@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mergeState } from '../src/store.js';
-import {projectContext} from '../src/project-core.js';
+import {projectContext,projectWorktreeSourceContext} from '../src/project-core.js';
 
 test('旧政务空间迁移保留用户资料与真实聊天，关闭旧 AI 调度', () => {
   const migrated = mergeState({
@@ -40,6 +40,8 @@ test('项目独立绑定工作区，旧目录迁移而模式切换不授予文�
   assert.equal(projectContext(state).workspaceRoot,undefined);
   assert.throws(()=>projectContext(state,{projectId:'g'}),/不匹配/);
   assert.throws(()=>projectContext(state,{sessionId:'chat',projectId:'p1'}),/范围已变化/);
+  assert.equal(projectWorktreeSourceContext(state,{sourceProjectId:'g'},'office-home').workspaceRoot,'D:\\gov');
+  assert.equal(projectWorktreeSourceContext(state,{sourceProjectId:'g',sourceWorkspaceId:'government-home'},'office-home').workspaceRoot,'D:\\gov');
   state.projects[0].directory=null;assert.equal(mergeState(state).projects[0].directory,null);
 });
 
@@ -54,4 +56,20 @@ test('重启后保留各自空间和已明确选择的发送模式', () => {
   assert.equal(restored.workspaceId, 'government-home');
   assert.equal(restored.settings.privacyMode, 'raw');
   for (const item of [...restored.chats, ...restored.automations, ...restored.documents]) assert.equal(item.workspaceId, 'office-home');
+});
+
+test('工作区恢复保留作用域草稿版本与附件引用',()=>{
+ const saved=mergeState(null);
+ saved.drafts={
+  'new:office-home:p1:draft-one':{draftId:'draft-one',kind:'new',workspaceId:'office-home',projectId:'p1',revision:7,text:'待提交的中文内容',files:[{id:'file-one',name:'材料.png',status:'ready'}],updatedAt:123},
+  'chat:chat-one':{draftId:'chat-one',kind:'chat',workspaceId:'government-home',projectId:'p2',chatId:'chat-one',revision:2,text:'政务草稿',files:[],updatedAt:456},
+ };
+ const restored=mergeState(JSON.parse(JSON.stringify(saved)));
+ assert.equal(restored.drafts['new:office-home:p1:draft-one'].revision,7);
+ assert.equal(restored.drafts['new:office-home:p1:draft-one'].draftId,'draft-one');
+ assert.equal(restored.drafts['new:office-home:p1:draft-one'].text,'待提交的中文内容');
+ assert.equal(restored.drafts['new:office-home:p1:draft-one'].files[0].id,'file-one');
+ assert.equal(restored.drafts['chat:chat-one'].workspaceId,'government-home');
+ restored.settings.persist=false;
+ assert.deepEqual(mergeState(restored).drafts,{});
 });

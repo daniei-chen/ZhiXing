@@ -609,6 +609,17 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .review-export-actions label { display: flex; gap: 7px; align-items: center; }
 .toast { z-index: 45; display: flex; align-items: center; gap: 7px; position: fixed; bottom: 15px; right: 15px; max-width: min(448px, calc(100vw - 30px)); padding: 10px 14px; border-radius: 9px; color: var(--on-accent); background: var(--accent); box-shadow: var(--shadow); }
 .toast svg { flex: none; }
+.toast.error { color: var(--danger); background: var(--surface); border: 1px solid color-mix(in srgb,var(--danger) 36%,var(--line)); }
+.toast.warning { color: var(--text); background: var(--surface); border: 1px solid var(--line); }
+.toast-dismiss { margin-left: 4px; font-size: 18px; line-height: 1; color: inherit; }
+.workspace-save-banner { z-index: 24; position: fixed; right: 15px; bottom: 15px; display: flex; align-items: center; gap: 8px; max-width: min(430px,calc(100vw - 30px)); padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); background: var(--surface); box-shadow: var(--shadow); font-size: 12px; }
+.workspace-save-banner svg { flex: none; }
+.workspace-save-banner.failed { color: var(--danger); align-items: flex-start; }
+.workspace-save-banner.failed span { min-width: 0; overflow-wrap: anywhere; }
+.workspace-save-banner.failed .secondary-button { flex: none; min-height: 28px; padding: 4px 8px; font-size: 11px; }
+.workspace-save-banner.recovering { color: var(--text); }
+.run-error-detail { margin: 9px 0; color: var(--danger); font-size: 12px; line-height: 1.6; }
+.transcript-new-content { position: fixed; z-index: 21; bottom: 102px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); font-size: 12px; white-space: nowrap; }
 
 @media (max-width: 950px) {
   .app-shell { --side-width: 223px; }

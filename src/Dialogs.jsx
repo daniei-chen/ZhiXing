@@ -82,7 +82,7 @@ function ProjectWorktree({project,close,createProject,notify}){
   event.preventDefault();setBusy(true);setError('');
   try{
    const result=await window.zhixing.worktree({action:restoring?'restore':'create',workspaceId:project.workspaceId,projectId:project.id,name:name.trim()});
-   if(!restoring)createProject(result.branch,project.instructions,result.path,{...result,sourceProjectId:project.id});
+   if(!restoring)createProject(result.branch,project.instructions,result.path,{...result,sourceWorkspaceId:project.workspaceId,sourceProjectId:project.id});
    notify(restoring?'已恢复工作树。':'已创建独立工作树项目。');close();
   }catch(cause){setError(cause.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}
   finally{setBusy(false);}

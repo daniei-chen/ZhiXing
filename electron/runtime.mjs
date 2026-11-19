@@ -323,6 +323,7 @@ export class RuntimeManager{
    }catch(e){if(active.timedOut)throw new Error(`任务超过 ${kernel.taskTimeoutSeconds} 秒，内核已停止。`);if(active.cancelled)throw new Error('任务已停止。');throw e;}finally{clearTimeout(timeout);}
    if(active.cancelled)throw new Error('任务已停止。');
    if(['error','blocked','aborted','interrupted'].includes(result.finishReason)){throw new Error('模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。');}
+   active.resultReady=true;active.finishReason=result.finishReason;
    await waitContext(directory,bridgeKey,sessionId);
     await closeHarness(active,h);await active.draftTail;
    active.resultReady=true;active.finishReason=result.finishReason;
@@ -351,9 +352,9 @@ export class RuntimeManager{
    if(savedBridge){if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});}
    if(active.controls)await fs.unlink(active.controls.file).catch(()=>{});
    if(savedBridge&&config.persist===false){const target=path.resolve(this.root,sessionId);if(path.dirname(target)===path.resolve(this.root)&&await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150}).then(()=>true,()=>false)===false)cleanupError??=new Error('临时会话目录未能清理。');}
-   if(cleanupError&&active.terminalStatus!=='cancelled')active.terminalStatus='failed';
+   if(cleanupError)active.terminalStatus='failed';
    const status=active.terminalStatus||(active.resultReady?'succeeded':active.cancelled?'cancelled':'failed');
-   const terminal={runId,sessionId,type:'run/terminal',status,...active.finishReason?{finishReason:active.finishReason}:{},...active.partialText?{partialText:active.partialText}:{}};
+   const terminal={runId,sessionId,type:'run/terminal',status,...active.finishReason?{finishReason:active.finishReason}:{}};
    this.runs.delete(runId);this.busy.delete(sessionId);try{this.onEvent?.(terminal);}catch{}active.resolveSettled({runId,sessionId,status,finishReason:active.finishReason});
    if(cleanupError&&!active.cancelled)throw cleanupError;
   }

@@ -76,7 +76,7 @@ test('stdio 目标变化不继承旧环境秘密',()=>{
  assert(!JSON.stringify(publicMcpServers(validateMcpServers([updated.server]))).includes('fixture-secret'));
  const explicitClear=updateMcpServer(previous,{...previous,args:['other.mjs'],env:{}});
  assert.deepEqual(explicitClear.server.env,{});
- assert.equal(explicitClear.requiresCredentialReentry,true);
+ assert.equal(explicitClear.requiresCredentialReentry,false);
 });
 
 test('无凭据公共视图和格式错误不得回显 secret',()=>{

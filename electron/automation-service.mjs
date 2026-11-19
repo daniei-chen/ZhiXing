@@ -194,6 +194,7 @@ export class AutomationService {
   }
 
   start(interval = 1500) {
+    this.closed = false;
     if (this.timer) return;
     this.timer = setInterval(() => { void this.tick().catch(() => {}); }, interval);
     this.timer.unref?.();
@@ -306,7 +307,7 @@ export class AutomationService {
   }
 
   async close() {
-    this.closed = true; clearInterval(this.timer);
+    this.closed = true; clearInterval(this.timer); this.timer = null;
     await Promise.allSettled([...this.active.keys()].map(id => this.cancel(id)));
     await this.tail;
   }

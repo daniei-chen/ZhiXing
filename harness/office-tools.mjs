@@ -103,7 +103,7 @@ export function apply(ctx){
    if(v.protect(restored.text,terms,privacyPolicy).blocked)throw new Error('成果包含疑似凭证，已停止写入。');
    const requestedPath=info.exists?await nextOfficePath(info.target):info.target;
    const output=await resolveOfficePath(path.relative(root,requestedPath),root,{write:true});
-   if(!output.inside||forbidden(output.target))throw new Error('新成果路径不在允许的工作空间内。');
+   if(output.inside!==info.inside||forbidden(output.target))throw new Error('新成果路径无法沿用原文件的安全范围。');
    await permit(exec,{...output,write:true,exists:false},'保存办公成果');exec.signal.throwIfAborted();
    const checked=await localPath(file_path,true);if(checked.target!==info.target||checked.exists!==info.exists)throw new Error('目标文件已变化，请重新操作。');
    const destination=await resolveOfficePath(path.relative(root,requestedPath),root,{write:true});

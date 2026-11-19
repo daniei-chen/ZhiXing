@@ -63,6 +63,11 @@ export function mergeState(saved) {
     version: 2, workspaceId, workspaces, projects, settings,
     drafts: settings.persist && saved.drafts && typeof saved.drafts === 'object' && !Array.isArray(saved.drafts)
       ? Object.fromEntries(Object.entries(saved.drafts).filter(([, draft]) => draft && typeof draft.text === 'string' && Array.isArray(draft.files)).map(([id, draft]) => [id, {
+        draftId: typeof draft.draftId === 'string' ? draft.draftId : undefined,
+        kind: draft.kind === 'chat' || draft.kind === 'new' ? draft.kind : undefined,
+        workspaceId: typeof draft.workspaceId === 'string' ? draft.workspaceId : undefined,
+        projectId: typeof draft.projectId === 'string' ? draft.projectId : null,
+        chatId: typeof draft.chatId === 'string' ? draft.chatId : null,
         revision: Number.isSafeInteger(draft.revision) && draft.revision >= 0 ? draft.revision : 0,
         text: draft.text.slice(0, 60000),
         files: draft.files.slice(0, 12),

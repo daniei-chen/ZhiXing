@@ -29,8 +29,9 @@ export function updateMcpServer(previous,submitted){
  const supplied=submitted[field];
  const secrets=supplied!==undefined?supplied:identityChanged?{}:previous?.[field]||{};
  const hasNewSecrets=hasSecretValues(secrets);
- const requiresCredentialReentry=identityChanged?!hasNewSecrets:Boolean(previous?.credentialReentryRequired&&!hasNewSecrets);
- const server={...submitted,[field]:secrets,credentialReentryRequired:requiresCredentialReentry};
+ const explicitlyConfigured=supplied!==undefined;
+ const requiresCredentialReentry=identityChanged?!explicitlyConfigured:Boolean(previous?.credentialReentryRequired&&!explicitlyConfigured);
+ const server={...submitted,enabled:requiresCredentialReentry?false:submitted.enabled!==false,[field]:secrets,credentialReentryRequired:requiresCredentialReentry};
  if(identityChanged){
   server.headers=field==='headers'?secrets:{};
   server.env=field==='env'?secrets:{};

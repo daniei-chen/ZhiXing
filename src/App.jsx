@@ -14,6 +14,7 @@ import { BrandMark, IconButton } from './ui.jsx';
 import { initialState, mergeState, saveState, downloadText, chatText } from './store.js';
 import { PrivacySession } from './privacy-core.js';
 import { composePrompt, workflows } from './office-workflows.js';
+import { REASONING_LEVELS } from './model-options.js';
 import { selectedModel } from './provider-options.js';
 import { applyAutomationResults } from './automation-core.js';
 
@@ -43,6 +44,7 @@ export function App() {
   const [settingsPage, setSettingsPage] = useState(null);
   const [question,setQuestion]=useState(null);
   const [toast, setToastState] = useState(null);
+  const [transcriptHasNew,setTranscriptHasNew]=useState(false);
   const [runtime, setRuntime] = useState({ configured: false });
   const [events, setEvents] = useState([]);
   const [liveStats, setLiveStats] = useState(null);
@@ -53,12 +55,16 @@ export function App() {
   const composer = useRef(null);
   const picker = useRef(null);
   const transcript = useRef(null);
+  const transcriptNearBottom = useRef(true);
+  const transcriptPositions = useRef(new Map());
+  const transcriptChatId = useRef(null);
   const active = useRef(null);
   const latest = useRef(state);
   const fileTarget = useRef(null);
   const opening = useRef(null);
   const viewToken = useRef(0);
   const storageFailed = useRef(false);
+  const loadedRef = useRef(loaded);
   const inputRef = useRef('');
   const filesRef = useRef([]);
   const draftMap = useRef({});
@@ -68,6 +74,7 @@ export function App() {
   const saveSequence = useRef(0);
   const latestSaveSequence = useRef(0);
   latest.current = state;
+  loadedRef.current = loaded;
 
   function setToast(message, type) {
     if (!message) { setToastState(null); return; }
@@ -212,6 +219,25 @@ export function App() {
         if(job?.runId===event.runId)patchReply(job,{progressText:event.text});
         return;
       }
+      if(event.type==='run/terminal'){
+        if(event.status!=='succeeded'){
+          const stopped=event.status==='cancelled';
+          setState(current=>({
+            ...current,
+            chats:current.chats.map(item=>({
+              ...item,
+              messages:item.messages.map(message=>{
+                if(message.runId!==event.runId)return message;
+                const partial=message.progressText||(job?.runId===event.runId?job.progressText:'')||'';
+                return {...message,text:stopped?partial||'已停止生成。':partial||'本轮未完成，未确认任务结果。',progressText:'',pending:false,stopped,error:!stopped,status:event.status,errorMessage:stopped?undefined:'本轮未完成。以上部分输出已保留。'};
+              }),
+            })),
+          }));
+          if(job?.runId===event.runId){active.current=null;setRunning(null);}
+        }
+        setEvents(old=>[...old.slice(-599),{...event,time:event.time??Date.now()}]);
+        return;
+      }
       const time = event.time ?? Date.now();
       if(job?.runId===event.runId && event.label){
         // Store the trace summary without duplicating full plans and agent snapshots.
@@ -234,6 +260,31 @@ export function App() {
     };
     const unsubscribeSave = desktop.onWorkspaceSaveState?.(applySaveState) || (() => {});
     desktop.workspaceSaveStatus?.().then(applySaveState).catch(() => {});
+    const unsubscribeQuit = desktop.onPrepareToQuit?.(async()=>{
+      try{
+        await new Promise((resolve,reject)=>{
+          let frames=0;
+          const check=()=>{
+            if(loadedRef.current){resolve();return;}
+            if(frames++>150){reject(new Error('本机工作空间尚未完成读取。'));return;}
+            requestAnimationFrame(check);
+          };
+          check();
+        });
+        if(storageFailed.current)throw new Error('本机工作空间读取失败，现有文件保持在磁盘中。');
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        const current=latest.current;
+        const snapshot=current.settings.persist?current:{...current,chats:[],documents:[],drafts:{},automations:[],settings:{...current.settings,customTerms:[]}};
+        await desktop.saveWorkspace(snapshot);
+        setNativeProjects(snapshot.projects);
+        desktop.acknowledgeQuitPreparation?.({saved:true});
+      }catch(error){
+        const message=errorText(error);
+        setWorkspaceSave(previous=>({...previous,status:'failed',errorCode:message||'WORKSPACE_SAVE_FAILED'}));
+        setToast(`退出前保存失败：${message}`,'error');
+        desktop.acknowledgeQuitPreparation?.({saved:false,error:message});
+      }
+    });
     const applyAutomations = snapshot => {
       if (!mounted) return;
       setAutomationState(previous => snapshot.revision > previous.revision ? snapshot : previous);
@@ -241,7 +292,7 @@ export function App() {
     };
     const unsubscribeAutomations = desktop.onAutomationChange(applyAutomations);
     desktop.listAutomations().then(applyAutomations).catch(() => setToast('自动化记录读取失败，请重新启动知行。'));
-    return () => { mounted = false; unsubscribe(); unsubscribeAutomations(); unsubscribeSave(); };
+    return () => { mounted = false; unsubscribe(); unsubscribeAutomations(); unsubscribeSave(); unsubscribeQuit?.(); };
   }, []);
 
   const renderedDraftKey = draftKeyFor({ workspaceId: workspace.id, projectId: chat?.projectId || projectId, chatId, newDraftId: view.newDraftId });
@@ -293,9 +344,41 @@ export function App() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  useEffect(() => {
-    if (transcript.current) transcript.current.scrollTop = transcript.current.scrollHeight;
-  }, [chatId, messages.length, running]);
+  useLayoutEffect(()=>{
+    const element=transcript.current;
+    if(!element)return;
+    const previousChatId=transcriptChatId.current;
+    if(previousChatId&&previousChatId!==chatId)transcriptPositions.current.set(previousChatId,element.scrollTop);
+    if(previousChatId!==chatId){
+      const saved=chatId?transcriptPositions.current.get(chatId):undefined;
+      element.scrollTop=saved??element.scrollHeight;
+      transcriptChatId.current=chatId;
+      transcriptNearBottom.current=element.scrollHeight-element.scrollTop-element.clientHeight<72;
+      setTranscriptHasNew(false);
+      return;
+    }
+    if(transcriptNearBottom.current){
+      element.scrollTop=element.scrollHeight;
+      transcriptPositions.current.set(chatId,element.scrollTop);
+      setTranscriptHasNew(false);
+    }else setTranscriptHasNew(true);
+  },[chatId,messages.length,messages.at(-1)?.text,messages.at(-1)?.progressText,messages.at(-1)?.pending,running?.runId,running?.status]);
+
+  function onTranscriptScroll(){
+    const element=transcript.current;
+    if(!element)return;
+    transcriptNearBottom.current=element.scrollHeight-element.scrollTop-element.clientHeight<72;
+    if(chatId)transcriptPositions.current.set(chatId,element.scrollTop);
+    if(transcriptNearBottom.current)setTranscriptHasNew(false);
+  }
+
+  function returnTranscriptToBottom(){
+    if(!transcript.current)return;
+    transcript.current.scrollTop=transcript.current.scrollHeight;
+    transcriptNearBottom.current=true;
+    if(chatId)transcriptPositions.current.set(chatId,transcript.current.scrollTop);
+    setTranscriptHasNew(false);
+  }
 
   useEffect(() => {
     if (!menu) return;
@@ -326,9 +409,6 @@ export function App() {
     setState(current => {
       if (name === 'modelSelection') {
         const settings = { ...current.settings, model: value.id, modelProviderId: value.providerId || null };
-        if (value.levels?.length && !value.levels.includes(settings.reasoning)) {
-          settings.reasoning = value.levels.includes('high') ? 'high' : value.levels[0];
-        }
         return { ...current, settings };
       }
       if (current.settings[name] === value) return current;
@@ -347,6 +427,8 @@ export function App() {
 
   function navigate(next, nextChat = null, nextProject = null, freshDraft = false, workspaceOverride = null) {
     viewToken.current++;
+    if(chatId&&transcript.current)transcriptPositions.current.set(chatId,transcript.current.scrollTop);
+    if(nextChat!==chatId||!['home','project'].includes(next))transcriptChatId.current=null;
     setSettingsPage(null);
     const projectWorkspaceId = nextProject ? latest.current.projects.find(item => item.id === nextProject)?.workspaceId : null;
     const targetWorkspaceId = workspaceOverride || projectWorkspaceId || (nextChat ? latest.current.chats.find(item => item.id === nextChat)?.workspaceId : null) || latest.current.workspaceId;
@@ -532,7 +614,11 @@ export function App() {
       setToast('此命令不会读取附件。请移除附件或改为交办内容。');
       return;
     }
+    const { privacyMode, reasoning, permission, customTerms,privacyPolicy,demo } = state.settings;
     const selection = selectedModel(runtime, state.settings);
+    if(!demo&&!selection){setToast('所选供应商或型号当前不可用。请选择目录中的有效模型后再发送。','error');return;}
+    if(!demo&&selection.reasoningCapability==='unknown'){setToast('当前模型的思考能力尚未确认，暂不能发送。请刷新模型目录或选择已确认的型号。','error');return;}
+    if(!demo&&selection&&!selection.levels.includes(reasoning)){const label=REASONING_LEVELS.find(level=>level.id===reasoning)?.label||reasoning;setToast(`所选模型不支持「${label}」思考档位。请选择该模型支持的档位后再发送。`,'error');return;}
     const selectedProvider = runtime.providers?.find(provider => provider.id === selection?.providerId);
     const unboundImport = chat?.importedFrom==='deepseek'&&!chat.providerId;
     const providerChanged = !state.settings.demo && !!chat?.messages?.length && !!selectedProvider && !unboundImport
@@ -542,7 +628,6 @@ export function App() {
     const preferences = state.settings.personalizationEnabled ? state.settings.personalInstructions : '';
     const taskText = startInPlanMode ? planText || '' : text;
     const prompt = repeatMessageId && previous?.prompt ? previous.prompt : composePrompt(taskText, attachments, [], project?.instructions, preferences);
-    const { privacyMode, reasoning, permission, customTerms,privacyPolicy,demo } = state.settings;
     const model = selection?.id || state.settings.model;
     const modelProviderId = selection?.providerId;
     const bootstrapPrompt=repeatMessageId || providerChanged ? prompt : composePrompt(taskText, attachments, messages, project?.instructions, preferences);
@@ -576,7 +661,7 @@ export function App() {
     const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [] };
     active.current = job; setRunning(job);
     const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ name, size }) => ({ name, size })) };
-    const assistant = { id: job.replyId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0 };
+    const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0 };
     setState(current => {
       const target = current.chats.find(item => item.id === draft.sessionId);
       const now = Date.now();
@@ -595,7 +680,10 @@ export function App() {
       const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
       if (active.current === job) patchReply(job, { text: result.text || '内核没有返回正文。', masked: result.masked,plan:result.plan,context:result.context,children:result.children,deliverables:result.deliverables,protectCount:result.protectCount||0,pending: false, finishReason: result.finishReason, trace:job.trace, traceTruncated:job.traceTruncated });
     } catch (error) {
-      if (active.current === job) patchReply(job, { text: `运行未完成：${errorText(error)}`, pending: false, error: true, trace:job.trace, traceTruncated:job.traceTruncated });
+      if (active.current === job) {
+        const partialText=job.progressText||'';
+        patchReply(job,{text:partialText,progressText:partialText,pending:false,error:true,errorMessage:`运行未完成：${errorText(error)}`,trace:job.trace,traceTruncated:job.traceTruncated});
+      }
     } finally {
       if (active.current === job) { active.current = null; setRunning(null); }
     }
@@ -604,13 +692,22 @@ export function App() {
   async function stop() {
     const job = active.current;
     if (!job) return;
+    if(job.demo){
+      const partial=job.progressText||'';
+      patchReply(job,{text:partial||'已停止生成。',pending:false,stopped:true,trace:job.trace,traceTruncated:job.traceTruncated});
+      active.current=null;setRunning(null);return;
+    }
     setRunning(previous => previous?.runId === job.runId ? { ...previous, status: 'cancelling' } : previous);
     patchReply(job, { status: 'cancelling' });
     if (!job.demo) {
       try {
         await desktop.cancelRun(job.runId);
         if (active.current === job) patchReply(job, { text: job.progressText || '已请求停止，正在等待任务结束…', pending: true, stopped: false, status: 'cancelling', trace: job.trace, traceTruncated: job.traceTruncated });
-      } catch (error) { setToast(`停止状态未确认：${errorText(error)}`, 'error'); }
+      } catch (error) {
+        setRunning(previous=>previous?.runId===job.runId?{...previous,status:'running'}:previous);
+        patchReply(job,{status:'running'});
+        setToast(`停止状态未确认：${errorText(error)}`, 'error');
+      }
     }
   }
 
@@ -711,7 +808,7 @@ export function App() {
           </div>
         </div>
             {room ? <>
-              {chat ? <section className="transcript" ref={transcript} aria-label="聊天记录">
+              {chat ? <section className="transcript" ref={transcript} onScroll={onTranscriptScroll} aria-label="聊天记录">
                 {!messages.length && <p className="transcript-empty">这段聊天还没有消息。</p>}
                 {messages.map((message, index) => message.role === 'user' ? <article className="user-message" key={message.id || index}>{message.text&&<p>{message.text}</p>}<ChatAttachments files={message.files}/></article> : <article className={`assistant-message ${message.error ? 'error-message' : ''}`} key={message.id || index}>
                   <div className="assistant-byline"><span className="assistant-icon"><NotePencil size={17}/></span><strong>{message.imported?'DeepSeek':'知行'}</strong><small>{message.imported?'导入记录':message.demo ? '演示回复' : message.error ? '运行错误' : message.stopped ? '已停止' : message.privacyMode === 'raw' ? '非脱敏模式' : '脱敏模式'}</small></div>
@@ -722,7 +819,8 @@ export function App() {
                   {message.context?.planning&&<p className="context-usage">规划模式 · 只读调查与方案设计 <button disabled={!!running} onClick={()=>setInput('/plan off')}>退出规划模式</button></p>}
                   {message.context?.goal&&<p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[message.context.goal.phase]||message.context.goal.phase} · 第 {message.context.goal.roundsStarted} / {message.context.goal.maxGoalRounds} 轮 <button disabled={!!running} onClick={()=>setInput(message.context.goal.phase==='active'?'/goal pause':'/goal resume')}>{message.context.goal.phase==='active'?'暂停目标':'查看并继续'}</button></p>}
                   {message.pending&&message.progressText&&<AnswerText text={message.progressText} onOpenUrl={openAnswerUrl}/>}
-                  {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{events.findLast(event => event.sessionId === chatId)?.label || '正在生成…'}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl}/>}
+                  {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':events.findLast(event => event.runId===running?.runId&&event.label)?.label || '正在生成…'}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl}/>}
+                  {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
                   {message.context?.measurement&&<p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow||128000).toLocaleString()} tokens · <button type="button" onClick={()=>setInput('/compact')} disabled={!!running}>压缩上下文</button></p>}
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}
                   {!message.pending && <div className="answer-actions">
@@ -734,6 +832,7 @@ export function App() {
                     }}/>}
                   </div>}
                 </article>)}
+                {transcriptHasNew&&<button className="transcript-new-content" type="button" onClick={returnTranscriptToBottom}>有新内容 · 回到底部</button>}
               </section> : <div className="empty-stage"><section className="welcome" aria-label={project ? '项目交办' : '新建交办'}>
                 {project ? <span className="welcome-icon"><FolderOpen size={28} weight="light"/></span> : <BrandMark className="brand-welcome"/>}
                 <h1>{project ? project.name : mode === 'government' ? '今天要办理什么？' : '今天，有什么事交给知行？'}</h1>

@@ -7,3 +7,9 @@ export function projectContext(state,{workspaceId=state.workspaceId,projectId=nu
   if(chat&&(chat.workspaceId!==workspace.id||(chat.projectId||null)!==(projectId||null)))throw new Error('会话的项目范围已变化，请重新打开会话。');
   return {workspace,project,workspaceRoot:project?.directory||undefined};
 }
+
+export function projectWorktreeSourceContext(state,record,fallbackWorkspaceId) {
+  const source=state.projects?.find(project=>project.id===record?.sourceProjectId);
+  const workspaceId=record?.sourceWorkspaceId||source?.workspaceId||fallbackWorkspaceId;
+  return projectContext(state,{workspaceId,projectId:record?.sourceProjectId});
+}

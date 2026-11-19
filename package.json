@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "electron": "node scripts/run-desktop.mjs",
-    "test": "node --test tests/privacy.test.mjs tests/office.test.mjs tests/store.test.mjs tests/automation.test.mjs tests/runtime.test.mjs tests/runtime-policy.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/providers.test.mjs tests/plugins.test.mjs",
+    "test": "node --test tests/privacy.test.mjs tests/office.test.mjs tests/store.test.mjs tests/automation.test.mjs tests/runtime.test.mjs tests/runtime-policy.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/providers.test.mjs tests/mcp-identity.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs",
     "test:packed": "node scripts/test-packed.mjs",
     "electron:dist": "npm run build && electron-builder --win --x64 --dir",
     "electron:install": "npm run build && electron-builder --win nsis --x64",
