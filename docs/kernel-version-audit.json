@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-11-19T10:34:24.221Z",
+  "currentOfficialLatest": "0.2.2-rc.5",
+  "upToDate": true,
+  "releaseChannel": "release-candidate",
+  "packages": [
+    {
+      "name": "@deepseek-ai/dsh",
+      "installed": "0.2.2-rc.5",
+      "officialTags": {
+        "alpha": "0.2.2-alpha.3",
+        "latest": "0.2.2-rc.5",
+        "next": "0.2.2-rc.5"
+      },
+      "publishedAt": "2026-11-18T13:17:23.604Z",
+      "registry": "https://registry.npmjs.org/"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-client",
+      "installed": "0.2.2-rc.5",
+      "officialTags": {
+        "latest": "0.0.1-rc.1",
+        "alpha": "0.2.2-alpha.3",
+        "next": "0.2.2-rc.5"
+      },
+      "publishedAt": "2026-11-18T13:18:25.128Z",
+      "registry": "https://registry.npmjs.org/"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tools",
+      "installed": "0.2.2-rc.5",
+      "officialTags": {
+        "latest": "0.0.1-rc.1",
+        "alpha": "0.2.2-alpha.3",
+        "next": "0.2.2-rc.5"
+      },
+      "publishedAt": "2026-11-18T12:51:54.353Z",
+      "registry": "https://registry.npmjs.org/"
+    }
+  ],
+  "lockedHarnessPackageCount": 329,
+  "lockedHarnessVersions": [
+    "0.2.2-rc.5"
+  ]
+}

@@ -1,0 +1,45 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {runDocumentWorker} from './document-service.mjs';
+import {readWorkspaceBytes} from './workspace-files.mjs';
+import {officeConversions, officeWorkbookFormats, officeRecalculationFormats} from './office-formats.mjs';
+import {recognizeImage} from './ocr-service.mjs';
+
+const outputLimit = 20 * 1024 * 1024;
+
+export async function recognizeOfficePage(workspaceRoot,options){
+ const result=await runOfficeLayout(workspaceRoot,{...options,action:'preview'});
+ const file=await recognizeImage('page.png',Buffer.from(result.png,'base64'));
+ return {...file,name:`${result.name} · 第 ${result.page} 页`,coverage:{...file.coverage,pages:1,page:result.page}};
+}
+
+export async function runOfficeLayout(workspaceRoot, input) {
+ const {action, page, format, sheet} = input;
+ const {name, bytes} = await readWorkspaceBytes(workspaceRoot, input.path);
+ const extension = path.extname(name).slice(1).toLowerCase();
+ const version = createHash('sha256').update(bytes).digest('hex');
+ if(input.version!==undefined&&input.version!==version)throw new Error('文件已更新，请重新打开文件预览。');
+ if (!Object.hasOwn(officeConversions, extension)) throw new Error('此文件格式不支持版面预览。');
+ if (action === 'preview') {
+  if (!Number.isInteger(page) || page < 1 || page > 10000) throw new Error('请输入有效的页码。');
+ } else if (action === 'convert') {
+  if (!officeConversions[extension].includes(format)) throw new Error('此文件不支持选定的转换格式。');
+  if (sheet !== undefined && (format !== 'csv' || typeof sheet !== 'string' || sheet.length > 100 || !sheet.trim())) throw new Error('工作表名称无效。');
+ } else if (action === 'recalculate') {
+  if (!officeWorkbookFormats.includes(extension) || !officeRecalculationFormats.includes(format)) throw new Error('请选择可重算的工作簿与输出格式。');
+ } else {
+  throw new Error('未知的 Office 操作。');
+ }
+
+ const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'zhixing-office-'));
+ try {
+  const result = await runDocumentWorker('office-layout-worker.mjs', [
+   directory, JSON.stringify({action, extension, page, format, sheet}),
+  ], bytes, {timeoutMs: 75000, maxBytes: Math.ceil(outputLimit * 4 / 3) + 16384});
+  return {...result, name, version};
+ } finally {
+  await fs.rm(directory, {recursive: true, force: true, maxRetries: 4, retryDelay: 100});
+ }
+}

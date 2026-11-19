@@ -1,0 +1,51 @@
+{
+  "appId": "cn.zhixing.office",
+  "productName": "知行",
+  "asar": false,
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/client/**/*",
+    "electron/**/*",
+    "harness/**/*",
+    "src/privacy-core.js",
+    "src/privacy-policy.js",
+    "src/project-core.js",
+    "src/permissions.js",
+    "src/store.js",
+    "src/provider-options.js",
+    "src/scheduler.js",
+    "src/automation-core.js",
+    "src/office-workflows.js",
+    "src/kernel-config.js",
+    "package.json",
+    "!node_modules/**/*"
+  ],
+  "afterPack": "./scripts/pack-runtime.cjs",
+  "npmRebuild": false,
+  "win": {
+    "icon": "public/brand/zhixing.ico",
+    "signExecutable": false,
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "artifactName": "知行-${version}-${arch}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "installerIcon": "public/brand/zhixing.ico",
+    "uninstallerIcon": "public/brand/zhixing.ico",
+    "installerHeaderIcon": "public/brand/zhixing.ico"
+  },
+  "extraMetadata": {
+    "main": "electron/main.cjs"
+  }
+}

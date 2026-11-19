@@ -1,0 +1,319 @@
+const {app,BrowserWindow,ipcMain,safeStorage,dialog,Notification,protocol,net,session}=require('electron');
+const path=require('node:path'),fs=require('node:fs/promises'),{pathToFileURL}=require('node:url'),{randomUUID}=require('node:crypto');
+protocol.registerSchemesAsPrivileged([{scheme:'zhixing',privileges:{standard:true,secure:true,supportFetchAPI:true,corsEnabled:true}}]);
+app.setName('知行');
+const APP_ID = app.isPackaged ? 'cn.zhixing.office' : 'cn.zhixing.office.development';
+if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
+const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
+if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
+const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
+const firstInstance=app.requestSingleInstanceLock();
+let windowRef,manager,automations,browserService,terminalService,speechService,quitting=false,saveTail=Promise.resolve(),workspaceContext,resolveProjectContext;
+let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
+let worktreeOperation;
+let configuration={model:'deepseek-flash',reasoning:'high',baseUrl:'https://api.deepseek.com/anthropic',credentialRevision:0,contextWindow:128000,maxTokens:8192};
+let normaliseKernel,validateKernel;
+const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
+const WORKSPACE_FILE=path.join(ROOT,'workspace.bin');
+async function writeEncrypted(target,text){
+ if(!safeStorage.isEncryptionAvailable())throw new Error('Windows 用户加密不可用，数据没有写入磁盘。');
+ const temp=`${target}.${randomUUID()}.tmp`;
+ try{await fs.writeFile(temp,safeStorage.encryptString(text));await fs.rename(temp,target);}finally{await fs.unlink(temp).catch(()=>{});}
+}
+async function readEncrypted(target){
+ try{return safeStorage.decryptString(await fs.readFile(target));}catch(e){if(e.code==='ENOENT')return null;throw new Error('本机加密文件无法读取。');}
+}
+async function initialise(){
+ await fs.mkdir(VAULTS,{recursive:true});
+ ({normaliseKernel,validateKernel}=await import('../src/kernel-config.js'));
+ configuration.kernel=normaliseKernel();
+ try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));for(const key of ['model','reasoning'])if(typeof saved[key]==='string')configuration[key]=saved[key];for(const key of ['contextWindow','maxTokens'])if(Number.isSafeInteger(saved[key])&&saved[key]>=1024&&saved[key]<=2000000)configuration[key]=saved[key];if(saved.baseUrl)configuration.baseUrl=validEndpoint(saved.baseUrl);if(Number.isSafeInteger(saved.credentialRevision))configuration.credentialRevision=saved.credentialRevision;}catch{}
+ try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));configuration.kernel=normaliseKernel(saved.kernel);}catch{}
+ providerApi=await import('./providers.mjs');
+ const {PluginService}=await import('./plugin-service.mjs');
+ pluginService=new PluginService({directory:path.join(ROOT,'extensions')});
+ const registry=await readEncrypted(path.join(ROOT,'providers.bin'));
+ if(registry!==null)providers=JSON.parse(registry);
+ else {
+  const legacy=providerApi.legacyProvider(configuration,await readEncrypted(path.join(ROOT,'deepseek.credential')));
+  if(legacy)await persistProviders([legacy]);
+ }
+ const {RuntimeManager}=await import('./runtime.mjs');
+ const {validateMcpServers}=await import('./mcp-config.mjs');
+ mcpServers=validateMcpServers(JSON.parse(await readEncrypted(path.join(ROOT,'mcp.bin')))||[]);
+ const {mergeState}=await import('../src/store.js');
+ resolveProjectContext=(await import('../src/project-core.js')).projectContext;
+ workspaceContext=mergeState(JSON.parse(await readEncrypted(WORKSPACE_FILE)));
+ manager=new RuntimeManager({root:path.join(ROOT,'harness'),readVault:async id=>JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`))),writeVault:(id,value)=>writeEncrypted(path.join(VAULTS,`${id}.bin`),JSON.stringify(value)),onApproval:async request=>{
+  let detail;try{detail=JSON.parse(request.reason);}catch{return {outcome:'rejected'};}
+  if(!request.toolName.startsWith('mcp__')&&!['office_read_file','office_write_file','office_list_files','office_execute','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource','office_browser','workflow','office_schedule'].includes(request.toolName)||typeof detail.path!=='string')return {outcome:'rejected'};
+  if(request.signal?.aborted)return {outcome:'rejected'};
+  const answer=await dialog.showMessageBox(windowRef,{type:'question',title:detail.command?'批准本次命令':detail.network?'批准本次联网':'批准本次文件操作',message:detail.operation||'操作需要批准',detail:`${detail.path}\n\n${detail.command?`${detail.command}\n\n命令可访问项目外文件和网络，请核对后批准。`:detail.network?`${JSON.stringify(detail.network)}\n\n仅批准本次联网操作。`:detail.overwrite?'此操作会覆盖已有文件。':'只批准本次操作，不改变权限模式。'}`,buttons:['拒绝','仅允许本次'],defaultId:0,cancelId:0,noLink:true,signal:request.signal});
+  return {outcome:answer.response===1?'allowed-once':'rejected'};
+ },onEvent:e=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('agent:event',e);void automations?.recordEvent(e).catch(()=>{});}});
+ const {AutomationService}=await import('./automation-service.mjs');
+ automations=new AutomationService({read:async()=>JSON.parse(await readEncrypted(path.join(ROOT,'automations.bin'))),write:value=>writeEncrypted(path.join(ROOT,'automations.bin'),JSON.stringify(value)),getContext:()=>workspaceContext,getConfiguration:settings=>({kernel:configuration.kernel,...providerApi.resolveProvider(providers,settings)}),getKey:config=>currentCredential(config).key,runtime:manager,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('automation:change',value);},notify:notifyTask});
+ await automations.initialise(workspaceContext.automations);
+ const {automationTool}=await import('./automation-tools.mjs');
+ manager.automationAction=(scope,input,signal)=>{signal.throwIfAborted();return automationTool(automations,scope,input);};
+ const {BrowserService}=await import('./browser-service.mjs'),{TerminalService}=await import('./terminal-service.mjs');
+ browserService=new BrowserService({electron:require('electron'),getWindow:()=>windowRef,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('browser:change',value);}});
+ manager.browserAction=(scope,input,signal)=>{signal.throwIfAborted();return browserService.agentAction(scope,input);};
+ terminalService=new TerminalService({onEvent:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('terminal:event',value);}});
+ const {SpeechService}=await import('./speech-service.mjs');
+ speechService=new SpeechService(value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',value);});
+
+}
+function workScope(options={}){const {workspace,project,workspaceRoot}=resolveProjectContext(workspaceContext,options);return {key:`${workspace.id}:${project?.id||options.sessionId||'home'}`,workspaceRoot};}
+function notifyTask(payload){if(Notification.isSupported())new Notification({title:'知行 · 定时任务',body:String(payload?.label||'任务状态已更新').slice(0,160)}).show();}
+async function persistProviders(next){
+ await writeEncrypted(path.join(ROOT,'providers.bin'),JSON.stringify(next));providers=next;
+}
+function changeProviders(update){
+ const job=providerTail.then(async()=>{
+  const next=await update(providers);
+  await persistProviders(next);
+  return runtimeStatus();
+ });
+ providerTail=job.catch(()=>{});
+ return job;
+}
+function currentCredential(config){
+ const provider=providers.find(row=>row.id===config.providerId);
+ if(!provider||provider.credentialRevision!==config.credentialRevision||provider.baseUrl!==config.baseUrl||provider.protocol!==config.protocol)throw new Error('供应商连接已更新，请重新选择模型或审阅。');
+ const current=providerApi.resolveProvider(providers,{modelProviderId:config.providerId,model:config.model,reasoning:config.reasoning});
+ if(['model','reasoning','maxTokens','contextWindow','compat','reasoningMap'].some(field=>JSON.stringify(current[field])!==JSON.stringify(config[field])))throw new Error('模型目录或推理设置已更新，请重新交办。');
+ if(config.extensions&&(pluginService.operation||JSON.stringify(config.extensions)!==JSON.stringify(pluginService.selection())))throw new Error('已启用的插件有变化，请重新交办。');
+ return {config,key:provider.key};
+}
+async function runtimeStatus(){return {configured:providers.length>0,providers:providerApi.publicProviders(providers),models:providerApi.providerModels(providers),version:`DeepSeek Harness ${require('@deepseek-ai/dsh/package.json').version}`,tools:['数字计算','日期计算','表格检查','读取办公文件','生成办公文件','列出目录','PowerShell 终端','原生计划','原生技能','交互提问',...(configuration.kernel.webEnabled?['网页读取','内置浏览器']:[]),...(configuration.kernel.subagentDepth?['原生子任务']:[]),...(configuration.kernel.workflowEnabled?['多 Agent 工作流','后台作业']:[]),'加密上下文恢复','上下文压缩'],capability:'harness-office',kernel:configuration.kernel,appVersion:require('../package.json').version};}
+function trusted(event){if(!windowRef||event.sender!==windowRef.webContents||event.senderFrame!==windowRef.webContents.mainFrame||event.senderFrame.url!=='zhixing://app/index.html')throw new Error('请求来源无效。');}
+function handle(channel,fn){ipcMain.handle(channel,async(event,...args)=>{trusted(event);try{return await fn(...args);}catch(e){
+ const message=String(e.message||'操作未完成');
+ if(/dsh profile|ERR_MODULE_NOT_FOUND|stderr tail/i.test(message))throw new Error('DeepSeek 内核启动失败。请打开设置检查内核，或使用最新安装包重新安装。');
+ throw new Error(message.replace(/sk-[A-Za-z0-9_-]{12,}/g,'[已隐藏凭据]').slice(0,600));
+}});}
+function validEndpoint(value){let url;try{url=new URL(value);}catch{throw new Error('请输入完整的模型服务地址。');}if(url.username||url.password||url.search||url.hash)throw new Error('服务地址不能包含凭据、查询参数或片段。');if(url.protocol!=='https:'&&!(url.protocol==='http:'&&['127.0.0.1','localhost','[::1]'].includes(url.hostname)))throw new Error('服务地址需要 HTTPS；本机测试服务可用 HTTP。');if(url.hostname==='api.deepseek.com'&&url.pathname==='/')url.pathname='/anthropic';return url.href.replace(/\/$/,'');}
+function route(options={}){
+ const {workspaceRoot}=resolveProjectContext(workspaceContext,options);
+ const permission=['ask','auto','full'].includes(options.permission)?options.permission:workspaceContext.settings.permission||'ask';
+ if(workspaceRoot&&permission==='full'&&pluginService.operation)throw new Error('插件正在变更，请完成后再交办。');
+ const extensions=workspaceRoot&&permission==='full'?pluginService.selection():null;
+ return {...configuration,...providerApi.resolveProvider(providers,options),mcpServers,persist:workspaceContext.settings.persist,automationScope:{workspaceId:options.workspaceId||workspaceContext.workspaceId,projectId:options.projectId||null},browserScope:workScope(options).key,permission,workspaceRoot,extensions,privacyPolicy:workspaceContext.settings.privacyPolicy};
+}
+function registerHandlers(){
+ handle('plugins:manage',async input=>{
+  const mutates=['install','enable','remove','update','market-install','confirm-builds'].includes(input?.action);
+  if(mutates&&manager.runs.size)throw new Error('请等当前交办结束，再修改插件。');
+  if(input?.action==='enable'&&input.enabled===true){
+   const reply=await dialog.showMessageBox(windowRef,{type:'question',title:'启用 Harness 插件',message:`启用 ${String(input.name||'').slice(0,200)}？`,detail:'此插件将在选择「完全访问」的项目交办中运行。插件代码以你的 Windows 账户运行，可读取本机文件或联网。知行会保护模型请求；插件自行发出的请求由插件负责。',buttons:['取消','信任并启用'],defaultId:0,cancelId:0,noLink:true});
+   if(reply.response!==1)return {cancelled:true};
+   if(manager.runs.size)throw new Error('请等当前交办结束，再修改插件。');
+  }
+  return pluginService.run(input,async({request,builds})=>{
+   const result=await dialog.showMessageBox(windowRef,{
+    type:'warning',title:'批准插件构建脚本',message:`允许 ${request.expectedName||request.name} ${request.version} 的依赖运行构建脚本？`,
+    detail:`依赖：\n${builds.join('\n')}\n\n脚本使用当前 Windows 用户权限。批准会记录在知行插件档案中。`,
+    buttons:['拒绝','允许并继续'],defaultId:0,cancelId:0,noLink:true,
+   });
+   return result.response===1&&!manager.runs.size;
+  });
+ });
+ handle('browser:state',options=>browserService.snapshot(workScope(options).key));
+ handle('browser:action',options=>browserService.action(workScope(options).key,options));
+ handle('browser:layout',options=>browserService.layout(workScope(options).key,options));
+ handle('browser:read',async options=>{const value=await browserService.read(workScope(options).key,options.id);return {id:randomUUID(),name:value.title||new URL(value.url).hostname,size:Buffer.byteLength(value.text),text:`网页来源：${value.url}\n页面标题：${value.title}\n\n${value.text}`,status:'ready',sourceUrl:value.url};});
+ handle('browser:external',options=>browserService.external(workScope(options).key,options.id));
+ handle('browser:capture',async options=>{
+  const scope=workScope(options);
+  const image=await browserService.capture(scope.key,options.id);
+  const filename='网页截图.png';
+  const target=await dialog.showSaveDialog(windowRef,{title:'保存网页截图',defaultPath:scope.workspaceRoot?path.join(scope.workspaceRoot,filename):filename,filters:[{name:'PNG 图片',extensions:['png']}]});
+  if(target.canceled||!target.filePath)return {cancelled:true};
+  await fs.writeFile(target.filePath,image);
+  return {name:path.basename(target.filePath)};
+ });
+ handle('terminal:action',async options=>{await saveTail;const scope=workScope(options);if(!scope.workspaceRoot)throw new Error('请先在项目设置中选择工作区，再打开终端。');return terminalService.request({...options,scope:scope.key,cwd:await fs.realpath(scope.workspaceRoot)});});
+ handle('workspace:list-files',async options=>{await saveTail;const {listWorkspaceFiles}=await import('./workspace-files.mjs');return listWorkspaceFiles(workScope(options).workspaceRoot,options.path||'');});
+ handle('workspace:worktree',async({action,name,workspaceId,projectId}={})=>{
+  await saveTail;
+  if(worktreeOperation)throw new Error('正在处理另一项工作树操作。');
+  const {workspace,project,workspaceRoot}=resolveProjectContext(workspaceContext,{workspaceId,projectId});
+  if(!project||!['create','restore'].includes(action))throw new Error('请选择工作树所属的项目。');
+  const record=action==='restore'?project.worktree:null;
+  if(action==='restore'&&!record||action==='create'&&project.worktree)throw new Error('请在原 Git 项目创建工作树，或选择已有的工作树项目恢复。');
+  const repository=record?resolveProjectContext(workspaceContext,{workspaceId:workspace.id,projectId:record.sourceProjectId}).workspaceRoot:workspaceRoot;
+  if(record&&project.directory!==record.path)throw new Error('项目目录已变化，无法恢复原工作树。');
+  const controller=new AbortController();
+  const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(90000)]);
+  const job=(async()=>{const {runProjectWorktree}=await import('./project-worktree.mjs');return runProjectWorktree(path.join(ROOT,'worktrees'),repository,{name,record},signal);})();
+  worktreeOperation={job,controller};
+  try{return await job;}finally{worktreeOperation=null;}
+ });
+ handle('workspace:read-file',async options=>{await saveTail;const {readWorkspaceFile}=await import('./workspace-files.mjs');return readWorkspaceFile(workScope(options).workspaceRoot,options.path);});
+ handle('workspace:office-layout',async options=>{
+  await saveTail;
+  const {runOfficeLayout,recognizeOfficePage}=await import('./office-layout.mjs');
+  const {workspaceRoot}=workScope(options);
+  if(options.action==='ocr')return recognizeOfficePage(workspaceRoot,options);
+  const result=await runOfficeLayout(workspaceRoot,options);
+  if(options.action==='preview')return result;
+  const format=options.format;
+  const stem=path.parse(result.name).name;
+  const name=`${stem}${options.action==='recalculate'?'-重算':''}.${format}`;
+  const selected=await dialog.showSaveDialog(windowRef,{defaultPath:path.join(workspaceRoot,name),filters:[{name:format.toUpperCase(),extensions:[format]}]});
+  if(selected.canceled||!selected.filePath)return {saved:false};
+  if(path.extname(selected.filePath).toLowerCase()!==`.${format}`)throw new Error('保存文件的扩展名必须与所选格式一致。');
+  try {await fs.writeFile(selected.filePath,Buffer.from(result.bytes,'base64'),{flag:'wx'});}
+  catch(error){if(error.code==='EEXIST')throw new Error('已有同名文件，请另选文件名。');throw error;}
+  return {saved:true,name:path.basename(selected.filePath),missingFonts:result.missingFonts};
+ });
+ handle('workspace:reveal-file',async options=>{const {workspaceTarget}=await import('./workspace-files.mjs');const {target}=await workspaceTarget(workScope(options).workspaceRoot,options.path||'');require('electron').shell.showItemInFolder(target);return true;});
+ handle('app:runtime-status',runtimeStatus);
+ handle('providers:save',input=>changeProviders(async rows=>{
+  if(!input||typeof input!=='object')throw new Error('供应商格式无效。');
+  const provider=await providerApi.saveProvider(input,rows);
+  if(rows.length>=32&&!rows.some(row=>row.id===provider.id))throw new Error('最多可连接 32 个供应商。');
+  return rows.some(row=>row.id===provider.id)?rows.map(row=>row.id===provider.id?provider:row):[...rows,provider];
+ }));
+ handle('providers:remove',id=>changeProviders(rows=>rows.filter(row=>row.id!==id)));
+ handle('providers:refresh',id=>changeProviders(async rows=>{
+  const provider=rows.find(row=>row.id===id);
+  if(!provider)throw new Error('所选供应商已移除。');
+  const refreshed=await providerApi.saveProvider({...provider,manualModels:provider.models.filter(row=>row.source==='configured').map(row=>row.id).join('\n'),discover:true},rows);
+  return rows.map(row=>row.id===id?refreshed:row);
+ }));
+ handle('speech:status',()=>speechService.status());
+ handle('speech:start',({language,id})=>speechService.start(language,id));
+ handle('speech:stop',id=>speechService.stop(id));
+ handle('speech:cancel',id=>speechService.cancel(id));
+ handle('app:check-kernel-version',async()=>{const {checkOfficialKernel}=await import('./kernel-version.mjs');return checkOfficialKernel();});
+ handle('app:configure-kernel',async value=>{const kernel=validateKernel(value),next={...configuration,kernel};await fs.writeFile(path.join(ROOT,'config.json'),JSON.stringify(next,null,2));configuration=next;return runtimeStatus();});
+ handle('app:inspect-kernel',async()=>manager.check(configuration,'zhixing-local-inspection'));
+ handle('skills:list',async options=>manager.check({...configuration,workspaceRoot:workScope(options).workspaceRoot,mcpServers:[]},'zhixing-local-inspection').then(value=>value.skills));
+ handle('mcp:list',async()=>{const {publicMcpServers}=await import('./mcp-config.mjs');return publicMcpServers(mcpServers);});
+ handle('mcp:save',async value=>{
+  const {validateMcpServers,publicMcpServers}=await import('./mcp-config.mjs');
+  const next=validateMcpServers(value.map(server=>{const old=mcpServers.find(item=>item.serverName===server.serverName);return {...server,env:server.env??old?.env,headers:server.headers??old?.headers};}));
+  await writeEncrypted(path.join(ROOT,'mcp.bin'),JSON.stringify(next));mcpServers=next;return publicMcpServers(next);
+ });
+ handle('mcp:check',async()=>{try{return await manager.check({...configuration,mcpServers},'zhixing-startup-check');}catch{throw new Error('MCP 连接失败，请检查程序路径、地址、凭据和服务状态。');}});
+ handle('data:load',async()=>JSON.parse(await readEncrypted(WORKSPACE_FILE)));
+ handle('data:import-deepseek',async options=>{
+  await saveTail;
+  resolveProjectContext(workspaceContext,options);
+  const selected=await dialog.showOpenDialog(windowRef,{title:'选择 DeepSeek 聊天导出',properties:['openFile'],filters:[{name:'DeepSeek 导出 ZIP',extensions:['zip']}]});
+  if(selected.canceled||!selected.filePaths.length)return null;
+  const {importDeepSeekChats}=await import('./chat-import.mjs');
+  const result=await importDeepSeekChats(selected.filePaths[0]);
+  await saveTail;
+  const {workspace,project}=resolveProjectContext(workspaceContext,options);
+  const chats=result.chats.map(chat=>({...chat,workspaceId:workspace.id,projectId:project?.id||null,mode:workspace.type,importedFrom:'deepseek'}));
+  if(workspaceContext.settings.persist&&JSON.stringify({...workspaceContext,chats:[...workspaceContext.chats,...chats]}).length>12*1024*1024)throw new Error('导入后本地工作空间会超过 12 MB。请先整理已有资料或拆分导出文件。');
+  return {...result,chats};
+ });
+ handle('data:save',async state=>{
+  if(![1,2].includes(state?.version)||!Array.isArray(state.projects)||!Array.isArray(state.chats)||!Array.isArray(state.automations))throw new Error('本地工作空间格式不正确。');
+  const body=JSON.stringify(state);if(body.length>12*1024*1024)throw new Error('本地工作空间超过 12 MB，请先导出并归档旧资料。');
+  const result=saveTail.then(async()=>{if(!state.settings?.persist&&manager.runs.size)throw new Error('请先停止正在运行的任务，再关闭本地保存。');await writeEncrypted(WORKSPACE_FILE,body);workspaceContext=JSON.parse(body);if(!workspaceContext.settings?.persist){await automations.clearSavedData();await manager.clearSavedHistory();for(const file of await fs.readdir(VAULTS)){if(/^[\w-]+\.bin$/.test(file)&&!manager.busy.has(file.slice(0,-4)))await fs.unlink(path.join(VAULTS,file));}}});saveTail=result.catch(()=>{});await result;void automations.tick().catch(()=>{});return true;
+ });
+ handle('agent:prepare',async options=>{
+  await saveTail;
+  const config=route(options);
+  const prompt=options?.bootstrapPrompt||options?.prompt;
+  if(typeof prompt==='string'&&providers.some(({key})=>key.length>=12&&prompt.includes(key)))throw new Error('检测到已配置的模型凭证，请从输入中移除。');
+  return manager.preview(options,{...config,manualControls:true});
+ });
+ handle('agent:run-prepared',options=>manager.runPrepared(options,currentCredential));
+ handle('agent:cancel',async({runId})=>manager.cancel(runId));
+ handle('agent:control-execution',value=>manager.controlExecution(value));
+ handle('agent:answer-question',value=>manager.answerQuestion(value));
+ handle('automation:list',()=>automations.snapshot());
+ handle('automation:preview-timing',value=>automations.previewTiming(value));
+ handle('automation:save',async value=>{await saveTail;return automations.save(value);});
+ handle('automation:prepare',async({id,action})=>{await saveTail;return automations.prepare(id,action);});
+ handle('automation:confirm',async({approvalId})=>{await saveTail;return automations.confirm(approvalId);});
+ handle('automation:toggle',async({id,enabled})=>{await saveTail;return automations.toggle(id,enabled);});
+ handle('automation:remove',({id})=>automations.remove(id));
+ handle('automation:remind',({id})=>automations.runReminder(id));
+ handle('automation:cancel',({id})=>automations.cancel(id));
+ handle('agent:forget',async({sessionId})=>{
+  if(typeof sessionId!=='string'||!SAFE_ID.test(sessionId))throw new Error('会话编号无效。');
+  if(manager.busy.has(sessionId))throw new Error('请先等待会话停止。');
+  const parent=path.join(ROOT,'harness'),target=path.resolve(parent,sessionId);
+  if(path.dirname(target)!==parent)throw new Error('会话目录不在应用工作区内。');
+  const stat=await fs.lstat(target).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
+  if(stat){if(stat.isSymbolicLink()||path.dirname(await fs.realpath(target))!==path.join(await fs.realpath(ROOT),'harness'))throw new Error('会话目录不在应用工作区内。');await fs.rm(target,{recursive:true,force:true});}
+  await fs.unlink(path.join(VAULTS,`${sessionId}.bin`)).catch(e=>{if(e.code!=='ENOENT')throw e;});
+  return true;
+ });
+ handle('files:parse',async({name,bytes})=>{
+  if(typeof name!=='string'||!ArrayBuffer.isView(bytes)||bytes.byteLength>10*1024*1024)throw new Error('文件超过 10 MB 或参数无效。');
+  const {parseLocalMaterial}=await import('./office-files.mjs');return parseLocalMaterial(name,Buffer.from(bytes));
+ });
+ handle('space:choose-folder',async()=>{
+  const chosen=await dialog.showOpenDialog(windowRef,{title:'选择工作空间目录',properties:['openDirectory']});
+  if(chosen.canceled)return null;
+  return fs.realpath(chosen.filePaths[0]);
+ });
+ handle('files:pick',async(directory)=>{
+  let defaultPath;
+  if(typeof directory==='string'&&path.isAbsolute(directory)){
+   const stat=await fs.stat(directory).catch(()=>null);
+   if(stat?.isDirectory())defaultPath=directory;
+  }
+  const result=await dialog.showOpenDialog(windowRef,{title:'添加工作资料',defaultPath,properties:['openFile','multiSelections'],filters:[{name:'办公文档、文本和图片',extensions:['txt','md','csv','tsv','json','docx','xlsx','pptx','pdf','png','jpg','jpeg','bmp','tif','tiff']}]});
+  if(result.canceled)return [];
+  const {parseLocalMaterial}=await import('./office-files.mjs');
+  const files=[];
+  for(const filePath of result.filePaths.slice(0,12)){
+   const name=path.basename(filePath),id=randomUUID();let size=0;
+   try{const stat=await fs.stat(filePath);size=stat.size;if(!stat.isFile()||size>10*1024*1024)throw new Error('请选用不超过 10 MB 的文件。');
+   files.push({...await parseLocalMaterial(name,await fs.readFile(filePath)),id});}
+   catch(error){files.push({id,name,size,status:'error',reason:error.message,text:''});}
+  }
+  return files;
+ });
+ handle('file:export',async({name,text,format='txt',directory})=>{
+  if(typeof text!=='string'||text.length>2000000||!['txt','docx','xlsx'].includes(format))throw new Error('导出参数无效。');
+  const filename=`${path.basename(String(name||'知行成果')).replace(/[<>:"/\\|?*]/g,'_').slice(0,90)}.${format}`;
+  const folder=typeof directory==='string'&&path.isAbsolute(directory)&&(await fs.stat(directory).catch(()=>null))?.isDirectory()?directory:undefined;
+  const result=await dialog.showSaveDialog(windowRef,{defaultPath:folder?path.join(folder,filename):filename,filters:[{name:format.toUpperCase(),extensions:[format]}]});
+  if(result.canceled)return {cancelled:true};
+  const {exportOfficeFile}=await import('./office-files.mjs');await fs.writeFile(result.filePath,await exportOfficeFile(text,format));return {cancelled:false,path:result.filePath};
+ });
+ handle('app:window-control',action=>{if(action==='minimize')windowRef.minimize();else if(action==='maximize')windowRef.isMaximized()?windowRef.unmaximize():windowRef.maximize();else if(action==='close')windowRef.close();return true;});
+ handle('schedule:notify',payload=>{notifyTask(payload);return true;});
+}
+async function createWindow(){
+ const appIcon=path.join(__dirname,'..','dist','client','brand','zhixing.ico');
+ windowRef=new BrowserWindow({width:1255,height:912,minWidth:850,minHeight:600,show:false,frame:false,backgroundColor:'#f0f3f9',title:'知行 · AI 办公助手',icon:appIcon,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
+ if (process.platform === 'win32') {
+  windowRef.setAppDetails({
+   appId: APP_ID,
+   appIconPath: app.isPackaged ? process.execPath : appIcon,
+   appIconIndex: 0,
+   relaunchCommand: app.isPackaged ? `"${process.execPath}"` : `"${process.execPath}" "${path.join(__dirname,'main.cjs')}"`,
+   relaunchDisplayName: '知行 · AI 办公助手',
+  });
+ }
+ windowRef.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+ windowRef.webContents.on('will-navigate',(event,url)=>{if(url!=='zhixing://app/index.html')event.preventDefault();});
+ await windowRef.loadURL('zhixing://app/index.html');
+ windowRef.show();
+}
+if(!firstInstance)app.quit();
+else app.whenReady().then(async()=>{
+ protocol.handle('zhixing',request=>{
+  const url=new URL(request.url);if(url.hostname!=='app')return new Response('Not found',{status:404});
+  const root=path.join(__dirname,'..','dist','client'),file=path.resolve(root,`.${decodeURIComponent(url.pathname)}`);
+  if(!file.startsWith(root+path.sep))return new Response('Forbidden',{status:403});return net.fetch(pathToFileURL(file).href);
+ });
+ session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
+ session.defaultSession.webRequest.onHeadersReceived((details,callback)=>callback({responseHeaders:{...details.responseHeaders,'Content-Security-Policy':["default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"]}}));
+ await initialise();registerHandlers();await createWindow();automations.start();
+ app.on('activate',()=>{if(BrowserWindow.getAllWindows().length===0)createWindow();});
+}).catch(e=>{dialog.showErrorBox('知行启动失败',e.message);app.quit();});
+app.on('before-quit',event=>{if(quitting)return;event.preventDefault();quitting=true;const pendingWorktree=worktreeOperation;pendingWorktree?.controller.abort();(async()=>{await browserService?.close();await automations?.close();await Promise.allSettled([manager?.close(),terminalService?.close(),speechService?.close(),pluginService?.close(),pendingWorktree?.job,saveTail]);})().finally(()=>app.quit());});
+app.on('window-all-closed',()=>{if(process.platform!=='darwin')app.quit();});
+app.on('second-instance',()=>{if(windowRef?.isMinimized())windowRef.restore();windowRef?.show();windowRef?.focus();});

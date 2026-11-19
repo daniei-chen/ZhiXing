@@ -1,0 +1,85 @@
+.app-shell { --side-width: 308px; --rail-width: 52px; }
+.sidebar { display: grid; grid-template-columns: var(--rail-width) minmax(0, 1fr); padding: 0; border: 0; background: transparent; }
+.app-rail { display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: var(--rail-width); padding: 10px 6px 8px; background: var(--base); }
+.app-rail > div { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.app-rail button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: var(--muted); }
+.app-rail button:hover, .app-rail button[aria-current="page"] { color: var(--text); background: var(--selected); }
+.brand-rail { width: 25px; height: 25px; }
+.sidebar-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--sidebar); padding: 8px 8px 12px; border: 1px solid var(--line); border-right: 0; border-bottom: 0; border-radius: 15px 0 0 0; }
+.workspace-anchor { display: flex; align-items: center; justify-content: space-between; flex: none; min-height: 40px; }
+.mode-trigger { min-height: 36px; padding: 3px 8px; }
+.mode-trigger strong { font-size: 18px; }
+.sidebar-heading-actions { display: flex; align-items: center; }
+.sidebar-heading-actions .icon-button { width: 29px; height: 29px; }
+.sidebar-heading-actions svg { width: 15px; height: 15px; }
+.workspace-nav { margin: 6px 0 12px; gap: 2px; }
+.workspace-nav > button { min-height: 32px; padding: 5px 8px; font-size: 14px; font-weight: 400; }
+.chat-navigation {grid-template-columns:minmax(0,1fr) auto}
+.workspace-nav>.import-chat {width:32px;height:32px;padding:0;justify-content:center}
+.sidebar .section-label { margin-top: 14px; padding-left: 8px; }
+.sidebar .project-row { min-height: 32px; }
+.sidebar .project-name { padding-left: 2px; }
+.sidebar .project-name svg { width: 16px; }
+.sidebar .chat-row { min-height: 31px; }
+.sidebar-empty { color: var(--quiet); }
+.utility-sidebar-heading { display: flex; justify-content: space-between; align-items: center; min-height: 40px; padding: 0 7px; }
+.utility-sidebar-heading h2 { font-size: 18px; font-weight: 600; }
+.utility-sidebar-heading .icon-button { width: 27px; height: 27px; }
+.sidebar-resource-link { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 33px; text-align: left; border-radius: 8px; padding: 5px 8px; font-size: 13px; }
+.sidebar-resource-link:hover { background: var(--hover); }
+.sidebar-resource-link > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.main-panel { border-radius: 0 15px 15px 0; border-left: 1px solid var(--line); }
+.sidebar-hidden .main-panel { border-radius: 15px; }
+.settings-shell > .app-rail { position: absolute; left: 0; top: 42px; bottom: 0; }
+.settings-page { margin-left: var(--rail-width); grid-template-columns: calc(var(--side-width) - var(--rail-width)) minmax(0, 1fr); }
+.settings-nav { border-radius: 15px 0 0 0; padding: 8px; }
+.settings-content { border-radius: 0 15px 0 0; padding-top: 29px; }
+.settings-page-heading > .icon-button { width: 25px; height: 30px; }
+.settings-nav-items button { font-size: 14px; min-height: 31px; gap: 8px; }
+.settings-nav-items button svg { width: 16px; height: 16px; }
+.tasks-empty .utility-inner { width: min(738px, calc(100% - 56px)); }
+.schedule-welcome { text-align: center; padding: 30px 0 24px; }
+.schedule-welcome > svg { color: var(--muted); }
+.schedule-welcome h2 { font-size: 19px; font-weight: 550; margin: 7px 0 2px; }
+.schedule-welcome p { color: var(--muted); font-size: 14px; }
+.tasks-empty .task-templates h2 { display: none; }
+.tasks-empty .task-templates { margin-top: 26px; }
+.tasks-empty .utility-cards { gap: 20px; }
+.tasks-empty .utility-cards button { min-height: 108px; border-style: dashed; border-radius: 24px; padding: 20px; gap: 16px; }
+.tasks-empty .utility-cards button strong { font-size: 15px; font-weight: 550; }
+.tasks-empty .utility-cards button small { font-size: 13px; margin-top: 3px; }
+.connections-page { padding-top: 12px; }
+.attachment-menu { left: 0; right: 0; bottom: calc(100% + 4px); max-height: min(330px, 54dvh); }
+.command-palette { left: 14px; right: 14px; bottom: calc(100% + 5px); max-height: min(390px, 54dvh); overflow: auto; border-radius: 17px; }
+.command-palette > button { display: flex; align-items: center; gap: 11px; width: 100%; min-height: 49px; padding: 7px 10px; border-radius: 10px; text-align: left; }
+.command-palette > button:hover, .command-palette > button[aria-selected="true"] { background: var(--hover); }
+.command-palette > button > span { display: block; }
+.command-palette strong { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; }
+.command-palette small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; }
+@media (max-width: 1100px) {
+  .app-shell { --side-width: 282px; }
+  .connections-heading { flex-wrap: wrap; }
+  .connections-search input { width: 130px; }
+  .connections-empty { flex-wrap: wrap; }
+  .connections-empty > div { min-width: 150px; }
+  .connection-grid { column-gap: 14px; }
+}
+@media (max-width: 700px) {
+  .app-shell { --side-width: 282px; }
+  .sidebar { width: min(308px, 90vw); grid-template-columns: var(--rail-width) minmax(0, 1fr); }
+  .main-panel { border-radius: 15px; }
+  .settings-shell > .app-rail { display: none; }
+  .settings-page { margin-left: 0; grid-template-columns: minmax(0, 1fr); }
+  .settings-content { border-radius: 0; }
+  .connection-grid { grid-template-columns: minmax(0, 1fr); }
+  .connections-heading > div:last-child { width: 100%; }
+  .connections-search { flex: 1; min-width: 0; }
+  .connections-search input { width: 100%; }
+  .attachment-action small { display: none; }
+  .theme-choices button { width: 65px; }
+  .composer-tools { gap: 2px; }
+}
+@media (max-width: 420px) {
+  .permission-trigger > span { display: none; }
+  .connections-empty .secondary-button { width: 100%; }
+}
