@@ -3,38 +3,50 @@ import { PROVIDER_PRESETS } from '../src/provider-options.js';
 import { builtinModels, fetchModels, MODEL_ID } from './model-catalog.mjs';
 
 const presetById = new Map(PROVIDER_PRESETS.map(preset => [preset.id, preset]));
-const none = { levels: ['off'] };
 const toggle = { off: null, high: 'high' };
 const full = { off: null, low: 'low', high: 'high', max: 'max' };
-const wire = (map, compat) => ({ levels: Object.keys(map), map, compat });
+const wire = (map, compat) => ({ capability: 'known', levels: Object.keys(map), map, compat });
+const unknownEffort = () => ({ capability: 'unknown', levels: [], map: null, compat: undefined });
+
+export class ProviderSelectionError extends Error {
+  constructor(code, reason, requested) {
+    super(reason);
+    this.name = 'ProviderSelectionError';
+    this.code = code;
+    this.reason = reason;
+    this.requested = requested;
+  }
+}
 
 export function modelReasoning(provider, model) {
+  const modelId = typeof model === 'string' ? model : model?.id;
+  if (!provider || typeof modelId !== 'string' || !modelId) return unknownEffort();
   if (provider.protocol === 'deepseek') return wire(full);
   const preset = provider.preset;
-  if (preset === 'zhipu' && /^glm-(?:4\.[567]|5)/i.test(model)) {
+  if (preset === 'zhipu' && /^glm-(?:4\.[567]|5)/i.test(modelId)) {
     return wire({ ...toggle, off: 'none' }, { thinkingFormat: 'zai', supportsReasoningEffort: false });
   }
-  if (preset === 'kimi' && /^kimi-k2\.[56]/i.test(model)) {
+  if (preset === 'kimi' && /^kimi-k2\.[56]/i.test(modelId)) {
     return wire({ ...toggle, off: 'none' }, { thinkingFormat: 'deepseek', supportsReasoningEffort: false });
   }
-  if (preset === 'qwen' && /^(?:qwen3\.|qwen3-|qwen-(?:max|plus|flash))/i.test(model)) {
+  if (preset === 'qwen' && /^(?:qwen3\.|qwen3-|qwen-(?:max|plus|flash))/i.test(modelId)) {
     return wire({ ...toggle, off: 'none' }, { thinkingFormat: 'qwen', supportsReasoningEffort: false });
   }
-  if (preset === 'openai' && /^gpt-5(?:$|[.\-])/.test(model) && !/audio|image|codex|chat-latest|pro(?:-|$)/i.test(model)) {
-    const map = /^gpt-5(?:-|$)/.test(model) ? { off: 'minimal', low: 'low', high: 'high' } : { ...full, off: 'none', max: 'xhigh' };
+  if (preset === 'openai' && /^gpt-5(?:$|[.\-])/.test(modelId) && !/audio|image|codex|chat-latest|pro(?:-|$)/i.test(modelId)) {
+    const map = /^gpt-5(?:-|$)/.test(modelId) ? { off: 'minimal', low: 'low', high: 'high' } : { ...full, off: 'none', max: 'xhigh' };
     return wire(map, { supportsReasoningEffort: true });
   }
-  if (preset === 'openai' && /^o[134](?:-|$)/.test(model)) return wire({ low: 'low', high: 'high' }, { supportsReasoningEffort: true });
-  if (preset === 'anthropic' && /^claude-(?:opus|sonnet)-(?:4-[6-9]|[5-9])/.test(model)) {
+  if (preset === 'openai' && /^o[134](?:-|$)/.test(modelId)) return wire({ low: 'low', high: 'high' }, { supportsReasoningEffort: true });
+  if (preset === 'anthropic' && /^claude-(?:opus|sonnet)-(?:4-[6-9]|[5-9])/.test(modelId)) {
     return wire(full, { forceAdaptiveThinking: true });
   }
-  if (preset === 'anthropic' && /^claude-(?:opus|sonnet|haiku)-4/.test(model)) return wire(full);
-  if (preset === 'openrouter' && /deepseek\/.*(?:r1|v[34])|openai\/(?:o[134]|gpt-5)|anthropic\/claude-4/.test(model)) {
+  if (preset === 'anthropic' && /^claude-(?:opus|sonnet|haiku)-4/.test(modelId)) return wire(full);
+  if (preset === 'openrouter' && /deepseek\/.*(?:r1|v[34])|openai\/(?:o[134]|gpt-5)|anthropic\/claude-4/.test(modelId)) {
     return wire({ ...full, off: 'none', max: 'xhigh' }, { thinkingFormat: 'openrouter' });
   }
   if (!preset && provider.reasoningStyle === 'standard') return wire({ ...full, off: 'none', max: 'xhigh' }, provider.protocol === 'openai' ? { supportsReasoningEffort: true } : undefined);
   if (!preset && provider.reasoningStyle === 'deepseek' && provider.protocol === 'openai') return wire({ ...full, off: 'none' }, { thinkingFormat: 'deepseek', supportsReasoningEffort: true });
-  return none;
+  return unknownEffort();
 }
 
 export function normalizeEndpoint(value, protocol) {
@@ -65,22 +77,41 @@ export function publicProviders(providers) {
 export function providerModels(providers) {
   return providers.flatMap(provider => provider.models.map(model => ({
     ...model, providerId: provider.id, providerName: provider.name,
-    levels: modelReasoning(provider, model.id).levels,
+    levels: modelReasoning(provider, model).levels,
+    reasoningCapability: modelReasoning(provider, model).capability,
   })));
 }
 
 export function resolveProvider(providers, selection = {}) {
-  const { modelProviderId, model, reasoning } = selection;
-  const provider = modelProviderId ? providers.find(row => row.id === modelProviderId)
-    : providers.find(row => row.id === 'deepseek') || providers[0];
-  if (!provider) throw new Error('请在设置的「供应商」中配置模型，或重新选择可用模型。');
-  const selected = provider.models.find(row => row.id === model) || provider.models.find(row => row.id === provider.model) || provider.models[0];
-  const effort = modelReasoning(provider, selected.id);
+  const hasProviderId = Object.hasOwn(selection, 'providerId');
+  const hasModelId = Object.hasOwn(selection, 'modelId');
+  const providerId = hasProviderId ? selection.providerId : selection.modelProviderId;
+  const modelId = hasModelId ? selection.modelId : selection.model;
+  const providerWasExplicit = typeof providerId === 'string' && providerId.length > 0;
+  const requestedReasoning = selection.requestedReasoning ?? selection.reasoning;
+  const requested = { providerId, modelId, reasoning: requestedReasoning };
+  let provider = providers.find(row => row.id === providerId);
+  if (!providerWasExplicit && modelId) {
+    const matches = providers.filter(row => row.models.some(candidate => candidate.id === modelId));
+    if (matches.length > 1) throw new ProviderSelectionError('PROVIDER_SELECTION_AMBIGUOUS', '此模型名称对应多个供应商，请明确选择供应商。', requested);
+    provider = matches[0];
+  }
+  if (!provider) throw new ProviderSelectionError('PROVIDER_UNAVAILABLE', '所选供应商不可用，请重新选择供应商。', requested);
+  const selected = provider.models.find(row => row.id === modelId);
+  if (!modelId || !selected) throw new ProviderSelectionError('MODEL_UNAVAILABLE', '所选模型不可用，请在该供应商下重新选择模型。', requested);
+  const effort = modelReasoning(provider, selected);
+  if (effort.capability === 'unknown') {
+    throw new ProviderSelectionError('REASONING_CAPABILITY_UNKNOWN', '当前模型的思考强度能力未确认，已阻止发送。请重新选择已确认的模型。', requested);
+  }
+  if (typeof requestedReasoning !== 'string' || !effort.levels.includes(requestedReasoning)) {
+    throw new ProviderSelectionError('REASONING_EFFORT_UNAVAILABLE', `当前模型不可用所选思考强度「${requestedReasoning ?? '未选择'}」，已阻止发送。请重新选择思考强度或模型。`, requested);
+  }
   const compatibleChat = provider.protocol === 'openai' && provider.preset !== 'openai';
   return {
-    providerId: provider.id, protocol: provider.protocol, baseUrl: provider.baseUrl,
-    model: selected.id, reasoning: effort.levels.includes(reasoning) ? reasoning : effort.levels.includes('high') ? 'high' : effort.levels[0],
-    reasoningMap: effort.map || false,
+    providerId: provider.id, modelId: selected.id, protocol: provider.protocol, baseUrl: provider.baseUrl,
+    model: selected.id, requestedReasoning, effectiveReasoning: requestedReasoning,
+    wireReasoning: effort.map[requestedReasoning], reasoning: requestedReasoning,
+    reasoningCapability: effort.capability, reasoningMap: effort.map,
     compat: compatibleChat ? {
       supportsStore: false, supportsDeveloperRole: false, supportsStrictMode: false,
       maxTokensField: 'max_tokens', supportsUsageInStreaming: false, ...effort.compat,

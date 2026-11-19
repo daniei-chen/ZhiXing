@@ -11,8 +11,12 @@ export const PROVIDER_PRESETS = [
 
 export function selectedModel(runtime, settings) {
   const models = runtime.models || [];
-  return models.find(row => row.providerId === settings.modelProviderId && row.id === settings.model)
-    || models.find(row => row.providerId === settings.modelProviderId)
-    || models.find(row => row.providerId === 'deepseek' && row.id === settings.model)
-    || models[0];
+  if (Object.hasOwn(settings, 'modelProviderId') && settings.modelProviderId != null && settings.modelProviderId !== '') {
+    return models.find(row => row.providerId === settings.modelProviderId && row.id === settings.model);
+  }
+  const providerId = settings.modelProviderId;
+  const modelId = settings.model;
+  if (typeof modelId !== 'string' || !modelId) return undefined;
+  const matches = models.filter(row => row.id === modelId);
+  return matches.length === 1 ? matches[0] : undefined;
 }
