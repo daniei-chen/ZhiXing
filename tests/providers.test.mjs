@@ -28,6 +28,12 @@ test('同名模型按供应商和凭据区分，换地址不能沿用原密钥',
 });
 
 test('显式失效供应商与型号、未知能力和不支持档位均阻止解析',async()=>{
+  assert.equal(typeof resolveProvider,'function');
+  assert.equal(typeof ProviderSelectionError,'function');
+  assert.equal(typeof modelReasoning,'function');
+  assert.equal(typeof publicProviders,'function');
+  const { providerModels } = await load('providers.mjs');
+  assert.equal(typeof providerModels,'function');
   const provider=await saveProvider({name:'严格选择',apiKey:'fixture-strict-key',baseUrl:'https://strict.example/v1',protocol:'openai',reasoningStyle:'deepseek',manualModels:'known-model'},[]);
   assert.throws(()=>resolveProvider([provider],{providerId:'removed-provider',modelId:'known-model',reasoning:'high'}),error=>Boolean(error instanceof ProviderSelectionError&&error.code==='PROVIDER_UNAVAILABLE'&&error.reason));
   assert.throws(()=>resolveProvider([provider],{providerId:provider.id,modelId:'removed-model',reasoning:'high'}),error=>error.code==='MODEL_UNAVAILABLE'&&error.requested.modelId==='removed-model');

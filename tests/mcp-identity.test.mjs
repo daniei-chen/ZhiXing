@@ -2,14 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mcpServerIdentity, publicMcpServers, updateMcpServer, validateMcpServers } from '../electron/mcp-config.mjs';
 
-test('HTTP MCP 身份规范化并绑定 scheme、host、port、path 和 query',()=>{
- const canonical={serverName:'files',transport:'streamable-http',url:'HTTPS://Example.COM:443/mcp/?b=2&a=1'};
- const reordered={...canonical,url:'https://example.com/mcp?a=1&b=2'};
+test('HTTP MCP 身份规范化并绑定 scheme、host、port 和 path',()=>{
+ const canonical={serverName:'files',transport:'streamable-http',url:'HTTPS://Example.COM:443/mcp/'};
+ const reordered={...canonical,url:'https://example.com/mcp'};
  assert.equal(mcpServerIdentity(canonical),mcpServerIdentity(reordered));
- for(const url of ['https://other.example/mcp?a=1&b=2','https://example.com/other?a=1&b=2','https://example.com:8443/mcp?a=1&b=2','http://example.com/mcp?a=1&b=2','https://example.com/mcp?a=2&b=2']){
+ for(const url of ['https://other.example/mcp','https://example.com/other','https://example.com:8443/mcp','http://example.com/mcp']){
   assert.notEqual(mcpServerIdentity(canonical),mcpServerIdentity({...canonical,url}),url);
  }
  assert.throws(()=>mcpServerIdentity({...canonical,url:'https://user:pass@example.com/mcp'}),/凭据/);
+ assert.throws(()=>mcpServerIdentity({...canonical,url:'https://example.com/mcp?token=fixture-secret'}),/凭据/);
+});
+
+test('公开 MCP helper 导出固定摘要身份，且身份不受凭据值影响',()=>{
+ assert.equal(typeof mcpServerIdentity,'function');
+ assert.equal(typeof updateMcpServer,'function');
+ const server={serverName:'files',transport:'streamable-http',url:'https://mcp.example/api',headers:{Authorization:'fixture-secret-one'}};
+ const changedSecret={...server,headers:{Authorization:'fixture-secret-two'}};
+ const identity=mcpServerIdentity(server);
+ assert.match(identity,/^[a-f0-9]{64}$/);
+ assert.equal(mcpServerIdentity(changedSecret),identity);
+ assert(!identity.includes('fixture-secret'));
 });
 
 test('stdio MCP 身份绑定 transport、command、args 与 cwd',()=>{

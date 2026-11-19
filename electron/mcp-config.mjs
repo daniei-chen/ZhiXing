@@ -9,11 +9,10 @@ export function mcpServerIdentity(server){
  let identity;
  if(server?.transport==='streamable-http'){
   let url;try{url=new URL(server.url);}catch{throw new Error('MCP 服务地址无效，无法确认凭据目标。');}
-  if(url.username||url.password||url.hash)throw new Error('MCP 服务地址包含凭据或非规范参数，无法确认凭据目标。');
+  if(url.username||url.password||url.search||url.hash)throw new Error('MCP 服务地址包含凭据或非规范参数，无法确认凭据目标。');
   url.pathname=url.pathname.replace(/\/+$/,'')||'/';
   url.searchParams.sort();
-  url.searchParams.sort();
-  identity=['streamable-http',url.protocol.toLowerCase(),url.hostname.toLowerCase(),url.port,url.pathname,url.search];
+  identity=['streamable-http',url.protocol.toLowerCase(),url.hostname.toLowerCase(),url.port,url.pathname];
  }else if(server?.transport==='stdio'){
   const cwd=path.resolve(server.cwd||process.cwd());
   const command=String(server.command||'').trim().replaceAll('\\','/');
