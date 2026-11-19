@@ -24,3 +24,34 @@ export function needsApproval(mode, { inside, write, exists }) {
   if (!inside) return true;
   return write && (mode !== 'auto' || exists);
 }
+
+export async function writeOfficeFile(requestedPath, content) {
+  let handle;
+  try {
+    handle = await fs.open(requestedPath, 'wx', 0o600);
+    await handle.writeFile(content);
+  } catch (error) {
+    await handle?.close().catch(() => {});
+    if (handle) await fs.unlink(requestedPath).catch(() => {});
+    if (error.code === 'EEXIST') throw new Error('FILE_CHANGED: 保存位置已被占用，请重新审批新的文件名。');
+    throw error;
+  }
+  await handle.close();
+  return requestedPath;
+}
+
+export async function nextOfficePath(requestedPath) {
+  const directory = path.dirname(requestedPath);
+  const extension = path.extname(requestedPath);
+  const stem = path.basename(requestedPath, extension);
+  for (let version = 1; version <= 10000; version++) {
+    const suffix = version === 1 ? '' : ` (${version})`;
+    const target = path.join(directory, `${stem}${suffix}${extension}`);
+    try { await fs.lstat(target); }
+    catch (error) {
+      if (error.code === 'ENOENT') return target;
+      throw error;
+    }
+  }
+  throw new Error('可用的文件名过多，请指定其他保存路径。');
+}

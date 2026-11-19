@@ -4,6 +4,10 @@ import ExcelJS from 'exceljs';
 import {calculate,checkTable} from '../harness/office-tools.mjs';
 import {parseOfficeFile,exportOfficeFile} from '../electron/office-files.mjs';
 import {nextOccurrence} from '../src/scheduler.js';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {nextOfficePath,writeOfficeFile} from '../harness/file-policy.mjs';
 test('办公计算与重复缺失检查',()=>{
  assert.equal(calculate([1,2,3],'sum').value,6);assert.equal(calculate([2,4],'average').value,3);assert.throws(()=>calculate([Infinity],'sum'));
  const r=checkTable([['姓名','金额'],['甲',1],['甲',1],['乙',null]]);assert.equal(r.duplicateRows[0].row,3);assert.equal(r.missingCells[0].row,4);
@@ -21,4 +25,15 @@ test('月末与每周调度按本机日历计算',()=>{
  const anchor=new Date(2026,0,31,10),task={frequency:'每月',time:'09:00',anchorDate:anchor.toISOString()};
  const next=new Date(nextOccurrence(task,+anchor));assert.equal(next.getMonth(),1);assert.equal(next.getDate(),28);
  const week=new Date(nextOccurrence({...task,frequency:'每周'},+anchor));assert.equal(week.getDay(),anchor.getDay());assert(+week>+anchor);
+});
+test('文件冲突安全生成实际新路径并保留原件',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'zhixing-file-collision-')),requested=path.join(root,'成果.txt');
+ try{
+  await fs.writeFile(requested,'用户原有内容');
+  const target=await nextOfficePath(requested);assert.equal(target,path.join(root,'成果 (2).txt'));
+  const written=await writeOfficeFile(target,Buffer.from('新成果'));
+  assert.equal(written,target);assert.equal(await fs.readFile(requested,'utf8'),'用户原有内容');assert.equal(await fs.readFile(written,'utf8'),'新成果');
+  await assert.rejects(writeOfficeFile(requested,Buffer.from('覆盖尝试')),/FILE_CHANGED/);
+  assert.equal(await fs.readFile(requested,'utf8'),'用户原有内容');
+ }finally{await fs.rm(root,{recursive:true,force:true});}
 });

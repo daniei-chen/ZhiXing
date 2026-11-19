@@ -111,8 +111,24 @@ export async function makeHarness(directory,configuration,apiKey){
  });
  return harness;
 }
+function closeHarness(active,harness){
+ if(!active.closePromise)active.closePromise=Promise.resolve().then(()=>harness?.close());
+ return active.closePromise;
+}
+
+export async function waitForStoppedJobs(jobs,timeoutMs,onTimeout){
+ const stopping=[...jobs.values()].filter(job=>job.stopRequested&&!job.settled);
+ if(!stopping.length)return;
+ let timer;
+ const timeout=new Promise(resolve=>{timer=setTimeout(resolve,timeoutMs);});
+ const completed=await Promise.race([Promise.all(stopping.map(job=>job.settledPromise)).then(()=>true),timeout.then(()=>false)]);
+ clearTimeout(timer);
+ if(!completed)for(const job of stopping)if(!job.settled)onTimeout(job);
+ return completed?[]:stopping.filter(job=>!job.settled);
+}
+
 export class RuntimeManager{
- constructor({root,readVault,writeVault,onEvent,onApproval}){this.root=root;this.readVault=readVault;this.writeVault=writeVault;this.onEvent=onEvent;this.onApproval=onApproval;this.runs=new Map();this.busy=new Set();this.prepared=new Map();this.cancelled=new Map();this.questions=new Map();this.volatileVaults=new Map();}
+ constructor({root,readVault,writeVault,onEvent,onApproval,createHarness=makeHarness,createGateway=startPrivacyGateway}){this.root=root;this.readVault=readVault;this.writeVault=writeVault;this.onEvent=onEvent;this.onApproval=onApproval;this.createHarness=createHarness;this.createGateway=createGateway;this.runs=new Map();this.runSettlements=new Map();this.busy=new Set();this.prepared=new Map();this.cancelled=new Map();this.questions=new Map();this.volatileVaults=new Map();}
  answerQuestion({requestId,answers,cancelled=false}){
   const entry=this.questions.get(requestId);if(!entry)throw new Error('问题已结束或任务已停止。');
   if(cancelled){entry.finish({cancelled:true});return true;}
@@ -130,7 +146,7 @@ export class RuntimeManager{
  }
  async check(config,key){
   const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h;
-  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);h=await makeHarness(directory,{...config,bridgeKey,mcpFile},key);await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await h.close();return {tools:report.tools||[],skills:report.skills||[]};}
+  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);h=await this.createHarness(directory,{...config,bridgeKey,mcpFile},key);await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await h.close();return {tools:report.tools||[],skills:report.skills||[]};}
   finally{try{if(h)await h.close();}finally{await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});}}
  }
  async prepare(options,config){
@@ -168,6 +184,12 @@ export class RuntimeManager{
   if(!config||['baseUrl','credentialRevision','providerId','protocol'].some(field=>p.config[field]!==config[field]))throw new Error('供应商连接已更新，请重新预览。');
   return this.run({...p.options,runId},p.config,key,p);
  }
+ async waitForRun(runId){
+  if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');
+  const settled=this.runSettlements.get(runId);
+  if(!settled)throw new Error('任务不存在。');
+  return settled;
+ }
  async run(options,config,key,prepared=null){
   const {runId,sessionId,customTerms=[]}=options;
   if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');
@@ -176,7 +198,7 @@ export class RuntimeManager{
   if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
   if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error('该会话正在执行，请先停止当前任务。');
   for(const [id,p] of this.prepared)if(p.options.sessionId===sessionId)this.prepared.delete(id);
-  this.busy.add(sessionId);let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,persistKey,persistBridgeKey;const active={cancelled:false,h:null,controller:new AbortController()};this.runs.set(runId,active);
+  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,persistKey,persistBridgeKey;const active={cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128)this.runSettlements.delete(this.runSettlements.keys().next().value);this.runSettlements.set(runId,active.settled);this.runs.set(runId,active);
   const connection={endpoint:config.baseUrl,providerId:config.providerId,protocol:config.protocol};
   try{
    let {vault,input,privacyMode,historyKey,resume}=prepared||await this.prepare(options,config);
@@ -191,13 +213,13 @@ export class RuntimeManager{
    const kernel=normaliseKernel(config.kernel);
    if(config.browserScope&&this.browserAction&&config.allowNetwork!==false&&kernel.webEnabled)toolBridge=await startToolBridge({invoke:(input,signal)=>this.browserAction(config.browserScope,input,signal),signal:active.controller.signal});
    if(config.automationScope&&this.automationAction)automationBridge=await startToolBridge({route:'/automation',invoke:(input,signal)=>this.automationAction(config.automationScope,input,signal),signal:active.controller.signal});
-   gateway=await startPrivacyGateway({...config,apiKey:key,privacyMode,customTerms,bridgeFile,bridgeKey});
+   gateway=await this.createGateway({...config,apiKey:key,privacyMode,customTerms,bridgeFile,bridgeKey});
    const transcripts=new Map();
    if(config.manualControls)active.controls={file:path.join(directory,`control-${runId}.bin`),key:createBridgeKey(),sessionId,targets:new Map(),transcripts,bridgeFile,bridgeKey,privacyMode,customTerms,privacyPolicy:config.privacyPolicy,providerKey:key};
-   h=await makeHarness(directory,{...config,controls:active.controls,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
+   h=await this.createHarness(directory,{...config,controls:active.controls,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
    if(active.cancelled)throw new Error('任务已停止。');
-   const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void h.close().catch(()=>{});},kernel.taskTimeoutSeconds*1000);
-   let result;let plan=[];const children=new Map(),deliverables=[],calls=new Map();
+   const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void closeHarness(active,h).catch(()=>{});},kernel.taskTimeoutSeconds*1000);
+   let result;let plan=[];const children=new Map(),deliverables=[],calls=new Map(),jobs=new Map();active.jobs=jobs;
    let nextStats=0;
    const emitStats=()=>{
     if(Date.now()<nextStats)return;
@@ -210,7 +232,7 @@ export class RuntimeManager{
     }).catch(()=>{});
    };
    try{
-    await h.start();
+    await h.start();active.status='running';
     await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);
     const session = resume ? await h.resumeSession(sessionId) : h.session(sessionId);
     if (options.startInPlanMode === true) {
@@ -222,7 +244,7 @@ export class RuntimeManager{
     }
     active.controller.signal.throwIfAborted();
     const observe=n=>{
-    if(active.cancelled)return;
+    if(active.cancelled&&!(n.method==='session.event'&&n.params.event?.type==='assistant/message'))return;
     if(n.method==='subagent.started'||n.method==='subagent.finished'){
      const {childSessionId:id,parentSessionId:parentId}=n.params;
      if(SAFE_ID.test(id)&&SAFE_ID.test(parentId)){
@@ -252,15 +274,28 @@ export class RuntimeManager{
       }
      }
      if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.onEvent?.({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
-     if(n.params.sessionId===sessionId&&e?.type==='assistant/message'){const partial=e.data?.message?.content?.filter(block=>block.type==='text').map(block=>block.text).join('');if(partial)void readBridge(bridgeFile,bridgeKey).then(saved=>{const v=new PrivacySession(saved.id,saved),checked=v.protect(partial,customTerms,config.privacyPolicy);if(checked.blocked||partial.includes(key))return;const restored=privacyMode==='raw'?{text:partial,unknown:[]}:v.restore(checked.text,{allowedTokens:new Set(saved.entries.map(entry=>entry.token))});if(!restored.unknown.length&&!active.cancelled)this.onEvent?.({runId,sessionId,type:'draft',text:restored.text.replace(/⟦ZX-[^⟧]+⟧/g,'【敏感值待核实】')});}).catch(()=>{});}
+     if(n.params.sessionId===sessionId&&e?.type==='assistant/message'){
+      const partial=e.data?.message?.content?.filter(block=>block.type==='text').map(block=>block.text).join('');
+      if(partial)active.draftTail=active.draftTail.then(async()=>{
+       const saved=await readBridge(bridgeFile,bridgeKey),v=new PrivacySession(saved.id,saved),checked=v.protect(partial,customTerms,config.privacyPolicy);
+       if(checked.blocked||partial.includes(key))return;
+       const restored=privacyMode==='raw'?{text:partial,unknown:[]}:v.restore(checked.text,{allowedTokens:new Set(saved.entries.map(entry=>entry.token))});
+       if(restored.unknown.length)return;
+       active.partialText=restored.text.replace(/⟦ZX-[^⟧]+⟧/g,'【敏感值待核实】');
+       this.onEvent?.({runId,sessionId,type:'draft',text:active.partialText});
+      }).catch(()=>{});
+     }
      if(n.params.sessionId===sessionId&&e?.type==='todo/write'&&Array.isArray(e.data?.todos)){plan=e.data.todos.filter(item=>typeof item.content==='string'&&['pending','in_progress','completed'].includes(item.status)).slice(0,30).map(item=>({...item,content:item.content.slice(0,200)}));this.onEvent?.({runId,sessionId,type:'plan',label:'工作计划已更新',plan});}
      const trace=e&&projectExecutionEvent(e,n.params.sessionId===sessionId?undefined:n.params.sessionId,calls);
-     if(trace?.type==='job/registered'&&trace.itemId&&active.controls?.targets.size<250){
-      active.controls.targets.set(`stop-job:${trace.itemId}`,n.params.sessionId);
-      active.controls.targets.set(`read-job:${trace.itemId}`,n.params.sessionId);
+    if(trace?.type==='job/registered'&&trace.itemId){
+      let resolveJob;const job={id:trace.itemId,sessionId:n.params.sessionId,settled:false,stopRequested:false,settledPromise:new Promise(resolve=>{resolveJob=resolve;})};job.resolve=resolveJob;jobs.set(`${n.params.sessionId}:${trace.itemId}`,job);
+      if(active.controls&&active.controls.targets.size<250){active.controls.targets.set(`stop-job:${trace.itemId}`,n.params.sessionId);active.controls.targets.set(`read-job:${trace.itemId}`,n.params.sessionId);}
      }
-     if(trace?.type==='job/settled')active.controls?.targets.delete(`stop-job:${trace.itemId}`);
-     if(trace)this.onEvent?.({runId,sessionId,...trace});
+     if(trace?.type==='job/settled'){
+      active.controls?.targets.delete(`stop-job:${trace.itemId}`);
+      const job=jobs.get(`${n.params.sessionId}:${trace.itemId}`);if(job&&!job.settled){job.settled=true;job.resolve(trace.status);}
+     }
+   if(trace)this.onEvent?.({runId,sessionId,...trace});
      if(n.params.sessionId===sessionId&&e?.type!=='assistant/message')emitStats();
     }
     if(n.method==='session.status'&&n.params.sessionId===sessionId)this.onEvent?.({runId,sessionId,type:'status',label:n.params.status==='idle'?'内核空闲':'内核运行中'});
@@ -278,6 +313,7 @@ export class RuntimeManager{
      if(!['error','blocked','aborted','interrupted'].includes(result.finishReason)){
       await h.client.request('session/wait',{sessionId},kernel.taskTimeoutSeconds*1000);
      }
+     await waitForStoppedJobs(jobs,5000,job=>this.onEvent?.({runId,sessionId,type:'job/settlement-timeout',childSessionId:job.sessionId===sessionId?undefined:job.sessionId,itemId:job.id,status:'stopping'}));
      let queued;
      while((queued=tree.tryNext())!==undefined)observe(queued);
     }finally{
@@ -288,7 +324,8 @@ export class RuntimeManager{
    if(active.cancelled)throw new Error('任务已停止。');
    if(['error','blocked','aborted','interrupted'].includes(result.finishReason)){throw new Error('模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。');}
    await waitContext(directory,bridgeKey,sessionId);
-   await h.close();
+    await closeHarness(active,h);await active.draftTail;
+   active.resultReady=true;active.finishReason=result.finishReason;
    vault=new PrivacySession(sessionId,await readBridge(bridgeFile,bridgeKey));
    await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey},config);
    let context;try{const reports=await readBridge(path.join(directory,'context.bin'),bridgeKey);context=reports[sessionId];}catch{}
@@ -304,7 +341,22 @@ export class RuntimeManager{
    }
    const childDetails=[...children.values()].map(child=>({...child,messages:(transcripts.get(child.id)||[]).map(row=>({...row,text:this.executionDisplay(row.text,active.controls)}))}));
    return {runId,sessionId,text,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,children:childDetails,plan:plan.map(item=>({...item,content:vault.restore(item.content,{allowedTokens:originalTokens}).text}))};
-  }finally{active.controller.abort();try{if(h)await h.close();}finally{try{if(toolBridge)await toolBridge.close();if(automationBridge)await automationBridge.close();if(gateway)await gateway.close();if(bridgeFile&&persistKey){const state=await readBridge(bridgeFile,persistBridgeKey);await this.saveVault(sessionId,{...state,...connection,historyKey:persistKey},config);}}finally{if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}if(active.controls)await fs.unlink(active.controls.file).catch(()=>{});await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});this.runs.delete(runId);this.busy.delete(sessionId);if(config.persist===false){const target=path.resolve(this.root,sessionId);if(path.dirname(target)===path.resolve(this.root))await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150});}}}}
+  }catch(error){active.terminalStatus=active.cancelled?'cancelled':'failed';throw error;}
+  finally{
+   active.controller.abort();
+   const closing=await Promise.allSettled([closeHarness(active,h),toolBridge?.close(),automationBridge?.close(),gateway?.close()].filter(Boolean));await active.draftTail;
+   let cleanupError=closing.find(result=>result.status==='rejected')?.reason;
+   let savedBridge=false;
+   if(bridgeFile&&persistKey){try{const state=await readBridge(bridgeFile,persistBridgeKey);await this.saveVault(sessionId,{...state,...connection,historyKey:persistKey},config);savedBridge=true;}catch(error){cleanupError??=error;}}
+   if(savedBridge){if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});}
+   if(active.controls)await fs.unlink(active.controls.file).catch(()=>{});
+   if(savedBridge&&config.persist===false){const target=path.resolve(this.root,sessionId);if(path.dirname(target)===path.resolve(this.root)&&await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150}).then(()=>true,()=>false)===false)cleanupError??=new Error('临时会话目录未能清理。');}
+   if(cleanupError&&active.terminalStatus!=='cancelled')active.terminalStatus='failed';
+   const status=active.terminalStatus||(active.resultReady?'succeeded':active.cancelled?'cancelled':'failed');
+   const terminal={runId,sessionId,type:'run/terminal',status,...active.finishReason?{finishReason:active.finishReason}:{},...active.partialText?{partialText:active.partialText}:{}};
+   this.runs.delete(runId);this.busy.delete(sessionId);try{this.onEvent?.(terminal);}catch{}active.resolveSettled({runId,sessionId,status,finishReason:active.finishReason});
+   if(cleanupError&&!active.cancelled)throw cleanupError;
+  }
  }
  executionDisplay(text,controls){
   if(!text)return '';
@@ -339,14 +391,19 @@ export class RuntimeManager{
    const {value}=await response.json();
    if(action==='read-job')return {...value,text:this.executionDisplay(value.text,controls)};
    if(action==='send-agent')return {accepted:value==='accepted'};
+   if(action==='stop-job'){
+    const job=active.jobs?.get(`${owner}:${target}`);
+    if(job&&value==='requested')job.stopRequested=true;
+    this.onEvent?.({runId,sessionId,type:'job/stop-requested',childSessionId:owner===sessionId?undefined:owner,itemId:target,status:value==='requested'?'stopping':'already-finished'});
+   }
    return {requested:value==='requested'};
   }catch{throw new Error('内核未能完成此操作，请核对当前交办是否仍在运行。');}
  }
- async cancel(runId){if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');const run=this.runs.get(runId);if(!run){if(this.cancelled.size>=64)this.cancelled.delete(this.cancelled.keys().next().value);this.cancelled.set(runId,Date.now()+30000);return {cancelled:true};}run.cancelled=true;run.controller.abort();if(run.h)await run.h.close();return {cancelled:true};}
+ async cancel(runId){if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');const run=this.runs.get(runId);if(!run){if(this.runSettlements.has(runId))return {cancelled:false,accepted:false,settled:true};if(this.cancelled.size>=64)this.cancelled.delete(this.cancelled.keys().next().value);this.cancelled.set(runId,Date.now()+30000);return {cancelled:true,accepted:true};}if(run.resultReady)return {cancelled:false,accepted:false,settled:false,status:'settling'};run.cancelled=true;run.cancelRequested=true;run.status='cancelling';run.controller.abort();if(run.h)void closeHarness(run,run.h).catch(()=>{});return {cancelled:true,accepted:true};}
  async saveVault(id,value,config){if(config.persist===false)this.volatileVaults.set(id,value);else await this.writeVault(id,value);}
  async clearSavedHistory(){
   const items=await fs.readdir(this.root,{withFileTypes:true}).catch(error=>{if(error.code==='ENOENT')return [];throw error;});
   for(const item of items){if(!item.isDirectory()||!SAFE_ID.test(item.name)||this.busy.has(item.name))continue;const target=path.resolve(this.root,item.name);if(path.dirname(target)!==path.resolve(this.root))throw new Error('会话目录无效。');const stat=await fs.lstat(target);if(stat.isSymbolicLink())throw new Error('会话目录不能是链接。');await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150});}
  }
- async close(){await Promise.allSettled([...this.runs.keys()].map(id=>this.cancel(id)));}
+ async close(){const runs=[...this.runs.entries()];await Promise.allSettled(runs.map(async([id,run])=>{await this.cancel(id);return run.settled;}));}
 }

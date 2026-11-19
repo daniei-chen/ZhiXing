@@ -230,10 +230,10 @@ test('真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本�
   manager.onApproval=async request=>{approvals.push(request);return {outcome:'rejected'};};
   filePlan={name:'office_write_file',input:{file_path:'auto.txt',content:'这个覆盖应被拒绝'}};
   await manager.run({runId:'auto-deny',sessionId:'auto-deny',prompt:'覆盖auto.txt',privacyMode:'redact'},{...filesConfig,permission:'auto'},fixtureKey);
-  assert.equal(approvals.length,2);assert.equal(JSON.parse(approvals[1].reason).overwrite,true);assert.equal(await fs.readFile(path.join(workspace,'auto.txt'),'utf8'),'自动批准的新成果');
+ assert.equal(approvals.length,1);assert.equal(await fs.readFile(path.join(workspace,'auto.txt'),'utf8'),'自动批准的新成果');assert.equal(await fs.readFile(path.join(workspace,'auto (2).txt'),'utf8'),'这个覆盖应被拒绝');
   filePlan={name:'office_write_file',input:{file_path:'auto.txt',content:'完全访问已更新成果'}};
   await manager.run({runId:'full-overwrite',sessionId:'full-overwrite',prompt:'覆盖auto.txt',privacyMode:'redact'},{...filesConfig,permission:'full'},fixtureKey);
-  assert.equal(approvals.length,2);assert.equal(await fs.readFile(path.join(workspace,'auto.txt'),'utf8'),'完全访问已更新成果');
+ assert.equal(approvals.length,1);assert.equal(await fs.readFile(path.join(workspace,'auto.txt'),'utf8'),'自动批准的新成果');assert.equal(await fs.readFile(path.join(workspace,'auto (2).txt'),'utf8'),'这个覆盖应被拒绝');assert.equal(await fs.readFile(path.join(workspace,'auto (3).txt'),'utf8'),'完全访问已更新成果');
   manager.onApproval=async request=>{approvals.push(request);return {outcome:'allowed-once'};};
   filePlan={name:'office_execute',input:{command:"[Console]::WriteLine('HARNESS_PWSH_OK'); [Console]::WriteLine([string]::IsNullOrEmpty($env:ZHIXING_BRIDGE_KEY))",description:'运行本机终端合成测试'}};
   const commandResult=await manager.run({runId:'native-terminal',sessionId:'native-terminal',prompt:'运行合成终端测试并报告输出。',privacyMode:'redact'},filesConfig,fixtureKey);

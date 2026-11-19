@@ -3,7 +3,7 @@ import {PrivacySession} from '../src/privacy-core.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readBridge, updateBridge } from './privacy-bridge.mjs';
-import { resolveOfficePath, needsApproval } from './file-policy.mjs';
+import { resolveOfficePath, needsApproval, writeOfficeFile, nextOfficePath } from './file-policy.mjs';
 import { parseOfficeFile, exportOfficeFile } from '../electron/office-files.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
 
@@ -101,11 +101,16 @@ export function apply(ctx){
    if(!['txt','md','csv','tsv','docx','xlsx'].includes(extension))throw new Error('此工具只生成办公文稿或表格。');
    const v=await getVault(),restored=v.restore(content);if(restored.unknown.length)throw new Error('成果包含未知占位符，已停止写入。');
    if(v.protect(restored.text,terms,privacyPolicy).blocked)throw new Error('成果包含疑似凭证，已停止写入。');
-   await permit(exec,{...info,write:true},info.exists?'覆盖文件':'新建文件');exec.signal.throwIfAborted();
+   const requestedPath=info.exists?await nextOfficePath(info.target):info.target;
+   const output=await resolveOfficePath(path.relative(root,requestedPath),root,{write:true});
+   if(!output.inside||forbidden(output.target))throw new Error('新成果路径不在允许的工作空间内。');
+   await permit(exec,{...output,write:true,exists:false},'保存办公成果');exec.signal.throwIfAborted();
    const checked=await localPath(file_path,true);if(checked.target!==info.target||checked.exists!==info.exists)throw new Error('目标文件已变化，请重新操作。');
+   const destination=await resolveOfficePath(path.relative(root,requestedPath),root,{write:true});
+   if(destination.target!==output.target||destination.exists)throw new Error('FILE_CHANGED: 保存位置已变化，请重新审批。');
    const buffer=await exportOfficeFile(restored.text,['docx','xlsx'].includes(extension)?extension:'txt');
-   await fs.writeFile(info.target,buffer,{flag:info.exists?'w':'wx'});
-   return protectedValue({path:info.target,bytes:buffer.length,written:true});
+   const writtenPath=await writeOfficeFile(destination.target,buffer);
+   return protectedValue({path:writtenPath,bytes:buffer.length,written:true});
   }}));
  }
  ctx.tools.register(defineTool({name:'office_calculate',description:'对用户提供的数字做确定性求和、均值、最大最小值或计数。金额单位由用户提供，不猜测。',parameters:{numbers:{type:'array',items:{type:'number'},required:true},operation:{type:'string',enum:['sum','average','min','max','count'],required:true}},output,async execute({numbers,operation},exec){exec.signal.throwIfAborted();return calculate(numbers,operation);}}));
