@@ -14,16 +14,25 @@ export function ModelControls({ settings, runtime, setRuntime, setSetting, disab
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [notice, setNotice] = useState('');
-  const models = runtime.configured ? runtime.models : availableModels([], settings.model);
-  const currentModel = selectedModel(runtime, settings) || models.find(model => model.id === settings.model);
-  const modelName = currentModel?.name || settings.model;
+  const models = runtime.configured ? runtime.models || [] : availableModels([], settings.model);
+  const matchingModels = runtime.configured ? models.filter(model => model.id === settings.model) : [];
+  const currentModel = runtime.configured
+    ? settings.modelProviderId
+      ? matchingModels.find(model => model.providerId === settings.modelProviderId)
+      : matchingModels.length === 1 ? matchingModels[0] : undefined
+    : selectedModel(runtime, settings);
+  const effortCapabilityKnown = Array.isArray(currentModel?.levels);
+  const modelName = currentModel?.name || (runtime.configured ? `不可用 · ${settings.model}` : settings.model);
   const modelCaption = [modelName, currentModel?.providerName].filter(Boolean).join(' · ');
-  const levels = REASONING_LEVELS.filter(level => !currentModel?.levels || currentModel.levels.includes(level.id));
+  const levels = effortCapabilityKnown
+    ? REASONING_LEVELS.filter(level => currentModel.levels.includes(level.id))
+    : runtime.configured ? [] : REASONING_LEVELS;
   const adjustable = levels.length > 1;
-  const effort = levels.find(level => level.id === settings.reasoning) || levels.find(level => level.id === 'high') || levels[0];
+  const effort = levels.find(level => level.id === settings.reasoning);
+  const requestedEffort = REASONING_LEVELS.find(level => level.id === settings.reasoning);
   const effortIndex = levels.indexOf(effort);
   const lastEffortIndex = levels.length - 1;
-  const effortLabel = adjustable ? effort.label : '默认';
+  const effortLabel = effort ? adjustable ? effort.label : '默认' : currentModel ? `请选择思考档位（当前${requestedEffort?.label || settings.reasoning}不可用）` : '能力未知';
   const search = query.trim().toLowerCase();
   const visibleModels = search ? models.filter(model => `${model.name} ${model.id} ${model.providerName || ''}`.toLowerCase().includes(search)) : models;
   const isSelected = model => model.id === currentModel?.id && model.providerId === currentModel?.providerId;
@@ -92,7 +101,7 @@ export function ModelControls({ settings, runtime, setRuntime, setSetting, disab
       aria-haspopup="dialog"
       aria-expanded={!!panel}
       aria-controls={panel === 'models' ? modelPanelId : panel === 'reasoning' ? effortPanelId : undefined}
-      data-effort={effort.id}
+      data-effort={effort?.id || 'unavailable'}
       title={`${modelCaption} · ${effortLabel}`}
       disabled={disabled}
       onClick={event => panel ? close() : toggleMenu('reasoning', event)}
@@ -110,7 +119,7 @@ export function ModelControls({ settings, runtime, setRuntime, setSetting, disab
       id={effortPanelId}
       role="dialog"
       aria-label="思考强度"
-      data-effort={effort.id}
+      data-effort={effort?.id || 'unavailable'}
     >
       <div className="effort-heading">
         <Lightning size={16} weight="fill" aria-hidden="true"/>
@@ -119,7 +128,7 @@ export function ModelControls({ settings, runtime, setRuntime, setSetting, disab
       <button type="button" className="effort-model-link" aria-label={`切换模型，当前 ${modelCaption}`} title={modelCaption} onClick={openModels}>
         <span>{modelCaption}</span><CaretRight size={11} aria-hidden="true"/>
       </button>
-      {adjustable ? <div className="effort-rail" style={{ '--effort-position': effortIndex / lastEffortIndex }}>
+      {adjustable && effort ? <div className="effort-rail" style={{ '--effort-position': effortIndex / lastEffortIndex }}>
         <div className="effort-track" aria-hidden="true"><div className="effort-fill"/></div>
         <input
           type="range"
@@ -133,8 +142,11 @@ export function ModelControls({ settings, runtime, setRuntime, setSetting, disab
           aria-describedby={descriptionId}
           onChange={event => setSetting('reasoning', levels[event.target.valueAsNumber].id)}
         />
-      </div> : <p className="model-picker-status">此模型使用服务端默认思考方式</p>}
-      <span id={descriptionId} className="screen-reader-only">{effort.description}</span>
+      </div> : currentModel && !effort && effortCapabilityKnown ? <div className="model-picker-status" role="group" aria-label="选择支持的思考档位">
+        <p>已保存的「{requestedEffort?.label || settings.reasoning}」档位不受当前模型支持。请选择档位后再交办。</p>
+        <div className="form-actions">{levels.map(level => <button type="button" className="secondary-button" key={level.id} onClick={() => setSetting('reasoning', level.id)}>{level.label}</button>)}</div>
+      </div> : currentModel && !effortCapabilityKnown ? <p className="model-picker-status" role="status">当前模型的思考能力未知。请刷新目录或选择能力已确认的模型。</p> : currentModel ? <p className="model-picker-status">此模型使用服务端默认思考方式</p> : <p className="model-picker-status" role="alert">所选模型已从当前目录移除，或供应商选择不再有效。请选择可用模型后再交办。</p>}
+      {effort && <span id={descriptionId} className="screen-reader-only">{effort.description}</span>}
     </section>}
     {panel === 'models' && <section ref={surface} className="dropdown composer-dropdown model-popover model-picker" id={modelPanelId} role="dialog" aria-label="模型">
       <header className="model-picker-header">

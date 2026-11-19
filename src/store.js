@@ -13,6 +13,7 @@ const seedState = {
     { id: 'government-general', workspaceId: 'government-home', name: '事项办理', expanded: true },
   ],
   chats: [],
+  drafts: {},
   automations: [],
   appliedAutomationRuns: [],
   documents: [],
@@ -60,6 +61,14 @@ export function mergeState(saved) {
   const projectById = new Map(projects.map(project => [project.id, project]));
   return {
     version: 2, workspaceId, workspaces, projects, settings,
+    drafts: settings.persist && saved.drafts && typeof saved.drafts === 'object' && !Array.isArray(saved.drafts)
+      ? Object.fromEntries(Object.entries(saved.drafts).filter(([, draft]) => draft && typeof draft.text === 'string' && Array.isArray(draft.files)).map(([id, draft]) => [id, {
+        revision: Number.isSafeInteger(draft.revision) && draft.revision >= 0 ? draft.revision : 0,
+        text: draft.text.slice(0, 60000),
+        files: draft.files.slice(0, 12),
+        updatedAt: Number.isFinite(draft.updatedAt) ? draft.updatedAt : Date.now(),
+      }]))
+      : {},
     appliedAutomationRuns: Array.isArray(saved.appliedAutomationRuns) ? saved.appliedAutomationRuns.filter(id => typeof id === 'string').slice(-240) : [],
     chats: chats.map(chat => ({
       ...chat,
@@ -73,12 +82,15 @@ export function mergeState(saved) {
 
 export function initialState() {
   if (window.zhixing) return mergeState(null);
-  try { return mergeState(JSON.parse(localStorage.getItem(STORAGE_KEY))); }
+  try { return { ...mergeState(JSON.parse(localStorage.getItem(STORAGE_KEY))), drafts: {} }; }
   catch { return mergeState(null); }
 }
 
 export function saveState(state) {
-  if (state.settings.persist) localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (state.settings.persist) {
+    const { drafts: _memoryDrafts, ...persisted } = state;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+  }
   else localStorage.removeItem(STORAGE_KEY);
 }
 
