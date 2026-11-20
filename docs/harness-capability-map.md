@@ -4,7 +4,7 @@
 
 | 能力 | 当前接入 | 证据与边界 |
 | --- | --- | --- |
-| 模型与推理 | DeepSeek 原生适配器、Harness 多供应商适配器。预设和自定义 API 拉取模型，输入框单入口切模型与调强度 | IPC 和输入区已使用 `{ providerId, modelId, reasoning }` 严格解析。供应商/型号失效、未知能力或档位不支持时停止预览且保留草稿；能力未知仍显示未知。结果保存 requested/effective/wire 值。`tests/providers.test.mjs` 核对真实 Harness 对本机收件服务的路由、模型、思考档位及消息保护。Windows 界面验收尚待 |
+| 模型与推理 | DeepSeek 原生适配器、Harness 多供应商适配器。预设和自定义 API 拉取模型，输入框单入口切模型与调强度 | IPC 和输入区已使用 `{ providerId, modelId, reasoning }` 严格解析。供应商/型号失效、未知能力或档位不支持时停止预览且保留草稿；能力未知仍显示未知。结果保存 requested/effective/wire 值。`tests/providers.test.mjs` 核对真实 Harness 对本机收件服务的路由、模型、思考档位及消息保护。Windows 最终目录包已通过本机供应商目录、模型选择、high 请求、再次执行历史与停止前缀验收；真实云端供应商效果未测 |
 | 多轮会话 | 原生日志加密、恢复、压缩、目标、规划模式与审批 | 两种发送模式的历史分开。带正文和附件的规划交办在确认进入内核规划模式后发送受保护的完整提示 |
 | 脱敏与还原 | 本机识别、分类策略、自定义词、排除词、请求网关、工具输出保护和任务映射 | 手动交办自动处理并发送；凭证另行阻断；未解析附件不能标为已脱敏 |
 | 浏览器面板 | 原生 WebContentsView、多标签、项目快捷入口、仅本次运行的站点卡、网页文字加入交办、可见区域截图另存 PNG | 源码回归核对导航、隔离与 PNG。Windows 界面核对本机短地址、站点卡、文字加入交办与截图另存。Agent 有文字快照、点击、输入工具，网页截图作为模型视觉输入仍待接入 |
@@ -14,7 +14,7 @@
 | 原生技能 | 知行办公与政务流程、Harness Office 技能、当前项目自定义技能 | 内核目录检查无模型调用；本机 Python/Office 工具运行条件仍影响实际操作 |
 | 子 Agent | spawn、fork、状态、中断、运行中发送补充及查看近期子会话 | 由 Harness 子任务服务执行。源码回归验证父会话先空闲时仍能收到子任务的最终回复。运行中每个子任务最多保留近期 16 条摘要，归档后完整子会话日志仍待接入 |
 | 工作流与作业 | 原生 workflow/PTC、job_list/output/kill、生命周期事件，执行面板可读输出并请求停止 | `cancel` 接受只表示进入收尾；最终持久化和清理后发送 `run/terminal`。UI 用 runId 绑定交办、显示取消中，并保留终止前已流出的正文。后台 job 停止分为请求和 settle，最多等待 5 秒，超时显示 `stopping`。源码回归覆盖最终保存延迟、停止确认与终态竞态；作业跨启动持久化及完整日志仍待 |
-| MCP | stdio、Streamable HTTP、工具、资源列表和读取、加密凭据 | `mcpServerIdentity(server)` 和 `updateMcpServer(previous, submitted)` 已接到保存入口。HTTP 规范化 scheme/host/port/path，stdio 包含 transport/command/args/cwd。目标变更移除旧 headers/env、自动停用并要求明确重新设置。同目标空提交保留，显式 `{}` 清空，检查连接不回显秘密。源码合成身份与泄漏测试通过；双目的地实际 UI 验收尚待。非文本返回暂不接入模型附件隐私链 |
+| MCP | stdio、Streamable HTTP、工具、资源列表和读取、加密凭据 | `mcpServerIdentity(server)` 和 `updateMcpServer(previous, submitted)` 已接到保存入口。HTTP 规范化 scheme/host/port/path，stdio 包含 transport/command/args/cwd。目标变更移除旧 headers/env、自动停用并要求明确重新设置。同目标空提交保留，显式 `{}` 清空，检查连接不回显秘密。源码与包内真实 Harness 验证 port/path/host 和 HTTP/stdio 变更；Windows 实包 UI 验证 A→B 空凭据阻止、明确清空、新凭据、启停，B 没有收到 A 凭据。非文本返回暂不接入模型附件隐私链 |
 | 自动化 | 主进程持久调度、日/周/月/年/工作日/单次、延迟、间隔、Cron、RRULE、执行历史、取消、自然语言草稿 | 高级规则使用 Harness 时间引擎。支持每次新建聊天、固定一条任务聊天及既有聊天结果投递。既有聊天只用已审阅的上下文，任务使用独立内核会话。应用退出后不执行 |
 | 成果 | 原生 present、工作区文件卡、DOCX/XLSX/TXT 导出，可从文件面板按支持格式转换并另存 | 版面基于本机字体和 Office 打印布局。工作表重算更新公式缓存。Agent 写入采用同目录编号另存和 `wx` 独占创建；碰撞不会覆盖用户原件，回执使用实际新路径。桌面权限与实际文件审批流程仍待验 |
 | 设置 | 主题、项目工作区、模型、MCP、权限、隐私、语音、办公偏好、内核限制和版本检查 | 版本与 npm 官方标签核对。用户填写的办公偏好使用同一脱敏链，定时任务沿用已审阅内容 |

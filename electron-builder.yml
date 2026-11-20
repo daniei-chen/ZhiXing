@@ -5,6 +5,7 @@
   "directories": {
     "output": "release"
   },
+  "electronDist": "node_modules/electron/dist",
   "files": [
     "dist/client/**/*",
     "electron/**/*",
@@ -40,6 +41,7 @@
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
+    "include": "installer.nsh",
     "createDesktopShortcut": true,
     "installerIcon": "public/brand/zhixing.ico",
     "uninstallerIcon": "public/brand/zhixing.ico",
