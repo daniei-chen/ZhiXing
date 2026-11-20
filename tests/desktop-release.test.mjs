@@ -13,7 +13,7 @@ test('知行桌面版本按 SemVer 顺序比较', () => {
 test('发行检查选择最新兼容标签并准确识别 Windows 安装包', async () => {
   let requestedUrl;
   const releases = [
-    {tag_name: 'v0.12.0-rc.2', name: '知行测试版', prerelease: true, published_at: '2026-11-21T00:00:00Z', assets: [{name: '知行-0.12.0-rc.2-x64.exe'}]},
+    {tag_name: 'v0.12.0-rc.2', name: '知行测试版', prerelease: true, published_at: '2026-11-21T00:00:00Z', assets: [{name: 'ZhiXing-0.12.0-rc.2-x64.exe'}]},
     {tag_name: 'v0.12.0-rc.1', name: '旧测试版', assets: [{name: '知行-0.12.0-rc.1-x64.exe'}]},
     {tag_name: 'release-notes', name: '无效标签', assets: [{name: '知行-0.99.0-x64.exe'}]},
     {tag_name: 'v99.0.0', name: '草稿', draft: true, assets: [{name: '知行-99.0.0-x64.exe'}]},

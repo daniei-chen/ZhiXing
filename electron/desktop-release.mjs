@@ -53,7 +53,8 @@ function normaliseRelease(release) {
     name: typeof release.name === 'string' && release.name.trim() ? release.name.trim().slice(0, 160) : release.tag_name,
     publishedAt: typeof release.published_at === 'string' && Number.isFinite(Date.parse(release.published_at)) ? release.published_at : null,
     prerelease: Boolean(release.prerelease),
-    hasWindowsInstaller: Array.isArray(release.assets) && release.assets.some(asset => asset?.name === `知行-${version}-x64.exe`),
+    hasWindowsInstaller: Array.isArray(release.assets) && release.assets.some(asset =>
+      ['知行', 'ZhiXing'].some(prefix => asset?.name === `${prefix}-${version}-x64.exe`)),
   };
 }
 
