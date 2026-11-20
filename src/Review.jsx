@@ -35,8 +35,8 @@ export function PrivacyReview({ modal, original, terms,policy,currentMode, onClo
   </Modal>;
 }
 
-export function ExportReview({ title, original, masked, terms, desktop, onClose, onExport }) {
-  const [scope, setScope] = useState('recipient'), [confirmed, setConfirmed] = useState(false), [format, setFormat] = useState('txt'), [busy, setBusy] = useState(false);
+export function ExportReview({ title, original, masked, terms, desktop, action='export', defaultFormat='txt', onClose, onExport }) {
+  const [scope, setScope] = useState('recipient'), [confirmed, setConfirmed] = useState(false), [format, setFormat] = useState(defaultFormat), [busy, setBusy] = useState(false);
   const redacted = useMemo(() => {
     const value = new PrivacySession('export').protect(masked || original, terms);
     return hideTokens(value.text);
@@ -49,12 +49,13 @@ export function ExportReview({ title, original, masked, terms, desktop, onClose,
     try { await onExport({ text, name: scope === 'recipient' ? '知行交付（对外版）' : `${title}（本人版）`, format }); }
     finally { setBusy(false); }
   }
-  return <Modal title="交付审阅" onClose={onClose} className="privacy-modal review-modal">
-    <div className="review-meta"><span className="review-icon"><FileText size={21}/></span><span><strong>{title}</strong><small>选择要保存的版本和格式</small></span></div>
-    <div className="privacy-tabs" role="tablist" aria-label="交付版本">{[['recipient', '接收方版', ShieldCheck], ['self', '本人版', Eye]].map(([id, label, Icon]) => <button key={id} role="tab" aria-selected={scope === id} className={scope === id ? 'active' : ''} onClick={() => { setScope(id); setConfirmed(false); }}><Icon size={15}/>{label}</button>)}</div>
+  const sharing = action === 'share';
+  return <Modal title={sharing?'分享审阅':'交付审阅'} onClose={onClose} canDismiss={!busy} className="privacy-modal review-modal">
+    <div className="review-meta"><span className="review-icon"><FileText size={21}/></span><span><strong>{title}</strong><small>{sharing?'选择要分享的版本并核对接收范围':'选择要保存的版本和格式'}</small></span></div>
+    <div className="privacy-tabs" role="tablist" aria-label="交付版本">{[['recipient', '接收方版', ShieldCheck], ['self', '本人版', Eye]].map(([id, label, Icon]) => <button key={id} role="tab" disabled={busy} aria-selected={scope === id} className={scope === id ? 'active' : ''} onClick={() => { setScope(id); setConfirmed(false); }}><Icon size={15}/>{label}</button>)}</div>
     <div className="privacy-text" role="tabpanel"><pre>{text}</pre></div>
     {scope === 'self' && <p className="callout raw"><LockKey size={14}/>本人版保留原值，请核对接收范围。</p>}
-    <label className="checkbox-row"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}/>我已核对要保存的内容与接收范围</label>
-    <div className="review-export-actions"><label>文件格式 <select aria-label="文件格式" value={format} onChange={e => setFormat(e.target.value)}><option value="txt">TXT 文本</option>{desktop && <><option value="docx">DOCX 文档</option><option value="xlsx">XLSX 表格</option></>}</select></label><button className="primary-button" disabled={!confirmed || busy || (scope === 'self' && local.blocked)} onClick={exportSelected}>{busy ? '等待保存…' : '保存文件'}</button></div>
+    <label className="checkbox-row"><input type="checkbox" disabled={busy} checked={confirmed} onChange={e => setConfirmed(e.target.checked)}/>我已核对要{sharing?'分享':'保存'}的内容与接收范围</label>
+    <div className="review-export-actions">{!sharing&&<label>文件格式 <select aria-label="文件格式" disabled={busy} value={format} onChange={e => setFormat(e.target.value)}><option value="txt">TXT 文本</option>{desktop && <><option value="docx">DOCX 文档</option><option value="xlsx">XLSX 表格</option></>}</select></label>}<button className="primary-button" disabled={!confirmed || busy || (scope === 'self' && local.blocked)} onClick={exportSelected}>{busy ? sharing?'等待分享…':'等待保存…' : sharing?'分享或复制':'保存文件'}</button></div>
   </Modal>;
 }

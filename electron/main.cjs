@@ -1,4 +1,4 @@
-const {app,BrowserWindow,ipcMain,safeStorage,dialog,Notification,protocol,net,session}=require('electron');
+const {app,BrowserWindow,ipcMain,safeStorage,dialog,Notification,protocol,net,session,shell}=require('electron');
 const path=require('node:path'),fs=require('node:fs/promises'),{pathToFileURL}=require('node:url'),{randomUUID}=require('node:crypto');
 protocol.registerSchemesAsPrivileged([{scheme:'zhixing',privileges:{standard:true,secure:true,supportFetchAPI:true,corsEnabled:true}}]);
 app.setName('知行');
@@ -8,7 +8,7 @@ const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
 if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
 const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
 const firstInstance=app.requestSingleInstanceLock();
-let windowRef,manager,automations,browserService,terminalService,speechService,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
+let windowRef,manager,automations,browserService,terminalService,speechService,deliverableAccess,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
@@ -77,6 +77,8 @@ async function initialise(){
   if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('agent:event',event);
   void automations?.recordEvent(event).catch(()=>{});
  }});
+ const {DeliverableAccess}=await import('./deliverable-access.mjs');
+ deliverableAccess=new DeliverableAccess({root:ROOT,getWorkspace:()=>workspaceContext,readVault:async id=>manager.volatileVaults.get(id)??JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`)))});
  const {AutomationService}=await import('./automation-service.mjs');
  automations=new AutomationService({read:async()=>JSON.parse(await readEncrypted(path.join(ROOT,'automations.bin'))),write:value=>writeEncrypted(path.join(ROOT,'automations.bin'),JSON.stringify(value)),getContext:()=>workspaceContext,getConfiguration:settings=>({kernel:configuration.kernel,...providerApi.resolveProvider(providers,settings)}),getKey:config=>currentCredential(config).key,runtime:manager,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('automation:change',value);},notify:notifyTask});
  await automations.initialise(workspaceContext.automations);
@@ -87,7 +89,7 @@ async function initialise(){
  manager.browserAction=(scope,input,signal)=>{signal.throwIfAborted();return browserService.agentAction(scope,input);};
  terminalService=new TerminalService({onEvent:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('terminal:event',value);}});
  const {SpeechService}=await import('./speech-service.mjs');
- speechService=new SpeechService(value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',value);});
+ speechService=new SpeechService(value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',value);},{dataRoot:path.join(ROOT,'speech','sensevoice-int8')});
 
 }
 function workScope(options={}){const {workspace,project,workspaceRoot}=resolveProjectContext(workspaceContext,options);return {key:`${workspace.id}:${project?.id||options.sessionId||'home'}`,workspaceRoot};}
@@ -191,6 +193,8 @@ function registerHandlers(){
   try{return await job;}finally{worktreeOperation=null;}
  });
  handle('workspace:read-file',async options=>{await workspaceSaveQueue.flush();const {readWorkspaceFile}=await import('./workspace-files.mjs');return readWorkspaceFile(workScope(options).workspaceRoot,options.path);});
+ handle('deliverables:list',async options=>{await workspaceSaveQueue.flush();return deliverableAccess.list(options);});
+ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();return deliverableAccess.read(options);});
  handle('workspace:office-layout',async options=>{
   await workspaceSaveQueue.flush();
   const {runOfficeLayout,recognizeOfficePage}=await import('./office-layout.mjs');
@@ -224,9 +228,13 @@ function registerHandlers(){
   return rows.map(row=>row.id===id?refreshed:row);
  }));
  handle('speech:status',()=>speechService.status());
+ handle('speech:prepare',({downloadSource}={})=>speechService.prepare(downloadSource));
+ handle('speech:cancel-preparation',()=>speechService.cancelPreparation());
  handle('speech:start',({language,id})=>speechService.start(language,id));
- handle('speech:stop',id=>speechService.stop(id));
+ handle('speech:transcribe',({id,audioBase64})=>speechService.transcribe(id,audioBase64));
  handle('speech:cancel',id=>speechService.cancel(id));
+ handle('app:check-desktop-release',async()=>{const {checkDesktopRelease}=await import('./desktop-release.mjs');return checkDesktopRelease(require('../package.json').version);});
+ handle('app:open-official-release',async({tag})=>{const {officialReleaseUrl}=await import('./desktop-release.mjs');await shell.openExternal(officialReleaseUrl(tag));return true;});
  handle('app:check-kernel-version',async()=>{const {checkOfficialKernel}=await import('./kernel-version.mjs');return checkOfficialKernel();});
  handle('app:configure-kernel',async value=>{const kernel=validateKernel(value),next={...configuration,kernel};await fs.writeFile(path.join(ROOT,'config.json'),JSON.stringify(next,null,2));configuration=next;return runtimeStatus();});
  handle('app:inspect-kernel',async()=>manager.check(configuration,'zhixing-local-inspection'));
@@ -353,6 +361,8 @@ async function createWindow(){
   });
  }
  windowRef.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+ windowRef.webContents.on('render-process-gone',()=>{if(speechService?.active)void speechService.cancel(speechService.active.id);});
+ windowRef.webContents.on('did-start-navigation',(_event,_url,_inPlace,isMainFrame)=>{if(isMainFrame&&speechService?.active)void speechService.cancel(speechService.active.id);});
  windowRef.webContents.on('will-navigate',(event,url)=>{if(url!=='zhixing://app/index.html')event.preventDefault();});
  await windowRef.loadURL('zhixing://app/index.html');
  windowRef.show();
@@ -364,7 +374,13 @@ else app.whenReady().then(async()=>{
   const root=path.join(__dirname,'..','dist','client'),file=path.resolve(root,`.${decodeURIComponent(url.pathname)}`);
   if(!file.startsWith(root+path.sep))return new Response('Forbidden',{status:403});return net.fetch(pathToFileURL(file).href);
  });
- session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
+ const {permitsSpeechCapture}=await import('./speech-policy.mjs');
+ const speechPermission=(webContents,permission,details)=>permitsSpeechCapture({permission,details,isMainWindow:!!windowRef&&!windowRef.isDestroyed()&&webContents===windowRef.webContents,armed:speechService?.canCapture()===true});
+ session.defaultSession.setPermissionRequestHandler((webContents,permission,callback,details)=>callback(speechPermission(webContents,permission,details)));
+ session.defaultSession.setPermissionCheckHandler((webContents,permission,_origin,details)=>{
+  if(permission==='clipboard-sanitized-write')return !!windowRef&&!windowRef.isDestroyed()&&webContents===windowRef.webContents&&details.isMainFrame&&details.requestingUrl==='zhixing://app/index.html';
+  return speechPermission(webContents,permission,details);
+ });
  session.defaultSession.webRequest.onHeadersReceived((details,callback)=>callback({responseHeaders:{...details.responseHeaders,'Content-Security-Policy':["default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"]}}));
  await initialise();registerHandlers();await createWindow();automations.start();
  app.on('activate',()=>{if(BrowserWindow.getAllWindows().length===0)createWindow();});
@@ -378,6 +394,12 @@ app.on('before-quit',event=>{
  const pendingWorktree=worktreeOperation;
  pendingWorktree?.controller.abort();
  (async()=>{
+  if(speechService?.active){
+   const id=speechService.active.id;
+   if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',{id,type:'cancelled'});
+   await speechService.cancel(id);
+  }
+  if(speechService?.speech)await speechService.cancelPreparation();
   await automations?.close();
   await manager?.close();
   for(;;){

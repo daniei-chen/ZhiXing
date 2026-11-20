@@ -36,7 +36,7 @@ export function mergeState(saved) {
   if (saved.version === 1 || settings.privacyMode !== 'raw') settings.privacyMode = 'redact';
   if (!['ask','auto','full'].includes(settings.permission)) settings.permission = 'ask';
   settings.privacyPolicy=normalisePrivacyPolicy(settings.privacyPolicy);
-  settings.voiceLanguage=['zh-CN','en-US'].includes(settings.voiceLanguage)?settings.voiceLanguage:'zh-CN';
+  settings.voiceLanguage=['auto','zh-CN','en-US','yue','ja','ko'].includes(settings.voiceLanguage)?settings.voiceLanguage:'zh-CN';
   settings.personalInstructions=typeof settings.personalInstructions==='string'?settings.personalInstructions.slice(0,4000):'';
   settings.personalizationEnabled=settings.personalizationEnabled===true;
 
@@ -120,9 +120,10 @@ export function downloadText(name, text) {
 }
 
 export function chatText(chat, { protectedView = false } = {}) {
-  return (chat?.messages || []).filter(message => !message.pending && !message.error && !message.stopped && message.text).map(message => {
+  return (chat?.messages || []).filter(message => !message.pending && message.text).map(message => {
     if (protectedView && message.role === 'user') return '';
     const text = protectedView ? message.masked ?? message.text : message.text;
-    return `${message.role === 'user' ? '你' : message.imported ? 'DeepSeek（导入）' : '知行'}${message.demo ? '（本地演示）' : ''}\n${text}`;
+    const status = message.stopped ? '（已停止，部分内容）' : message.error ? '（未完成，部分内容）' : '';
+    return `${message.role === 'user' ? '你' : message.imported ? 'DeepSeek（导入）' : '知行'}${message.demo ? '（本地演示）' : ''}${status}\n${text}`;
   }).filter(Boolean).join('\n\n');
 }

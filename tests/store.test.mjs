@@ -1,7 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mergeState, restoredDraftView } from '../src/store.js';
+import { chatText, mergeState, restoredDraftView } from '../src/store.js';
 import {projectContext,projectWorktreeSourceContext} from '../src/project-core.js';
+
+test('会话副本保留停止和失败后的部分正文及其状态', () => {
+ const chat={messages:[{role:'user',text:'合成任务'},{role:'assistant',text:'停止前的正文',masked:'已保护正文',stopped:true},{role:'assistant',text:'失败前的正文',error:true},{role:'assistant',text:'尚未完成流式',pending:true}]};
+ assert.match(chatText(chat),/已停止，部分内容.*\n停止前的正文/);
+ assert.match(chatText(chat),/未完成，部分内容.*\n失败前的正文/);
+ assert.doesNotMatch(chatText(chat),/尚未完成流式/);
+ assert.match(chatText(chat,{protectedView:true}),/已保护正文/);
+ assert.doesNotMatch(chatText(chat,{protectedView:true}),/合成任务/);
+});
 
 test('旧政务空间迁移保留用户资料与真实聊天，关闭旧 AI 调度', () => {
   const migrated = mergeState({

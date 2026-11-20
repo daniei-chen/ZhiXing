@@ -2,18 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {once} from 'node:events';
-import {mkdtemp,rm,writeFile,realpath} from 'node:fs/promises';
+import {mkdtemp,rm,realpath} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {execFile} from 'node:child_process';
-import {promisify} from 'node:util';
-import {fileURLToPath,pathToFileURL} from 'node:url';
+import {pathToFileURL} from 'node:url';
 import {availableModels,REASONING_LEVELS} from '../src/model-options.js';
 import {composePrompt} from '../src/office-workflows.js';
 import {PrivacySession} from '../src/privacy-core.js';
 const packed=process.env.ZHIXING_TEST_PACKED_APP;
 const {builtinModels,decodeModels,fetchModels}=await import(packed?pathToFileURL(path.join(packed,'electron/model-catalog.mjs')).href:'../electron/model-catalog.mjs');
-const {SpeechService}=await import(packed?pathToFileURL(path.join(packed,'electron/speech-service.mjs')).href:'../electron/speech-service.mjs');
+const {SpeechService,decodeSpeechRecording}=await import(packed?pathToFileURL(path.join(packed,'electron/speech-service.mjs')).href:'../electron/speech-service.mjs');
 const {RuntimeManager}=await import(packed?pathToFileURL(path.join(packed,'electron/runtime.mjs')).href:'../electron/runtime.mjs');
 
 test('模型目录使用真实内核 ID；配置模型保留；思考强度只提供内核档位',()=>{
@@ -34,11 +32,17 @@ test('刷新目录只请求配置服务；拒绝重定向；不把凭据转发�
  finally { server.closeAllConnections();target.closeAllConnections();await Promise.all([new Promise(resolve=>server.close(resolve)),new Promise(resolve=>target.close(resolve))]); }
 });
 
-test('个人偏好进入正常脱敏链；语音服务拒绝未知会话与语言',async()=>{
+test('个人偏好进入正常脱敏链；本机语音校验会话、语言和音频',async()=>{
  const prompt=composePrompt('整理会议纪要',[],[],'','联系人：张三，电话13800000000');
  const protectedInput=new PrivacySession('preference-fixture').protect(prompt);
  assert(prompt.includes('【用户办公偏好】'));assert(!protectedInput.text.includes('13800000000'));assert(!protectedInput.text.includes('张三'));
- const speech=new SpeechService();await assert.rejects(speech.start('invalid'));await assert.rejects(speech.stop('stale'));assert.equal(speech.cancel('stale'),true);await speech.close();
+ const speech=new SpeechService(()=>{},{dataRoot:path.join(os.tmpdir(),'zhixing-speech-guard-test')});
+ await assert.rejects(speech.start('invalid','8f9bb3b6-7a67-4d5c-97d7-a940f4cda48f'),/不支持/);
+ await assert.rejects(speech.start('zh-CN','stale'),/听写编号/);
+ await assert.rejects(speech.stop('stale'),/已结束/);
+ assert.equal(await speech.cancel('stale'),true);
+ assert.throws(()=>decodeSpeechRecording('not-base64'),/录音格式无效/);
+ await speech.close();
 });
 
 test('同一聊天切换模型和四档思考强度，规划草稿随附件自动脱敏',{timeout:90000},async()=>{
@@ -93,12 +97,19 @@ test('同一聊天切换模型和四档思考强度，规划草稿随附件自�
  finally { await manager.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));const resolved=await realpath(root);if(path.dirname(resolved)===parent&&path.basename(resolved).startsWith('zhixing-effort-test-'))await rm(resolved,{recursive:true,force:true,maxRetries:6,retryDelay:150}); }
 });
 
-test('Windows 本机语音组件可加载并读取 WAV；测试不打开麦克风',{skip:process.platform!=='win32'},async()=>{
- const parent=await realpath(os.tmpdir()),root=await mkdtemp(path.join(parent,'zhixing-speech-test-'));
- try { const file=path.join(root,'silence.wav'),pcm=Buffer.alloc(32000),header=Buffer.alloc(44);header.write('RIFF');header.writeUInt32LE(36+pcm.length,4);header.write('WAVEfmt ',8);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(1,22);header.writeUInt32LE(16000,24);header.writeUInt32LE(32000,28);header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);header.write('data',36);header.writeUInt32LE(pcm.length,40);await writeFile(file,Buffer.concat([header,pcm]));
-  const speech=new SpeechService();const status=await speech.status();assert(status.supported);assert(Array.isArray(status.languages));
-  if(!status.languages.some(item=>item.language==='zh-CN'))return;
-  const worker=packed?path.join(packed,'electron/speech-worker.ps1'):fileURLToPath(new URL('../electron/speech-worker.ps1',import.meta.url));
-  const {stdout}=await promisify(execFile)('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',worker,'-WaveFile',file],{windowsHide:true,timeout:30000,maxBuffer:65536});assert.match(stdout,/ready:/);assert.match(stdout,/done:/);assert(!stdout.includes('error:'));
- } finally { const resolved=await realpath(root);if(path.dirname(resolved)===parent&&path.basename(resolved).startsWith('zhixing-speech-test-'))await rm(resolved,{recursive:true,force:true}); }
+test('Windows SenseVoice Provider can inspect local model state without recording or downloading',{skip:process.platform!=='win32'},async()=>{
+ const parent=await realpath(os.tmpdir()),root=await mkdtemp(path.join(parent,'zhixing-sensevoice-test-'));
+ const speech=new SpeechService(()=>{},{dataRoot:path.join(root,'models')});
+ try {
+  const status=await speech.status();
+  assert.equal(status.supported,true);
+  assert.equal(status.providerId,'sensevoice-local');
+  assert.match(status.providerName,/SenseVoice/);
+  assert(status.languages.includes('zh'));
+  assert(status.preparation.phase==='unprepared'||status.preparation.phase==='checking'||status.preparation.phase==='ready'||status.preparation.phase==='standby');
+  await assert.rejects(speech.start('zh-CN','8f9bb3b6-7a67-4d5c-97d7-a940f4cda48f'),/先下载并准备/);
+ } finally {
+  await speech.close();
+  const resolved=await realpath(root);if(path.dirname(resolved)===parent&&path.basename(resolved).startsWith('zhixing-sensevoice-test-'))await rm(resolved,{recursive:true,force:true});
+ }
 });

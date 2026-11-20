@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Archive, ArrowLeft, BellSimple, Briefcase, Check, Desktop, Eye, FolderOpen, GearSix, Info, Keyboard, LockKey, MagnifyingGlass, Microphone, Moon, Palette, PencilSimple, Plugs, Plus, ShieldCheck, SlidersHorizontal, Sun, Trash, X } from '@phosphor-icons/react';
+import { Archive, ArrowLeft, BellSimple, Briefcase, Check, CircleNotch, Desktop, Eye, FolderOpen, GearSix, Info, Keyboard, LockKey, MagnifyingGlass, Microphone, Moon, Palette, PencilSimple, Plugs, Plus, ShieldCheck, SlidersHorizontal, Sun, Trash, X } from '@phosphor-icons/react';
 import { BrandMark, Modal, Switch, IconButton } from './ui.jsx';
 import { WorkspaceIcon } from './Sidebar.jsx';
 import { PERMISSION_MODES } from './permissions.js';
@@ -82,15 +82,86 @@ export function Settings({ modal, close, setModal, state, scope, setSetting, run
           <div className="setting-row"><span><strong>系统通知</strong><small>提醒到时或 AI 任务完成时通知</small></span><Switch label="系统通知" value={state.settings.notifications} onChange={value => setSetting('notifications', value)}/></div>
           <div className="setting-row"><span><strong>最近任务活动</strong></span><button className="secondary-button" onClick={() => setModal({ type: 'notifications' })}>查看</button></div>
         </>}
-        {tab === '关于知行' && <div className="about-settings"><BrandMark className="brand-about"/><strong>知行 · AI 办公助手</strong><p className="muted">{runtime.appVersion ? `版本 ${runtime.appVersion} · ` : ''}Windows 桌面端</p><p className="muted">{runtime.version||'DeepSeek Harness · 请在桌面版查看版本'}</p><p>知你所需，行你所托。</p></div>}
+        {tab === '关于知行' && <AboutSettings runtime={runtime}/>}
       </div></section>
   </section>;
 }
 
+function AboutSettings({runtime}) {
+  const [checking, setChecking] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const desktop = window.zhixing;
+
+  async function checkForUpdates() {
+    if (!desktop || checking) return;
+    setChecking(true);
+    setError('');
+    setResult(null);
+    try {
+      setResult(await desktop.checkDesktopRelease());
+    } catch (failure) {
+      setError(failure.message || '无法读取 GitHub 发行信息。');
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  async function openRelease(tag) {
+    try {
+      await desktop.openOfficialRelease(tag);
+    } catch (failure) {
+      setError(failure.message || '无法打开官方发行页。');
+    }
+  }
+
+  return <div className="about-settings">
+    <BrandMark className="brand-about"/>
+    <strong>知行 · AI 办公助手</strong>
+    <p className="muted">{runtime.appVersion ? `版本 ${runtime.appVersion} · ` : ''}Windows 桌面端</p>
+    <p className="muted">{runtime.version||'DeepSeek Harness · 请在桌面版查看版本'}</p>
+    <p>知你所需，行你所托。</p>
+    {desktop ? <>
+      <button className="secondary-button" type="button" disabled={checking} onClick={checkForUpdates}>{checking ? '正在检查…' : '检查知行更新'}</button>
+      {error && <p className="setting-notice bad" role="alert">{error}</p>}
+      {result && <div className="desktop-release-result" role="status">
+        {!result.latest ? <p>GitHub 尚未发布知行桌面版本。</p> : <>
+          <p><strong>{result.updateAvailable ? '发现新版本' : '未发现较新版本'}</strong></p>
+          <p>{result.latest.name} · {result.latest.version}{result.latest.prerelease ? ' · 预发布' : ''}</p>
+          <p>{result.latest.hasWindowsInstaller ? 'Windows 安装包可下载。安装时会保留当前用户数据。' : '发行页暂未附带 Windows 安装包。'}</p>
+          <button className="secondary-button" type="button" onClick={() => openRelease(result.latest.tag)}>查看官方发行页</button>
+        </>}
+        <small>检查时间 {new Date(result.checkedAt).toLocaleString()}</small>
+      </div>}
+      <p className="settings-note">检查只读取 GitHub 发行记录，不会自动下载或安装。</p>
+    </> : <p className="settings-note">桌面版更新检查需在 Windows 应用中使用。</p>}
+  </div>;
+}
+
 function VoiceSettings({settings,setSetting}) {
-  const [status,setStatus]=useState(null),[checking,setChecking]=useState(false);
-  async function check(){setChecking(true);try{setStatus(await window.zhixing.speechStatus());}catch{setStatus({supported:false,languages:[]});}finally{setChecking(false);}}
-  return <><h3 className="settings-section-title">听写</h3><div className="settings-card"><label className="setting-row"><span><strong>主要语言</strong><small>使用 Windows 已安装的本机识别器</small></span><select aria-label="听写语言" value={settings.voiceLanguage} onChange={event=>setSetting('voiceLanguage',event.target.value)}><option value="zh-CN">简体中文</option><option value="en-US">English (US)</option></select></label><div className="setting-row"><span><strong>语音组件</strong><small>{status?(status.languages?.map(item=>item.language).join('、')||'未找到可用语言'):'检查本机可用语言，不打开麦克风'}</small></span><button className="secondary-button" disabled={!window.zhixing||checking} onClick={check}>{checking?'正在检查…':'检查'}</button></div><div className="setting-row"><span><strong>识别后插入输入框</strong><small>结束听写后，选择「插入文字」，再自行发送</small></span><Check size={17}/></div></div><p className="settings-lead">点击输入框旁的麦克风开始听写，最长两分钟。关闭听写或离开当前聊天会停止麦克风。</p><div className="settings-card"><div className="setting-row"><span><strong>音频留在本机</strong><small>由 Windows 本机语音组件处理，不保存录音，不向模型发送音频。</small></span><ShieldCheck size={18}/></div><div className="setting-row"><span><strong>发送文字的隐私设置</strong><small>脱敏模式下，听写文字与键盘输入使用相同保护流程。</small></span></div></div>{!window.zhixing&&<p className="settings-note">浏览器预览可以查看界面；本机听写需使用 Windows 桌面版。</p>}</>;
+  const [status,setStatus]=useState(null),[checking,setChecking]=useState(false),[source,setSource]=useState('');
+  const api=window.zhixing;
+  useEffect(()=>{
+    if(!api)return undefined;
+    let live=true;
+    const update=async()=>{try{const value=await api.speechStatus();if(live){setStatus(value);setSource('');}}catch(error){if(live)setStatus({supported:false,message:error.message});}};
+    void update();
+    const off=api.onSpeechEvent(event=>{if(!live||event.type!=='snapshot')return;const provider=event.snapshot.providers?.find(item=>item.id==='sensevoice-local');if(provider)setStatus({...provider,supported:true});});
+    return()=>{live=false;off?.();};
+  },[api]);
+  async function check(){setChecking(true);try{setStatus(await api.speechStatus());}catch(error){setStatus({supported:false,message:error.message});}finally{setChecking(false);}}
+  async function prepare(){setChecking(true);setStatus(previous=>({...previous,preparation:{...previous?.preparation,phase:'checking'}}));try{const result=await api.prepareSpeech(source||undefined);setStatus(previous=>{const phase=result.preparation?.phase;return {...previous,...result,preparation:['ready','standby','failed'].includes(phase)?result.preparation:previous.preparation};});}catch(error){setStatus(previous=>({...previous,preparation:{phase:'failed',message:error.message}}));}finally{setChecking(false);}}
+  async function cancel(){setChecking(true);try{setStatus(await api.cancelSpeechPreparation());}catch(error){setStatus(previous=>({...previous,preparation:{phase:'failed',message:error.message}}));}finally{setChecking(false);}}
+  const preparation=status?.preparation,preparing=['checking','downloading','loading','waking','cancelling'].includes(preparation?.phase);
+  const estimate=status?.setupEstimate;
+  const size=value=>value?`${(value/1024/1024).toFixed(0)} MB`:'—';
+  const statusText=!status?'正在检查本机缓存…':!status.supported?status.message||'本机语音服务不可用。':preparation?.phase==='ready'?'已准备 · 本机识别器空闲':preparation?.phase==='standby'?'已准备 · 首次听写时加载识别器':preparation?.phase==='failed'?preparation.message:preparation?.phase==='cancelled'?'准备已取消':preparing&&preparation?.phase==='downloading'?`下载 ${preparation.resource||'模型'} · ${size(preparation.completedBytes)}${preparation.totalBytes?` / ${size(preparation.totalBytes)}`:''}`:preparing?'正在准备本机语音模型…':'首次使用需要下载本机模型。';
+  return <><h3 className="settings-section-title">听写</h3><div className="settings-card"><label className="setting-row"><span><strong>主要语言</strong><small>SenseVoice 本机识别支持自动识别、中文、英语、粤语、日语和韩语</small></span><select aria-label="听写语言" value={settings.voiceLanguage} onChange={event=>setSetting('voiceLanguage',event.target.value)}><option value="auto">自动识别</option><option value="zh-CN">简体中文</option><option value="en-US">English</option><option value="yue">粤语</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label><div className="setting-row"><span><strong>本机语音模型</strong><small>{statusText}</small></span>{preparing?<CircleNotch className="spinning" size={17}/>:<button className="secondary-button" disabled={!api||checking} onClick={check}>{checking?'正在检查…':'重新检查'}</button>}</div>
+    {estimate&&preparation?.phase!=='ready'&&<p className="speech-estimate">首次准备约需 {size(estimate.recommendedDiskBytes)} 磁盘空间；内存需求约 {size(estimate.expectedMemoryBytes)}。资源下载后留在本机。</p>}
+    {status?.downloadSources?.length>1&&preparation?.phase!=='ready'&&<label className="setting-row"><span><strong>模型下载源</strong><small>仅用于下载校验通过的 SenseVoice 模型</small></span><select aria-label="语音模型下载源" value={source} onChange={event=>setSource(event.target.value)}><option value="">自动选择</option>{status.downloadSources.map(value=><option key={value} value={value}>{new URL(value).host}</option>)}</select></label>}
+    {status?.supported&&['unprepared','cancelled','failed'].includes(preparation?.phase)&&<div className="setting-row"><span><strong>{preparation.phase==='failed'?'准备未完成':'准备识别器'}</strong><small>{preparation.phase==='failed'?'检查网络或存储空间后重试。':'下载并验证本机 INT8 模型，只在你点击麦克风后录音。'}</small></span><button className="secondary-button" disabled={checking} onClick={prepare}>{checking?'正在启动…':preparation.phase==='failed'?'重试准备':'下载并准备'}</button></div>}
+    {preparing&&<div className="setting-row"><span><strong>模型准备</strong><small>完成后可断网听写；当前不会启用麦克风</small></span><button className="secondary-button" disabled={checking||preparation.phase==='cancelling'} onClick={cancel}>取消准备</button></div>}
+    <div className="setting-row"><span><strong>识别后插入输入框</strong><small>停止听写后先检查转写内容，再自行发送</small></span><Check size={17}/></div></div><p className="settings-lead">点击输入框旁的麦克风开始录音，最长两分钟。关闭听写或离开当前聊天会停止录音。</p><div className="settings-card"><div className="setting-row"><span><strong>音频留在本机</strong><small>录音由 SenseVoice 本机处理，不保存在会话历史，也不发送给聊天模型。</small></span><ShieldCheck size={18}/></div><div className="setting-row"><span><strong>发送文字的隐私设置</strong><small>确认后的转写内容与键盘输入使用同一保护流程。</small></span></div></div>{!api&&<p className="settings-note">本机语音识别需使用 Windows x64 桌面包。</p>}</>;
 }
 
 function PrivacySettings({ settings, setSetting, setModal, desktop }) {

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowCounterClockwise, ArrowUpRight, Check, CircleNotch, Copy, DownloadSimple, FileText, FolderOpen, Globe, TerminalWindow, NotePencil, Plus, ShieldCheck, SidebarSimple, WarningCircle, Info } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ArrowUpRight, Check, CircleNotch, Copy, DownloadSimple, FileText, FloppyDisk, FolderOpen, ListBullets, NotePencil, Plus, ShareNetwork, ShieldCheck, SidebarSimple, WarningCircle, Info } from '@phosphor-icons/react';
 import { Titlebar, Sidebar, AppRail } from './Sidebar.jsx';
 import { Composer } from './Composer.jsx';
 import { Dialogs } from './Dialogs.jsx';
@@ -8,9 +8,10 @@ import { UtilityPage } from './UtilityPage.jsx';
 import { Settings } from './Settings.jsx';
 import {AgentQuestion} from './AgentQuestion.jsx';
 import {Workbench} from './Workbench.jsx';
+import {ConversationResources} from './ConversationResources.jsx';
 import {AnswerText} from './AnswerText.jsx';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
-import { BrandMark, IconButton } from './ui.jsx';
+import { BrandMark, IconButton, MenuItem } from './ui.jsx';
 import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText } from './store.js';
 import { PrivacySession } from './privacy-core.js';
 import { composePrompt, workflows } from './office-workflows.js';
@@ -34,6 +35,7 @@ export function App() {
   const [sidebarOpen, setSidebar] = useState(() => innerWidth > 700);
   const [panel, setPanel] = useState(false);
   const [workPage,setWorkPage]=useState('browser');
+  const [sideSelection,setSideSelection]=useState({scope:'',id:null});
   const [customTab,setCustomTab]=useState('plugins');
   const [fileRequest,setFileRequest]=useState(null);
   const [input, setInputValue] = useState('');
@@ -137,6 +139,31 @@ export function App() {
 
   async function retryWorkspaceSave() {
     if (['saving', 'recovering'].includes(workspaceSave.status)) return;
+    if (storageFailed.current) {
+      setWorkspaceSave(previous => ({ ...previous, status: 'recovering' }));
+      try {
+        const saved = mergeState(await desktop.loadWorkspace());
+        const restoredDrafts={...saved.drafts,...draftMap.current};
+        draftMap.current = saved.settings.persist ? restoredDrafts : {};
+        saved.drafts=draftMap.current;
+        const restored = restoredDraftView(saved)||{section:'home',chatId:null,projectId:null,newDraftId:newDraftIdFor(saved.workspaceId,null)};
+        const key=draftKeyFor({...restored,workspaceId:saved.workspaceId});
+        const draft=draftMap.current[key]||{text:'',files:[]};
+        activeDraftKey.current=key;
+        inputRef.current=draft.text;
+        filesRef.current=draft.files;
+        setInputValue(draft.text);
+        setFilesValue(draft.files);
+        setState(saved);
+        setNativeProjects(saved.projects);
+        setView(restored);
+        storageFailed.current = false;
+        setWorkspaceSave(previous => ({ ...previous, status: 'saved', errorCode: undefined }));
+      } catch (error) {
+        setWorkspaceSave(previous => ({ ...previous, status: 'failed', errorCode: errorText(error) }));
+      }
+      return;
+    }
     const sequence = ++saveSequence.current;
     latestSaveSequence.current = sequence;
     setWorkspaceSave(previous => ({ ...previous, status: 'saving' }));
@@ -393,6 +420,11 @@ export function App() {
   }, [menu]);
 
   useEffect(() => {
+    if (menu?.name !== 'session-actions') return;
+    requestAnimationFrame(() => document.querySelector('.session-actions-menu [role="menuitem"]:not(:disabled)')?.focus({ preventScroll: true }));
+  }, [menu?.name]);
+
+  useEffect(() => {
     const shortcut = event => {
       if (event.key === 'Escape') { if (modal) return; if (settingsPage) setSettingsPage(null); setMenu(null); return; }
       if ((!event.ctrlKey && !event.metaKey) || event.isComposing || modal || !loaded) return;
@@ -596,18 +628,21 @@ export function App() {
     else if(command==='/skills'){setCustomTab('skills');navigate('skills');}
   }
 
-  async function submit(repeatMessageId = null) {
-    if (!loaded || active.current || busy) return;
-    const repeatIndex = repeatMessageId ? messages.findIndex(message => message.id === repeatMessageId) : -1;
-    const previous = repeatIndex >= 0 ? messages.slice(0, repeatIndex).findLast(message => message.role === 'user') : null;
+  async function submit(repeatMessageId = null, sideTarget = null) {
+    if (!loaded || storageFailed.current || active.current || busy) return;
+    const targetChat = sideTarget ? state.chats.find(item => item.id === sideTarget.chatId && item.workspaceId === workspace.id && (item.projectId||null) === (project?.id||null) && !item.archived) : chat;
+    if(sideTarget&&(!targetChat||targetChat.id===chatId||sideTarget.scope!==workScopeKey)) { setToast('侧边聊天已变更，请重新选择有效会话。'); return; }
+    const targetMessages = targetChat?.messages || [];
+    const repeatIndex = repeatMessageId ? targetMessages.findIndex(message => message.id === repeatMessageId) : -1;
+    const previous = repeatIndex >= 0 ? targetMessages.slice(0, repeatIndex).findLast(message => message.role === 'user') : null;
     if (repeatMessageId && !previous) return;
-    const text = repeatMessageId ? previous.text : input.trim();
-    if(!repeatMessageId&&['/model','/settings','/skills'].includes(text)){localCommand(text);return;}
-    const attachments = repeatMessageId ? [] : files;
+    const draftKey = repeatMessageId ? null : sideTarget ? `chat:${sideTarget.chatId}` : activeDraftKey.current;
+    const sourceDraft = draftMap.current[draftKey] || { revision: 0, text: '' };
+    const text = repeatMessageId ? previous.text : (sideTarget ? sourceDraft.text : input).trim();
+    if(!repeatMessageId&&!sideTarget&&['/model','/settings','/skills'].includes(text)){localCommand(text);return;}
+    const attachments = repeatMessageId ? [] : sideTarget ? sourceDraft.files||[] : files;
     if (!text && !attachments.length) return;
     if (attachments.some(file => file.status !== 'ready')) { setToast('请移除无法解析的附件后再发送。'); return; }
-    const draftKey = repeatMessageId ? null : activeDraftKey.current;
-    const sourceDraft = draftMap.current[draftKey] || { revision: 0 };
     const submittedRevision = sourceDraft.revision;
     const repeatedFiles = repeatMessageId ? previous.files || [] : [];
     const planText = text?.match(/^\/plan(?:\s+([\s\S]*))?$/)?.[1]?.trim();
@@ -625,18 +660,18 @@ export function App() {
     if(!demo&&selection.reasoningCapability==='unknown'){setToast('当前模型的思考能力尚未确认，暂不能发送。请刷新模型目录或选择已确认的型号。','error');return;}
     if(!demo&&selection&&!selection.levels.includes(reasoning)){const label=REASONING_LEVELS.find(level=>level.id===reasoning)?.label||reasoning;setToast(`所选模型不支持「${label}」思考档位。请选择该模型支持的档位后再发送。`,'error');return;}
     const selectedProvider = runtime.providers?.find(provider => provider.id === selection?.providerId);
-    const unboundImport = chat?.importedFrom==='deepseek'&&!chat.providerId;
-    const providerChanged = !state.settings.demo && !!chat?.messages?.length && !!selectedProvider && !unboundImport
-      && ((chat.providerId || 'deepseek') !== selectedProvider.id || (chat.providerUrl && chat.providerUrl !== selectedProvider.baseUrl));
-    const forkScheduled = !state.settings.demo && !!chat?.automationTaskId;
-    const sessionId = !providerChanged && !forkScheduled && chat?.id || uuid();
+    const unboundImport = targetChat?.importedFrom==='deepseek'&&!targetChat.providerId;
+    const providerChanged = !state.settings.demo && !!targetChat?.messages?.length && !!selectedProvider && !unboundImport
+      && ((targetChat.providerId || 'deepseek') !== selectedProvider.id || (targetChat.providerUrl && targetChat.providerUrl !== selectedProvider.baseUrl));
+    const forkScheduled = !state.settings.demo && !!targetChat?.automationTaskId;
+    const sessionId = !providerChanged && !forkScheduled && targetChat?.id || uuid();
     const preferences = state.settings.personalizationEnabled ? state.settings.personalInstructions : '';
     const taskText = startInPlanMode ? planText || '' : text;
     const prompt = repeatMessageId && previous?.prompt ? previous.prompt : composePrompt(taskText, attachments, [], project?.instructions, preferences);
     const model = selection?.id || state.settings.model;
     const modelProviderId = selection?.providerId;
-    const bootstrapPrompt=repeatMessageId || providerChanged ? prompt : composePrompt(taskText, attachments, messages, project?.instructions, preferences);
-    const draft = { sessionId, workspaceId: workspace.id, projectId: project?.id || null, text: text || '请处理附件。', attachments, files: repeatedFiles, prompt, repeatExecution: !!repeatMessageId, draftKey, submittedRevision, mode, model, reasoning, privacyMode, startInPlanMode };
+    const bootstrapPrompt=repeatMessageId || providerChanged ? prompt : composePrompt(taskText, attachments, targetMessages, project?.instructions, preferences);
+    const draft = { sessionId, workspaceId: workspace.id, projectId: project?.id || null, text: text || '请处理附件。', attachments, files: repeatedFiles, prompt, repeatExecution: !!repeatMessageId, draftKey, submittedRevision, mode, model, reasoning, privacyMode, startInPlanMode, sideScope: sideTarget?.scope };
     if (demo) {
       const local = new PrivacySession(sessionId).protect(prompt, customTerms,privacyPolicy);
       if (local.blocked) { openModal({ type: 'privacy', original: prompt, preview: local, blocked: true }); return; }
@@ -665,7 +700,7 @@ export function App() {
     if (draft.draftKey) clearSubmittedDraft(draft.draftKey, draft.submittedRevision);
     const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [] };
     active.current = job; setRunning(job);
-    const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ name, size }) => ({ name, size })) };
+    const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl }) => ({ id, name, size, path, sourceUrl })) };
     const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0 };
     setState(current => {
       const target = current.chats.find(item => item.id === draft.sessionId);
@@ -677,10 +712,12 @@ export function App() {
       }] };
       const history = [...target.messages];
       history.push(user);
-      const binding = target.importedFrom==='deepseek'&&!target.providerId&&!demo ? {providerId:preview.providerId,providerUrl:preview.baseUrl} : {};
+      const binding = !demo&&(!target.messages.length||target.importedFrom==='deepseek'&&!target.providerId) ? {providerId:preview.providerId,providerUrl:preview.baseUrl} : {};
+      if(!target.messages.length)binding.title=draft.text.replace(/\s+/g,' ').slice(0,42);
       return { ...current, chats: current.chats.map(item => item.id === target.id ? { ...item,...binding, updatedAt: now, messages: [...history, assistant] } : item) };
     });
-    navigate('home', draft.sessionId, draft.projectId);
+    if (draft.sideScope) setSideSelection({scope:draft.sideScope,id:draft.sessionId});
+    else navigate('home', draft.sessionId, draft.projectId);
     try {
       const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
       if (active.current === job) patchReply(job, { text: result.text || '内核没有返回正文。', masked: result.masked,plan:result.plan,context:result.context,children:result.children,deliverables:result.deliverables,protectCount:result.protectCount||0,pending: false, finishReason: result.finishReason, trace:job.trace, traceTruncated:job.traceTruncated });
@@ -775,10 +812,10 @@ export function App() {
     setModal(null);
   }
 
-  function openExport(message) {
+  function openExport(message, { format, titleSuffix = '' } = {}) {
     const original = message?.text || chatText(chat);
     if (!original) return;
-    openModal({ type: 'export-review', original, masked: message?.masked ?? (message ? undefined : chatText(chat, { protectedView: true })), title: chat?.title || '知行成果' });
+    openModal({ type: 'export-review', original, masked: message?.masked ?? (message ? undefined : chatText(chat, { protectedView: true })), title: `${chat?.title || '知行成果'}${titleSuffix}`, ...(format?{format}:{}) });
   }
 
   async function saveExport({ text, name, format }) {
@@ -791,16 +828,116 @@ export function App() {
     } catch (error) { setToast(`导出失败：${errorText(error)}`); return false; }
   }
 
+  async function saveCurrentChat() {
+    if (!loaded || storageFailed.current) {
+      setToast('本机工作空间尚未成功读取，请先重试读取。', 'error');
+      return;
+    }
+    try {
+      if (!latest.current.settings.persist) {
+        setMenu(null);
+        setToast('本地保存已关闭，请使用导出菜单保存会话副本。');
+        openExport(undefined,{format:'txt',titleSuffix:'（会话副本）'});
+        return;
+      }
+      if (desktop) await desktop.saveWorkspace(latest.current);
+      else saveState(latest.current);
+      setMenu(null);
+      setToast('当前会话已保存。');
+    } catch (error) { setToast(`保存会话失败：${errorText(error)}`); }
+  }
+
+  async function shareCurrentChat() {
+    const original = chatText(chat);
+    if (!original) return;
+    openModal({ type: 'export-review', action: 'share', original, masked: chatText(chat, { protectedView: true }), title: chat.title || '知行会话' });
+  }
+
+  async function shareReviewedChat({ text }) {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: modal.title, text });
+        setToast('已交给系统分享。');
+      } else {
+        await navigator.clipboard.writeText(text);
+        setToast('已复制审阅后的会话内容，可粘贴到其他应用。');
+      }
+      setModal(null);
+      return true;
+    } catch (error) {
+      if (error.name !== 'AbortError') setToast(error.message || '分享失败。');
+      return false;
+    }
+  }
+
+  function sessionMenuKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      setMenu(null);
+      requestAnimationFrame(() => document.querySelector('.session-actions-anchor > .icon-button')?.focus({ preventScroll: true }));
+      return;
+    }
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    const items = [...event.currentTarget.querySelectorAll('[role="menuitem"]:not(:disabled)')];
+    const index = items.indexOf(document.activeElement);
+    if (!items.length) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+      : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items[next].focus();
+  }
+
   const privacyView = ['privacy', 'send-review'].includes(modal?.type);
   const reviewOriginal = privacyView ? modal.original ?? (input || files.length ? composePrompt(input, files.filter(file => file.status === 'ready')) : '示例：联系人：测试员，电话 138-0000-0000。') : '';
   const visibleEvents = events.filter(event => spaceChats.some(item => item.id === event.sessionId));
   const workContext={workspaceId:workspace.id,projectId:project?.id||null,sessionId:chat?.id||null};
   const workScopeKey=`${workspace.id}:${project?.id||chat?.id||'home'}`;
+  const sideChats=chats.filter(item=>item.workspaceId===workspace.id&&(item.projectId||null)===(project?.id||null)&&item.id!==chatId);
+  const sideChatId=sideSelection.scope===workScopeKey&&sideChats.some(item=>item.id===sideSelection.id)?sideSelection.id:null;
+  const sideChat=sideChats.find(item=>item.id===sideChatId);
+  const sideDraftState=sideChatId?state.drafts?.[`chat:${sideChatId}`]:null;
+  const sideDraft=sideDraftState?.text||'';
+  function selectSideChat(id) { setSideSelection({scope:workScopeKey,id}); }
+  function createSideChat() {
+    const id=uuid(),now=Date.now();
+    setState(current=>({...current,chats:[...current.chats,{id,workspaceId:workspace.id,projectId:project?.id||null,title:'侧边聊天',mode,createdAt:now,updatedAt:now,messages:[]}]}));
+    selectSideChat(id);
+  }
+  function setSideText(text) {
+    if (!sideChatId) return;
+    const key=draftKeyFor({workspaceId:workspace.id,projectId:project?.id,chatId:sideChatId});
+    persistDraft(key,{text});
+  }
   const runEvents=runningHere?events.filter(event=>event.runId===running.runId):[];
   const statsHere=runningHere&&liveStats?.runId===running.runId?liveStats.context:null;
   function showWorkPage(page){setWorkPage(page);setPanel(true);setMenu(null);}
+  function returnToRunningChat() {
+    const target = latest.current.chats.find(item => item.id === running?.chatId);
+    if (!target) return;
+    setState(current => ({ ...current, workspaceId: target.workspaceId }));
+    navigate('home', target.id, target.projectId, false, target.workspaceId);
+    showWorkPage('activity');
+  }
+  async function openDeliverable(file) {
+    setMenu(null);
+    if (!desktop?.listDeliverables || !chat?.id) { setToast('交付预览需要在桌面版的所属会话中打开。'); return; }
+    const token=viewToken.current;
+    try {
+      const references=await desktop.listDeliverables(workContext);
+      const reference=references.findLast(item=>item.path===file.path);
+      if (!reference?.available) throw new Error(reference?.reason||'没有找到可核验的原生交付记录，请在原会话中重新交付。');
+      const parsed=await desktop.readDeliverable({...workContext,id:reference.id});
+      if(token!==viewToken.current)return;
+      openModal({type:'document',value:{...parsed,status:'ready',text:parsed.text||'',size:parsed.size||reference.size}});
+    } catch(error) { if(token===viewToken.current)setToast(`打开交付文件失败：${errorText(error)}`,'error'); }
+  }
   function attachWorkingMaterial(file){if(file.status!=='ready'){setToast('这份资料尚未解析。');return;}setFiles(old=>old.some(item=>item.id===file.id)?old:[...old,{...file,workspaceId:workspace.id}].slice(0,12));setToast('已加入本次交办，发送时按设置自动处理。');}
   async function openAnswerUrl(url){showWorkPage('browser');if(desktop)try{await desktop.browserAction({...workContext,action:'new',url});}catch(error){setToast(errorText(error));}}
+  function openConversationSource(source) {
+    if (source.url) { void openAnswerUrl(source.url); return; }
+    if (source.file) openModal({type:'document',value:{...source.file,status:source.file.status||'record',reason:source.recordOnly?'仅保留附件记录，原文件内容没有保存在此会话中。':source.file.reason}});
+  }
   const scopeProps = { workspace, projects, chats, spaceChats, documents, automations, taskRuns, project, mode };
 
   return <div className={`app-shell ${isDark ? 'dark' : ''} ${sidebarOpen ? '' : 'sidebar-hidden'} ${settingsPage ? 'settings-open' : ''}`}>
@@ -813,11 +950,26 @@ export function App() {
         <div className="main-topbar">
           <div className="top-path">{panel&&room?<><FolderOpen size={15}/><strong title={chat?.title||project?.name||workspace.name}>{chat?.title||project?.name||workspace.name}</strong></>:<><button onClick={() => navigate('home')}>{workspace.name}</button>{project && <><span>/</span><button onClick={() => selectProject(project.id)}>{project.name}</button></>}{chat && <><span>/</span><strong title={chat.title}>{chat.title}</strong></>}</>}</div>
           <div className="top-actions">
-            {chat && (panel?<IconButton icon={DownloadSimple} label="导出聊天" onClick={()=>openExport()}/>:<button className="header-action" onClick={() => openExport()}><DownloadSimple size={17}/>导出</button>)}
-            {running && !runningHere && <button className="header-action" onClick={() => running.workspaceId === workspace.id ? openChat(running.chatId) : changeWorkspace(running.workspaceId)}><CircleNotch size={16}/>正在生成</button>}
-            {room&&!panel&&<><IconButton icon={Globe} label="打开内置浏览器" onClick={()=>showWorkPage('browser')}/><IconButton icon={FolderOpen} label="浏览项目文件" onClick={()=>showWorkPage('files')}/><IconButton icon={TerminalWindow} label="打开交互终端" onClick={()=>showWorkPage('terminal')}/>{chat&&<IconButton icon={CircleNotch} label="打开执行轨迹" onClick={()=>showWorkPage('activity')}/>}<IconButton icon={SidebarSimple} label="打开工作面板" aria-expanded={false} onClick={()=>setPanel(true)}/></>}
+            {room&&<>
+              <div className="menu-anchor session-actions-anchor">
+                <IconButton icon={ShareNetwork} label="会话操作" aria-expanded={menu?.name==='session-actions'} onClick={event=>toggleMenu('session-actions',event)}/>
+                {menu?.name==='session-actions'&&<div className="dropdown session-actions-menu" role="menu" aria-label="会话操作" onKeyDown={sessionMenuKeydown}>
+                  <MenuItem icon={FloppyDisk} disabled={!loaded||storageFailed.current} onClick={saveCurrentChat}>保存会话</MenuItem>
+                  <MenuItem icon={ShareNetwork} disabled={!chatText(chat)} onClick={shareCurrentChat}>分享或转发…</MenuItem>
+                  <MenuItem icon={FileText} disabled={!chatText(chat)} onClick={()=>openExport(undefined,{format:'txt',titleSuffix:'（会话副本）'})}>复制为文件…</MenuItem>
+                  <div className="menu-separator"/>
+                  <MenuItem icon={DownloadSimple} disabled={!chatText(chat)} onClick={()=>openExport()}>导出聊天文件…</MenuItem>
+                </div>}
+              </div>
+              <div className="menu-anchor resources-anchor">
+                <IconButton icon={ListBullets} label="查看当前对话产出与来源" aria-expanded={menu?.name==='resources'} onClick={event=>toggleMenu('resources',event)}/>
+                {menu?.name==='resources'&&<ConversationResources messages={messages} liveTrace={runEvents} running={running} runningTitle={state.chats.find(item=>item.id===running?.chatId)?.title} onOpenDeliverable={openDeliverable} onOpenSource={openConversationSource} onViewActivity={()=>showWorkPage('activity')} onViewFiles={()=>showWorkPage('files')} onAddSource={()=>showWorkPage('browser')} onReturnToRun={returnToRunningChat} onClose={()=>setMenu(null)}/>}
+              </div>
+              <IconButton icon={SidebarSimple} label={panel?'隐藏工作面板':'打开工作面板'} aria-expanded={panel} onClick={()=>setPanel(value=>!value)}/>
+            </>}
           </div>
         </div>
+            {running&&!runningHere&&<div className="running-return" role="status"><CircleNotch size={14}/><span>{state.chats.find(item=>item.id===running.chatId)?.title||'另一段聊天'}正在执行</span><button type="button" onClick={returnToRunningChat}>返回任务</button></div>}
             {room ? <>
               {chat ? <section className="transcript" ref={transcript} onScroll={onTranscriptScroll} aria-label="聊天记录">
                 {!messages.length && <p className="transcript-empty">这段聊天还没有消息。</p>}
@@ -826,7 +978,7 @@ export function App() {
                   {message.imported&&<ImportedActivity message={message} onOpenUrl={openAnswerUrl}/>}
                   <AgentChildren items={message.pending?runEvents.findLast(event=>event.type==='subagents')?.children:message.children} onView={()=>showWorkPage('activity')}/>
                   <TaskPlan items={message.pending?events.findLast(event=>event.runId===running?.runId&&event.type==='plan')?.plan:message.plan}/>
-                  {message.deliverables?.length>0&&<div className="deliverable-files">{message.deliverables.map((file,index)=><button key={index} onClick={()=>{showWorkPage('files');setFileRequest({path:file.path,revision:uuid()});}}><FileText size={18}/><span><strong>{file.path.split(/[\\/]/).at(-1)}</strong><small>{file.description||'成果文件'}</small></span></button>)}</div>}
+                  {message.deliverables?.length>0&&<div className="deliverable-files">{message.deliverables.map((file,index)=><button key={index} onClick={()=>void openDeliverable(file)}><FileText size={18}/><span><strong>{file.path.split(/[\\/]/).at(-1)}</strong><small>{file.description||'成果文件'}</small></span></button>)}</div>}
                   {message.context?.planning&&<p className="context-usage">规划模式 · 只读调查与方案设计 <button disabled={!!running} onClick={()=>setInput('/plan off')}>退出规划模式</button></p>}
                   {message.context?.goal&&<p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[message.context.goal.phase]||message.context.goal.phase} · 第 {message.context.goal.roundsStarted} / {message.context.goal.maxGoalRounds} 轮 <button disabled={!!running} onClick={()=>setInput(message.context.goal.phase==='active'?'/goal pause':'/goal resume')}>{message.context.goal.phase==='active'?'暂停目标':'查看并继续'}</button></p>}
                   {message.pending&&message.progressText&&<AnswerText text={message.progressText} onOpenUrl={openAnswerUrl}/>}
@@ -835,7 +987,7 @@ export function App() {
                   {message.context?.measurement&&<p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow||128000).toLocaleString()} tokens · <button type="button" onClick={()=>setInput('/compact')} disabled={!!running}>压缩上下文</button></p>}
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}
                   {!message.pending && <div className="answer-actions">
-                    {!message.error && !message.stopped && <><IconButton icon={Copy} label="复制回复" onClick={() => navigator.clipboard.writeText(message.text).then(() => setToast('已复制。')).catch(() => setToast('请选中文字后复制。'))}/><IconButton icon={DownloadSimple} label="导出成果" onClick={() => openExport(message)}/></>}
+                    {!!message.text && <><IconButton icon={Copy} label="复制回复" onClick={() => navigator.clipboard.writeText(message.text).then(() => setToast('已复制。')).catch(() => setToast('请选中文字后复制。'))}/><IconButton icon={DownloadSimple} label="导出成果" onClick={() => openExport(message)}/></>}
                     {index === messages.length - 1 && !message.imported && <IconButton icon={ArrowCounterClockwise} label="再次执行" disabled={!!running || busy} onClick={() => submit(message.id)}/>}
                     {message.masked && <IconButton icon={ShieldCheck} label="查看发送详情" onClick={() => {
                       const source = messages.slice(0, index).findLast(item => item.role === 'user');
@@ -851,10 +1003,10 @@ export function App() {
                 <div className="quick-workflows">{workflows[mode].slice(0, 3).map(([label, prompt]) => <button key={label} onClick={() => useTemplate(prompt)}>{label}<ArrowUpRight size={13}/></button>)}</div>
                 {project && <button className="text-button" onClick={() => openModal({ type: 'project-settings', value: project })}>项目说明</button>}
               </section></div>}
-              <Composer settings={state.settings} files={files} input={input} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage||!!question}/>
+              <Composer settings={state.settings} files={files} input={input} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage||!!question}/>
             </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={useTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
           </div>
-          {room&&<Workbench key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question} onClose={()=>setPanel(false)} page={workPage} setPage={setWorkPage} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} mode={mode} privacyMode={state.settings.privacyMode}/>}
+          {room&&<Workbench key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={()=>setPanel(false)} page={workPage} setPage={setWorkPage} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/>}
 
         </div>
       </main>
@@ -869,15 +1021,15 @@ export function App() {
       const request = fileTarget.current; fileTarget.current = null;
       if (request) void addFiles(list, request.target, request.spaceId, request.token);
     }}/>
-    <section className={`workspace-save-banner ${workspaceSave.status}`} role={workspaceSave.status === 'failed' ? 'alert' : 'status'} aria-live={workspaceSave.status === 'failed' ? 'assertive' : 'polite'}>
+    <section hidden={workspaceSave.status==='saved'} data-save-status={workspaceSave.status} className={`workspace-save-banner ${workspaceSave.status}`} role={workspaceSave.status === 'failed' ? 'alert' : 'status'} aria-live={workspaceSave.status === 'failed' ? 'assertive' : 'polite'}>
       {workspaceSave.status === 'failed' ? <WarningCircle size={17}/> : workspaceSave.status === 'saved' ? <Check size={17}/> : <CircleNotch className={workspaceSave.status === 'saving' ? 'spinning' : ''} size={17}/>}
-      <span>{workspaceSave.status === 'failed' ? `工作空间保存失败：${workspaceSave.errorCode || '请检查磁盘空间和本机权限。'}` : workspaceSave.status === 'recovering' ? '正在读取并恢复本机工作空间…' : workspaceSave.status === 'saved' ? '工作空间已保存' : '正在保存工作空间…'}</span>
-      {workspaceSave.status === 'failed' && <button type="button" className="secondary-button" onClick={() => void retryWorkspaceSave()}>重试保存</button>}
+      <span>{workspaceSave.status === 'failed' ? `${storageFailed.current?'工作空间读取失败':'工作空间保存失败'}：${workspaceSave.errorCode || '请检查磁盘空间和本机权限。'}` : workspaceSave.status === 'recovering' ? '正在读取并恢复本机工作空间…' : workspaceSave.status === 'saved' ? '' : '正在保存工作空间…'}</span>
+      {workspaceSave.status === 'failed' && <button type="button" className="secondary-button" onClick={() => void retryWorkspaceSave()}>{storageFailed.current?'重试读取':'重试保存'}</button>}
     </section>
     {toast && <div className={`toast ${toast.type}`} role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'}>{toast.type === 'error' ? <WarningCircle size={15}/> : toast.type === 'success' ? <Check size={15}/> : <Info size={15}/>}<span>{toast.message}</span>{toast.type === 'error'&&<button type="button" className="toast-dismiss" aria-label="关闭错误提示" onClick={()=>setToast(null)}>×</button>}</div>}
     {question&&<AgentQuestion key={question.requestId} request={question} onAnswer={value=>desktop.answerQuestion(value)}/>}
     {privacyView && <PrivacyReview key={modal.type} modal={modal} original={reviewOriginal} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} currentMode={state.settings.privacyMode} onClose={() => setModal(null)} onSettings={() => openModal({ type: 'settings', tab: '隐私与数据' })} onSend={() => startReply(modal.draft, modal.preview)}/>}
-    {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} terms={state.settings.customTerms} desktop={!!desktop} onClose={() => setModal(null)} onExport={saveExport}/>}
+    {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} terms={state.settings.customTerms} desktop={!!desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
     {modal && !privacyView && modal.type !== 'export-review' && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={state} setState={setState} scope={scopeProps} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={useTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
   </div>;
 }

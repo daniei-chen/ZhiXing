@@ -48,7 +48,7 @@ async function newProject(name) {
   await ui.waitFor(`document.body.innerText.includes(${JSON.stringify(name)}) && !document.querySelector('.modal')`);
 }
 try {
-  await ui.waitFor('document.body.innerText.includes("工作空间已保存")');
+  await ui.waitFor('document.querySelector(".workspace-save-banner")?.dataset.saveStatus==="saved"');
   if (phase === 'drafts') {
     await home();
     const homeDraft = '首页草稿验收，仅合成资料。';
@@ -88,7 +88,7 @@ try {
       await ui.evaluate(`(() => {const data=new DataTransfer();data.items.add(new File(['合成附件来源，数值 123.45，编号 00123。'],'草稿材料.txt',{type:'text/plain'}));document.querySelector('.composer').dispatchEvent(new DragEvent('drop',{dataTransfer:data,bubbles:true,cancelable:true}));})()`);
       await ui.waitFor("!!document.querySelector('.attachment-chip:not(.invalid)')");
     }
-    await ui.waitFor('document.body.innerText.includes("工作空间已保存")');
+    await ui.waitFor('document.querySelector(".workspace-save-banner")?.dataset.saveStatus==="saved"');
     await ui.send('Page.reload');
     await ui.waitFor(`document.querySelector(${JSON.stringify(inputSelector)})?.value==='验收项目乙的独立中文草稿 · 重启恢复'`);
     await record('重启渲染页面恢复最近草稿作用域');
@@ -203,7 +203,7 @@ try {
     await record('流式首段后停止并保留正文', { requestNumber: firstChunk.requestNumber });
     await ui.screenshot(path.join(evidence, 'stopped-prefix.png'));
     await ui.fill(inputSelector, '当前聊天未发送草稿，供安装与重启保留验收。');
-    await ui.waitFor('document.body.innerText.includes("工作空间已保存")');
+    await ui.waitFor('document.querySelector(".workspace-save-banner")?.dataset.saveStatus==="saved"');
   } else if (phase === 'recovery') {
     await home();
     await ui.fill(inputSelector, 'QA_ERROR 发送失败时保留这份中文草稿');
@@ -251,7 +251,8 @@ try {
       await ui.waitFor('!document.querySelector(".modal")');
       assert.equal(await ui.evaluate('document.activeElement?.getAttribute("aria-label")'), '新建项目');
       await record('弹窗 Escape 与关闭按钮返回焦点');
-      await ui.click('打开内置浏览器');
+      if (!await ui.evaluate('!!document.querySelector(".workbench:not([hidden])")')) await ui.click('打开工作面板');
+      await ui.fill('select[aria-label="工作面板视图"]', 'browser');
       if (await ui.evaluate('!!document.querySelector("input[aria-label=新标签页网址]")')) {
         await ui.fill('input[aria-label="新标签页网址"]', 'http://127.0.0.1:43123/__qa/health');
         await ui.click('前往网址');
@@ -278,6 +279,80 @@ try {
       await ui.click('返回工作台');
       await record('外观方向键切换并保持焦点');
     } finally { main.close(); }
+  } else if (phase === 'sidebar') {
+    const main = await connectUi(Number(process.env.ZHIXING_QA_MAIN_PORT || 9334), true);
+    try {
+      await home();
+      const state = await ui.evaluate('window.zhixing.loadWorkspace()');
+      const now = Date.now();
+      state.workspaceId = 'office-home';
+      state.workspaces = state.workspaces.map(item => item.id === 'office-home' ? {...item, projectId: 'qa-sidebar-a'} : item);
+      state.projects = [...state.projects.filter(item => item.workspaceId !== 'office-home'),
+        {id:'qa-sidebar-a',workspaceId:'office-home',name:'产品周报',expanded:true},
+        {id:'qa-sidebar-b',workspaceId:'office-home',name:'客户回访',expanded:true},
+        {id:'qa-sidebar-c',workspaceId:'office-home',name:'资料整理',expanded:false},
+      ];
+      state.chats = [
+        {id:'qa-sidebar-pin',workspaceId:'office-home',projectId:null,title:'本周工作重点',pinned:true,createdAt:now,updatedAt:now,messages:[]},
+        {id:'qa-sidebar-chat-a',workspaceId:'office-home',projectId:'qa-sidebar-a',title:'月度数据核对',createdAt:now,updatedAt:now,messages:[]},
+        {id:'qa-sidebar-chat-b',workspaceId:'office-home',projectId:'qa-sidebar-b',title:'会议纪要整理',createdAt:now-1000,updatedAt:now-1000,messages:[]},
+        {id:'qa-sidebar-chat-home',workspaceId:'office-home',projectId:null,title:'临时问题记录',createdAt:now-2000,updatedAt:now-2000,messages:[]},
+      ];
+      await ui.evaluate(`window.zhixing.saveWorkspace(${JSON.stringify(state)})`);
+      await ui.send('Page.reload');
+      await ui.waitFor('document.querySelectorAll(".project-name").length===3 && document.querySelectorAll(".chat-row").length>=6');
+      const matrix = [];
+      for (const zoom of [1, 1.25, 1.5, 2]) {
+        await main.evaluate(`process.mainModule.require('electron').BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(${zoom})`);
+        for (const [width, height] of [[1255, 912], [1366, 768], [1920, 1080]]) {
+          await main.evaluate(`process.mainModule.require('electron').BrowserWindow.getAllWindows()[0].setBounds({x:0,y:0,width:${width},height:${height}})`);
+          await ui.waitFor('document.querySelectorAll(".project-name").length===3');
+          const projectToggle = await ui.evaluate('[...document.querySelectorAll(".project-name")].find(item=>item.textContent.includes("客户回访"))?.closest(".project-group")?.querySelector(".project-expand")?.getAttribute("aria-expanded")');
+          if (projectToggle === 'true') await ui.click('收起 客户回访', '.project-expand');
+          assert.equal(await ui.evaluate('[...document.querySelectorAll(".project-name")].find(item=>item.textContent.includes("客户回访"))?.closest(".project-group")?.querySelector(".project-expand")?.getAttribute("aria-expanded")'), 'false');
+          await ui.click('展开 客户回访', '.project-expand');
+          assert.equal(await ui.evaluate('[...document.querySelectorAll(".project-name")].find(item=>item.textContent.includes("客户回访"))?.closest(".project-group")?.querySelector(".project-expand")?.getAttribute("aria-expanded")'), 'true');
+          await ui.click('客户回访', '.project-name');
+          await ui.waitFor('document.querySelector(".main-topbar")?.innerText.includes("客户回访")');
+          await ensureNav();
+          await ui.waitFor('[...document.querySelectorAll(".project-row")].find(item=>item.textContent.includes("客户回访"))?.classList.contains("selected")');
+          assert.equal(await ui.evaluate('[...document.querySelectorAll(".project-row")].find(item=>item.textContent.includes("客户回访"))?.classList.contains("selected")'), true);
+          await ui.click('筛选最近聊天');
+          await ui.click('项目聊天', '.chat-filter-dropdown button');
+          assert.equal(await ui.evaluate('document.getElementById(document.querySelector(".sidebar-section-toggle").getAttribute("aria-controls")).innerText.includes("临时问题记录")'), false);
+          assert.equal(await ui.evaluate('document.getElementById(document.querySelector(".sidebar-section-toggle").getAttribute("aria-controls")).innerText.includes("月度数据核对")'), true);
+          await ui.click('筛选最近聊天');
+          await ui.click('全部聊天', '.chat-filter-dropdown button');
+          const metrics = await ui.evaluate('({width:innerWidth,height:innerHeight,overflow:document.documentElement.scrollWidth>innerWidth+1,rail:document.querySelector(".app-rail").getBoundingClientRect().width,sidebar:document.querySelector(".sidebar").getBoundingClientRect().width,projectOrder:[...document.querySelectorAll(".project-name")].map(item=>item.textContent.trim()),pinnedFirst:document.querySelector(".sidebar-scroll")?.firstElementChild?.classList.contains("pinned-chats"),recentVisible:!!document.querySelector(".sidebar-section-toggle")})');
+          assert.equal(metrics.overflow, false, `${width}x${height} at ${zoom * 100}% document overflow`);
+          assert.equal(metrics.rail, 46);
+          assert.equal(metrics.sidebar, metrics.width <= 700 ? Math.min(308, metrics.width * 0.9) : metrics.width <= 1100 ? 282 : 302);
+          assert.deepEqual(metrics.projectOrder, ['产品周报','客户回访','资料整理']);
+          assert.equal(metrics.pinnedFirst, true);
+          assert.equal(metrics.recentVisible, true);
+          if ((width === 1255 && zoom === 1) || (width === 1366 && zoom === 1.25) || (width === 1920 && zoom === 1.5) || (width === 1255 && zoom === 2)) {
+            await ui.screenshot(path.join(evidence, `sidebar-${width}x${height}-${zoom * 100}pct.png`));
+          }
+          matrix.push({zoom, ...metrics});
+        }
+      }
+      await record('侧栏分组、置顶、项目展开、最近聊天筛选和选中态', matrix);
+    } finally {
+      await main.evaluate("process.mainModule.require('electron').BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(1)").catch(()=>{});
+      main.close();
+    }
+  } else if (phase === 'updates') {
+    await home();
+    await settings('关于知行');
+    await ui.screenshot(path.join(evidence, 'updates-about-before-check.png'));
+    await ui.click('检查知行更新');
+    await ui.waitFor('!!document.querySelector(".desktop-release-result, .about-settings [role=alert]")', 30000);
+    const result = await ui.evaluate('({status:document.querySelector(".desktop-release-result")?.innerText||document.querySelector(".about-settings [role=alert]")?.innerText,button:document.querySelector(".about-settings button")?.textContent,disabled:document.querySelector(".about-settings button")?.disabled})');
+    assert(result.status, 'The update check must show a result or a recoverable error.');
+    assert.equal(result.button, '检查知行更新');
+    assert.equal(result.disabled, false);
+    await ui.screenshot(path.join(evidence, 'updates-about-after-check.png'));
+    await record('关于页手动检查 GitHub 发行信息', result);
   } else if (phase === 'pages') {
     const main = await connectUi(Number(process.env.ZHIXING_QA_MAIN_PORT || 9334), true);
     try {
@@ -302,8 +377,25 @@ try {
         await record(`${width}×${height} ${zoom * 100}% 设置 ${tab}`, metrics);
       }
       await home();
-      await ui.click('打开工作面板');
-      for (const [id, label] of [['browser', '浏览器'], ['files', '文件'], ['terminal', '终端'], ['activity', '执行'], ['stats', '统计'], ['details', '详情']]) {
+      await ui.click('新聊天', '.new-chat');
+      await ui.waitFor('document.querySelectorAll(".top-actions .icon-button").length===3');
+      await ui.click('会话操作');
+      assert(await ui.evaluate('document.querySelector(".session-actions-menu")?.innerText.includes("保存会话")'));
+      assert(await ui.evaluate('document.querySelector(".session-actions-menu")?.innerText.includes("复制为文件")'));
+      await ui.click('保存会话', '.session-actions-menu button');
+      await ui.waitFor('document.body.innerText.includes("当前会话已保存")');
+      await record('会话顶栏三入口与会话操作菜单');
+      await ui.click('查看当前对话产出与来源');
+      await ui.waitFor('!!document.querySelector(".conversation-resources")');
+      assert(await ui.evaluate('document.querySelector(".conversation-resources")?.innerText.includes("本对话暂无已记录的文件产出")'));
+      assert(await ui.evaluate('document.querySelector(".conversation-resources")?.innerText.includes("来源")'));
+      await ui.screenshot(path.join(evidence, 'conversation-deliverables-empty.png'));
+      await record('当前对话产出来源浮层可达');
+      await ui.send('Input.dispatchKeyEvent', {type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+      assert.equal(await ui.evaluate('document.activeElement?.getAttribute("aria-label")'),'查看当前对话产出与来源');
+      assert.equal(await ui.evaluate('document.querySelector(".workspace-save-banner.saved")?.getClientRects().length'),0);
+      if (!await ui.evaluate('!!document.querySelector(".workbench:not([hidden])")')) await ui.click('打开工作面板');
+      for (const [id, label] of [['browser', '浏览器'], ['files', '文件'], ['terminal', '终端'], ['chat', '侧边聊天'], ['activity', '执行'], ['deliverables', '产出'], ['stats', '统计'], ['details', '详情']]) {
         await ui.fill('select[aria-label="工作面板视图"]', id);
         await ui.screenshot(path.join(evidence, `${sizeLabel}-面板-${label}.png`));
         await record(`${width}×${height} ${zoom * 100}% 面板 ${label}`, await ui.evaluate('({width:innerWidth,height:innerHeight,dpr:devicePixelRatio})'));

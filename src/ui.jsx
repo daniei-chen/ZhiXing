@@ -9,7 +9,7 @@ export function IconButton({icon:Icon,label,onClick,className='',children,...res
   return <button type="button" className={`icon-button ${className}`} aria-label={label} title={label} onClick={onClick} {...rest}>{Icon&&<Icon size={17}/ >}{children}</button>;
 }
 export function MenuItem({icon:Icon,children,onClick,danger=false,hint,disabled}) {
-  return <button type="button" className={`menu-item ${danger?'danger':''}`} onClick={onClick} disabled={disabled}>{Icon&&<Icon size={16}/>}<span>{children}</span>{hint&&<small>{hint}</small>}</button>;
+  return <button type="button" role="menuitem" className={`menu-item ${danger?'danger':''}`} onClick={onClick} disabled={disabled}>{Icon&&<Icon size={16}/>}<span>{children}</span>{hint&&<small>{hint}</small>}</button>;
 }
 export function Modal({title,onClose,className='',children,canDismiss=true}) {
   const ref=useRef(null);
