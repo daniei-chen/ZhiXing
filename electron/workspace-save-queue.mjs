@@ -80,8 +80,10 @@ export class WorkspaceSaveQueue {
   }finally{
    this.running=false;
    this.active=null;
+   // A failed snapshot stays pending for retry, but current flush callers must
+   // receive the failure before state listeners can start another save.
+   if(!this.pending||this.status==='failed')this.resolveIdle();
    this.publish();
-   if(!this.running&&!this.pending)this.resolveIdle();
    if(this.pending&&this.status==='saving')void this.drain();
   }
  }

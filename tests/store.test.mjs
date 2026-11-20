@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mergeState } from '../src/store.js';
+import { mergeState, restoredDraftView } from '../src/store.js';
 import {projectContext,projectWorktreeSourceContext} from '../src/project-core.js';
 
 test('旧政务空间迁移保留用户资料与真实聊天，关闭旧 AI 调度', () => {
@@ -72,4 +72,26 @@ test('工作区恢复保留作用域草稿版本与附件引用',()=>{
  assert.equal(restored.drafts['chat:chat-one'].workspaceId,'government-home');
  restored.settings.persist=false;
  assert.deepEqual(mergeState(restored).drafts,{});
+});
+
+test('启动恢复最近的有效草稿作用域并保留中断输出',()=>{
+ const saved=mergeState(null);
+ saved.chats=[{id:'unfinished',workspaceId:'office-home',projectId:'office-general',messages:[{role:'assistant',pending:true,text:'已完成第一段',progressText:'已完成第一段和第二段'}]}];
+ saved.drafts={
+  home:{kind:'new',draftId:'home-draft',workspaceId:'office-home',text:'首页草稿',files:[],updatedAt:1},
+  project:{kind:'new',draftId:'project-draft',workspaceId:'office-home',projectId:'office-general',text:'项目草稿',files:[],updatedAt:2},
+  other:{kind:'new',draftId:'other',workspaceId:'government-home',text:'其他模式',files:[],updatedAt:8},
+  removed:{kind:'new',draftId:'removed',workspaceId:'office-home',projectId:'missing',text:'已移除项目',files:[],updatedAt:9},
+ };
+ const restored=mergeState(saved);
+ assert.deepEqual(restoredDraftView(restored),{section:'project',chatId:null,projectId:'office-general',newDraftId:'project-draft'});
+ assert.equal(restored.chats[0].messages[0].text,'已完成第一段和第二段');
+ assert.equal(restored.chats[0].messages[0].status,'interrupted');
+ assert.equal(restored.chats[0].messages[0].pending,false);
+ assert.equal(restored.chats[0].messages[0].progressText,'');
+ restored.drafts.project={...restored.drafts.project,kind:'chat',draftId:'unfinished',chatId:'unfinished',updatedAt:10};
+ assert.equal(restoredDraftView(restored).chatId,'unfinished');
+ restored.chats[0].archived=true;
+ assert.equal(restoredDraftView(restored).newDraftId,'home-draft');
+ restored.drafts={};assert.equal(restoredDraftView(restored),null);
 });

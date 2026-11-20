@@ -11,7 +11,7 @@ import {Workbench} from './Workbench.jsx';
 import {AnswerText} from './AnswerText.jsx';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
 import { BrandMark, IconButton } from './ui.jsx';
-import { initialState, mergeState, saveState, downloadText, chatText } from './store.js';
+import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText } from './store.js';
 import { PrivacySession } from './privacy-core.js';
 import { composePrompt, workflows } from './office-workflows.js';
 import { REASONING_LEVELS } from './model-options.js';
@@ -197,7 +197,11 @@ export function App() {
       if(mounted){
         const initial=mergeState(saved);
         draftMap.current = initial.settings.persist ? initial.drafts || {} : {};
-        if(saved)setState(initial);
+        if(saved){
+          setState(initial);
+          const restored = restoredDraftView(initial);
+          if (restored) setView(restored);
+        }
         setNativeProjects(initial.projects);
       }
     }).catch(() => {
@@ -220,6 +224,7 @@ export function App() {
         return;
       }
       if(event.type==='run/terminal'){
+        if(job?.runId===event.runId)job.terminalStatus=event.status;
         if(event.status!=='succeeded'){
           const stopped=event.status==='cancelled';
           setState(current=>({
@@ -680,6 +685,12 @@ export function App() {
       const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
       if (active.current === job) patchReply(job, { text: result.text || '内核没有返回正文。', masked: result.masked,plan:result.plan,context:result.context,children:result.children,deliverables:result.deliverables,protectCount:result.protectCount||0,pending: false, finishReason: result.finishReason, trace:job.trace, traceTruncated:job.traceTruncated });
     } catch (error) {
+      if (draft.draftKey && job.terminalStatus !== 'cancelled') {
+        const currentDraft = draftMap.current[draft.draftKey];
+        if (currentDraft?.revision === draft.submittedRevision + 1 && !currentDraft.text && !currentDraft.files.length) {
+          persistDraft(draft.draftKey, { text: draft.text, files: draft.attachments }, currentDraft.revision);
+        }
+      }
       if (active.current === job) {
         const partialText=job.progressText||'';
         patchReply(job,{text:partialText,progressText:partialText,pending:false,error:true,errorMessage:`运行未完成：${errorText(error)}`,trace:job.trace,traceTruncated:job.traceTruncated});

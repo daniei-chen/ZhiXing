@@ -24,6 +24,17 @@ export function Settings({ modal, close, setModal, state, scope, setSetting, run
     return () => previous?.focus?.({preventScroll:true});
   }, []);
   const desktop = !!window.zhixing;
+  function moveThemeFocus(event) {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    const buttons = [...event.currentTarget.querySelectorAll('[role="radio"]')];
+    const current = buttons.indexOf(document.activeElement);
+    if (current < 0) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+      : (current + (['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1) + buttons.length) % buttons.length;
+    buttons[next].click();
+    buttons[next].focus();
+  }
   const filteredTabs = tabs.filter(([label]) => !query.trim() || `${label} ${label === '隐私与数据' ? '脱敏 原文 词表 保存 归档' : label === '权限与工具' ? '请求批准 帮我批准 完全访问 文件' : label === '供应商' ? 'DeepSeek API Key 服务地址 推理 内核' : label === '外观' ? '主题 深色 浅色 系统' : label === '常规' ? '语言 快捷键 演示' : ''}`.toLowerCase().includes(query.trim().toLowerCase()));
   return <section ref={page} tabIndex={-1} className="settings-page" aria-label="设置">
       <nav className="settings-nav" aria-label="设置分类">
@@ -42,7 +53,7 @@ export function Settings({ modal, close, setModal, state, scope, setSetting, run
           <div className="setting-row"><span><strong>项目工作区</strong><small>新建项目时选择文件夹，每个项目分别保存</small></span><button className="secondary-button" onClick={() => setTab('项目与工作区')}>管理</button></div>
           </div><h3 className="settings-section-title">编辑器</h3><div className="settings-card"><div className="setting-row"><span><strong>发送快捷键</strong><small>Enter 直接发送；脱敏模式在本机自动处理</small></span><kbd>Enter</kbd></div><div className="setting-row"><span><strong>键盘快捷键</strong></span><button className="secondary-button" onClick={() => setTab('键盘快捷键')}>查看</button></div></div>
         </>}
-        {tab === '外观' && <><h3 className="settings-section-title">视觉风格</h3><div className="settings-card"><div className="setting-row appearance-mode-row"><span><strong>模式</strong></span><div className="theme-choices" role="radiogroup" aria-label="外观模式">{[['system','跟随系统',Desktop],['light','浅色',Sun],['dark','深色',Moon]].map(([id,label,Icon])=><button type="button" role="radio" aria-checked={state.settings.theme===id} key={id} onClick={()=>setSetting('theme',id)}><Icon size={22} weight="light"/><span>{label}</span>{state.settings.theme===id&&<Check size={12}/>}</button>)}</div></div></div><div className="settings-card"><div className="setting-row"><strong>主题</strong><span className="setting-token">知行 · 经典</span></div><div className="setting-row"><strong>强调色</strong><span className="setting-token">中性黑白</span></div><div className="setting-row"><strong>字体</strong><span className="setting-token">系统</span></div></div></>}
+        {tab === '外观' && <><h3 className="settings-section-title">视觉风格</h3><div className="settings-card"><div className="setting-row appearance-mode-row"><span><strong>模式</strong></span><div className="theme-choices" role="radiogroup" aria-label="外观模式" onKeyDown={moveThemeFocus}>{[['system','跟随系统',Desktop],['light','浅色',Sun],['dark','深色',Moon]].map(([id,label,Icon])=><button type="button" role="radio" tabIndex={state.settings.theme===id?0:-1} aria-checked={state.settings.theme===id} key={id} onClick={()=>setSetting('theme',id)}><Icon size={22} weight="light"/><span>{label}</span>{state.settings.theme===id&&<Check size={12}/>}</button>)}</div></div></div><div className="settings-card"><div className="setting-row"><strong>主题</strong><span className="setting-token">知行 · 经典</span></div><div className="setting-row"><strong>强调色</strong><span className="setting-token">中性黑白</span></div><div className="setting-row"><strong>字体</strong><span className="setting-token">系统</span></div></div></>}
         {tab === '语音' && <VoiceSettings settings={state.settings} setSetting={setSetting}/>}
         {tab === '个性化' && <><h3 className="settings-section-title">办公偏好</h3><div className="settings-card"><div className="setting-row"><span><strong>使用我的办公偏好</strong><small>新交办携带下方说明，发送时自动遵循脱敏设置</small></span><Switch label="使用我的办公偏好" value={state.settings.personalizationEnabled} onChange={value=>setSetting('personalizationEnabled',value)}/></div><label className="form-label personal-instructions">你希望知行了解哪些工作习惯？<textarea aria-label="个人办公偏好" rows={6} maxLength={4000} value={state.settings.personalInstructions} onChange={event=>setSetting('personalInstructions',event.target.value)} placeholder="例如：先给结论，表格注明单位；正式文稿保留待核实事项。"/><small>{state.settings.personalInstructions.length} / 4000 · 仅保存你主动填写的说明</small></label></div><p className="settings-note">项目专用要求可在项目设置中填写。知行目前不会自动从聊天中提取长期记忆。定时任务使用其已审阅的内容与资料。</p></>}
         {tab === '键盘快捷键' && <div className="settings-card shortcuts">{[['新建聊天','Ctrl + N'],['搜索聊天','Ctrl + K'],['打开设置','Ctrl + ,'],['添加本机文件','Ctrl + O'],['打开浏览器','Ctrl + T'],['项目文件面板','Ctrl + P'],['交互终端','Ctrl + `'],['发送消息','Enter'],['输入换行','Shift + Enter'],['压缩当前上下文','/compact'],['进入／退出规划模式','/plan · /plan off'],['持续目标及控制','/goal · /goal pause · /goal resume'],['关闭弹窗或返回工作台','Esc']].map(([title,key]) => <div key={title}><span>{title}</span><kbd>{key}</kbd></div>)}</div>}

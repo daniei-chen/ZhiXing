@@ -78,11 +78,22 @@ export function mergeState(saved) {
     chats: chats.map(chat => ({
       ...chat,
       workspaceId: projectById.get(chat.projectId)?.workspaceId || chat.workspaceId || workspaceId,
-      messages: (chat.messages || []).map(message => message.pending ? { ...message, pending: false, stopped: true, text: '上次运行已中断。' } : message),
+      messages: (chat.messages || []).map(message => message.pending ? { ...message, pending: false, stopped: true, status: 'interrupted', text: message.progressText || message.text || '上次运行已中断。', progressText: '' } : message),
     })),
     automations: automations.map(task => ({ ...task, workspaceId: task.workspaceId || projectById.get(task.projectId)?.workspaceId || workspaceId, kind: task.kind || 'reminder', status: task.status === '运行中' ? '上次运行已中断' : task.status })),
     documents: documents.map(document => ({ ...document, workspaceId: document.workspaceId || workspaceId })),
   };
+}
+
+export function restoredDraftView(state) {
+  const draft = Object.values(state.drafts || {}).filter(item => {
+    if (item.workspaceId !== state.workspaceId || (!item.text && !item.files?.length)) return false;
+    if (item.projectId && !state.projects.some(project => project.id === item.projectId && project.workspaceId === item.workspaceId)) return false;
+    if (item.chatId && !state.chats.some(chat => chat.id === item.chatId && !chat.archived && chat.workspaceId === item.workspaceId)) return false;
+    return item.kind === 'chat' || item.kind === 'new' && !!item.draftId;
+  }).sort((left, right) => right.updatedAt - left.updatedAt)[0];
+  if (!draft) return null;
+  return { section: draft.chatId ? 'home' : draft.projectId ? 'project' : 'home', chatId: draft.chatId || null, projectId: draft.projectId || null, newDraftId: draft.draftId };
 }
 
 export function initialState() {
