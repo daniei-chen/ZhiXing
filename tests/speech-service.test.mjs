@@ -3,14 +3,22 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import os from 'node:os';
 import { randomUUID } from 'node:crypto';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { encodePcm16Wav } from '../src/speech-audio.js';
+import { createRequire } from 'node:module';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { mkdtemp } from 'node:fs/promises';
+import electron from 'electron';
+const require = createRequire(import.meta.url);
 
 const packed = process.env.ZHIXING_TEST_PACKED_APP;
 const load = file => import(packed ? pathToFileURL(path.join(packed, 'electron', file)).href : `../electron/${file}`);
 const { SpeechService } = await load('speech-service.mjs');
 const { permitsSpeechCapture } = await load('speech-policy.mjs');
 const dataRoot = path.join(os.tmpdir(), 'zhixing-speech-lifecycle-fixture');
+const electronExecutable = typeof electron === 'string' ? electron
+  : path.join(path.dirname(require.resolve('electron/package.json')), 'dist', 'electron.exe');
 
 function localFixture(transcribe) {
   return {
@@ -30,6 +38,33 @@ test('speech capture permission requires an armed main-window audio request', ()
   assert.equal(permitsSpeechCapture({ ...request, details: { ...request.details, isMainFrame: false } }), false);
   assert.equal(permitsSpeechCapture({ ...request, details: { isMainFrame: true, requestingUrl: 'zhixing://app/index.html', mediaType: 'audio' } }), true);
 });
+
+test('real Electron speech subprocess starts its Windows Job runner as Node and restores the host environment',
+  { skip: process.platform !== 'win32', timeout: 30000 }, async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'zhixing-speech-electron-'));
+    const service = packed ? path.join(packed, 'electron', 'speech-service.mjs')
+      : fileURLToPath(new URL('../electron/speech-service.mjs', import.meta.url));
+    const env = { ...process.env };
+    delete env.ELECTRON_RUN_AS_NODE;
+    delete env.NODE_OPTIONS;
+    const child = spawn(electronExecutable, [
+      `--user-data-dir=${path.join(directory, 'profile')}`,
+      fileURLToPath(new URL('./fixtures/speech-electron.cjs', import.meta.url)), service, directory,
+    ], { env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    const timer = setTimeout(() => child.kill(), 25000);
+    let code;
+    try { [code] = await once(child, 'close'); }
+    finally { clearTimeout(timer); }
+    assert.equal(code, 0, `${stdout}\n${stderr}\nEvidence retained at ${directory}`);
+    const result = stdout.split(/\r?\n/).map(line => { try { return JSON.parse(line); } catch { return null; } })
+      .find(value => value?.speechElectronSubprocess);
+    assert.equal(result?.speechElectronSubprocess.workerRunAsNode, '1', stdout);
+    assert.equal(result.speechElectronSubprocess.hostRestored, true);
+    assert.equal(result.speechElectronSubprocess.credentialScrubbed, true);
+  });
 
 test('simultaneous recording admissions reserve one local recognizer', async () => {
   const voice = new SpeechService(null, { dataRoot });

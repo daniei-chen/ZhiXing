@@ -853,13 +853,17 @@ export function App() {
     openModal({ type: 'export-review', action: 'share', original, masked: chatText(chat, { protectedView: true }), title: chat.title || '知行会话' });
   }
 
+  function writeClipboardText(text) {
+    return desktop?.writeClipboardText ? desktop.writeClipboardText(text) : navigator.clipboard.writeText(text);
+  }
+
   async function shareReviewedChat({ text }) {
     try {
       if (navigator.share) {
         await navigator.share({ title: modal.title, text });
         setToast('已交给系统分享。');
       } else {
-        await navigator.clipboard.writeText(text);
+        await writeClipboardText(text);
         setToast('已复制审阅后的会话内容，可粘贴到其他应用。');
       }
       setModal(null);
@@ -987,7 +991,7 @@ export function App() {
                   {message.context?.measurement&&<p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow||128000).toLocaleString()} tokens · <button type="button" onClick={()=>setInput('/compact')} disabled={!!running}>压缩上下文</button></p>}
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}
                   {!message.pending && <div className="answer-actions">
-                    {!!message.text && <><IconButton icon={Copy} label="复制回复" onClick={() => navigator.clipboard.writeText(message.text).then(() => setToast('已复制。')).catch(() => setToast('请选中文字后复制。'))}/><IconButton icon={DownloadSimple} label="导出成果" onClick={() => openExport(message)}/></>}
+                    {!!message.text && <><IconButton icon={Copy} label="复制回复" onClick={() => writeClipboardText(message.text).then(() => setToast('已复制。')).catch(() => setToast('请选中文字后复制。'))}/><IconButton icon={DownloadSimple} label="导出成果" onClick={() => openExport(message)}/></>}
                     {index === messages.length - 1 && !message.imported && <IconButton icon={ArrowCounterClockwise} label="再次执行" disabled={!!running || busy} onClick={() => submit(message.id)}/>}
                     {message.masked && <IconButton icon={ShieldCheck} label="查看发送详情" onClick={() => {
                       const source = messages.slice(0, index).findLast(item => item.role === 'user');

@@ -3,7 +3,7 @@ import {existsSync as fsSyncExists} from 'node:fs';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
-import {DeepSeekHarness} from '@deepseek-ai/dsh-sdk-client';
+import {DeepSeekHarness,HarnessClient} from '@deepseek-ai/dsh-sdk-client';
 import {PrivacySession} from '../src/privacy-core.js';
 import { createBridgeKey, readBridge, writeBridge, updateBridge } from '../harness/privacy-bridge.mjs';
 import { permissionMode } from '../src/permissions.js';
@@ -12,6 +12,7 @@ import {startPrivacyGateway} from './privacy-gateway.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
 import {applyRuntimeExtensions} from './plugin-profile.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
+import {AssistantTextStream} from './assistant-stream.mjs';
 const require=createRequire(import.meta.url);
 const harnessRequire=createRequire(require.resolve('@deepseek-ai/dsh/lib/bin.js'));
 const baseRequire=createRequire(harnessRequire.resolve('@deepseek-ai/dsh-base'));
@@ -24,8 +25,19 @@ async function checkMcpReady(file,key,servers=[]){
  if(enabled.some(server=>!status.some(item=>item.server===server.serverName&&item.connected)))throw new Error('部分 MCP 服务未能连接，请在设置中检查或停用。');
 }
 async function waitContext(directory,key,sessionId){
- const deadline=Date.now()+5000;while(Date.now()<deadline){const reports=await readBridge(path.join(directory,'context.bin'),key).catch(()=>null);if(Array.isArray(reports?.[sessionId]?.skills))return reports[sessionId];await new Promise(resolve=>setTimeout(resolve,30));}
- throw new Error('内核目录读取超时，请重新检查。');
+ const deadline=Date.now()+5000;
+ let reports,readError;
+ while(Date.now()<deadline){
+  try{reports=await readBridge(path.join(directory,'context.bin'),key);readError=undefined;}
+  catch(error){readError=error;}
+  if(Array.isArray(reports?.[sessionId]?.skills))return reports[sessionId];
+  await new Promise(resolve=>setTimeout(resolve,30));
+ }
+ const error=new Error('内核目录读取超时，请重新检查。',readError?{cause:readError}:undefined);
+ error.code='RUNTIME_CONTEXT_TIMEOUT';
+ error.stage='context';
+ error.details={sessionId,reportCount:reports?Object.keys(reports).length:0,sessionPresent:Boolean(reports?.[sessionId]),skillsReady:Array.isArray(reports?.[sessionId]?.skills),readErrorCode:readError?.code};
+ throw error;
 }
 export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',protocol='deepseek',reasoningMap=false,compat,pluginRoot=sourceRoot,workspaceRoot,permission='ask',nodeExecutable,contextWindow=128000,maxTokens=8192,kernel:kernelValue,controls,cancellation,projectWorktree}={}){
  const kernel=normaliseKernel(kernelValue);
@@ -104,8 +116,26 @@ export async function makeHarness(directory,configuration,apiKey){
  if(configuration.controls)Object.assign(env,{ZHIXING_CONTROL_PATH:configuration.controls.file,ZHIXING_CONTROL_KEY:configuration.controls.key,ZHIXING_CONTROL_SESSION:configuration.controls.sessionId});
  if(configuration.cancellation)Object.assign(env,{ZHIXING_CANCEL_FILE:configuration.cancellation.file,ZHIXING_CANCEL_KEY:configuration.cancellation.key,ZHIXING_CANCEL_SESSION:configuration.cancellation.sessionId});
  if(configuration.projectWorktree)env.ZHIXING_WORKTREE_KEY=configuration.projectWorktree.key;
- Object.assign(env,{ELECTRON_RUN_AS_NODE:'1',DEEPSEEK_API_KEY:apiKey,DSH_HOME:directory,AGENTS_HOME:path.join(directory,'instructions'),DSH_PERMISSION_MODE:configuration.workspaceRoot?permissionMode(configuration.permission).sandbox:'read-only',ZHIXING_PRIVACY_MODE:configuration.privacyMode==='raw'?'raw':'redact',ZHIXING_PERMISSION_MODE:configuration.permission||'ask',ZHIXING_WORKSPACE_ROOT:configuration.workspaceRoot||'',ZHIXING_BRIDGE_FILE:configuration.bridgeFile||'',ZHIXING_BRIDGE_KEY:configuration.bridgeKey||'',ZHIXING_MCP_FILE:configuration.mcpFile||'',ZHIXING_CONTEXT_FILE:path.join(directory,'context.bin'),ZHIXING_HISTORY_DIR:path.join(directory,`history-${configuration.privacyMode==='raw'?'raw':'redact'}`),ZHIXING_HISTORY_KEY:configuration.historyKey||configuration.bridgeKey||'',ZHIXING_CUSTOM_TERMS:JSON.stringify(configuration.customTerms||[]),ZHIXING_PRIVACY_POLICY:JSON.stringify(configuration.privacyPolicy||{}),ZHIXING_BROWSER_BRIDGE:configuration.browserBridge||'',ZHIXING_BROWSER_TOKEN:configuration.browserToken||'',ZHIXING_AUTOMATION_BRIDGE:configuration.automationBridge||'',ZHIXING_AUTOMATION_TOKEN:configuration.automationToken||'',ZHIXING_ALLOW_NETWORK:configuration.allowNetwork===false?'false':'true',NO_COLOR:'1'});
- const harness=new DeepSeekHarness({dshBin:require.resolve('@deepseek-ai/dsh/lib/bin.js'),dshHome:directory,profile:'sdk-minimal',patches:[patch],cwd:configuration.workspaceRoot||directory,processCwd:directory,provider:configuration.protocol&&configuration.protocol!=='deepseek'?'zhixing-provider':'deepseek-official',model:configuration.model||'deepseek-flash',reasoningEffort:configuration.protocol && configuration.protocol!=='deepseek' && configuration.reasoningMap===false ? undefined : configuration.reasoning||'high',maxTokens:configuration.maxTokens||8192,approvalRequests:true,onUserQuestion:configuration.onUserQuestion,env,initializeTimeoutMs:20000,disposeEofGraceMs:750,disposeGraceMs:6000});
+ Object.assign(env,{ELECTRON_RUN_AS_NODE:'1',DEEPSEEK_API_KEY:apiKey,DSH_HOME:directory,AGENTS_HOME:path.join(directory,'instructions'),DSH_PERMISSION_MODE:configuration.workspaceRoot?permissionMode(configuration.permission).sandbox:'read-only',ZHIXING_PRIVACY_MODE:configuration.privacyMode==='raw'?'raw':'redact',ZHIXING_PERMISSION_MODE:configuration.permission||'ask',ZHIXING_WEB_SEARCH_AVAILABLE:configuration.protocol==='openai'||configuration.protocol==='anthropic'?'false':'true',ZHIXING_WORKSPACE_ROOT:configuration.workspaceRoot||'',ZHIXING_BRIDGE_FILE:configuration.bridgeFile||'',ZHIXING_BRIDGE_KEY:configuration.bridgeKey||'',ZHIXING_MCP_FILE:configuration.mcpFile||'',ZHIXING_CONTEXT_FILE:path.join(directory,'context.bin'),ZHIXING_HISTORY_DIR:path.join(directory,`history-${configuration.privacyMode==='raw'?'raw':'redact'}`),ZHIXING_HISTORY_KEY:configuration.historyKey||configuration.bridgeKey||'',ZHIXING_CUSTOM_TERMS:JSON.stringify(configuration.customTerms||[]),ZHIXING_PRIVACY_POLICY:JSON.stringify(configuration.privacyPolicy||{}),ZHIXING_BROWSER_BRIDGE:configuration.browserBridge||'',ZHIXING_BROWSER_TOKEN:configuration.browserToken||'',ZHIXING_AUTOMATION_BRIDGE:configuration.automationBridge||'',ZHIXING_AUTOMATION_TOKEN:configuration.automationToken||'',ZHIXING_ALLOW_NETWORK:configuration.allowNetwork===false?'false':'true',NO_COLOR:'1'});
+ const options={dshBin:require.resolve('@deepseek-ai/dsh/lib/bin.js'),dshHome:directory,profile:'sdk-minimal',patches:[patch],cwd:configuration.workspaceRoot||directory,processCwd:directory,provider:configuration.protocol&&configuration.protocol!=='deepseek'?'zhixing-provider':'deepseek-official',model:configuration.model||'deepseek-flash',reasoningEffort:configuration.protocol && configuration.protocol!=='deepseek' && configuration.reasoningMap===false ? undefined : configuration.reasoning||'high',maxTokens:configuration.maxTokens||8192,approvalRequests:true,onUserQuestion:configuration.onUserQuestion,env,initializeTimeoutMs:20000,disposeEofGraceMs:750,disposeGraceMs:6000};
+ const bundledNode=path.join(configuration.pluginRoot||sourceRoot,'runtime','node.exe');
+ const executable=configuration.nodeExecutable||(fsSyncExists(bundledNode)?bundledNode:process.execPath);
+ // The pinned rc.5 SDK accepts its generic process descriptor through these
+ // constructor seams. Keep SDK transport, cancellation and exit confirmation,
+ // while using the same bundled Node already shipped for Office/PTC tools.
+ // Re-entering the Electron binary can close stdio without delivering exit
+ // before the SDK's Windows termination bound.
+ const clientFactory=()=>new HarnessClient(options,{
+  command:path.resolve(executable),
+  args:[options.dshBin,'--profile',options.profile,...options.patches.flatMap(file=>['--patch',path.resolve(file)])],
+  cwd:path.resolve(directory),
+  environment:()=>env,
+  description:'知行 SDK 内核',
+  initializeTimeoutMs:options.initializeTimeoutMs,
+  disposeEofGraceMs:options.disposeEofGraceMs,
+  disposeGraceMs:options.disposeGraceMs,
+ });
+ const harness=new DeepSeekHarness(options,clientFactory);
  harness.client.start();
  harness.client.onRequest(async(method,params)=>{
   if(method!=='approval/request')throw new Error('未知的内核请求。');
@@ -114,7 +144,14 @@ export async function makeHarness(directory,configuration,apiKey){
  return harness;
 }
 function closeHarness(active,harness){
- if(!active.closePromise)active.closePromise=Promise.resolve().then(()=>harness?.close());
+ if(!active.closePromise)active.closePromise=Promise.resolve().then(async()=>{
+  await harness?.close();
+ }).catch(cause=>{
+  const error=new Error('无法确认内核已退出，已保留会话恢复文件。',{cause});
+  error.code='RUNTIME_CLOSE_FAILED';
+  error.stage='close';
+  throw error;
+ });
  return active.closePromise;
 }
 
@@ -177,9 +214,14 @@ export class RuntimeManager{
   return new Promise(resolve=>{const finish=value=>{if(!this.questions.delete(request.requestId))return;signal.removeEventListener('abort',abort);this.onEvent?.({runId:context.runId,sessionId:request.sessionId,type:'question-closed',requestId:request.requestId});if(value.answers)value={answers:value.answers.map(answer=>({...answer,selected:answer.selected.map(label=>request.questions.find(question=>question.id===answer.id)?.options?.find(option=>translated(option.label)===label)?.label||label)}))};resolve(value);};const abort=()=>finish({cancelled:true});this.questions.set(request.requestId,{questions,finish});signal.addEventListener('abort',abort,{once:true});this.onEvent?.({runId:context.runId,sessionId:request.sessionId,type:'question',requestId:request.requestId,questions});if(signal.aborted)abort();});
  }
  async check(config,key){
-  const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h;
-  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);h=await this.createHarness(directory,{...config,bridgeKey,mcpFile},key);await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await h.close();return {tools:report.tools||[],skills:report.skills||[]};}
-  finally{try{if(h)await h.close();}finally{await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});}}
+  const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h,failure;const active={};
+  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);h=await this.createHarness(directory,{...config,bridgeKey,mcpFile},key);await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await closeHarness(active,h);return {tools:report.tools||[],skills:report.skills||[]};}
+  catch(error){failure=error;throw error;}
+  finally{
+   try{await closeHarness(active,h);}
+   catch(error){if(failure&&failure!==error)throw new AggregateError([failure,error],'内核检查与关闭均失败。',{cause:failure});throw error;}
+   await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});
+  }
  }
  async prepare(options,config){
   const {sessionId,prompt,customTerms=[],privacyMode='redact'}=options;
@@ -230,7 +272,7 @@ export class RuntimeManager{
   if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
   if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error('该会话正在执行，请先停止当前任务。');
   for(const [id,p] of this.prepared)if(p.options.sessionId===sessionId)this.prepared.delete(id);
-  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,persistKey,persistBridgeKey;const active={cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128)this.runSettlements.delete(this.runSettlements.keys().next().value);this.runSettlements.set(runId,active.settled);this.runs.set(runId,active);
+  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,persistKey,persistBridgeKey,failure;const active={cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128)this.runSettlements.delete(this.runSettlements.keys().next().value);this.runSettlements.set(runId,active.settled);this.runs.set(runId,active);
   const connection={endpoint:config.baseUrl,providerId:config.providerId,protocol:config.protocol};
   try{
    let {vault,input,privacyMode,historyKey,resume}=prepared||await this.prepare(options,config);
@@ -242,10 +284,45 @@ export class RuntimeManager{
    const directory=path.join(this.root,sessionId),bridgeKey=historyKey;persistBridgeKey=bridgeKey;bridgeFile=path.join(directory,'privacy-bridge.bin');
    mcpFile=path.join(directory,'mcp-config.bin');
    await fs.mkdir(directory,{recursive:true});await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);await writeBridge(bridgeFile,bridgeKey,vault.exportState());
+   active.assistantPreview=new AssistantTextStream({session:vault,terms:customTerms,policy:config.privacyPolicy,apiKey:key});
    const kernel=normaliseKernel(config.kernel);
    if(config.browserScope&&this.browserAction&&config.allowNetwork!==false&&kernel.webEnabled)toolBridge=await startToolBridge({invoke:(input,signal)=>this.browserAction(config.browserScope,input,signal),signal:active.controller.signal});
    if(config.automationScope&&this.automationAction)automationBridge=await startToolBridge({route:'/automation',invoke:(input,signal)=>this.automationAction(config.automationScope,input,signal),signal:active.controller.signal});
-   gateway=await this.createGateway({...config,apiKey:key,privacyMode,customTerms,bridgeFile,bridgeKey});
+   const publishAssistantPreview=result=>{
+    if(result?.changed&&!result.blocked)this.onEvent?.({runId,sessionId,type:'draft',text:result.text,source:'assistant-stream'});
+   };
+   active.assistantTextBuffer='';
+   active.assistantFlushTimer=null;
+   const flushAssistantText=()=>{
+    if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}
+    const text=active.assistantTextBuffer;
+    active.assistantTextBuffer='';
+    if(!text)return;
+    try{publishAssistantPreview(active.assistantPreview.appendText(text));}
+    catch(error){
+     if(!active.assistantPreviewError)this.onEvent?.({runId,sessionId,type:'status',label:'实时预览暂停，任务最终正文仍会在完成后显示。'});
+     active.assistantPreviewError=error;
+    }
+   };
+   gateway=await this.createGateway({...config,apiKey:key,privacyMode,customTerms,bridgeFile,bridgeKey,onAssistantText:frame=>{
+    if(frame?.type==='start'){
+     flushAssistantText();
+     publishAssistantPreview(active.assistantPreview.beginAttempt());
+    }else if(frame?.type==='delta'){
+     active.assistantTextBuffer+=frame.text;
+     if(!active.assistantFlushTimer)active.assistantFlushTimer=setTimeout(flushAssistantText,75);
+    }else if(frame?.type==='end'){
+     flushAssistantText();
+     publishAssistantPreview(active.assistantPreview.finishAttempt(true));
+    }else if(frame?.type==='discard'||frame?.type==='abort'){
+     active.assistantTextBuffer='';
+     if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}
+     publishAssistantPreview(active.assistantPreview.finishAttempt(false));
+    }else if(frame?.type==='cancel'){
+     flushAssistantText();
+     publishAssistantPreview(active.assistantPreview.finishAttempt(true));
+    }
+   }});
    const transcripts=new Map();
    active.cancellation={file:path.join(directory,`cancel-${runId}.bin`),key:createBridgeKey(),sessionId};
    if(config.manualControls)active.controls={file:path.join(directory,`control-${runId}.bin`),key:createBridgeKey(),sessionId,targets:new Map(),transcripts,bridgeFile,bridgeKey,privacyMode,customTerms,privacyPolicy:config.privacyPolicy,providerKey:key};
@@ -381,22 +458,24 @@ export class RuntimeManager{
    }
    const childDetails=[...children.values()].map(child=>({...child,messages:(transcripts.get(child.id)||[]).map(row=>({...row,text:this.executionDisplay(row.text,active.controls)}))}));
    return {runId,sessionId,text,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,children:childDetails,plan:plan.map(item=>({...item,content:vault.restore(item.content,{allowedTokens:originalTokens}).text}))};
-  }catch(error){active.terminalStatus=active.cancelError?'interrupted':active.cancelled?'cancelled':'failed';throw error;}
+  }catch(error){failure=error;active.terminalStatus=active.cancelError?'interrupted':active.cancelled?'cancelled':'failed';throw error;}
   finally{
    active.controller.abort();
-   const closing=await Promise.allSettled([closeHarness(active,h),toolBridge?.close(),automationBridge?.close(),gateway?.close()].filter(Boolean));await active.draftTail;
-   let cleanupError=closing.find(result=>result.status==='rejected')?.reason;
+   const harnessClosing=await Promise.allSettled([closeHarness(active,h)]);
+   const closing=await Promise.allSettled([toolBridge?.close(),automationBridge?.close(),gateway?.close()].filter(Boolean));if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}active.assistantTextBuffer='';await active.draftTail;
+   let cleanupError=harnessClosing[0].status==='rejected'?harnessClosing[0].reason:closing.find(result=>result.status==='rejected')?.reason;
+   const harnessClosed=harnessClosing[0].status==='fulfilled';
    let savedBridge=false;
    if(bridgeFile&&persistKey){try{const state=await readBridge(bridgeFile,persistBridgeKey);await this.saveVault(sessionId,{...state,...connection,historyKey:persistKey},config);savedBridge=true;}catch(error){cleanupError??=error;}}
-   if(savedBridge){if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});}
-   if(active.controls)await fs.unlink(active.controls.file).catch(()=>{});
-   if(active.cancellation)await fs.unlink(active.cancellation.file).catch(()=>{});
-   if(savedBridge&&config.persist===false){const target=path.resolve(this.root,sessionId);if(path.dirname(target)===path.resolve(this.root)&&await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150}).then(()=>true,()=>false)===false)cleanupError??=new Error('临时会话目录未能清理。');}
+   if(savedBridge&&harnessClosed){if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});}
+   if(harnessClosed&&active.controls)await fs.unlink(active.controls.file).catch(()=>{});
+   if(harnessClosed&&active.cancellation)await fs.unlink(active.cancellation.file).catch(()=>{});
+   if(savedBridge&&harnessClosed&&config.persist===false){const target=path.resolve(this.root,sessionId);if(path.dirname(target)===path.resolve(this.root)&&await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150}).then(()=>true,()=>false)===false)cleanupError??=new Error('临时会话目录未能清理。');}
    if(cleanupError)active.terminalStatus='failed';
    const status=active.terminalStatus||(active.resultReady?'succeeded':active.cancelled?'cancelled':'failed');
    const terminal={runId,sessionId,type:'run/terminal',status,...active.finishReason?{finishReason:active.finishReason}:{}};
    this.runs.delete(runId);this.busy.delete(sessionId);try{this.onEvent?.(terminal);}catch{}active.resolveSettled({runId,sessionId,status,finishReason:active.finishReason});
-   if(cleanupError&&!active.cancelled)throw cleanupError;
+   if(cleanupError&&!active.cancelled){if(failure&&failure!==cleanupError)throw new AggregateError([failure,cleanupError],'交办执行与收尾均失败。',{cause:failure});throw cleanupError;}
   }
  }
  executionDisplay(text,controls){

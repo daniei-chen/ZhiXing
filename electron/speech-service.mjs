@@ -12,6 +12,22 @@ const LANGUAGE_HINTS = new Map([
   ['auto', 'auto'], ['zh-CN', 'zh'], ['en-US', 'en'], ['yue', 'yue'], ['ja', 'ja'], ['ko', 'ko'],
 ]);
 
+class SpeechSubprocess extends LocalSubprocess {
+  spawn(spec) {
+    if (!process.versions.electron) return super.spawn(spec);
+    const previous = process.env.ELECTRON_RUN_AS_NODE;
+    // Upstream's Windows Job runner inherits the host environment before it
+    // receives the worker's env. Both processes must start Electron as Node.
+    // spawn is synchronous, so restore the host before another task can run.
+    process.env.ELECTRON_RUN_AS_NODE = '1';
+    try { return super.spawn(spec); }
+    finally {
+      if (previous === undefined) delete process.env.ELECTRON_RUN_AS_NODE;
+      else process.env.ELECTRON_RUN_AS_NODE = previous;
+    }
+  }
+}
+
 function publicError(error) {
   return String(error?.message || '本机语音识别未完成。')
     .replace(/https?:\/\/[^\s)]+/gi, '语音模型下载源')
@@ -48,7 +64,7 @@ export class SpeechService {
     this.initialising = (async () => {
       const context = new Context();
       try {
-        await context.plugin(LocalSubprocess);
+        await context.plugin(SpeechSubprocess);
         await context.plugin(SpeechToText, { defaultProvider: PROVIDER_ID, language: 'zh' });
         await context.plugin(SenseVoice, {
           dataRoot: this.dataRoot,

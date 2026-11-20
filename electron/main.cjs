@@ -1,4 +1,4 @@
-const {app,BrowserWindow,ipcMain,safeStorage,dialog,Notification,protocol,net,session,shell}=require('electron');
+const {app,BrowserWindow,ipcMain,safeStorage,dialog,Notification,protocol,net,session,shell,clipboard}=require('electron');
 const path=require('node:path'),fs=require('node:fs/promises'),{pathToFileURL}=require('node:url'),{randomUUID}=require('node:crypto');
 protocol.registerSchemesAsPrivileged([{scheme:'zhixing',privileges:{standard:true,secure:true,supportFetchAPI:true,corsEnabled:true}}]);
 app.setName('知行');
@@ -344,6 +344,7 @@ function registerHandlers(){
   if(result.canceled)return {cancelled:true};
   const {exportOfficeFile}=await import('./office-files.mjs');await fs.writeFile(result.filePath,await exportOfficeFile(text,format));return {cancelled:false,path:result.filePath};
  });
+ handle('app:clipboard-write',({text}={})=>{if(typeof text!=='string'||Buffer.byteLength(text,'utf8')>2*1024*1024)throw new Error('剪贴板内容无效或过长。');clipboard.writeText(text);return true;});
  handle('app:window-control',action=>{if(action==='minimize')windowRef.minimize();else if(action==='maximize')windowRef.isMaximized()?windowRef.unmaximize():windowRef.maximize();else if(action==='close')windowRef.close();return true;});
  handle('schedule:notify',payload=>{notifyTask(payload);return true;});
 }
@@ -377,10 +378,7 @@ else app.whenReady().then(async()=>{
  const {permitsSpeechCapture}=await import('./speech-policy.mjs');
  const speechPermission=(webContents,permission,details)=>permitsSpeechCapture({permission,details,isMainWindow:!!windowRef&&!windowRef.isDestroyed()&&webContents===windowRef.webContents,armed:speechService?.canCapture()===true});
  session.defaultSession.setPermissionRequestHandler((webContents,permission,callback,details)=>callback(speechPermission(webContents,permission,details)));
- session.defaultSession.setPermissionCheckHandler((webContents,permission,_origin,details)=>{
-  if(permission==='clipboard-sanitized-write')return !!windowRef&&!windowRef.isDestroyed()&&webContents===windowRef.webContents&&details.isMainFrame&&details.requestingUrl==='zhixing://app/index.html';
-  return speechPermission(webContents,permission,details);
- });
+ session.defaultSession.setPermissionCheckHandler((webContents,permission,_origin,details)=>speechPermission(webContents,permission,details));
  session.defaultSession.webRequest.onHeadersReceived((details,callback)=>callback({responseHeaders:{...details.responseHeaders,'Content-Security-Policy':["default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"]}}));
  await initialise();registerHandlers();await createWindow();automations.start();
  app.on('activate',()=>{if(BrowserWindow.getAllWindows().length===0)createWindow();});

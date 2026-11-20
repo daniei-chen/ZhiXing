@@ -4,10 +4,11 @@ import {once} from 'node:events';
 import {PrivacySession} from '../src/privacy-core.js';
 import {updateBridge} from '../harness/privacy-bridge.mjs';
 import {goalWire} from './goal-wire.mjs';
+import {createAssistantStreamDecoder} from './assistant-stream.mjs';
 
 // A request-local loopback gateway is the serialization boundary. Harness loop
 // messages are immutable; do not mutate its event-sourced request projection.
-export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,bridgeFile,bridgeKey,privacyMode,customTerms=[],privacyPolicy}) {
+export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,bridgeFile,bridgeKey,privacyMode,customTerms=[],privacyPolicy,onAssistantText}) {
   const openAI=protocol==='openai';
   const inbound=openAI?'/v1/chat/completions':protocol==='deepseek'?'/anthropic/v1/messages':'/v1/messages';
   const token=`zx-local-${randomBytes(24).toString('hex')}`;
@@ -71,7 +72,22 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
       if(!openAI)for(const [name,value] of Object.entries(req.headers))if((name.startsWith('x-deepseek-')||['anthropic-beta','user-agent','accept'].includes(name))&&typeof value==='string')headers[name]=value;
       const response=await fetch(target,{method:'POST',headers,body:JSON.stringify(body),redirect:'error',signal:controller.signal});
       res.writeHead(response.status,{'content-type':response.headers.get('content-type')||'application/json','cache-control':'no-store'});
-      if(response.body)for await(const chunk of response.body){if(!res.write(Buffer.from(chunk)))await once(res,'drain',{signal:controller.signal});}
+      const streamAssistant=response.ok&&response.headers.get('content-type')?.includes('text/event-stream')&&typeof onAssistantText==='function';
+      const notifyAssistantText=event=>{try{onAssistantText(event);}catch{}};
+      const assistantStream=streamAssistant?createAssistantStreamDecoder(text=>notifyAssistantText({type:'delta',text})):null;
+      if(assistantStream)notifyAssistantText({type:'start'});
+      try {
+        if(response.body)for await(const chunk of response.body){
+          const bytes=Buffer.from(chunk);
+          assistantStream?.push(bytes);
+          if(!res.write(bytes))await once(res,'drain',{signal:controller.signal});
+        }
+        const outcome=assistantStream?.finish();
+        if(assistantStream)notifyAssistantText({type:outcome==='abort'?'abort':controller.signal.aborted?'cancel':outcome==='discard'?'discard':'end'});
+      } catch(error) {
+        if(assistantStream)notifyAssistantText({type:controller.signal.aborted?'cancel':'abort'});
+        throw error;
+      }
       res.end();
     }catch(error){if(!res.headersSent&&!res.destroyed)res.writeHead(400,{'content-type':'application/json'}).end(JSON.stringify({type:'error',error:{type:'invalid_request_error',message:error.name==='AbortError'?'任务已停止。':'本机隐私边界未完成请求，请检查脱敏规则和连接。'}}));else res.destroy();}
     finally{controllers.delete(controller);}

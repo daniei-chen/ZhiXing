@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-label="知行 README 水墨雪竹横幅">
+  <rect width="1200" height="400" fill="#fcfcfb"/>
+  <path d="M0 332C111 303 192 312 281 288c88-24 149-19 239 3 73 18 128 4 194-16 98-30 193-23 284 4 73 22 133 14 202-4v125H0Z" fill="#f4f4f2"/>
+  <path d="M0 336c123-38 210-4 314-31s160-8 244 1 157-40 252-27 131 38 210 18 117-36 180-25" fill="none" stroke="#dadbd9" stroke-width="2" opacity=".62"/>
+  <path d="M55 344c82-24 125-12 205-29 64-14 133-10 190 8" fill="none" stroke="#e5e5e2" stroke-width="8" opacity=".42"/>
+  <path d="M922 423c-30-80-48-158-39-243 4-43 14-97 42-157" fill="none" stroke="#252525" stroke-width="8" stroke-linecap="round"/>
+  <path d="M929 414c-12-51-27-98-35-150-7-49-6-102 2-154" fill="none" stroke="#101010" stroke-width="2" opacity=".4"/>
+  <path d="M912 315c-47-46-98-71-164-83 38-17 70-20 103-9 32 11 55 34 72 72-3 9-6 16-11 20Z" fill="#171717"/>
+  <path d="M907 309c-54-26-97-37-151-39 37-12 80-9 124 13" fill="none" stroke="#f6f6f4" stroke-width="2" opacity=".48"/>
+  <path d="M913 266c-18-62-50-109-100-151 41 8 70 25 91 55 20 29 27 58 24 92-4 3-9 5-15 4Z" fill="#232323"/>
+  <path d="M921 259c-20-54-49-95-92-132" fill="none" stroke="#f5f5f2" stroke-width="2" opacity=".4"/>
+  <path d="M924 224c30-70 72-121 135-164-23 42-50 74-87 99-18 13-32 29-42 49" fill="#191919"/>
+  <path d="M930 226c35-56 72-98 120-134" fill="none" stroke="#f5f5f2" stroke-width="2" opacity=".35"/>
+  <path d="M936 179c-5-62-28-113-73-163 39 16 67 38 84 70 15 29 19 57 12 87-8 5-16 7-23 6Z" fill="#303030"/>
+  <path d="M936 172c-7-55-27-100-66-143" fill="none" stroke="#f6f6f3" stroke-width="2" opacity=".4"/>
+  <path d="M958 128c24-56 58-96 108-130-17 36-38 64-68 86-17 13-29 28-37 47" fill="#252525"/>
+  <path d="M957 126c29-45 58-75 98-105" fill="none" stroke="#f6f6f3" stroke-width="2" opacity=".32"/>
+  <path d="M954 355c45-44 91-70 153-82-33-18-62-23-93-16-30 7-52 26-72 57 1 16 5 29 12 41Z" fill="#1f1f1f"/>
+  <path d="M959 350c47-28 86-41 135-46" fill="none" stroke="#f5f5f2" stroke-width="2" opacity=".35"/>
+  <path d="M1007 250c35-37 78-60 132-70-30-14-55-16-80-8-25 8-43 25-59 52 1 10 3 18 7 26Z" fill="#303030"/>
+  <path d="M1011 246c38-23 70-34 111-40" fill="none" stroke="#f5f5f2" stroke-width="2" opacity=".35"/>
+  <g fill="#fff" opacity=".9">
+    <ellipse cx="793" cy="93" rx="4" ry="8" transform="rotate(22 793 93)"/>
+    <ellipse cx="1060" cy="56" rx="3" ry="7" transform="rotate(-18 1060 56)"/>
+    <ellipse cx="1114" cy="181" rx="3" ry="6" transform="rotate(27 1114 181)"/>
+    <ellipse cx="850" cy="201" rx="3" ry="7" transform="rotate(-15 850 201)"/>
+    <ellipse cx="1031" cy="313" rx="4" ry="8" transform="rotate(18 1031 313)"/>
+  </g>
+  <g fill="#bfc1c0" opacity=".45">
+    <circle cx="808" cy="57" r="2"/><circle cx="1094" cy="89" r="2"/><circle cx="1166" cy="238" r="2"/>
+    <circle cx="789" cy="235" r="2"/><circle cx="1045" cy="17" r="2"/><circle cx="1138" cy="337" r="2"/>
+    <circle cx="876" cy="124" r="1.5"/><circle cx="1158" cy="47" r="1.5"/><circle cx="992" cy="35" r="1.5"/>
+  </g>
+  <path d="M20 34c98 4 164 1 250-6M25 43c64 2 102 0 143-4" fill="none" stroke="#ededeb" stroke-width="1"/>
+</svg>

@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('zhixing',{
  loadWorkspace:()=>ipcRenderer.invoke('data:load'),
  importDeepSeekChats:options=>ipcRenderer.invoke('data:import-deepseek',options),
  saveWorkspace:state=>ipcRenderer.invoke('data:save',state),
+ writeClipboardText:text=>ipcRenderer.invoke('app:clipboard-write',{text}),
  workspaceSaveStatus:()=>ipcRenderer.invoke('data:save-status'),
  retryWorkspaceSave:()=>ipcRenderer.invoke('data:save-retry'),
  onWorkspaceSaveState:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('workspace:save-state',fn);return()=>ipcRenderer.removeListener('workspace:save-state',fn);},

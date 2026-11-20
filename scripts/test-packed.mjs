@@ -14,10 +14,9 @@ const env = { ...process.env, ELECTRON_RUN_AS_NODE: '1', ZHIXING_TEST_PACKED_APP
 delete env.NODE_PATH;
 delete env.NODE_OPTIONS;
 try {
-  // Harness and its spawned tools share the packaged executable on Windows.
   // Run the test files serially so cleanup checks do not race other test processes.
-  const child = spawn(exe, ['--test', '--test-concurrency=1', ...['automation.test.mjs','runtime.test.mjs','runtime-lifecycle.test.mjs','document-text.test.mjs','workbench.test.mjs','deliverable-access.test.mjs','composer-runtime.test.mjs','speech-audio.test.mjs','speech-service.test.mjs','providers.test.mjs','mcp-identity.test.mjs','mcp-destination.test.mjs','workspace-save-queue.test.mjs','plugins.test.mjs'].map(name=>fileURLToPath(new URL(`../tests/${name}`,import.meta.url)))], { cwd, env, stdio: 'inherit', windowsHide: true });
-  const [code, signal] = await once(child, 'exit');
+  const child = spawn(exe, ['--test', '--test-concurrency=1', ...['automation.test.mjs','runtime.test.mjs','runtime-cleanup.test.mjs','runtime-context.test.mjs','runtime-launch.test.mjs','runtime-lifecycle.test.mjs','document-text.test.mjs','workbench.test.mjs','deliverable-access.test.mjs','assistant-stream.test.mjs','composer-runtime.test.mjs','speech-audio.test.mjs','speech-service.test.mjs','providers.test.mjs','mcp-identity.test.mjs','mcp-destination.test.mjs','workspace-save-queue.test.mjs','plugins.test.mjs'].map(name=>fileURLToPath(new URL(`../tests/${name}`,import.meta.url)))], { cwd, env, stdio: 'inherit', windowsHide: true });
+  const [code, signal] = await once(child, 'close');
   if (code !== 0) throw new Error(`Packaged Harness test failed (${signal || code}).`);
 } finally {
   const resolved = await realpath(cwd);

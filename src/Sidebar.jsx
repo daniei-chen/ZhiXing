@@ -40,7 +40,7 @@ export function Sidebar({ state, workspace, projects, chats, activeChat, activeP
   function chatRow(chat, group) {
     const id = `chat-${group}-${chat.id}`;
     const running = runningChatId === chat.id;
-    return <div className={`chat-row ${activeChat === chat.id ? 'selected' : ''}`} key={chat.id}>
+    return <div className={`chat-row ${activeChat === chat.id ? 'selected' : ''}`} data-chat-id={chat.id} key={chat.id}>
       <button className="chat-link" title={chat.title} aria-current={activeChat === chat.id ? 'page' : undefined} onClick={() => openChat(chat.id)}>{chat.pinned && <PushPin size={13}/>}<span>{chat.title}</span></button>
       {running && <span className="sidebar-chat-running" role="status" aria-label="正在运行" title="正在运行"><CircleNotch size={13}/></span>}
       <div className="menu-anchor"><IconButton icon={DotsThree} label={`${chat.title} 的菜单`} aria-expanded={menu?.name === id} className="row-more" onClick={event => toggleMenu(id, event)}/>

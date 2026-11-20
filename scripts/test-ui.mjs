@@ -23,10 +23,14 @@ async function home() {
   if (await ui.evaluate('!!document.querySelector(".settings-page")')) await ui.click('返回工作台');
   await ensureNav();
   await ui.click('首页', '.app-rail button');
-  await ui.waitFor('!!document.querySelector("textarea[aria-label=聊天输入框]")');
+  await ensureNav();
+  await ui.waitFor('!!document.querySelector(".workspace-nav .new-chat")?.getClientRects().length&&!!document.querySelector("textarea[aria-label=聊天输入框]")');
 }
 async function ensureNav() {
-  if (await ui.evaluate('!!document.querySelector("button[aria-label=展开侧栏]")')) await ui.click('展开侧栏');
+  if (await ui.evaluate('!!document.querySelector("button[aria-label=展开侧栏]")')) {
+    await ui.click('展开侧栏');
+    await ui.waitFor('!!document.querySelector("button[aria-label=收起侧栏]")?.getClientRects().length');
+  }
 }
 async function settings(tab) {
   if (!await ui.evaluate('!!document.querySelector(".settings-page")')) { await ensureNav(); await ui.click('打开设置'); }
@@ -377,6 +381,7 @@ try {
         await record(`${width}×${height} ${zoom * 100}% 设置 ${tab}`, metrics);
       }
       await home();
+      await ensureNav();
       await ui.click('新聊天', '.new-chat');
       await ui.waitFor('document.querySelectorAll(".top-actions .icon-button").length===3');
       await ui.click('会话操作');
@@ -384,6 +389,8 @@ try {
       assert(await ui.evaluate('document.querySelector(".session-actions-menu")?.innerText.includes("复制为文件")'));
       await ui.click('保存会话', '.session-actions-menu button');
       await ui.waitFor('document.body.innerText.includes("当前会话已保存")');
+      if (await ui.evaluate('!!document.querySelector(".toast-dismiss")')) await clickOne('.toast-dismiss');
+      await ui.waitFor('!document.querySelector(".toast")');
       await record('会话顶栏三入口与会话操作菜单');
       await ui.click('查看当前对话产出与来源');
       await ui.waitFor('!!document.querySelector(".conversation-resources")');

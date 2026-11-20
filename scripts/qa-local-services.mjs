@@ -95,10 +95,53 @@ function userTurn(messages = []) {
   return { text: '', index: -1 };
 }
 
-function modelReply(body, requestNumber) {
+function conversationReply(body, requestNumber, prompt, following, sourceUrl) {
+  const tools = body.tools || [];
+  const results = new Set(following.filter(message => message.role === 'tool').map(message => message.tool_call_id));
+  const completed = following.filter(message => message.role === 'assistant').flatMap(message => message.tool_calls || [])
+    .filter(call => results.has(call.id)).map(call => call.function?.name);
+  function call(name, arguments_) {
+    if (!tools.some(tool => tool.function?.name === name)) return { content: `QA_CONVERSATION_TOOL_UNAVAILABLE ${name}` };
+    return { content: null, tool_calls: [{ id: `qa-conversation-${requestNumber}`, type: 'function', function: {
+      name, arguments: JSON.stringify(arguments_),
+    } }] };
+  }
+  if (prompt.includes('QA_CONVERSATION_PRESENT')) {
+    const filename = prompt.match(/QA_OUTPUT=(qa-conversation-[a-z0-9-]+\.txt)\b/)?.[1];
+    if (!filename) return { content: 'QA_CONVERSATION_INVALID_OUTPUT_NAME' };
+    if (!completed.includes('office_write_file')) return call('office_write_file', {
+      file_path: filename, content: 'QA_CONVERSATION_FILE_CONTENT\n合成产出，金额 123.45，编号 00123。',
+    });
+    if (!completed.includes('present')) return call('present', { files: [{ path: filename, description: '本机 Harness 生成并交付的合成成果' }] });
+    return { content: `QA_CONVERSATION_PRESENT_RESPONSE\n已通过真实文件工具和 present 交付 ${filename}。` };
+  }
+  if (prompt.includes('QA_CONVERSATION_SEARCH')) {
+    if (!completed.includes('web_search')) return call('web_search', { queries: ['知行合成来源验收'] });
+    const searchResult = following.findLast(message => message.role === 'tool');
+    if (JSON.stringify(searchResult?.content || '').includes('搜索暂不可用')) {
+      return { content: 'QA_CONVERSATION_SEARCH_UNAVAILABLE_RESPONSE\n当前路由没有配置独立搜索服务，工具失败已记录。' };
+    }
+    return { content: 'QA_CONVERSATION_SEARCH_RESPONSE\n工具调用结果以执行轨迹为准。' };
+  }
+  if (prompt.includes('QA_CONVERSATION_LINK_UNMAPPED')) {
+    return { content: `QA_CONVERSATION_LINK_RESPONSE\n[本机合成来源页面](${sourceUrl})` };
+  }
+  if (prompt.includes('QA_CONVERSATION_LINK')) {
+    // Echo the model-visible address, including privacy tokens, just as a real
+    // model must do. An address invented by this server has no input mapping.
+    const requestedUrl = prompt.match(/QA_SOURCE_URL=(https?:\/\/[^\s]+)/u)?.[1];
+    if (!requestedUrl) return { content: 'QA_CONVERSATION_SOURCE_URL_REQUIRED' };
+    return { content: `QA_CONVERSATION_LINK_RESPONSE\n[本机合成来源页面](${requestedUrl})` };
+  }
+  return null;
+}
+
+function modelReply(body, requestNumber, sourceUrl) {
   const messages = body.messages || [];
   const { text: prompt, index: lastUser } = userTurn(messages);
   const toolResult = messages.slice(lastUser + 1).findLast(message => message.role === 'tool');
+  const conversation = conversationReply(body, requestNumber, prompt, messages.slice(lastUser + 1), sourceUrl);
+  if (conversation) return conversation;
   const mcpTool = body.tools?.find(tool => /^mcp__.+__lookup$/.test(tool.function?.name));
   if (prompt.includes('QA_MCP') && mcpTool && !toolResult) {
     return {
@@ -154,7 +197,11 @@ export async function startQaLocalServices({
   }
 
   async function handleControl(request, response, url, service) {
-    if (request.method === 'GET' && url.pathname === '/__qa/health') {
+    if (request.method === 'GET' && url.pathname === '/__qa/conversation/page') {
+      record({ service, event: 'conversation-page', path: url.pathname });
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.end('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>知行合成来源页面</title><h1>知行合成来源页面</h1><p>QA_CONVERSATION_WEB_SOURCE</p><p>仅用于本机 UI 验收。合成金额 123.45，编号 00123。</p></html>');
+    } else if (request.method === 'GET' && url.pathname === '/__qa/health') {
       json(response, 200, { ok: !closing, service, startedAt, pid: process.pid, logError });
     } else if (request.method === 'GET' && url.pathname === '/__qa/config') {
       json(response, 200, configuration);
@@ -212,6 +259,7 @@ export async function startQaLocalServices({
   }
 
   async function handleModel(request, response, url) {
+    const modelPath = url.pathname.replace(/^\/conversation-b(?=\/)/, '');
     const authorization = safeAuthorization(request.headers.authorization);
     const authorized = request.headers.authorization === `Bearer ${QA_DEFAULTS.modelKey}`;
     if (!authorized) {
@@ -219,18 +267,18 @@ export async function startQaLocalServices({
       json(response, 401, { error: { message: 'Synthetic model key required', type: 'authentication_error' } });
       return;
     }
-    if (request.method === 'GET' && url.pathname === '/v1/models') {
-      record({ service: 'model', event: 'models', authorization });
+    if (request.method === 'GET' && modelPath === '/v1/models') {
+      record({ service: 'model', event: 'models', path: url.pathname, authorization });
       json(response, 200, { object: 'list', data: ['zhixing-qa', 'zhixing-qa-long'].map(id => ({ id, object: 'model', owned_by: 'local-qa' })) });
       return;
     }
-    if (request.method !== 'POST' || url.pathname !== '/v1/chat/completions') {
+    if (request.method !== 'POST' || modelPath !== '/v1/chat/completions') {
       json(response, 404, { error: { message: 'Unknown synthetic model endpoint' } });
       return;
     }
     const body = await readJson(request);
     const requestNumber = ++modelRequests;
-    const entry = record({ service: 'model', event: 'request', authorization, requestNumber, body });
+    const entry = record({ service: 'model', event: 'request', path: url.pathname, authorization, requestNumber, body });
     if (userTurn(body.messages).text.includes('QA_ERROR')) {
       record({ service: 'model', event: 'error', requestNumber, status: 400, code: 'QA_ERROR' });
       json(response, 400, { error: {
@@ -239,7 +287,15 @@ export async function startQaLocalServices({
       } });
       return;
     }
-    const message = modelReply(body, requestNumber);
+    const message = modelReply(body, requestNumber, configuration.conversation.sourceUrl);
+    if (message.tool_calls?.length) {
+      record({ service: 'model', event: 'tool-call', requestNumber, path: url.pathname,
+        model: body.model, calls: message.tool_calls.map(call => ({
+          id: call.id,
+          name: call.function?.name,
+          arguments: call.function?.arguments,
+        })) });
+    }
     const long = body.model === 'zhixing-qa-long' || /QA_LONG|长时间输出|停止验收/.test(userTurn(body.messages).text);
     const id = `qa-completion-${entry.sequence}`;
     const created = Math.floor(Date.now() / 1000);
@@ -365,6 +421,13 @@ export async function startQaLocalServices({
         reasoningStyle: 'standard', manualModels: 'zhixing-qa\nzhixing-qa-long', normalPrompt: 'QA_NORMAL 请输出一次正常合成回复。',
         longPrompt: 'QA_LONG 请持续输出供停止验收。', mcpPrompt: 'QA_MCP 请查询本机合成 MCP 工具。',
         errorPrompt: 'QA_ERROR 请验证发送失败后保留草稿。' },
+      conversation: {
+        sourceUrl: `${modelBase}/__qa/conversation/page`,
+        providerBBaseUrl: `${modelBase}/conversation-b/v1`,
+        presentPrompt: 'QA_CONVERSATION_PRESENT QA_OUTPUT=qa-conversation-example.txt',
+        linkPrompt: `QA_CONVERSATION_LINK QA_SOURCE_URL=${modelBase}/__qa/conversation/page`,
+        searchPrompt: 'QA_CONVERSATION_SEARCH 请记录一次实际搜索工具调用。',
+      },
       control: { health: `${modelBase}/__qa/health`, state: `${modelBase}/__qa/state`, requests: `${modelBase}/__qa/requests`,
         config: `${modelBase}/__qa/config`, reset: `${modelBase}/__qa/reset` },
       ports: { a: actualA, b: actualB, model: actualModel }, logFile,
