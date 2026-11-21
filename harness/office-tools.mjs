@@ -1,15 +1,17 @@
 import {defineTool} from '@deepseek-ai/dsh-tools';
 import {PrivacySession} from '../src/privacy-core.js';
+import {containsCredential} from '../src/privacy-recognizers.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readBridge, updateBridge } from './privacy-bridge.mjs';
 import { resolveOfficePath, needsApproval, writeOfficeFile, nextOfficePath } from './file-policy.mjs';
 import { parseOfficeFile, exportOfficeFile } from '../electron/office-files.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
+import {shellEnvironment, planningAllows} from './shell-policy.mjs';
 
 export const name='zhixing-office-tools';
-export const inject=['tools','llm','approval','shell','planMode'];
-export const TOOL_NAMES=['office_calculate','office_calendar','office_table_check','office_read_file','office_write_file','office_list_files','office_execute','todo_write','ask_user_question','skill','web_search','web_fetch','subagent','subagent_fork','list_agents','send_message','interrupt_agent','wait_agent','get_goal','create_goal','update_goal','exit_plan_mode','office_browser','office_schedule','workflow','job_list','job_output','job_kill','present'];
+export const inject=['tools','llm','approval','shell','planMode','sandboxPolicy'];
+export const TOOL_NAMES=['office_calculate','office_calendar','office_table_check','office_read_file','office_write_file','office_list_files','office_execute','todo_write','ask_user_question','skill','web_search','web_fetch','subagent','subagent_fork','list_agents','send_message','interrupt_agent','wait_agent','get_goal','create_goal','update_goal','exit_plan_mode','office_browser','office_schedule','workflow','job_list','job_output','job_kill','present','team_task_create','team_task_get','team_task_list','team_task_update','run_code'];
 const output={schema:{type:'object',additionalProperties:true},render:(_args,value)=>[{type:'text',text:JSON.stringify(value)}]};
 
 export function calculate(numbers,operation){
@@ -54,7 +56,7 @@ export function apply(ctx){
  async function protectedValue(value){
   return updateBridge(bridgeFile,bridgeKey,saved=>{
   const v=new PrivacySession(saved.id,saved),text=JSON.stringify(value),checked=v.protectValue(value,terms,privacyPolicy);
-  if(checked.blocked||(process.env.DEEPSEEK_API_KEY?.length>=12&&text.includes(process.env.DEEPSEEK_API_KEY)))throw new Error('文件结果含疑似凭证，已停止向模型返回。');
+  if(checked.blocked||containsCredential(text,process.env.DEEPSEEK_API_KEY))throw new Error('文件结果含疑似凭证，已停止向模型返回。');
   return {state:v.exportState(),value:raw?value:checked.value};
   });
  }
@@ -80,9 +82,9 @@ export function apply(ctx){
     if(outcome!=='allowed-once')throw new Error('命令未获批准。');
    }
    exec.signal.throwIfAborted();
-   const spec=ctx.shell.resolve({command:restored.text,workdir:root,timeoutMs:timeout_seconds*1000,signal:exec.signal,env:{DEEPSEEK_API_KEY:'',ZHIXING_BRIDGE_KEY:'',ZHIXING_BRIDGE_FILE:'',ZHIXING_CUSTOM_TERMS:'',ZHIXING_PRIVACY_POLICY:'',ZHIXING_HISTORY_KEY:'',ZHIXING_HISTORY_DIR:'',ZHIXING_MCP_FILE:'',ZHIXING_CONTEXT_FILE:'',ZHIXING_BROWSER_BRIDGE:'',ZHIXING_BROWSER_TOKEN:'',ZHIXING_AUTOMATION_BRIDGE:'',ZHIXING_AUTOMATION_TOKEN:'',ELECTRON_RUN_AS_NODE:''}});
+   const spec=ctx.shell.resolve({command:restored.text,workdir:root,timeoutMs:timeout_seconds*1000,signal:exec.signal,env:shellEnvironment(),sandboxPolicy:ctx.sandboxPolicy.resolve({session:exec.agent?.session})});
    const process=await ctx.shell.execute(spec),result=await process.result();
-   return protectedValue({exitCode:result.exitCode,timedOut:result.timedOut,aborted:result.aborted,stdout:result.stdout.text,stderr:result.stderr.text,truncated:result.stdout.truncated||result.stderr.truncated});
+   return protectedValue({exitCode:result.exitCode,timedOut:result.timedOut,aborted:result.aborted,sandbox:result.sandbox,stdout:result.stdout.text,stderr:result.stderr.text,truncated:result.stdout.truncated||result.stderr.truncated});
   }}));
   ctx.tools.register(defineTool({name:'office_read_file',description:'读取工作空间或经批准的本机办公文件。支持TXT、Markdown、CSV、DOCX、XLSX、PPTX和文字PDF。仅返回本机提取文本，图片和扫描区域未识别；公式只有缓存值。返回的敏感占位符必须原样保留。大文件按 start_character 和 max_characters 分段读取，直到 next_character 为 null。',parameters:{file_path:{type:'string',required:true},start_character:{type:'integer'},max_characters:{type:'integer'}},output,async execute({file_path,start_character=0,max_characters=80000},exec){
    exec.signal.throwIfAborted();if(!Number.isInteger(start_character)||start_character<0||!Number.isInteger(max_characters)||max_characters<1||max_characters>80000)throw new Error('读取范围无效，单次最多 80000 字符。');const info=await localPath(file_path);await permit(exec,{...info,write:false},'读取文件');
@@ -120,15 +122,16 @@ export function apply(ctx){
  const mcpEnabled=!!process.env.ZHIXING_MCP_FILE;
  const isMcp=name=>name.startsWith('mcp__')||['list_mcp_resources','list_mcp_resource_templates','read_mcp_resource'].includes(name);
  const extensionTool=name=>process.env.ZHIXING_ALLOW_EXTENSIONS==='1'&&!TOOL_NAMES.includes(name)&&!isMcp(name);
- const disabledTool=name=>(!kernel.webEnabled&&['office_browser','web_search','web_fetch'].includes(name))||(!kernel.workflowEnabled&&['workflow','job_list','job_output','job_kill'].includes(name))||(!kernel.subagentDepth&&['subagent','subagent_fork'].includes(name));
+ const disabledTool=name=>(!kernel.webEnabled&&['office_browser','web_search','web_fetch'].includes(name))||(!kernel.workflowEnabled&&['workflow','job_list','job_output','job_kill'].includes(name))||(!kernel.subagentDepth&&['subagent','subagent_fork'].includes(name))||((!kernel.teamEnabled||!kernel.subagentDepth)&&name.startsWith('team_task_'))||(name==='run_code'&&(!kernel.ptcEnabled||mode!=='full'||!root));
  ctx.tools.guard(exec=>!disabledTool(exec.name)&&(TOOL_NAMES.includes(exec.name)||(mcpEnabled&&isMcp(exec.name))||extensionTool(exec.name))?undefined:'此工具已关闭或尚未接入知行的权限和隐私策略。');
  ctx.on('tools/pre-execute',async(exec,next)=>{
+  if(exec.agent&&(ctx.planMode.get(exec.agent).pending??ctx.planMode.get(exec.agent).active)&&!planningAllows(exec.name,exec.arguments))return {kind:'deny',reason:'规划模式仅允许只读工具，请先提交方案或退出规划模式。'};
   if(exec.name==='present'){
    if(!Array.isArray(exec.arguments.files)||!exec.arguments.files.length||exec.arguments.files.length>8)return {kind:'deny',reason:'成果文件数量无效。'};
    for(const file of exec.arguments.files){const info=await localPath(file.path);await permit(exec,{...info,write:false},'交付成果文件');}
   }
   if(exec.name==='web_search'&&process.env.ZHIXING_WEB_SEARCH_AVAILABLE==='false')return {kind:'deny',reason:'当前模型服务未配置独立的网页搜索凭据，网页搜索暂不可用。请连接 DeepSeek 路由或配置独立搜索服务。'};
-  const decision=await next();if(exec.agent&&(ctx.planMode.get(exec.agent).pending??ctx.planMode.get(exec.agent).active)&&!['office_calculate','office_calendar','office_table_check','office_read_file','office_list_files','skill','ask_user_question','exit_plan_mode','get_goal'].includes(exec.name))return {kind:'deny',reason:'规划模式仅允许只读工具，请先提交方案或退出规划模式。'};if(exec.name==='office_schedule'&&['delete','edit','pause'].includes(exec.arguments.operation)&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'修改定时任务',path:exec.arguments.id||'当前项目',network:{operation:exec.arguments.operation}})};if(exec.name==='workflow'&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'运行多 Agent 工作流',path:root||'当前任务',command:exec.arguments.script})};if(exec.name==='create_goal'&&Number(exec.arguments.max_goal_rounds)>kernel.goalRounds)return {kind:'deny',reason:`单个目标最多自动继续 ${kernel.goalRounds} 轮。`};if(decision.kind!=='allow'||!['web_search','web_fetch','office_browser'].includes(exec.name)&&!isMcp(exec.name)&&!extensionTool(exec.name))return decision;
+  const decision=await next();if(exec.name==='office_schedule'&&['delete','edit','pause'].includes(exec.arguments.operation)&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'修改定时任务',path:exec.arguments.id||'当前项目',network:{operation:exec.arguments.operation}})};if(exec.name==='workflow'&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'运行多 Agent 工作流',path:root||'当前任务',command:exec.arguments.script})};if(exec.name==='create_goal'&&Number(exec.arguments.max_goal_rounds)>kernel.goalRounds)return {kind:'deny',reason:`单个目标最多自动继续 ${kernel.goalRounds} 轮。`};if(decision.kind!=='allow'||!['web_search','web_fetch','office_browser'].includes(exec.name)&&!isMcp(exec.name)&&!extensionTool(exec.name))return decision;
   if(process.env.ZHIXING_ALLOW_NETWORK==='false')return {kind:'deny',reason:'本次任务未授权联网。'};
   const v=await getVault(),checked=v.protectValue(exec.arguments,terms,privacyPolicy);
   if(checked.blocked||(!raw&&checked.entities.length))return {kind:'deny',reason:'联网参数含未经替换的敏感值，请改用占位符或不含敏感值的关键词。'};
@@ -143,6 +146,10 @@ export function apply(ctx){
   catch{return {kind:'block',feedback:[{type:'text',text:'外部工具返回内容被隐私策略拦截。'}]};}
  });
  // Provider turns stay text-only; office-file values pass through the local privacy bridge.
+ ctx.on('llm-pi-ai/request-headers',(request,headers)=>{
+  if(request.sessionId!==undefined)headers.set('x-zhixing-session-id',String(request.sessionId));
+  return headers;
+ });
  ctx.on('llm/stream',async function*(options,next){
   if(options.messages.some(message=>message.content.some(block=>['file','image'].includes(block.type)))){yield {type:'finish',reason:{kind:'error',failure:{code:'UNKNOWN',message:'原始附件尚未接入脱敏，请先解析为文本。'}}};return;}
   yield* next();

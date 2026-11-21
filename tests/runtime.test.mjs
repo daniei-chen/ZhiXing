@@ -69,7 +69,7 @@ test('真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本�
   assert(!result.masked.includes(fixturePhone));assert(requests.length>=2);
   const outbound=JSON.stringify(requests);assert(!outbound.includes(fixturePhone));assert(!outbound.includes(fixturePerson));
   assert(events.some(e=>e.type==='tool/call'));assert(!JSON.stringify(events.filter(event=>event.type!=='draft')).includes(fixturePhone));
-  const tools=requests[0].tools.map(t=>t.name);assert.deepEqual(tools.sort(),['ask_user_question','create_goal','get_goal','interrupt_agent','job_kill','job_list','job_output','list_agents','office_calculate','office_calendar','office_table_check','present','send_message','skill','subagent','subagent_fork','todo_write','update_goal','wait_agent','web_fetch','web_search','workflow']);
+  const tools=requests[0].tools.map(t=>t.name);assert.deepEqual(tools.sort(),['ask_user_question','create_goal','get_goal','interrupt_agent','job_kill','job_list','job_output','list_agents','office_calculate','office_calendar','office_table_check','present','send_message','skill','subagent','subagent_fork','team_task_create','team_task_get','team_task_list','team_task_update','todo_write','update_goal','wait_agent','web_fetch','web_search','workflow']);
   assert.equal(result.modelInput,preview.text);
   assert(requests[0].messages.some(m=>m.role==='user'&&JSON.stringify(m.content).includes(JSON.stringify(preview.text).slice(1,-1))));
   await assert.rejects(manager.runPrepared({runId:'repeat',preparationId:preview.preparationId},config,fixtureKey),/过期/);

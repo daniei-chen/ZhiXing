@@ -16,6 +16,9 @@ const { RuntimeManager } = await load('runtime.mjs');
 test('Harness 原生目录与 pnpm 隔离管理，可安装、启用、更新并移除插件', { timeout: 150000 }, async () => {
   const parent = await realpath(tmpdir());
   const root = await mkdtemp(path.join(parent, 'zhixing-plugin-test-'));
+  const originalPath=process.env.PATH;
+  // The installed product must work without a developer's external npm/node.
+  if(process.platform==='win32')process.env.PATH=path.join(process.env.SystemRoot||'C:\\Windows','System32');
   const packages = {'0.1.0':fixture('0.1.0',{build:true}),'0.2.0':fixture('0.2.0')};
   const modelRequests = [];
   const server = createServer(async (req, res) => {
@@ -73,7 +76,7 @@ test('Harness 原生目录与 pnpm 隔离管理，可安装、启用、更新并
     assert(catalog.some(row => row.official && row.selectable));
     await assert.rejects(async () => service.run({ action: 'inspect', spec: 'git+https://example.com/project' }), /npm/);
     const inspected = await service.run({ action: 'inspect', spec: name + '@0.1.0' });
-    assert.equal(inspected.version, '0.1.0');
+    assert.equal(inspected.version, '0.1.0', JSON.stringify(inspected));
     assert.equal(inspected.bundle, true);
     const url=`http://127.0.0.1:${server.address().port}/market.json`;
     await assert.rejects(async()=>service.run({action:'market-search',url}),/添加/);
@@ -125,6 +128,7 @@ test('Harness 原生目录与 pnpm 隔离管理，可安装、启用、更新并
     assert(removed.changed, JSON.stringify(removed));
     assert(!(await service.run({ action: 'list' })).some(row => row.name === name));
   } finally {
+    if(originalPath===undefined)delete process.env.PATH;else process.env.PATH=originalPath;
     await service.close();
     await manager.close();
     server.closeAllConnections();

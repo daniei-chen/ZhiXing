@@ -256,6 +256,7 @@ test('合成模型仅当前用户输入 QA_ERROR 返回确定性 400，历史与
     [{ role: 'user', content: 'QA_NORMAL 当前输入。' }, { role: 'assistant', content: 'QA_ERROR 仅在助手记录中。' }],
     [{ role: 'system', content: 'QA_ERROR 仅在系统记录中。' }, { role: 'user', content: 'QA_NORMAL 当前输入。' }],
     [{ role: 'user', content: 'QA_NORMAL 当前输入。' }, { role: 'user', content: '<system-reminder>QA_ERROR 注入提醒。</system-reminder>' }],
+    [{ role: 'user', content: 'QA_NORMAL 当前输入。' }, { role: 'user', content: 'Time sampled while preparing turn 1, step 1: 2026-11-21T12:00:00+08:00[Asia/Shanghai]\nBrowser time zone for this request: unavailable. Ask the user to clarify otherwise-unqualified dates and times.\nElapsed since the preceding model-visible message: 0s.' }],
   ];
   for (const messages of ordinaryTurns) {
     const response = await call(messages);

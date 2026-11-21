@@ -65,7 +65,7 @@ async function initialise(){
  });
  manager=new RuntimeManager({root:path.join(ROOT,'harness'),readVault:async id=>JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`))),writeVault:(id,value)=>writeEncrypted(path.join(VAULTS,`${id}.bin`),JSON.stringify(value)),onApproval:async request=>{
   let detail;try{detail=JSON.parse(request.reason);}catch{return {outcome:'rejected'};}
-  if(!request.toolName.startsWith('mcp__')&&!['office_read_file','office_write_file','office_list_files','office_execute','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource','office_browser','workflow','office_schedule'].includes(request.toolName)||typeof detail.path!=='string')return {outcome:'rejected'};
+  if(!request.toolName.startsWith('mcp__')&&!['office_read_file','office_write_file','office_list_files','office_execute','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource','office_browser','workflow','office_schedule','present'].includes(request.toolName)||typeof detail.path!=='string')return {outcome:'rejected'};
   if(request.signal?.aborted)return {outcome:'rejected'};
   const answer=await dialog.showMessageBox(windowRef,{type:'question',title:detail.command?'批准本次命令':detail.network?'批准本次联网':'批准本次文件操作',message:detail.operation||'操作需要批准',detail:`${detail.path}\n\n${detail.command?`${detail.command}\n\n命令可访问项目外文件和网络，请核对后批准。`:detail.network?`${JSON.stringify(detail.network)}\n\n仅批准本次联网操作。`:detail.overwrite?'此操作会覆盖已有文件。':'只批准本次操作，不改变权限模式。'}`,buttons:['拒绝','仅允许本次'],defaultId:0,cancelId:0,noLink:true,signal:request.signal});
   return {outcome:answer.response===1?'allowed-once':'rejected'};

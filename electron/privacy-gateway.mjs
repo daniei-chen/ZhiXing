@@ -2,19 +2,21 @@ import http from 'node:http';
 import {randomBytes} from 'node:crypto';
 import {once} from 'node:events';
 import {PrivacySession} from '../src/privacy-core.js';
+import {containsCredential} from '../src/privacy-recognizers.js';
 import {updateBridge} from '../harness/privacy-bridge.mjs';
 import {goalWire} from './goal-wire.mjs';
 import {createAssistantStreamDecoder} from './assistant-stream.mjs';
 
 // A request-local loopback gateway is the serialization boundary. Harness loop
 // messages are immutable; do not mutate its event-sourced request projection.
-export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,bridgeFile,bridgeKey,privacyMode,customTerms=[],privacyPolicy,onAssistantText}) {
+export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,bridgeFile,bridgeKey,privacyMode,customTerms=[],privacyPolicy,onAssistantText,mainSessionId}) {
   const openAI=protocol==='openai';
   const inbound=openAI?'/v1/chat/completions':protocol==='deepseek'?'/anthropic/v1/messages':'/v1/messages';
   const token=`zx-local-${randomBytes(24).toString('hex')}`;
   const controllers=new Set();let tail=Promise.resolve();
   const server=http.createServer(async(req,res)=>{
     const controller=new AbortController();controllers.add(controller);
+    let stage='boundary',previewState;
     req.on('aborted',()=>controller.abort());res.on('close',()=>{if(!res.writableEnded)controller.abort();});
     try{
       if(req.method!=='POST'||req.url?.split('?')[0]!==inbound||(openAI?req.headers.authorization!==`Bearer ${token}`:req.headers['x-api-key']!==token)){res.writeHead(403).end();return;}
@@ -23,7 +25,7 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
       const job=tail.then(async()=>{
         await updateBridge(bridgeFile,bridgeKey,async saved=>{
         const vault=new PrivacySession(saved.id,saved);
-        if(apiKey.length>=12&&JSON.stringify(body).includes(apiKey))throw new Error('请求内容含模型凭证，已阻止发送。');
+        if(containsCredential(JSON.stringify(body),apiKey))throw new Error('请求内容含模型凭证，已阻止发送。');
         const protect=value=>{const checked=vault.protectValue(value,customTerms,privacyPolicy);if(checked.blocked)throw new Error('请求内容含被拦截的敏感值，已阻止发送。');return privacyMode==='raw'?value:checked.value;};
         const goal=goalWire(body.messages,protect);
         const content=(value,toolId)=>{
@@ -61,7 +63,8 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
           body.messages=body.messages.map(message=>({...message,content:content(message.content)}));
           if(Array.isArray(body.tools))body.tools=body.tools.map(tool=>toolDefinition(tool,'input_schema'));
         }
-        return {state:vault.exportState()};
+        previewState=vault.exportState();
+        return {state:previewState};
         },{signal:controller.signal});
       });tail=job.catch(()=>{});await job;
       const root=baseUrl.replace(/\/$/,'');
@@ -70,12 +73,14 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
         ?{'content-type':'application/json',authorization:`Bearer ${apiKey}`}
         :{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':String(req.headers['anthropic-version']||'2023-06-01')};
       if(!openAI)for(const [name,value] of Object.entries(req.headers))if((name.startsWith('x-deepseek-')||['anthropic-beta','user-agent','accept'].includes(name))&&typeof value==='string')headers[name]=value;
+      stage='upstream';
       const response=await fetch(target,{method:'POST',headers,body:JSON.stringify(body),redirect:'error',signal:controller.signal});
       res.writeHead(response.status,{'content-type':response.headers.get('content-type')||'application/json','cache-control':'no-store'});
-      const streamAssistant=response.ok&&response.headers.get('content-type')?.includes('text/event-stream')&&typeof onAssistantText==='function';
+      const requestSessionId=req.headers['x-zhixing-session-id']||req.headers['x-deepseek-harness-session-id'];
+      const streamAssistant=(!mainSessionId||requestSessionId===mainSessionId)&&response.ok&&response.headers.get('content-type')?.includes('text/event-stream')&&typeof onAssistantText==='function';
       const notifyAssistantText=event=>{try{onAssistantText(event);}catch{}};
       const assistantStream=streamAssistant?createAssistantStreamDecoder(text=>notifyAssistantText({type:'delta',text})):null;
-      if(assistantStream)notifyAssistantText({type:'start'});
+      if(assistantStream)notifyAssistantText({type:'start',...(mainSessionId?{vaultState:previewState}:{})});
       try {
         if(response.body)for await(const chunk of response.body){
           const bytes=Buffer.from(chunk);
@@ -89,7 +94,11 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
         throw error;
       }
       res.end();
-    }catch(error){if(!res.headersSent&&!res.destroyed)res.writeHead(400,{'content-type':'application/json'}).end(JSON.stringify({type:'error',error:{type:'invalid_request_error',message:error.name==='AbortError'?'任务已停止。':'本机隐私边界未完成请求，请检查脱敏规则和连接。'}}));else res.destroy();}
+    }catch(error){
+      const cancelled=controller.signal.aborted||error.name==='AbortError',upstream=stage==='upstream'&&!cancelled;
+      if(!res.headersSent&&!res.destroyed)res.writeHead(upstream?502:400,{'content-type':'application/json','cache-control':'no-store'}).end(JSON.stringify({type:'error',error:{type:upstream?'api_error':'invalid_request_error',code:cancelled?'REQUEST_CANCELLED':upstream?'UPSTREAM_UNAVAILABLE':'PRIVACY_BOUNDARY_REJECTED',message:cancelled?'任务已停止。':upstream?'模型服务暂时无法连接，请稍后重试。':'本机隐私边界未完成请求，请检查脱敏规则和连接。'}}));
+      else res.destroy();
+    }
     finally{controllers.delete(controller);}
   });
   server.listen(0,'127.0.0.1');await once(server,'listening');

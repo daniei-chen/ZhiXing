@@ -3,7 +3,7 @@ import {CircleNotch} from '@phosphor-icons/react';
 
 const categories = [
  ['all','全部'], ['tools','工具'], ['agents','子任务'], ['workflow','工作流'],
- ['jobs','后台作业'], ['session','会话'],
+ ['jobs','后台作业'], ['team','共享任务'], ['session','会话'],
 ];
 const statusLabels = {
  running:'运行中', completed:'已完成', cancelled:'已取消', interrupted:'已中断',
@@ -13,7 +13,7 @@ const statusLabels = {
 const formatTime = time => new Date(time).toLocaleTimeString('zh-CN',{hour12:false});
 const duration = ms => ms >= 1000 ? `${(ms/1000).toFixed(2)} 秒` : `${ms} 毫秒`;
 
-export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, sessionId}) {
+export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, sessionId, liveTeam}) {
  const [selected,setSelected] = useState('');
  const [filter,setFilter] = useState('all');
  const [limit,setLimit] = useState(30);
@@ -51,6 +51,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  }
  return <div className="execution-panel">
   <div className="execution-head"><h3>执行轨迹</h3>{live && <span><CircleNotch size={13}/>正在执行</span>}</div>
+  <TeamBoard board={live?liveTeam:reply?.context?.team}/>
   {(live || runs.length>0) && <div className="execution-filters">
    <label>交办
     <select value={live?'live':reply?.id||''} onChange={event=>{setSelected(event.target.value);setSelectedItem(null);setLimit(30);}}>
@@ -102,6 +103,17 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
    {recent.length>limit && <button className="secondary-button execution-more" onClick={()=>setLimit(value=>value+30)}>显示更早的事件</button>}
   </> : <p className="empty-note">{live||reply?'这次交办暂无这一类事件。':'交办开始后，这里会显示工具调用、子任务、工作流和后台作业。'}</p>}
  </div>;
+}
+
+function TeamBoard({board}) {
+ if(!board?.enabled)return null;
+ const labels={pending:'待开始',in_progress:'进行中',completed:'已完成'};
+ return <section className="team-board" aria-label="共享任务板"><div className="team-board-heading"><h4>共享任务板</h4><span>{board.tasks.filter(task=>task.status==='completed').length} / {board.tasks.length}</span></div>
+  {board.failure&&<p role="alert">{board.failure}</p>}
+  {!board.tasks.length&&<p className="muted">多 Agent 协作时，在这里查看共享任务、负责人和依赖。</p>}
+  <ol>{board.tasks.map(task=><li key={task.id}><details><summary><span>{task.subject||`任务 ${task.id}`}</span><small>{labels[task.status]}</small></summary><p>{task.description}</p><dl><div><dt>负责人</dt><dd>{task.owner||'尚未领取'}</dd></div><div><dt>版本</dt><dd>{task.revision}</dd></div>{task.blockedBy.length>0&&<div><dt>依赖</dt><dd>{task.blockedBy.join('、')}</dd></div>}{task.writeScopes.length>0&&<div><dt>预期文件范围</dt><dd>{task.writeScopes.join('、')}</dd></div>}</dl>{task.warnings.map((warning,index)=><p className="settings-note" key={index}>{warning}</p>)}</details></li>)}</ol>
+  {board.truncated&&<p className="settings-note">仅显示前 100 项，完整状态保存在加密会话中。</p>}
+ </section>;
 }
 
 function ExecutionDetail({item,runId,sessionId,saved,onClose}){

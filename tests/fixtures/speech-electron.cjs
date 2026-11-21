@@ -2,9 +2,14 @@ const { app } = require('electron');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const started = Date.now();
+const trace = stage => console.error(`speech fixture ${stage}: ${Date.now() - started}ms`);
+trace('main-entered');
 
 app.whenReady().then(async () => {
+  trace('app-ready');
   const { SpeechService } = await import(pathToFileURL(process.argv.at(-2)).href);
+  trace('service-imported');
   const directory = process.argv.at(-1);
   const voice = new SpeechService(null, { dataRoot: path.join(directory, 'speech') });
   const guard = setTimeout(() => app.exit(1), 20000);
@@ -13,6 +18,7 @@ app.whenReady().then(async () => {
     assert.equal(process.env.ELECTRON_RUN_AS_NODE, undefined);
     process.env.ZHIXING_SPEECH_TEST_API_KEY = 'synthetic-regression-only';
     await voice.initialise();
+    trace('service-initialised');
     const subprocess = voice.context.get('subprocess');
     const job = subprocess.spawn({
       argv: [process.execPath, '-e', 'console.log(JSON.stringify({runAsNode:process.env.ELECTRON_RUN_AS_NODE,type:process.type,secret:process.env.ZHIXING_SPEECH_TEST_API_KEY}))'],
@@ -20,7 +26,9 @@ app.whenReady().then(async () => {
       stdio: { stdin: 'ignore', stdout: { maxBytes: 4096 }, stderr: { maxBytes: 4096 } },
     });
     assert.equal(process.env.ELECTRON_RUN_AS_NODE, undefined);
+    trace('job-spawned');
     const result = await job.done;
+    trace('job-finished');
     assert.equal(result.exitCode, 0, job.collected.stderr.readFrom(0).text);
     assert.equal(await job.waitForExit(AbortSignal.timeout(5000)), true);
     const output = JSON.parse(job.collected.stdout.readFrom(0).text);
@@ -30,6 +38,7 @@ app.whenReady().then(async () => {
     assert.throws(() => subprocess.spawn({ argv: [] }));
     assert.equal(process.env.ELECTRON_RUN_AS_NODE, undefined);
     await voice.close();
+    trace('service-closed');
     console.log(JSON.stringify({ speechElectronSubprocess: {
       workerRunAsNode: output.runAsNode, hostRestored: true, credentialScrubbed: true,
     } }));

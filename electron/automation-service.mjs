@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { acceptOccurrence, nextScheduledTime, normalizeTiming, previewTiming } from './schedule-rules.mjs';
 import { automationInput } from '../src/automation-core.js';
 import { PrivacySession } from '../src/privacy-core.js';
+import { PRIVACY_ENGINE_VERSION } from '../src/privacy-policy.js';
 
 const copy = value => structuredClone(value);
 const ID = /^[\w-]{1,100}$/;
@@ -33,7 +34,7 @@ export class AutomationService {
     if (saved && (saved.version !== 1 || !Array.isArray(saved.tasks) || !Array.isArray(saved.runs))) throw new Error('自动化记录无法读取，原文件已保留。');
     this.state = saved || { version: 1, revision: 0, tasks: copy(legacy), runs: [] };
     this.state.tasks = this.state.tasks.map(task => ({ ...task, documentIds: task.documentIds || [],
-      ...(task.kind === 'agent' && !task.approval ? { enabled: false, status: '待重新审阅' } : {}),
+      ...(task.kind === 'agent' && task.approval?.privacyEngineVersion!==PRIVACY_ENGINE_VERSION ? { enabled: false, status: '待重新审阅', approval:null } : {}),
       ...(task.status === '运行中' ? { status: '上次运行已中断' } : {}),
     }));
     this.state.runs = this.state.runs.map(run => run.status === 'running' ? { ...run, status: 'interrupted', finishedAt: this.now(), message: '上次运行已中断，可手动重新运行。' } : run);
@@ -119,7 +120,7 @@ export class AutomationService {
       ...(task.rule ? { rule: task.rule } : {}),
       ...(task.target && task.target.kind !== 'new' ? { target: task.target } : {}),
       ...(task.revisionToken ? { revisionToken: task.revisionToken } : {}),
-      privacyMode: settings.privacyMode, customTerms: settings.customTerms || [], config,
+      privacyMode: settings.privacyMode, privacyEngineVersion:PRIVACY_ENGINE_VERSION, customTerms: settings.customTerms || [], config,
     };
     const digest = createHash('sha256').update(JSON.stringify(descriptor)).digest('hex');
     const sessionId = task.reservedSessionId
@@ -157,7 +158,7 @@ export class AutomationService {
     await this.commit(draft => {
       const live = draft.tasks.find(item => item.id === task.id);
       if (!live || live.revisionToken !== task.revisionToken) throw new Error('任务已变化，请重新审阅。');
-      Object.assign(live, { enabled: true, nextRun, status: '待执行', approval: { digest: spec.digest, privacyMode: spec.privacyMode, baseUrl: spec.config.baseUrl, model: spec.config.model, approvedAt: this.now() } });
+      Object.assign(live, { enabled: true, nextRun, status: '待执行', approval: { digest: spec.digest, privacyEngineVersion:PRIVACY_ENGINE_VERSION, privacyMode: spec.privacyMode, baseUrl: spec.config.baseUrl, model: spec.config.model, approvedAt: this.now() } });
     });
     return { enabled: true };
   }

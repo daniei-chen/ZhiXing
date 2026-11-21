@@ -1,6 +1,6 @@
 {
   "name": "office-agent",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "知行 AI 办公助手 · DeepSeek Harness",
   "author": "知行",
   "private": true,
@@ -11,13 +11,15 @@
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "electron": "node scripts/run-desktop.mjs",
-    "test": "node --test --test-concurrency=2 tests/privacy.test.mjs tests/office.test.mjs tests/store.test.mjs tests/conversation-resources.test.mjs tests/deliverable-access.test.mjs tests/assistant-stream.test.mjs tests/automation.test.mjs tests/runtime.test.mjs tests/runtime-cleanup.test.mjs tests/runtime-context.test.mjs tests/runtime-launch.test.mjs tests/runtime-policy.test.mjs tests/runtime-lifecycle.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/desktop-release.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/speech-audio.test.mjs tests/speech-service.test.mjs tests/providers.test.mjs tests/mcp-identity.test.mjs tests/mcp-destination.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs",
+    "test": "node --test --test-concurrency=2 tests/privacy.test.mjs tests/privacy-gateway.test.mjs tests/kernel-native.test.mjs tests/office.test.mjs tests/store.test.mjs tests/conversation-resources.test.mjs tests/deliverable-access.test.mjs tests/assistant-stream.test.mjs tests/automation.test.mjs tests/runtime.test.mjs tests/runtime-cleanup.test.mjs tests/runtime-context.test.mjs tests/runtime-launch.test.mjs tests/runtime-policy.test.mjs tests/runtime-lifecycle.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/desktop-release.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/speech-audio.test.mjs tests/speech-service.test.mjs tests/providers.test.mjs tests/mcp-identity.test.mjs tests/mcp-destination.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs",
     "test:packed": "node scripts/test-packed.mjs",
     "electron:dist": "npm run build && electron-builder --win --x64 --dir && node scripts/generate-installer-path-policy.mjs",
     "electron:install": "npm run electron:dist && electron-builder --win nsis --x64",
     "test:browser": "node scripts/test-browser.mjs",
     "test:ui": "node scripts/test-ui.mjs",
-    "test:components": "node --test --test-concurrency=1 tests/conversation-resources-ui.test.mjs tests/speech-input.test.mjs"
+    "test:components": "node --test --test-concurrency=1 tests/conversation-resources-ui.test.mjs tests/speech-input.test.mjs",
+    "test:privacy": "node --test tests/privacy.test.mjs tests/privacy-gateway.test.mjs",
+    "test:kernel": "node --test --test-concurrency=1 tests/kernel.test.mjs tests/kernel-native.test.mjs tests/runtime-context.test.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {
@@ -48,6 +50,7 @@
     "exceljs": "^4.4.0",
     "fflate": "0.8.3",
     "ipaddr.js": "2.2.0",
+    "npm": "11.17.0",
     "pdfjs-dist": "6.5.438",
     "pnpm": "10.34.9",
     "react": "19.2.0",

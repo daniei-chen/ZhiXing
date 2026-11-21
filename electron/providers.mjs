@@ -7,6 +7,9 @@ const toggle = { off: null, high: 'high' };
 const full = { off: null, low: 'low', high: 'high', max: 'max' };
 const wire = (map, compat) => ({ capability: 'known', levels: Object.keys(map), map, compat });
 const unknownEffort = () => ({ capability: 'unknown', levels: [], map: null, compat: undefined });
+// An explicit no-override route can always use the provider's default without
+// guessing a reasoning dialect. false instructs the native adapter to omit it.
+const defaultEffort = () => ({ capability: 'known', levels: ['off'], map: false, compat: {supportsReasoningEffort: false} });
 
 export class ProviderSelectionError extends Error {
   constructor(code, reason, requested) {
@@ -46,6 +49,7 @@ export function modelReasoning(provider, model) {
   }
   if (!preset && provider.reasoningStyle === 'standard') return wire({ ...full, off: 'none', max: 'xhigh' }, provider.protocol === 'openai' ? { supportsReasoningEffort: true } : undefined);
   if (!preset && provider.reasoningStyle === 'deepseek' && provider.protocol === 'openai') return wire({ ...full, off: 'none' }, { thinkingFormat: 'deepseek', supportsReasoningEffort: true });
+  if (presetById.has(preset) || !preset && provider.reasoningStyle === 'none') return defaultEffort();
   return unknownEffort();
 }
 
@@ -110,7 +114,7 @@ export function resolveProvider(providers, selection = {}) {
   return {
     providerId: provider.id, modelId: selected.id, protocol: provider.protocol, baseUrl: provider.baseUrl,
     model: selected.id, requestedReasoning, effectiveReasoning: requestedReasoning,
-    wireReasoning: effort.map[requestedReasoning], reasoning: requestedReasoning,
+    wireReasoning: effort.map === false ? undefined : effort.map[requestedReasoning], reasoning: requestedReasoning,
     reasoningCapability: effort.capability, reasoningMap: effort.map,
     compat: compatibleChat ? {
       supportsStore: false, supportsDeveloperRole: false, supportsStrictMode: false,

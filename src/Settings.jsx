@@ -4,7 +4,7 @@ import { BrandMark, Modal, Switch, IconButton } from './ui.jsx';
 import { WorkspaceIcon } from './Sidebar.jsx';
 import { PERMISSION_MODES } from './permissions.js';
 import {PRIVACY_TYPES,normalisePrivacyPolicy} from './privacy-policy.js';
-import {PrivacySession} from './privacy-core.js';
+import PrivacyTest from './PrivacyTest.jsx';
 import McpSettings from './McpSettings.jsx';
 import KernelSettings from './KernelSettings.jsx';
 
@@ -168,10 +168,8 @@ function PrivacySettings({ settings, setSetting, setModal, desktop }) {
   const [term, setTerm] = useState('');
   const [exclusions,setExclusions]=useState(()=>normalisePrivacyPolicy(settings.privacyPolicy).neverMask.join('\n'));
   const [prefixes,setPrefixes]=useState(()=>normalisePrivacyPolicy(settings.privacyPolicy).secretPrefixes.join('\n'));
-  const [sample,setSample]=useState('');
   const policy=normalisePrivacyPolicy(settings.privacyPolicy);
-  const [sampleResult,setSampleResult]=useState(null);
-  const updatePolicy=patch=>{setSetting('privacyPolicy',normalisePrivacyPolicy({...policy,...patch}));setSampleResult(null);};
+  const updatePolicy=patch=>{setSetting('privacyPolicy',normalisePrivacyPolicy({...policy,...patch}));};
   const options = [
     ['redact', '脱敏模式', '发送前替换识别到的敏感值，回复按本次会话的映射在本机还原。', ShieldCheck],
     ['raw', '非脱敏模式', '输入、所选资料与相关聊天上下文按原文发送，回复不经过还原。', Eye],
@@ -199,7 +197,7 @@ function PrivacySettings({ settings, setSetting, setModal, desktop }) {
       <label className="form-label">从不脱敏<textarea aria-label="从不脱敏" rows={2} value={exclusions} onChange={event=>setExclusions(event.target.value)} onBlur={()=>updatePolicy({neverMask:exclusions.split(/[\n,，]/)})} placeholder="每行一个完整值，凭证不受此项豁免"/></label>
       <label className="form-label">自定义密钥前缀<textarea aria-label="自定义密钥前缀" rows={2} value={prefixes} onChange={event=>setPrefixes(event.target.value)} onBlur={()=>updatePolicy({secretPrefixes:prefixes.split(/[\n,，]/)})} placeholder="每行一个，至少 4 个字符"/></label>
     </div>
-    <div className="setting-section"><h3>在本机试一试</h3><p>测试内容仅在当前页面内存中处理，不保存、不发送。</p><textarea className="privacy-sample" aria-label="脱敏测试原文" rows={4} value={sample} onChange={event=>{setSample(event.target.value);setSampleResult(null);}} placeholder="粘贴一段合成测试文字"/><button className="secondary-button" disabled={!sample} onClick={()=>setSampleResult(new PrivacySession('local-sample').protect(sample,settings.customTerms,policy))}>测试脱敏</button>{sampleResult&&<><p className="settings-note" role="status">{sampleResult.blocked?'将被拦截':'可以发送'} · 替换 {sampleResult.entities.length} 个值</p><pre className="privacy-sample-result">{sampleResult.text}</pre></>}</div>
+    <PrivacyTest terms={settings.customTerms} policy={policy}/>
     <div className="setting-row"><span><strong>保存聊天与资料</strong><small>{desktop ? '保存在本机，使用 Windows 用户加密' : '保存在当前浏览器'}</small></span><Switch label="保存聊天与资料" value={settings.persist} onChange={value => value ? setSetting('persist', true) : setModal({ type: 'disable-history' })}/></div>
     <div className="setting-row"><span><strong>已归档聊天</strong></span><button className="secondary-button" onClick={() => setModal({ type: 'archive' })}><Archive size={15}/>管理</button></div>
   </>;

@@ -37,7 +37,7 @@ test('显式失效供应商与型号、未知能力和不支持档位均阻止�
   const provider=await saveProvider({name:'严格选择',apiKey:'fixture-strict-key',baseUrl:'https://strict.example/v1',protocol:'openai',reasoningStyle:'deepseek',manualModels:'known-model'},[]);
   assert.throws(()=>resolveProvider([provider],{providerId:'removed-provider',modelId:'known-model',reasoning:'high'}),error=>Boolean(error instanceof ProviderSelectionError&&error.code==='PROVIDER_UNAVAILABLE'&&error.reason));
   assert.throws(()=>resolveProvider([provider],{providerId:provider.id,modelId:'removed-model',reasoning:'high'}),error=>error.code==='MODEL_UNAVAILABLE'&&error.requested.modelId==='removed-model');
-  const unknown={...provider,id:'unknown',reasoningStyle:'none',models:[{id:'unclassified-model'}]};
+  const unknown={...provider,id:'unknown',reasoningStyle:'unrecognised-style',models:[{id:'unclassified-model'}]};
   assert.equal(modelReasoning(unknown,'unclassified-model').capability,'unknown');
   assert.throws(()=>resolveProvider([unknown],{providerId:'unknown',modelId:'unclassified-model',reasoning:'off'}),error=>error.code==='REASONING_CAPABILITY_UNKNOWN');
   const limited={...provider,preset:'zhipu',models:[{id:'glm-4.5'}]};
@@ -58,9 +58,18 @@ test('界面模型查找不跨供应商或静默改选',()=>{
   assert.equal(selectedModel(runtime,{modelProviderId:null,model:'other'}),runtime.models[2]);
 });
 
+test('非推理模型、硅基流动与明确不覆盖推理的自定义路由可正常发送',()=>{
+ for(const provider of [{preset:'openai',protocol:'openai',model:'gpt-4o'},{preset:'anthropic',protocol:'anthropic',model:'claude-3-5-sonnet-latest'},{preset:'siliconflow',protocol:'openai',model:'Qwen/Qwen2.5-7B-Instruct'},{preset:null,reasoningStyle:'none',protocol:'openai',model:'local-text-model'}]){
+  const row={...provider,id:'default-route',baseUrl:'https://fixture.example/v1',models:[{id:provider.model}]};
+  const config=resolveProvider([row],{providerId:row.id,modelId:provider.model,reasoning:'off'});
+  assert.equal(config.reasoningMap,false);assert.equal(config.wireReasoning,undefined);
+  assert.throws(()=>resolveProvider([row],{providerId:row.id,modelId:provider.model,reasoning:'high'}),error=>error.code==='REASONING_EFFORT_UNAVAILABLE');
+ }
+});
+
 test('真实 Harness 对接自定义 Chat Completions / Messages，收件端核对模型、档位、脱敏与恢复',{timeout:130000},async()=>{
   const parent=await realpath(os.tmpdir()),root=await mkdtemp(path.join(parent,'zhixing-provider-test-'));
-  const requests=[],vaults=new Map();
+  const requests=[],vaults=new Map(),events=[];
   const server=http.createServer(async(req,res)=>{
     if(req.method==='GET'){
       requests.push({url:req.url,auth:req.headers.authorization||req.headers['x-api-key']});
@@ -89,11 +98,11 @@ test('真实 Harness 对接自定义 Chat Completions / Messages，收件端核�
   });
   server.listen(0,'127.0.0.1');await once(server,'listening');
   const base=`http://127.0.0.1:${server.address().port}`;
-  const manager=new RuntimeManager({root,readVault:async id=>vaults.get(id),writeVault:async(id,value)=>vaults.set(id,value)});
+  const manager=new RuntimeManager({root,readVault:async id=>vaults.get(id),writeVault:async(id,value)=>vaults.set(id,value),onEvent:event=>events.push(event)});
   try{
     const chat=await saveProvider({name:'合成 Chat API',apiKey:'fixture-chat-key',baseUrl:`${base}/chat/v1`,protocol:'openai',reasoningStyle:'standard',discover:true},[]);
     const messages=await saveProvider({name:'合成 Messages API',apiKey:'fixture-messages-key',baseUrl:`${base}/messages`,protocol:'anthropic',reasoningStyle:'standard',discover:true},[chat]);
-    const plain={...chat,id:'fixture-nonreasoning',reasoningStyle:'standard'};
+    const plain={...chat,id:'fixture-nonreasoning',reasoningStyle:'none'};
     assert.deepEqual(requests.splice(0),[{url:'/chat/v1/models',auth:'Bearer fixture-chat-key'},{url:'/messages/v1/models?limit=100',auth:'fixture-messages-key'}]);
     const configs=[
       [chat,'max','/chat/v1/chat/completions'],
@@ -112,10 +121,12 @@ test('真实 Harness 对接自定义 Chat Completions / Messages，收件端核�
       assert.equal(request.auth,provider.protocol==='openai'?`Bearer ${provider.key}`:provider.key);
       const {body}=request;
       assert.equal(body.model,'fixture-selected');
-      if(provider.protocol==='openai')assert.equal(body.reasoning_effort,reasoning==='max'?'xhigh':'none');
+      if(provider===plain){assert(!Object.hasOwn(body,'reasoning_effort'));assert(!Object.hasOwn(body,'thinking'));}
+      else if(provider.protocol==='openai')assert.equal(body.reasoning_effort,reasoning==='max'?'xhigh':'none');
       else assert.equal(body.thinking.type,'enabled');
       assert.doesNotMatch(JSON.stringify(body.messages),/13800000000/);
       assert.match(result.text,/13800000000/);
+      assert(events.some(event=>event.runId===`${sessionId}-${reasoning}`&&event.source==='assistant-stream'&&event.text.includes('13800000000')),'Attributed provider stream must reach the main conversation');
     }
     const original=resolveProvider([chat],{providerId:chat.id,modelId:'fixture-selected',reasoning:'low'});
     const {preparationId}=await manager.preview({sessionId:'stale',prompt:'不要发出这次请求'},original);

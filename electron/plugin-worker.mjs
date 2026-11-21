@@ -20,6 +20,16 @@ await writeFile(path.join(dir, 'package.json'), JSON.stringify({
 
 const npmrc = path.join(root, 'registry.npmrc');
 await writeFile(npmrc, 'strict-ssl=true\n', { flag: 'wx' }).catch(error => { if (error.code !== 'EEXIST') throw error; });
+// pnpm delegates `view` to npm and lifecycle scripts may invoke `node`. Use
+// shipped CLIs even on a Windows machine without either command on PATH.
+// The shim is ASCII; Unicode installation paths travel in the environment.
+if(process.platform==='win32'){
+  const bin=path.join(root,'bin');await mkdir(bin,{recursive:true});
+  process.env.ZHIXING_PLUGIN_NODE=process.execPath;
+  process.env.ZHIXING_NPM_CLI=path.join(path.dirname(require.resolve('npm/package.json')),'bin','npm-cli.js');
+  await writeFile(path.join(bin,'npm.cmd'),'@echo off\r\n"%ZHIXING_PLUGIN_NODE%" "%ZHIXING_NPM_CLI%" %*\r\n');
+  process.env.PATH=[bin,path.dirname(process.execPath),process.env.PATH||''].join(path.delimiter);
+}
 const modules=[{
   id: 'plugin-manager', name: require.resolve('@deepseek-ai/dsh-plugin-manager'),
   config: { registry, fallbackRegistries: [], inspectTimeoutMs: 15000, idleTimeoutMs: 40000, outputBytes: 28000 },
@@ -97,7 +107,7 @@ async function perform(manager,market) {
   if (action === 'list') return (await manager.listBundles()).map(catalogRow);
   if (action === 'inspect') {
     const result = await manager.inspect(spec, { registry }, controller.signal);
-    return { name: result.name, version: result.version, description: result.description, bundle: result.bundle, problem: result.problem };
+    return { name: result.name, version: result.version, description: result.description, bundle: result.bundle, problem: result.problem, ...(result.status==='refused'?{reason:String(result.reason||'插件版本探测被拒绝。').slice(0,360)}:{}) };
   }
   if (action === 'versions') {
     const result = await manager.listVersions(name, { registry }, controller.signal);

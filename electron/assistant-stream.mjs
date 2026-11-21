@@ -1,4 +1,5 @@
 import {TYPE_LABELS} from '../src/privacy-core.js';
+import {canonicalText,detectionView} from '../src/privacy-recognizers.js';
 import {randomUUID} from 'node:crypto';
 
 const HOLD_BACK = 320;
@@ -11,6 +12,7 @@ export class AssistantTextStream {
     this.terms = terms;
     this.policy = policy;
     this.apiKey = apiKey;
+    this.canonicalKey = canonicalText(apiKey);
     this.allowedTokens = new Set(session.entries().map(entry => entry.token));
     this.reset();
   }
@@ -84,17 +86,19 @@ export class AssistantTextStream {
   }
 
   update(final) {
-    if (this.blocked || (this.apiKey.length >= 12 && this.raw.includes(this.apiKey))) {
+    const view=detectionView(this.raw);
+    if (this.blocked || (this.apiKey.length >= 12 && view.text.includes(this.canonicalKey))) {
       this.blocked = true;
       return {text: this.text, changed: false, blocked: true};
     }
 
-    let rawEnd = final ? this.raw.length : Math.max(0, this.raw.length - HOLD_BACK);
+    const visibleEnd=Math.max(0,view.text.length-HOLD_BACK);
+    let rawEnd = final ? this.raw.length : visibleEnd?view.range(visibleEnd,1).start:0;
     if (this.apiKey.length >= 12) {
-      const earliestCandidate = Math.max(0, this.raw.length - this.apiKey.length + 1);
-      for (let start = earliestCandidate; start < this.raw.length; start += 1) {
-        const suffix = this.raw.slice(start);
-        if (suffix.length < this.apiKey.length && this.apiKey.startsWith(suffix)) rawEnd = Math.min(rawEnd, start);
+      const earliestCandidate = Math.max(0, view.text.length - this.canonicalKey.length + 1);
+      for (let start = earliestCandidate; start < view.text.length; start += 1) {
+        const suffix = view.text.slice(start);
+        if (suffix.length < this.canonicalKey.length && this.canonicalKey.startsWith(suffix)) rawEnd = Math.min(rawEnd, view.range(start,1).start);
       }
     }
     const checked = this.session.protect(this.raw.slice(0, rawEnd), this.terms, this.policy);

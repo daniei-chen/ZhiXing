@@ -360,10 +360,13 @@ try {
   } else if (phase === 'pages') {
     const main = await connectUi(Number(process.env.ZHIXING_QA_MAIN_PORT || 9334), true);
     try {
+    // A minimized native window has no guaranteed compositor surface for CDP
+    // screenshots. Restore only this isolated QA window, without taking focus.
+    await main.evaluate('(() => {const w=process.mainModule.require("electron").BrowserWindow.getAllWindows()[0];if(w.isMinimized())w.restore();w.showInactive();return !w.isMinimized();})()');
     for (const zoom of [1, 1.25, 1.5, 2]) {
     await main.evaluate(`process.mainModule.require('electron').BrowserWindow.getAllWindows()[0].webContents.setZoomFactor(${zoom})`);
     for (const [width, height] of [[1255, 912], [1366, 768], [1920, 1080]]) {
-      await main.evaluate(`process.mainModule.require('electron').BrowserWindow.getAllWindows()[0].setBounds({x:0,y:0,width:${width},height:${height}})`);
+      await main.evaluate(`(() => {const w=process.mainModule.require('electron').BrowserWindow.getAllWindows()[0];if(w.isMinimized())w.restore();w.showInactive();w.setBounds({x:0,y:0,width:${width},height:${height}});})()`);
       const sizeLabel = `${width}x${height}-${zoom * 100}pct`;
       for (const page of ['首页', '资料空间', '定时任务', '自定义']) {
         await home();

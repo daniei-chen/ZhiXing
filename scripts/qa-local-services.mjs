@@ -90,6 +90,9 @@ function userTurn(messages = []) {
     const content = typeof message.content === 'string' ? message.content
       : Array.isArray(message.content) ? message.content.map(block => block.text || '').join('\n') : '';
     const text = content.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, '').trim();
+    // The real time-context plugin appends a user-role service reading after
+    // the user prompt. It must not replace the fixture's actual current turn.
+    if (/^Time sampled while preparing turn \d+, step \d+: [^\n]+\nBrowser time zone for this request: [^\n]+\nElapsed since the preceding [^\n]+\.$/.test(text)) continue;
     if (text) return { text, index };
   }
   return { text: '', index: -1 };

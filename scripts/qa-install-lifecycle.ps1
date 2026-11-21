@@ -3,7 +3,7 @@
 .SYNOPSIS
 Inspect or test the original Windows NSIS candidate with reversible host backups.
 .DESCRIPTION
-Inspect is read-only outside .preview/qa-0.11.0/install-evidence-*.
+Inspect is read-only outside .preview/qa-<package-version>/install-evidence-*.
 Run accepts the same Windows account with byte-verified backups of default data
 and existing shortcuts. A separate Windows account is not required. Existing
 same-appId installation registrations must be absent, so the tested installer
@@ -76,6 +76,7 @@ param(
     [string]$BaselineInstaller,
     [string]$FixtureManifest,
     [string]$HostBackupManifest,
+    [string]$PackedSourceManifest,
     [string]$InstallRoot,
     [string]$ExpectedTestUserSid,
     [ValidateRange(30, 1800)][int]$TimeoutSeconds = 1800
@@ -84,7 +85,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$evidenceParent = Join-Path $repository '.preview\qa-0.11.0'
+$packageVersion = [string](Get-Content -LiteralPath (Join-Path $repository 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json).version
+if ($packageVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Lifecycle acceptance requires an explicit numeric package version.' }
+$evidenceParent = Join-Path $repository ('.preview\qa-' + $packageVersion)
 $evidenceDirectory = Join-Path $evidenceParent ('install-evidence-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $reportPath = Join-Path $evidenceDirectory 'report.json'
 $utf8 = New-Object Text.UTF8Encoding($false)
@@ -93,7 +96,7 @@ $applicationId = 'cn.zhixing.office'
 $applicationGuid = '8d0162ad-33d7-58a5-95e7-2602977677c3'
 $productName = [string]([char]0x77E5) + [char]0x884C
 $executableName = $productName + '.exe'
-if (-not $Installer) { $Installer = Join-Path $repository ('release\' + $productName + '-0.11.0-x64.exe') }
+if (-not $Installer) { $Installer = Join-Path $repository ('release\' + $productName + '-' + $packageVersion + '-x64.exe') }
 
 function Get-PropertyValue($Object, [string]$Name, $Default = $null) {
     if ($null -ne $Object -and $null -ne $Object.PSObject.Properties[$Name]) { return $Object.$Name }
@@ -427,6 +430,16 @@ function Invoke-TestInstall($Asset, [string]$Label) {
     $installedPackage = Get-Content -LiteralPath (Join-Path $installDirectory 'resources\app\package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($installed.fileVersion -ne $Asset.fileVersion -or $installedPackage.version -ne $Asset.productVersion) { throw 'Installed executable/package version differs from installer version.' }
     Add-Step ($Label + '-registration') 'passed' @{ installedExecutable = $installed; registry = @(Get-ProductRegistry); shortcuts = @(Get-ProductShortcuts) }
+    if ($PackedSourceManifest -and $Asset.productVersion -eq $packageVersion) {
+        $appRoot = [IO.Path]::GetFullPath((Join-Path $installDirectory 'resources\app')).TrimEnd('\')
+        foreach ($file in @($packedIdentity.files)) {
+            $target = [IO.Path]::GetFullPath((Join-Path $appRoot $file.file))
+            if (-not $target.StartsWith($appRoot + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Source identity path escapes the installed application.' }
+            Assert-NoReparsePath $target
+            if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ine $file.sha256) { throw "Installed source differs from the tested directory: $($file.file)" }
+        }
+        Add-Step ($Label + '-tested-source-identity') 'passed' @{ matchedFiles = @($packedIdentity.files).Count; sourceFingerprint = $packedIdentity.sourceFingerprint }
+    }
 }
 
 function Assert-NoOwnedApplication {
@@ -479,7 +492,11 @@ $report = [ordered]@{
 
 try {
     $report.candidate = Get-Asset $Installer
-    if ($report.candidate.productVersion -ne '0.11.0') { throw 'Candidate is not version 0.11.0.' }
+    if ($report.candidate.productVersion -ne $packageVersion) { throw 'Candidate version does not match package.json.' }
+    if ($PackedSourceManifest) {
+        $packedIdentity = Get-Content -LiteralPath $PackedSourceManifest -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($packedIdentity.version -ne $packageVersion -or -not @($packedIdentity.files).Count) { throw 'Source identity manifest does not describe this candidate.' }
+    }
     if ($BaselineInstaller) { $report.baselineInstaller = Get-Asset $BaselineInstaller }
     $configuration = Get-Content -LiteralPath (Join-Path $repository 'electron-builder.yml') -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($configuration.appId -ne $applicationId -or $configuration.productName -ne $productName) { throw 'Installer identity assumptions no longer match electron-builder.yml.' }
@@ -509,6 +526,7 @@ try {
     if ($fixture.creatorSid -ne $currentSid) { throw 'Fixture belongs to a different Windows SID. Recreate it under the test account.' }
     $initialAsset = if ($report.baselineInstaller) { $report.baselineInstaller } else { $report.candidate }
     if ($fixture.sourceAppVersion -ne $initialAsset.productVersion) { throw 'Fixture source version does not match the initial installer.' }
+    $fixture | Add-Member -NotePropertyName candidateVersion -NotePropertyValue $packageVersion -Force
     foreach ($name in @('projectPaths', 'expectedProjectIds', 'expectedChatIds', 'expectedDraftKeys', 'expectedEncryptedFiles')) {
         if ($null -eq $fixture.PSObject.Properties[$name]) { throw "Fixture manifest is missing $name." }
     }
@@ -622,7 +640,7 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
       smoke = {status: 'passed_actual_installed_harness_and_mcp', sessionId: options.sessionId, runId: run.runId, requestedModel: options.model, requestedEffort: options.reasoning, providerId: provider.id, loopbackOnly: true, mcpToolCount: mcp.tools.length, mcpLookupDiscovered: true, normalResponseObserved: true, sourceFixtureModified: false};
     }
     if (action === 'create-drafts') {
-      if (snapshot.runtime.appVersion !== '0.11.0') throw Error('Drafts may only be generated after the actual 0.11.0 upgrade');
+      if (snapshot.runtime.appVersion !== manifest.candidateVersion) throw Error('Drafts may only be generated after the actual candidate upgrade');
       const state = snapshot.state;
       const workspaceId = state.workspaceId;
       const projects = state.projects.filter(project => project.workspaceId === workspaceId && !['office-general','government-general'].includes(project.id)).slice(0, 3);
@@ -630,9 +648,9 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
       const keys = [];
       state.drafts = {...state.drafts};
       scopes.forEach((projectId, index) => {
-        const draftId = `qa-v011-retention-${index}`;
+        const draftId = `qa-v${manifest.candidateVersion.replaceAll('.', '')}-retention-${index}`;
         const key = `new:${workspaceId}:${projectId || 'home'}:${draftId}`;
-        state.drafts[key] = {draftId,kind:'new',workspaceId,projectId,chatId:null,revision:1,text:`\u5347\u7ea7\u540e0.11\u5408\u6210\u4e2d\u6587\u8349\u7a3f ${index + 1}`,files:[],updatedAt:Date.now()};
+        state.drafts[key] = {draftId,kind:'new',workspaceId,projectId,chatId:null,revision:1,text:`\u5347\u7ea7\u540e${manifest.candidateVersion}\u5408\u6210\u4e2d\u6587\u8349\u7a3f ${index + 1}`,files:[],updatedAt:Date.now()};
         keys.push(key);
       });
       if (keys.length !== 4) throw Error('The historical fixture needs three custom projects for four new-version draft scopes');
@@ -746,24 +764,31 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
     Save-Report
     Invoke-TestInstall $initialAsset 'first-install'
     Assert-Retained 'first-install'
-    $baselineRead = Read-InstalledProfile 'first-install' -SkipDrafts:([bool]$report.baselineInstaller)
+    $missingHistoricalDrafts = [bool]$report.baselineInstaller -and -not @($fixture.expectedDraftKeys).Count
+    $baselineRead = Read-InstalledProfile 'first-install' -SkipDrafts:$missingHistoricalDrafts
+    if ($baselineRead.appVersion -ne $initialAsset.productVersion) { throw 'Initial installed runtime version differs from its installer.' }
     $report.coverage.firstInstall = 'passed'
     $report.coverage.outsideCwdStartup = 'passed'
     if ($report.baselineInstaller) {
         Invoke-TestInstall $report.candidate 'historical-to-candidate-upgrade'
         Assert-Retained 'historical-upgrade'
-        $read = Read-InstalledProfile 'historical-upgrade' -SkipDrafts
+        $read = Read-InstalledProfile 'historical-upgrade' -SkipDrafts:$missingHistoricalDrafts
+        if ($read.appVersion -ne $packageVersion) { throw 'Upgraded runtime version differs from the candidate.' }
         Assert-Identical $baselineRead.hashes $read.hashes 'historical profile project/chat/draft/settings/configuration logical hashes'
         $report.coverage.historicalUpgrade = 'passed_same_account_fixture_only'
-        # Version 0.10 did not persist drafts. Create them only through the
-        # installed 0.11 application, then establish the next preservation
-        # baseline after that explicit, recorded mutation and normal close.
-        $draftRead = Read-ProfileAt $profileDirectory 'create-v011-drafts' 'create-drafts'
-        $fixture = Get-Content -LiteralPath (Join-Path $evidenceDirectory 'fixture-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-        $profileHashes = @(Get-TreeHashes $profileDirectory)
-        Write-JsonFile (Join-Path $evidenceDirectory 'retained-profile-after-v011-draft-creation.json') $profileHashes
-        $baselineRead = $draftRead
-        Add-Step 'new-version-draft-baseline' 'passed' @{ createdByVersion = $draftRead.appVersion; scopeCount = $draftRead.counts.drafts; historicalVersionDraftPersistenceClaimed = $false }
+        if ($missingHistoricalDrafts) {
+            # Older fixtures can lack persisted drafts. Create new candidate
+            # drafts only after upgrade and do not claim historical migration.
+            $draftRead = Read-ProfileAt $profileDirectory 'create-candidate-drafts' 'create-drafts'
+            $fixture = Get-Content -LiteralPath (Join-Path $evidenceDirectory 'fixture-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+            $profileHashes = @(Get-TreeHashes $profileDirectory)
+            Write-JsonFile (Join-Path $evidenceDirectory 'retained-profile-after-candidate-draft-creation.json') $profileHashes
+            $baselineRead = $draftRead
+            Add-Step 'new-version-draft-baseline' 'passed' @{ createdByVersion = $draftRead.appVersion; scopeCount = $draftRead.counts.drafts; historicalVersionDraftPersistenceClaimed = $false }
+        } else {
+            $baselineRead = $read
+            Add-Step 'historical-draft-retention' 'passed' @{ sourceVersion = $initialAsset.productVersion; candidateVersion = $packageVersion; scopeCount = $read.counts.drafts; draftsWithAttachments = $read.counts.draftsWithAttachments }
+        }
     } else {
         Add-Step 'historical-upgrade' 'not_run' 'No historical installer/profile pair was supplied. Asset presence alone is insufficient.'
     }

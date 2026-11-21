@@ -1,4 +1,5 @@
 import {PRIVACY_TYPES,normalisePrivacyPolicy} from './privacy-policy.js';
+import {detectionView, validIban, fieldLabel, literalPattern} from './privacy-recognizers.js';
 export const TYPE_LABELS = Object.fromEntries(PRIVACY_TYPES.map(([id,label]) => [id,label]));
 const TOKEN = /⟦ZX-[^⟧\r\n]+⟧/g;
 const RULES = [
@@ -7,15 +8,17 @@ const RULES = [
   ['SECRET', /\b(?:ghp_|github_pat_|glpat-|AIza|xox[baprs]-|sk_live_|hf_|gsk_|xai-|npm_|pypi-|dop_v1_|cfut_)[A-Za-z0-9_-]{12,}\b/g],
   ['SECRET', /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g],
   ['SECRET', /\beyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\b/g],
-  ['SECRET', /(?:api[_ -]?key|密码|password|token|secret)["']?[ \t]*[=:：][ \t]*(?:"[^"\r\n]{4,}"|'[^'\r\n]{4,}'|[^\s"',;，；]{6,})/gi],
+  ['SECRET', /(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|client[_ -]?secret|密码|密钥|password|passwd|token|secret)["']?[ \t]*[=:：][ \t]*(?:"[^"\r\n]+(?:"|(?=\r|\n|$))|'[^'\r\n]+(?:'|(?=\r|\n|$))|[^\s"',;，；⟦⟧]+)/gi],
+  ['SECRET', /\b(?:postgres(?:ql)?|mysql|mariadb|mongodb(?:\+srv)?|rediss?|amqps?|https?):\/\/[^\s/@"'<>]+:[^\s/@"'<>]+@[^\s"'<>，；]+/gi],
+  ['SECRET', /\b(?:authorization|proxy-authorization)["']?[ \t]*[:=][ \t]*["']?(?:Basic|Bearer)[ \t]+[A-Za-z0-9._~+\/=-]+/gi],
   ['EMAIL', /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi],
   ['PHONE', /(?<!\d)(?:\+?86[- ]?)?1[3-9]\d[- ]?\d{4}[- ]?\d{4}(?!\d)/g],
   ['PHONE', /(?<!\d)0\d{2,3}-\d{7,8}(?!\d)/g],
   ['MAC', /\b(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}\b/gi],
   ['IP', /(?<![\d.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![\d.])/g],
   ['IP', /(?<![\w:])(?:[0-9a-f]{1,4}:){2,7}[0-9a-f]{0,4}(?![\w:])/gi],
-  ['PATH', /[A-Z]:\\(?:[^\\\s"<>|\r\n]+\\)*[^\\\s"<>|\r\n，。；]*/gi],
-  ['PATH', /\/(?:Users|home)\/[^\s"<>|\r\n，。；]+/g],
+  ['PATH', /[A-Z]:\\(?:[^\\\s"<>|\r\n，。；,;:]+\\)*[^\\\s"<>|\r\n，。；,;:]*/gi],
+  ['PATH', /\/(?:Users|home)\/[^\s"<>|\r\n，。；,;:]+/g],
 ];
 
 function validId(value) {
@@ -50,14 +53,27 @@ export class PrivacySession {
   exportState() { return { id: this.id, prefix: this.#prefix, entries: this.entries({ reveal: true }) }; }
   protect(input, terms = [], configuration = {}) {
     const source = String(input ?? '');
+    const view = detectionView(source), inspected = view.text;
     const policy=normalisePrivacyPolicy(configuration);
-    const reserved = [...source.matchAll(TOKEN)].map(m => ({ start: m.index, end: m.index + m[0].length, type: null }));
+    // Only this vault's issued tokens are trusted. Arbitrary token-looking
+    // strings must not create blind spots for credentials or personal data.
+    const tokenSpans=[...source.matchAll(TOKEN)].map(m=>({start:m.index,end:m.index+m[0].length,type:null,trusted:this.#entries.has(m[0])}));
+    const reserved = tokenSpans.filter(span=>span.trusted);
     const candidates = [...reserved];
-    const push = (start, value, type) => { if (value && policy.actions[type] !== 'allow' && !(type!=='SECRET'&&policy.neverMask.some(word => policy.caseInsensitive ? word.toLowerCase()===value.toLowerCase() : word===value))) candidates.push({ start, end: start + value.length, value, type }); };
-    for (const [type, re] of RULES) for (const m of source.matchAll(re)) {if(type==='IP'&&m[0].includes(':')&&!m[0].includes('::')&&(m[0].match(/:/g)||[]).length<7)continue;push(m.index, m[0], type);}
-    for(const m of source.matchAll(/(?<!\d)[1-9]\d{16}[\dXx](?!\d)/g))if(validId(m[0]))push(m.index,m[0],'ID');
-    for(const m of source.matchAll(/(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)/g))if(validCard(m[0]))push(m.index,m[0],'ACCOUNT');
-    for(const m of source.matchAll(/\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){11,30}\b/g))push(m.index,m[0],'ACCOUNT');
+    const equivalent = value => {const normalized=detectionView(value).text;return policy.caseInsensitive?normalized.toLowerCase():normalized;};
+    const neverMask = new Set(policy.neverMask.map(equivalent));
+    const push = (start, value, type, method='pattern') => {
+      if(!value||policy.actions[type]==='allow'||type!=='SECRET'&&neverMask.has(equivalent(value)))return;
+      const range=view.range(start,value.length);
+      for(const span of tokenSpans)if(!span.trusted&&range.start<span.end&&range.end>span.start){range.start=Math.min(range.start,span.start);range.end=Math.max(range.end,span.end);}
+      const protectedContext=type==='SECRET'&&value.match(/^[^:=：\r\n]+["']?\s*[:=：]\s*["']?\s*(⟦ZX-[^⟧]+⟧)\s*["']?$/u);
+      if(protectedContext&&this.#entries.has(protectedContext[1]))return;
+      candidates.push({...range,type,method,blocked:policy.actions[type]==='block'});
+    };
+    for (const [type, re] of RULES) for (const m of inspected.matchAll(re)) {if(type==='IP'&&m[0].includes(':')&&!m[0].includes('::')&&(m[0].match(/:/g)||[]).length<7)continue;push(m.index, m[0], type);}
+    for(const m of inspected.matchAll(/(?<!\d)[1-9]\d{16}[\dXx](?!\d)/g))if(validId(m[0]))push(m.index,m[0],'ID','checksum');
+    for(const m of inspected.matchAll(/(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)/g))if(validCard(m[0]))push(m.index,m[0],'ACCOUNT','checksum');
+    for(const m of inspected.matchAll(/\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){11,30}\b/gi))if(validIban(m[0]))push(m.index,m[0],'ACCOUNT','checksum');
     const dict = new Map([...terms.filter(t => typeof t === 'string' && t).map(t => [t, 'TERM']), ...Array.from(this.#entries.values(), e => [e.value, e.type])]);
     for (const [type, re] of [
       ['PERSON', /(?:姓名|联系人|负责人|经办人|申请人|收件人|员工姓名|客户姓名)["']?[：:\t ]+["'「]?([\u3400-\u9fff]{2,4})(?=[，,。\s；;"'」\]}]|$)/g],
@@ -69,22 +85,23 @@ export class PrivacySession {
       ['BIRTHDATE', /(?:出生日期|生日|birth(?:day|date)|DOB)["']?[：:\t ]+["']?((?:19|20)\d{2}[-/.年]\d{1,2}[-/.月]\d{1,2}日?)/gi],
       ['PASSPORT', /(?:护照(?:号(?:码)?)?|passport(?:[_ ]?(?:number|no))?)["']?[：:\t ]+["']?([A-Z0-9]{5,15})/gi],
       ['SERIAL', /(?:序列号|工号|内部编号|设备编号|S\/N|serial(?:[_ ]?number)?)["']?[：:\t ]+["']?([A-Z0-9][A-Z0-9._-]{3,60})/gi],
-      ['PHONE', /(?:联系电话|电话|phone|mobile)["']?[：:\t ]+["']?(\+\d[\d ()-]{7,22}\d)/gi],
-    ]) for (const m of source.matchAll(re)) {const value=m[1].trimEnd();push(m.index+m[0].indexOf(m[1]),value,type);dict.set(value,type);}
-    for(const prefix of policy.secretPrefixes){let from=0,at;while((at=source.indexOf(prefix,from))>=0){const value=source.slice(at).match(/^[^\s"',;，；]+/)?.[0];push(at,value,'SECRET');from=at+prefix.length;}}
+      ['PHONE', /(?:联系电话|电话|phone|mobile)["']?[：:\t ]+["']?(\+?\d[\d ()-]{6,22}\d)/gi],
+    ]) for (const m of inspected.matchAll(re)) {const value=m[1].trimEnd();push(m.index+m[0].lastIndexOf(m[1]),value,type,'context');dict.set(value,type);}
+    for(const rawPrefix of policy.secretPrefixes){const prefix=detectionView(rawPrefix).text;if(!prefix)continue;for(const match of inspected.matchAll(literalPattern(prefix,policy.caseInsensitive))){const value=inspected.slice(match.index).match(/^[^\s"',;，；⟦⟧]+/)?.[0];push(match.index,value,'SECRET','custom');}}
     for (const [value, type] of dict) {
       if (!value) continue;
-      const haystack=policy.caseInsensitive?source.toLowerCase():source,needle=policy.caseInsensitive?value.toLowerCase():value;
-      for (let from = 0, at; (at = haystack.indexOf(needle, from)) >= 0; from = at + value.length) push(at, source.slice(at,at+value.length), type);
+      const needle=detectionView(value).text;if(!needle)continue;
+      for (const match of inspected.matchAll(literalPattern(needle,policy.caseInsensitive))) push(match.index,match[0],type,'dictionary');
     }
     // Merge overlapping spans so a phone or email inside a longer dictionary term cannot leave a partial value behind.
     const spans = [];
     for (const item of candidates.sort((a, b) => a.start - b.start || b.end - a.end)) {
-      if(item.type&&reserved.some(span=>item.start<span.end&&item.end>span.start))continue;
+      if(item.type&&reserved.some(span=>item.start>=span.start&&item.end<=span.end))continue;
       const last = spans.at(-1);
       if (!last || item.start >= last.end) { spans.push({ ...item }); continue; }
       last.end = Math.max(last.end, item.end);
-      if (!last.type || item.type === 'SECRET') last.type = item.type || last.type;
+      if (!last.type || item.type === 'SECRET' || item.blocked && !last.blocked && last.type !== 'SECRET') {last.type = item.type || last.type;last.method=item.method;}
+      last.blocked ||= item.blocked;
     }
     const used = new Map(), parts = [];
     let offset = 0;
@@ -102,7 +119,7 @@ export class PrivacySession {
       offset = span.end;
     }
     parts.push(source.slice(offset));
-    return { text: parts.join(''), entities: [...used.values()], blocked: spans.some(s => policy.actions[s.type] === 'block') };
+    return { text: parts.join(''), entities: [...used.values()], blocked: spans.some(s => s.blocked), findings:spans.filter(span=>span.type).map(({start,end,type,method,blocked})=>({start,end,type,label:TYPE_LABELS[type],method,action:blocked?'block':policy.actions[type]})) };
   }
   protectValue(value, terms=[], configuration={}) {
     const entities=new Map();let blocked=false;
@@ -112,10 +129,10 @@ export class PrivacySession {
       if(typeof item==='number'&&Number.isInteger(item)&&String(item).length>=11){const checked=this.protect(String(item),terms,configuration);blocked ||= checked.blocked;for(const entity of checked.entities)entities.set(entity.token,entity);return checked.entities.length?checked.text:item;}
       if(Array.isArray(item))return item.map(child=>visit(child,depth+1));
       if(item&&typeof item==='object')return Object.fromEntries(Object.entries(item).map(([key,child])=>{
-        if(typeof child==='string'&&/^(?:姓名|联系人|负责人|经办人|申请人|收件人|单位名称|公司名称|机构名称|地址|住址|出生日期|生日|护照号|工号|银行账号|full_name|contact_name|address|passport|phone|mobile|password|api_key|token|secret)$/i.test(key)){
-          const label=key==='地址'?'详细地址':key;
+        const field=fieldLabel(key),label=field==='姓名'&&/^[A-Z]/i.test(String(child))?'full_name':field;
+        if(label&&(typeof child==='string'||typeof child==='number'&&Number.isFinite(child))){
           const checked=this.protect(`${label}: ${child}`,terms,configuration);blocked ||= checked.blocked;for(const entity of checked.entities)entities.set(entity.token,entity);
-          return [key,checked.text.startsWith(`${label}: `)?checked.text.slice(label.length+2):checked.text];
+          return [key,checked.entities.length?(checked.text.startsWith(`${label}: `)?checked.text.slice(label.length+2):checked.text):child];
         }
         return [key,visit(child,depth+1)];
       }));

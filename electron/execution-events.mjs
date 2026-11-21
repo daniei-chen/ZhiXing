@@ -9,6 +9,7 @@ const toolLabels = new Map(Object.entries({
  wait_agent:'等待子任务或补充消息', exit_plan_mode:'提交工作方案',
  list_mcp_resources:'列出 MCP 资源', list_mcp_resource_templates:'列出 MCP 模板',
  read_mcp_resource:'读取 MCP 资源', office_schedule:'安排定时任务',
+ team_task_create:'创建共享任务', team_task_get:'读取共享任务', team_task_list:'查看共享任务板', team_task_update:'更新共享任务', run_code:'程序化工具调用',
 }));
 const lifecycle = new Map(Object.entries({
  'job/registered':'后台作业已启动', 'job/settled':'后台作业已结束',
@@ -45,6 +46,8 @@ export function projectExecutionEvent(event, childSessionId, calls) {
   }
   case 'turn/end':
    return {...base, label:'本轮结束', category:'session', status:executionStatus(data.reason?.kind)};
+  case 'team/task':
+   return {...base,label:'共享任务状态已更新',category:'team',itemId:id(data.task?.id),status:({pending:'running',in_progress:'running',completed:'completed',deleted:'completed'})[data.task?.status]};
   default:
    if (!lifecycle.has(type)) return null;
    return {...base, label:lifecycle.get(type), category:type.startsWith('job/') ? 'jobs' : 'workflow',

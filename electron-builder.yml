@@ -11,6 +11,7 @@
     "electron/**/*",
     "harness/**/*",
     "src/privacy-core.js",
+    "src/privacy-recognizers.js",
     "src/privacy-policy.js",
     "src/project-core.js",
     "src/permissions.js",
@@ -20,6 +21,7 @@
     "src/automation-core.js",
     "src/office-workflows.js",
     "src/kernel-config.js",
+    "src/team-board.js",
     "package.json",
     "!node_modules/**/*"
   ],

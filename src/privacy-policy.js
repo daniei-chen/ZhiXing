@@ -1,3 +1,4 @@
+export const PRIVACY_ENGINE_VERSION = '0.12.0-local-v2';
 export const PRIVACY_TYPES = [
   ['PERSON','姓名','带姓名、联系人、经办人等字段的人名'],
   ['ORG','机构名称','公司、机关和机构字段及常见单位名称'],
