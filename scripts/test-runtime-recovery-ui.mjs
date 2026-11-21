@@ -25,7 +25,26 @@ const abort=new AbortController();
 let ui,main,host,leaseTimer,primaryError,cleanupError,stage='setup',providerId,taskId;
 let captureInstalled=false;
 await fs.mkdir(evidence,{recursive:true});
-const baseline={id,startedAt:new Date().toISOString(),head:execFileSync('git',['rev-parse','HEAD'],{cwd:repository,encoding:'utf8'}).trim(),layer:fixtureOnly?'Synthetic loopback HTTP fixtures only; no Windows product or Harness execution':'Windows packaged UI + actual RuntimeManager/AutomationService + real Harness + loopback; no cloud'};
+const baseline={id,startedAt:new Date().toISOString(),head:execFileSync('git',['rev-parse','HEAD'],{cwd:repository,encoding:'utf8'}).trim(),layer:fixtureOnly?'Synthetic loopback HTTP and strict JSON restoration fixtures only; no Windows product or Harness execution':'Windows packaged UI + actual RuntimeManager/AutomationService + real Harness + loopback; no cloud'};
+
+// JSON records: ignore object-key insertion order, but compare every key/value,
+// primitive type, array length and indexed element. No restoration fields are omitted.
+function sameJsonData(left,right){
+  if(Object.is(left,right))return true;
+  if(left===null||right===null||typeof left!=='object'||typeof right!=='object')return false;
+  const array=Array.isArray(left);
+  if(array!==Array.isArray(right)||(array&&left.length!==right.length))return false;
+  const leftKeys=Object.keys(left).sort(),rightKeys=Object.keys(right).sort();
+  return leftKeys.length===rightKeys.length&&leftKeys.every((key,index)=>key===rightKeys[index]&&sameJsonData(left[key],right[key]));
+}
+
+// Both functions are serialized together; the inspected main receives the exact
+// comparator exercised by --check-fixtures, without a controller closure.
+async function compareRestoredRecords(key,sameJsonData){
+  const s=globalThis[key],windows=process.mainModule.require('electron').BrowserWindow.getAllWindows(),window=windows.find(window=>window.webContents.getURL().startsWith('zhixing://app/'));
+  const actual=await window.webContents.executeJavaScript('window.zhixing.loadWorkspace()');
+  return {workspaceRestored:sameJsonData(actual,s.originalWorkspace),automationRestored:sameJsonData(s.automation.state,s.originalAutomationState),workspaceRawEqual:JSON.stringify(actual)===JSON.stringify(s.originalWorkspace),automationRawEqual:JSON.stringify(s.automation.state)===JSON.stringify(s.originalAutomationState)};
+}
 
 function parseToolValue(content){
   if(typeof content==='string'){try{return parseToolValue(JSON.parse(content));}catch{return null;}}
@@ -34,6 +53,17 @@ function parseToolValue(content){
   if(content.operation==='sum'&&content.count===2&&typeof content.value==='number')return content.value;
   for(const value of Object.values(content)){const found=parseToolValue(value);if(found!==null)return found;}
   return null;
+}
+
+function currentAuditTask(messages){
+  for(let index=messages.length-1;index>=0;index--){
+    const message=messages[index];if(message.role!=='user')continue;
+    const text=typeof message.content==='string'?message.content:Array.isArray(message.content)?message.content.filter(part=>typeof part?.text==='string').map(part=>part.text).join('\n'):'';
+    if(/^\s*<system-reminder(?:\s|>)/i.test(text)||/^\s*Time sampled while preparing turn \d+, step \d+:/i.test(text))continue;
+    const heading=/(?:^|\r?\n)【本次交办】[ \t]*\r?\n/.exec(text);
+    if(heading)return {messageIndex:index,text:text.slice(heading.index+heading[0].length).split(/\r?\n[ \t]*【资料 \d+[：:]/,1)[0].trim()};
+  }
+  throw new Error('QA routing could not find a current 【本次交办】 user message');
 }
 
 function completion(response,body,{text,tool}){
@@ -53,14 +83,13 @@ const server=http.createServer(async(request,response)=>{
     const body=JSON.parse(Buffer.concat(chunks).toString('utf8'));
     if(requests.length>=12)throw new Error('More than 12 model requests: unexpected repeat execution');
     requests.push({sequence:requests.length+1,at:new Date().toISOString(),body});
-    const lastUser=[...(body.messages||[])].reverse().find(message=>message.role==='user');
-    const auto=JSON.stringify(lastUser?.content||'').includes(autoMarker);
+    const task=currentAuditTask(body.messages||[]),auto=task.text.includes(autoMarker);
     if(auto){
       const result=(body.messages||[]).find(message=>message.role==='tool'&&message.tool_call_id===`${id}-calculate`);
       if(result){const value=parseToolValue(result.content);assert.equal(value,42,'The real calculate tool must return 42');toolReceipts.push({request:requests.length,toolCallId:result.tool_call_id,value});completion(response,body,{text:autoMarker});}
       else {assert(body.tools?.some(tool=>tool.function?.name==='office_calculate'),'The actual model request must expose the native calculate tool');completion(response,body,{tool:true});}
     }else{
-      assert(JSON.stringify(lastUser?.content||'').includes(manualMarker),'Unexpected non-fixture prompt');
+      assert(task.text.includes(manualMarker),'Unexpected non-fixture prompt');
       completion(response,body,{text:manualMarker});
     }
   }catch(error){fixtureErrors.push(error.message);if(!response.headersSent)response.writeHead(422,{'content-type':'application/json'});response.end(JSON.stringify({error:{message:error.message,type:'invalid_request_error'}}));}
@@ -84,10 +113,18 @@ async function samplePersistent(selector,expected,durationMs=1600){const deadlin
 // The function is serialized into the inspected main process, so it has no
 // controller closures. Backups stay in main memory and are never logged.
 async function installCapture(key,directory,manualSession,manualText,originalWorkspace){
-  const require=process.mainModule.require,electron=require('electron'),path=require('node:path'),url=require('node:url');
+  const require=process.mainModule.require,electron=require('electron'),path=require('node:path'),url=require('node:url'),vm=require('node:vm');
   if(globalThis[key])throw new Error('A recovery QA session already owns this key');
-  const {RuntimeManager}=await import(url.pathToFileURL(path.join(electron.app.getAppPath(),'electron/runtime.mjs')).href);
-  const {AutomationService}=await import(url.pathToFileURL(path.join(electron.app.getAppPath(),'electron/automation-service.mjs')).href);
+  if(!vm.constants?.USE_MAIN_CONTEXT_DEFAULT_LOADER)throw new Error('Recovery QA requires the main-context default ESM loader');
+  // Inspector Runtime.evaluate has no dynamic-import callback. Compile only
+  // the import expression with Node's main loader, using the app's exact URLs:
+  // no cache-busting query, copied source, new context, or replacement class.
+  const loadPackagedModule=relative=>vm.runInThisContext(
+    'import('+JSON.stringify(url.pathToFileURL(path.join(electron.app.getAppPath(),relative)).href)+')',
+    {filename:'zhixing-recovery-qa-module-loader.cjs',importModuleDynamically:vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER}
+  );
+  const {RuntimeManager}=await loadPackagedModule('electron/runtime.mjs');
+  const {AutomationService}=await loadPackagedModule('electron/automation-service.mjs');
   const runtimeDescriptor=Object.getOwnPropertyDescriptor(RuntimeManager.prototype,'getCleanupStatus');
   const automationDescriptor=Object.getOwnPropertyDescriptor(AutomationService.prototype,'snapshot');
   if(typeof runtimeDescriptor?.value!=='function'||typeof automationDescriptor?.value!=='function')throw new Error('The candidate does not implement the agreed recovery contract');
@@ -112,6 +149,11 @@ async function finishSetup(key){
   s.runtimeDescriptors=Object.fromEntries(['createHarness','run','onEvent','cleanupRetryDelays'].map(name=>[name,Object.getOwnPropertyDescriptor(s.runtime,name)]));
   s.writeDescriptor=Object.getOwnPropertyDescriptor(s.automation,'write');
   s.restoreMethods=()=>{for(const [name,descriptor]of Object.entries(s.runtimeDescriptors)){if(descriptor)Object.defineProperty(s.runtime,name,descriptor);else delete s.runtime[name];}if(s.writeDescriptor)Object.defineProperty(s.automation,'write',s.writeDescriptor);else delete s.automation.write;};
+  s.quitWarnings=[];
+  s.restoreQuitAdapter=()=>{
+    if(s.quitObserver){e.app.removeListener('before-quit',s.quitObserver);s.quitObserver=null;}
+    if(s.dialogAdapterInstalled){if(s.dialogDescriptor)Object.defineProperty(e.dialog,'showErrorBox',s.dialogDescriptor);else delete e.dialog.showErrorBox;s.dialogAdapterInstalled=false;}
+  };
   s.backups=new Map();
   for(const name of ['workspace.bin','automations.bin','providers.bin','config.json']){const target=path.join(e.app.getPath('userData'),'zhixing',name);try{s.backups.set(target,await fs.readFile(target));}catch(error){if(error.code!=='ENOENT')throw error;s.backups.set(target,null);}}
   s.runtime.run=async function(options,...rest){
@@ -126,10 +168,15 @@ async function finishSetup(key){
   s.runtime.cleanupRetryDelays=[];
   s.runtime.createHarness=async function(...args){
     const harness=await s.original.createHarness.apply(this,args);
-    const entry={harness,close:harness.close,retryClose:harness.retryClose,child:harness.zhixingProcess,sessionId:path.basename(args[0])};
+    const entry={harness,close:harness.close,retryClose:harness.retryClose,child:harness.zhixingProcess,sessionId:path.basename(args[0]),closeRejections:0,retryCloseRejections:0,descriptors:Object.fromEntries(['close','retryClose'].map(name=>[name,Object.getOwnPropertyDescriptor(harness,name)]))};
+    entry.restoreMethods=()=>{for(const [name,descriptor]of Object.entries(entry.descriptors)){if(descriptor)Object.defineProperty(harness,name,descriptor);else delete harness[name];}};
     if(!entry.child||!Number.isInteger(entry.child.pid))throw new Error('The actual Harness child handle is unavailable');
     s.harnesses.push(entry);
-    if(entry.sessionId===s.manualSession)harness.close=function(...parameters){if(s.blockClose)throw Object.assign(new Error('QA_CLOSE_UNCONFIRMED: intentionally retained actual child'),{code:'QA_CLOSE_UNCONFIRMED',stage:'close'});return entry.close.apply(this,parameters);};
+    if(entry.sessionId===s.manualSession){
+      if(typeof entry.close!=='function'||typeof entry.retryClose!=='function')throw new Error('The actual Harness must expose close and retryClose before quit-gate QA');
+      harness.close=function(...parameters){if(s.blockClose){entry.closeRejections++;throw Object.assign(new Error('QA_CLOSE_UNCONFIRMED: intentionally retained actual child'),{code:'QA_CLOSE_UNCONFIRMED',stage:'close'});}return entry.close.apply(this,parameters);};
+      harness.retryClose=function(...parameters){if(s.blockClose){entry.retryCloseRejections++;throw Object.assign(new Error('QA_RETRY_CLOSE_UNCONFIRMED: intentionally retained actual child'),{code:'QA_RETRY_CLOSE_UNCONFIRMED',stage:'close'});}return entry.retryClose.apply(this,parameters);};
+    }
     return harness;
   };
   s.automation.write=async function(draft){const terminal=s.taskId&&draft.runs.some(run=>run.taskId===s.taskId&&run.status!=='running'&&Number.isFinite(run.finishedAt));if(s.failTerminal&&terminal){s.writeFaults++;throw Object.assign(new Error('QA_TERMINAL_ENOSPC'),{code:'ENOSPC'});}return s.original.write.call(this,draft);};
@@ -139,9 +186,10 @@ async function finishSetup(key){
     if(s.restorePromise)return s.restorePromise;
     s.restorePromise=(async()=>{
       clearInterval(s.watchdog);s.blockClose=false;s.failTerminal=false;
+      s.restoreQuitAdapter();
       Object.defineProperty(s.RuntimeManager.prototype,'getCleanupStatus',s.runtimeDescriptor);Object.defineProperty(s.AutomationService.prototype,'snapshot',s.automationDescriptor);
       s.restoreMethods();
-      for(const entry of s.harnesses){entry.harness.close=entry.close;if(entry.retryClose)entry.harness.retryClose=entry.retryClose;}
+      for(const entry of s.harnesses)entry.restoreMethods();
       const problems=[],step=async(label,operation)=>{try{return await operation();}catch(error){problems.push({step:label,message:error.message});}};
       const bounded=async(operation,milliseconds=20000)=>{let timer;try{return await Promise.race([Promise.resolve().then(operation),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('QA restoration join timeout')),milliseconds);})]);}finally{clearTimeout(timer);}};
       if(s.taskId&&s.automation.active.has(s.taskId))await step('cancel-own-automation',()=>bounded(()=>s.automation.cancel(s.taskId)));
@@ -176,7 +224,8 @@ async function finishSetup(key){
       if(liveChildren.length)problems.push({step:'child-exit',message:'Owned native child handles are still alive'});
       const remainingOwnedRuns=[...s.ownRunIds].filter(runId=>s.runtime.runs.has(runId));
       if(remainingOwnedRuns.length)problems.push({step:'run-settlement',message:'Owned runs still require cleanup'});
-      const result={reason,methodsRestored:s.runtime.createHarness===s.original.createHarness&&s.runtime.run===s.original.run&&s.runtime.onEvent===s.original.onEvent&&s.automation.write===s.original.write&&s.RuntimeManager.prototype.getCleanupStatus===s.runtimeDescriptor.value&&s.AutomationService.prototype.snapshot===s.automationDescriptor.value,clipboard:'untouched: no clipboard API or clipboard keyboard shortcut used',ownedChildCount:s.harnesses.length,liveChildren,remainingOwnedRuns,problems};
+      const dialogAdapterRestored=!s.dialogAdapterInstalled&&(!s.originalShowErrorBox||e.dialog.showErrorBox===s.originalShowErrorBox),harnessMethodsRestored=s.harnesses.every(entry=>entry.harness.close===entry.close&&entry.harness.retryClose===entry.retryClose);
+      const result={reason,methodsRestored:s.runtime.createHarness===s.original.createHarness&&s.runtime.run===s.original.run&&s.runtime.onEvent===s.original.onEvent&&s.automation.write===s.original.write&&s.RuntimeManager.prototype.getCleanupStatus===s.runtimeDescriptor.value&&s.AutomationService.prototype.snapshot===s.automationDescriptor.value&&dialogAdapterRestored&&!s.quitObserver&&harnessMethodsRestored,dialogAdapterRestored,harnessMethodsRestored,beforeQuitObserverRemoved:!s.quitObserver,nativeWarningDialogUx:'not tested; showErrorBox display adapter captured text only',clipboard:'untouched: no clipboard API or clipboard keyboard shortcut used',ownedChildCount:s.harnesses.length,liveChildren,remainingOwnedRuns,problems};
       s.restoration=result;await fs.writeFile(path.join(s.directory,'restoration.json'),JSON.stringify(result,null,2));return result;
     })();return s.restorePromise;
   };
@@ -186,16 +235,54 @@ async function finishSetup(key){
 
 function mainStatus(key){
   const s=globalThis[key];
-  return {attempts:s.attempts,writeFaults:s.writeFaults,harnesses:s.harnesses.map(entry=>({pid:entry.child.pid,sessionId:entry.sessionId,exited:entry.child.exitCode!==null||!!entry.child.signalCode})),cleanup:s.runtime.getCleanupStatus(),autoActive:s.taskId?s.automation.active.has(s.taskId):false,events:s.events,restoreStarted:!!s.restorePromise};
+  return {pid:process.pid,busy:[...s.runtime.busy],attempts:s.attempts,writeFaults:s.writeFaults,harnesses:s.harnesses.map(entry=>({pid:entry.child.pid,sessionId:entry.sessionId,exited:entry.child.exitCode!==null||!!entry.child.signalCode,closeRejections:entry.closeRejections,retryCloseRejections:entry.retryCloseRejections})),cleanup:s.runtime.getCleanupStatus(),autoActive:s.taskId?s.automation.active.has(s.taskId):false,events:s.events,restoreStarted:!!s.restorePromise,quitProbe:s.quitProbe?{...s.quitProbe,windowAlive:!s.quitWindow.isDestroyed()&&!s.quitWindow.webContents.isDestroyed(),windowVisible:!s.quitWindow.isDestroyed()&&s.quitWindow.isVisible(),warnings:s.quitWarnings,shutdownRecovered:!s.runtime.closing&&!s.automation.closed,dialogAdapterInstalled:!!s.dialogAdapterInstalled}:null};
+}
+
+function armQuitProbe(key,runId){
+  const s=globalThis[key],e=process.mainModule.require('electron');
+  if(s.restorePromise||!s.blockClose||s.harnesses.length!==1||s.automation.active.size||s.automation.pendingOutcomes.size||s.automation.state.tasks.some(task=>task.enabled))throw new Error('Quit-gate QA requires only this script\'s single quarantined child and no other active work');
+  const active=s.runtime.runs.get(runId),entry=s.harnesses[0],windows=e.BrowserWindow.getAllWindows().filter(window=>!window.isDestroyed()&&window.webContents.getURL().startsWith('zhixing://app/'));
+  if(s.runtime.runs.size!==1||s.runtime.busy.size!==1||!s.runtime.busy.has(s.manualSession)||active?.sessionId!==s.manualSession||active?.status!=='cleanup_pending'||entry.child.exitCode!==null||entry.child.signalCode||windows.length!==1)throw new Error('Refusing a quit probe outside the exact owned cleanup_pending session/window');
+  s.quitWindow=windows[0];s.quitProbe={runId,pid:process.pid,windowId:s.quitWindow.id,beforeQuitCount:0};
+  s.dialogDescriptor=Object.getOwnPropertyDescriptor(e.dialog,'showErrorBox');s.originalShowErrorBox=e.dialog.showErrorBox;
+  const descriptor=s.dialogDescriptor&&'value'in s.dialogDescriptor?{...s.dialogDescriptor}:{configurable:s.dialogDescriptor?.configurable??true,enumerable:s.dialogDescriptor?.enumerable??true,writable:true};
+  s.dialogAdapterInstalled=true;
+  Object.defineProperty(e.dialog,'showErrorBox',{...descriptor,value:function(title,content){s.quitWarnings.push({title:String(title),content:String(content),at:Date.now()});}});
+  // Observation only: do not replace quit/close or prevent any quit event here.
+  s.quitObserver=()=>{s.quitProbe.beforeQuitCount++;};e.app.on('before-quit',s.quitObserver);
+  return {pid:process.pid,windowId:s.quitWindow.id,runId};
 }
 
 async function fixtureSelfCheck(){
-  const body={model:'qa-recovery',messages:[{role:'user',content:manualMarker}],stream:true};
+  const original={body:'SYNTHETIC_BODY',attachments:[{id:'a',text:'ATTACHMENT_A',size:12},{id:'b',text:'ATTACHMENT_B',size:24}],count:42,options:{enabled:true,value:null}};
+  const reordered={options:{value:null,enabled:true},count:42,attachments:[{size:12,text:'ATTACHMENT_A',id:'a'},{size:24,text:'ATTACHMENT_B',id:'b'}],body:'SYNTHETIC_BODY'};
+  assert.notEqual(JSON.stringify(original),JSON.stringify(reordered),'Fixture must reproduce the original key-order false negative');
+  assert.equal(sameJsonData(original,reordered),true,'Nested key insertion order alone must not fail restoration');
+  const changes=[
+    ['body',value=>{value.body='CHANGED_BODY';}],
+    ['attachment body',value=>{value.attachments[0].text='CHANGED_ATTACHMENT';}],
+    ['attachment id',value=>{value.attachments[0].id='changed-id';}],
+    ['attachment number',value=>{value.attachments[0].size++;}],
+    ['number',value=>{value.count++;}],
+    ['number type',value=>{value.count='42';}],
+    ['array order',value=>{value.attachments.reverse();}],
+    ['array length',value=>{value.attachments.pop();}],
+    ['missing field',value=>{delete value.body;}],
+    ['extra field',value=>{value.extra=false;}],
+    ['nested boolean',value=>{value.options.enabled=false;}],
+    ['null value',value=>{value.options.value='';}],
+  ];
+  for(const [name,change]of changes){const changed=structuredClone(original);change(changed);assert.equal(sameJsonData(original,changed),false,'Restoration must reject changed '+name);}
+  await record('JSON恢复夹具：递归键重排相等；正文/附件/数字/类型/数组顺序与长度/增删字段等变化严格不等',{equalCases:1,rejectedChanges:changes.map(([name])=>name)});
+  const messages=(text,old)=>[{role:'user',content:'【本次交办】\n'+old},{role:'user',content:'任务模式：办公\n\n【本次交办】\n'+text},{role:'user',content:'<system-reminder>Current session and skills context.</system-reminder>'},{role:'user',content:'Time sampled while preparing turn 1, step 1: 2026-11-21T21:06:57+08:00[Asia/Shanghai]'}];
+  const body={model:'qa-recovery',messages:messages(manualMarker,autoMarker),stream:true};
+  assert.equal(body.messages.filter(message=>message.role==='user').length,4);assert.equal(currentAuditTask(body.messages).text,manualMarker);
   const normal=await fetch(endpoint+'/chat/completions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).then(response=>response.text());assert(normal.includes(manualMarker));assert(normal.includes('[DONE]'));
-  const auto={...body,messages:[{role:'user',content:autoMarker}],tools:[{type:'function',function:{name:'office_calculate'}}]};
+  const auto={...body,messages:messages(autoMarker,manualMarker),tools:[{type:'function',function:{name:'office_calculate'}}]};
+  assert.equal(currentAuditTask(auto.messages).text,autoMarker);
   const call=await fetch(endpoint+'/chat/completions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(auto)}).then(response=>response.text());assert(call.includes('tool_calls'));assert(call.includes('office_calculate'));
   const result=await fetch(endpoint+'/chat/completions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...auto,messages:[...auto.messages,{role:'tool',tool_call_id:`${id}-calculate`,content:JSON.stringify({operation:'sum',count:2,value:42})}]})}).then(response=>response.text());assert(result.includes(autoMarker));assert.equal(toolReceipts.length,1);assert.deepEqual(fixtureErrors,[]);
-  await record('loopback模型夹具自检：SSE正文、工具调用和42回执；未连接Windows产品',{requests:requests.length,toolReceipts});
+  await record('loopback模型夹具自检：4个user含旧任务和reminder/time-tail，SSE正文、工具调用和42回执；未连接Windows产品',{requests:requests.length,toolReceipts});
 }
 
 const signalHandlers=new Map(['SIGINT','SIGTERM'].map(signal=>[signal,()=>abort.abort(new Error(`Controller interrupted by ${signal}`))]));
@@ -244,7 +331,33 @@ try{
     assert.equal(requests.length,beforeRepeat);const blocked=await evaluate(mainStatus,mainKey);assert.equal(blocked.harnesses.length,1);assert.equal(blocked.cleanup[0].runId,pending.runId);
     await record('R03：UI再次执行同session被拒绝，没有第二个Harness或模型出站',{requestCount:requests.length,attempts:blocked.attempts,harnesses:blocked.harnesses});
 
-    await evaluate(key=>{const s=globalThis[key];s.blockClose=false;for(const entry of s.harnesses)entry.harness.close=entry.close;},mainKey);
+    stage='R03 actual before-quit gate';
+    let quitProbe,quitAfter,quitAdapterRestored;
+    const requestsBeforeQuit=requests.length;
+    try{
+      quitProbe=await evaluate(armQuitProbe,mainKey,pending.runId);
+      assert.equal(quitProbe.pid,host.pid);
+      assert.equal(await ui.evaluate('window.zhixing.windowControl("close")'),true);
+      await wait(async()=>{const status=await evaluate(mainStatus,mainKey);return status.quitProbe?.warnings.length>0&&status.quitProbe.shutdownRecovered;},'actual before-quit rejected with captured warning',45000);
+      quitAfter=await evaluate(mainStatus,mainKey);
+    }finally{
+      // Restore native dialog display and BOTH close descriptors before any
+      // assertions can throw or the UI is asked to retry the real cleanup.
+      quitAdapterRestored=await evaluate(key=>{const s=globalThis[key],e=process.mainModule.require('electron');s.restoreQuitAdapter();s.blockClose=false;for(const entry of s.harnesses)entry.restoreMethods();return {dialog:!s.dialogAdapterInstalled&&(!s.originalShowErrorBox||e.dialog.showErrorBox===s.originalShowErrorBox),observerRemoved:!s.quitObserver,harnessMethods:s.harnesses.every(entry=>entry.harness.close===entry.close&&entry.harness.retryClose===entry.retryClose)};},mainKey);
+    }
+    assert(quitAdapterRestored.dialog&&quitAdapterRestored.observerRemoved&&quitAdapterRestored.harnessMethods);
+    assert.equal(quitAfter.pid,host.pid);assert.doesNotThrow(()=>process.kill(host.pid,0),'The original isolated main process must remain alive');
+    assert(quitAfter.quitProbe.windowAlive&&quitAfter.quitProbe.windowVisible);assert.equal(quitAfter.quitProbe.windowId,quitProbe.windowId);assert(quitAfter.quitProbe.beforeQuitCount>=1);
+    assert(quitAfter.busy.includes(sessionId));assert.equal(quitAfter.cleanup.length,1);assert.equal(quitAfter.cleanup[0].runId,pending.runId);assert.equal(quitAfter.cleanup[0].finalization.processStatus,'cleanup_pending');
+    assert.equal(quitAfter.harnesses.length,1);assert.equal(quitAfter.harnesses[0].pid,blocked.harnesses[0].pid);assert.equal(quitAfter.harnesses[0].exited,false);assert(quitAfter.harnesses[0].closeRejections>0);assert(quitAfter.harnesses[0].retryCloseRejections>blocked.harnesses[0].retryCloseRejections);
+    assert.equal(quitAfter.attempts.length,blocked.attempts.length);assert.equal(requests.length,requestsBeforeQuit);
+    assert(quitAfter.quitProbe.warnings.some(warning=>warning.title==='知行仍在运行'&&/退出准备未完成/.test(warning.content)&&/内核退出未确认/.test(warning.content)),'Capture the actual incomplete-exit warning from the product');
+    await ui.waitFor('!!document.querySelector(".runtime-cleanup-pending")');
+    const quitEvidence={probe:quitProbe,after:quitAfter,restored:quitAdapterRestored,requestCount:requests.length,nativeWarningDialogUx:'not tested; only showErrorBox display adapter captured text; actual before-quit and manager.close were unchanged'};
+    await fs.writeFile(path.join(evidence,'quit-gate.json'),JSON.stringify(quitEvidence,null,2));
+    await record('R03：真实bridge关窗触发before-quit，退出未确认时原窗口/进程及隔离保留；无新增模型请求或Harness，捕获退出警告',{...quitEvidence,nativeWarningDialogUx:'未测原生警告弹窗UX，仅替换showErrorBox展示适配器记录文本'});
+
+    stage='R03 UI cleanup retry after rejected quit';
     await ui.click('重试清理','.runtime-cleanup-pending button');await ui.waitFor('!document.querySelector(".runtime-cleanup-pending")',45000);
     const cleaned=await evaluate(mainStatus,mainKey);assert.deepEqual(cleaned.cleanup,[]);assert.equal(cleaned.harnesses[0].exited,true);assert.equal(requests.length,beforeRepeat);
     await evaluate(key=>{const s=globalThis[key];s.runtime.createHarness=s.original.createHarness;s.runtime.cleanupRetryDelays=s.original.cleanupRetryDelays;},mainKey);
@@ -291,7 +404,13 @@ finally{
       let restored=restoreStart;
       if(restoreStart.pending){await wait(()=>evaluate(key=>{const s=globalThis[key];return !!s.restoration||!!s.restoreError;},mainKey),'main restoration completion',120000,true);restored=await evaluate(key=>{const s=globalThis[key];if(s.restoreError)throw new Error(s.restoreError);return s.restoration;},mainKey);}
       assert.equal(restored.methodsRestored,true);assert.equal(restored.liveChildren?.length||0,0);assert.equal(restored.problems?.length||0,0,JSON.stringify(restored.problems));
-      if(!restored.setupIncomplete){await wait(async()=>{await ready();return true;},'restored QA profile',45000,true);const logical=await evaluate(async key=>{const s=globalThis[key],windows=process.mainModule.require('electron').BrowserWindow.getAllWindows(),window=windows.find(window=>window.webContents.getURL().startsWith('zhixing://app/'));const actual=await window.webContents.executeJavaScript('window.zhixing.loadWorkspace()');return {workspaceRestored:JSON.stringify(actual)===JSON.stringify(s.originalWorkspace),automationRestored:JSON.stringify(s.automation.state)===JSON.stringify(s.originalAutomationState)};},mainKey);assert(logical.workspaceRestored&&logical.automationRestored,'The original synthetic profile records were not restored');await record('所有临时方法/自有子进程/原QA资料已恢复；未访问剪贴板',{restored,logical});}
+      if(!restored.setupIncomplete){
+        await wait(async()=>{await ready();return true;},'restored QA profile',45000,true);
+        const logical=await main.evaluate(`(${compareRestoredRecords.toString()})(${JSON.stringify(mainKey)},(${sameJsonData.toString()}))`);
+        await fs.writeFile(path.join(evidence,'restoration-comparison.json'),JSON.stringify(logical,null,2));
+        assert(logical.workspaceRestored&&logical.automationRestored,'The original synthetic profile records were not restored');
+        await record('所有临时方法/自有子进程/原QA资料已恢复；未访问剪贴板',{restored,logical});
+      }
       await evaluate(key=>{delete globalThis[key];},mainKey);
     }catch(error){cleanupError=error;records.push({name:'restoration',status:'failed',error:error.stack});}
   }
@@ -299,6 +418,6 @@ finally{
   for(const [signal,handler]of signalHandlers)process.removeListener(signal,handler);
   await flushEvidence();
   const status=primaryError||cleanupError?'failed':fixtureOnly?'fixture-only-passed':'passed';
-  await fs.writeFile(path.join(evidence,'result.json'),JSON.stringify({...baseline,status,host,records,requestCount:requests.length,toolReceiptCount:toolReceipts.length,coverage:fixtureOnly?'HTTP fixture validation only; no product or Windows gate executed':'R03/R04 actual packaged Windows UI and host failure injection; no real cloud or installer lifecycle',completedAt:new Date().toISOString()},null,2));
+  await fs.writeFile(path.join(evidence,'result.json'),JSON.stringify({...baseline,status,host,records,requestCount:requests.length,toolReceiptCount:toolReceipts.length,coverage:fixtureOnly?'HTTP fixtures and strict JSON restoration comparator only; no product or Windows gate executed':'R03/R04 actual packaged Windows UI and host failure injection; no real cloud or installer lifecycle',completedAt:new Date().toISOString()},null,2));
 }
 if(primaryError)throw primaryError;if(cleanupError)throw cleanupError;

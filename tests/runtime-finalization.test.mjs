@@ -118,6 +118,23 @@ test('R03 后台清理有次数上限，失败不会释放互斥，手动重试�
  }finally{await f.dispose();}
 });
 
+test('R03 空重试计划自动清理为零次，手动重试失败仍隔离且可继续恢复',async()=>{
+ const f=await fixture({cleanupRetryDelays:[]});try{
+  await assert.rejects(run(f));await pause(40);
+  assert.equal(f.manager.getCleanupStatus()[0].attempts,0);assert.equal(f.closes(),1);
+  assert.equal(f.manager.runs.get('quarantine-run').cleanupTimer??null,null);
+  assert.equal(f.manager.busy.has('quarantine-session'),true);
+  const pending=await f.manager.retryCleanup('quarantine-run');assert.equal(pending.status,'cleanup_pending');
+  await pause(40);assert.equal(f.manager.getCleanupStatus()[0].attempts,1);assert.equal(f.closes(),2);
+  assert.equal(f.manager.runs.get('quarantine-run').cleanupTimer??null,null);
+  assert.equal(f.manager.busy.has('quarantine-session'),true);
+  f.allowExit();const recovered=await f.manager.retryCleanup('quarantine-run');
+  assert.equal(recovered.status,'exited');assert.equal(recovered.finalization.processStatus,'exited');
+  assert.equal(f.closes(),3);assert.equal(f.created(),1);assert.equal(f.manager.busy.size,0);
+  assert.equal(f.manager.getCleanupStatus().length,0);assert.equal(f.manager.runs.has('quarantine-run'),false);
+ }finally{await f.dispose();}
+});
+
 test('R03 对外隔离诊断可序列化且不会携带配置 Key/任意 code 或 stage',async()=>{
  const f=await fixture({queryError:Object.assign(new Error(`Synthetic query ${key}`),{code:key,stage:key})});try{
   await assert.rejects(run(f));const status=f.manager.getCleanupStatus(),serialized=JSON.stringify(status);

@@ -254,7 +254,7 @@ export class RuntimeManager{
  cleanupError(active,error){return {code:this.safeMetadata(active,error?.code,/^[A-Z][A-Z0-9_]{0,79}$/)?error.code:'RUNTIME_CLOSE_FAILED',stage:this.safeMetadata(active,error?.stage,/^[a-z][a-z0-9_-]{0,39}$/)?error.stage:'close',message:active.safeContext?this.executionDisplay(error?.message||'内核退出仍待确认。',active.safeContext).slice(0,400):'内核退出仍待确认，恢复文件已保留。'};}
  getCleanupStatus(){return [...this.runs.values()].filter(active=>active.status==='cleanup_pending'||active.shutdownPending).map(active=>({runId:active.runId,sessionId:active.sessionId,status:'cleanup_pending',attempts:active.cleanupAttempts||0,error:active.cleanupError,finalization:structuredClone(active.finalization||{runId:active.runId,executionStatus:active.cancelled?'cancelled':'failed',persistenceStatus:'pending',processStatus:active.processExited?'exited':'cleanup_pending',eventWatermark:active.eventWatermark||0,error:active.cleanupError})}));}
  scheduleCleanup(active){
-  if(active.cleanupTimer||active.cleanupAttempts>=this.cleanupRetryDelays.length)return;
+  if(active.cleanupTimer||(active.cleanupAttempts||0)>=this.cleanupRetryDelays.length)return;
   const delay=this.cleanupRetryDelays[active.cleanupAttempts||0];
   active.cleanupTimer=setTimeout(()=>{active.cleanupTimer=null;void this.retryCleanup(active.runId).catch(()=>{});},delay);active.cleanupTimer.unref?.();
  }

@@ -10,16 +10,27 @@ import {connectUi} from './qa-cdp.mjs';
 // Only fixture setup uses saveWorkspace; all sends, deletion and materials actions use the UI.
 // This script closes/relaunches ONLY the verified isolated QA process and leaves it running.
 const repository=path.resolve(import.meta.dirname,'..');
+const fixtureOnly=process.argv.includes('--check-fixtures');
 const port=Number(process.env.QA_PORT||process.env.ZHIXING_QA_PORT||9343);
 const mainPort=Number(process.env.QA_MAIN_PORT||process.env.MAIN_PORT||9344);
 const projectId=process.env.QA_PROJECT_ID||'qa-0121-project';
-const evidence=path.resolve(process.env.QA_EVIDENCE||path.join(repository,'.preview/qa-0.12.1-audit/agent-c/packed-journey'));
+const evidence=path.resolve(process.env.QA_EVIDENCE||path.join(repository,'.preview/qa-0.12.1-audit/agent-c',fixtureOnly?'conversation-fixture-check':'packed-journey'));
 const runId=`audit-c-${Date.now().toString(36)}-${crypto.randomUUID().slice(0,6)}`;
 const input='textarea[aria-label="聊天输入框"]';
 const records=[],requests=[],held=[];
 let ui,main,host,providerId,originalSettings,ownedRun=false,restartedChild,logHandle;
 await fs.mkdir(evidence,{recursive:true});
-const baseline={runId,startedAt:new Date().toISOString(),head:execFileSync('git',['rev-parse','HEAD'],{cwd:repository,encoding:'utf8'}).trim(),layer:'Windows packaged renderer + real Harness + loopback; no real cloud'};
+const baseline={runId,startedAt:new Date().toISOString(),head:execFileSync('git',['rev-parse','HEAD'],{cwd:repository,encoding:'utf8'}).trim(),layer:fixtureOnly?'Synthetic loopback HTTP routing fixtures only; no Windows product or Harness execution':'Windows packaged renderer + real Harness + loopback; no real cloud'};
+function currentAuditTask(messages){
+  for(let index=messages.length-1;index>=0;index--){
+    const message=messages[index];if(message.role!=='user')continue;
+    const text=typeof message.content==='string'?message.content:Array.isArray(message.content)?message.content.filter(part=>typeof part?.text==='string').map(part=>part.text).join('\n'):'';
+    if(/^\s*<system-reminder(?:\s|>)/i.test(text)||/^\s*Time sampled while preparing turn \d+, step \d+:/i.test(text))continue;
+    const heading=/(?:^|\r?\n)【本次交办】[ \t]*\r?\n/.exec(text);
+    if(heading)return {messageIndex:index,text:text.slice(heading.index+heading[0].length).split(/\r?\n[ \t]*【资料 \d+[：:]/,1)[0].trim()};
+  }
+  throw new Error('QA routing could not find a current 【本次交办】 user message');
+}
 async function record(name,details={}) {
   records.push({name,status:'passed',time:new Date().toISOString(),details});
   await fs.writeFile(path.join(evidence,'journey.json'),JSON.stringify({...baseline,records},null,2));
@@ -31,11 +42,14 @@ const server=http.createServer(async(request,response)=>{
     if(request.url==='/v1/models'){response.writeHead(200,{'content-type':'application/json'});response.end(JSON.stringify({object:'list',data:[{id:'qa-audit',object:'model',owned_by:'synthetic-local'}]}));return;}
     assert.equal(request.url,'/v1/chat/completions');
     let body='';for await(const chunk of request)body+=chunk;
-    const parsed=JSON.parse(body);requests.push({time:new Date().toISOString(),body:parsed});
-    const user=[...(parsed.messages||[])].reverse().find(item=>item.role==='user');
-    const text=JSON.stringify(user?.content||'');
-    if(text.includes('QA_AUDIT_FAIL_HOLD')){held.push(response);return;}
-    if(text.includes('QA_AUDIT_STREAM')){
+    const parsed=JSON.parse(body),receipt={time:new Date().toISOString(),body:parsed};requests.push(receipt);
+    // Select the latest actual task first; never route by any marker in history,
+    // attached material, or official time/skills/system reminder user messages.
+    const task=currentAuditTask(parsed.messages||[]),text=task.text;
+    const route=/^QA_AUDIT_FAIL_HOLD(?:\s|$)/.test(text)?'hold':/^QA_AUDIT_STREAM(?:\s|$)/.test(text)?'stream':'normal';
+    receipt.routing={messageIndex:task.messageIndex,route};
+    if(route==='hold'){held.push(response);return;}
+    if(route==='stream'){
       response.writeHead(200,{'content-type':'text/event-stream','cache-control':'no-cache','connection':'keep-alive'});
       const emit=content=>response.write('data: '+JSON.stringify({id:'audit-stream',object:'chat.completion.chunk',created:1,model:'qa-audit',choices:[{index:0,delta:{role:'assistant',content},finish_reason:null}]})+'\n\n');
       emit('SAFE_AUDIT_PARTIAL 本机合成长输出，只用于取消和归档验收。\n');
@@ -76,7 +90,33 @@ async function diskCheck(){
   return main.evaluate(`(async()=>{const require=process.mainModule.require,e=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');const profile=e.app.getPath('userData');if(profile!==${JSON.stringify(host.profile)})throw Error('Wrong QA profile');const bytes=await fs.readFile(path.join(profile,'zhixing','workspace.bin'));const decoded=e.safeStorage.decryptString(bytes);const gone=${JSON.stringify([marker.deleted,marker.attachment,marker.archived,marker.project])},keep=${JSON.stringify([marker.keep,marker.shared])};const exists=async file=>{try{await fs.access(file);return true;}catch(error){if(error.code==='ENOENT')return false;throw error;}};return {ciphertextBytes:bytes.length,ciphertextSHA256:crypto.createHash('sha256').update(bytes).digest('hex'),deletedAbsent:gone.every(marker=>!decoded.includes(marker)),keptPresent:keep.every(marker=>decoded.includes(marker)),draftKeys:Object.keys(JSON.parse(decoded).drafts||{}),deletedNativeSessionPresent:await exists(path.join(profile,'zhixing','harness',${JSON.stringify(ids.delete)})),deletedVaultPresent:await exists(path.join(profile,'zhixing','vaults',${JSON.stringify(ids.delete+'.bin')}))};})()`);
 }
 async function deleteChat(id){await openChat(id);const selector=`.sidebar-projects .chat-row[data-chat-id="${id}"] .row-more`;if(await ui.evaluate(`!!document.querySelector(${JSON.stringify(selector)})`))await clickSelector(selector);else await clickSelector(`.sidebar-scroll .chat-row[data-chat-id="${id}"] .row-more`);await ui.click('删除聊天','[role=menuitem]');await ui.click('删除','.modal .danger-button');await ui.waitFor('!document.querySelector(".deletion-pending")',30000);await saveSettled();}
+async function fixtureSelfCheck(){
+  const task=text=>'任务模式：办公\n\n【本次交办】\n'+text;
+  const reminders=[{role:'user',content:'<system-reminder>Current session context.</system-reminder>'},{role:'user',content:'<system-reminder>Available skills; quoted QA_AUDIT_STREAM is not a task.</system-reminder>'},{role:'user',content:'Time sampled while preparing turn 1, step 1: 2026-11-21T21:06:57+08:00[Asia/Shanghai]'}];
+  const post=messages=>{assert.equal(messages.filter(message=>message.role==='user').length,4);return fetch(endpoint+'/chat/completions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:'qa-audit',stream:true,messages})});};
+  const hold=post([{role:'user',content:task('QA_AUDIT_FAIL_HOLD current')},...reminders]);
+  await until(()=>held.length===1,'fixture held request',3000);assert.equal(requests.at(-1).routing.route,'hold');releaseFailure();
+  const failed=await hold;assert.equal(failed.status,400);assert((await failed.text()).includes('SYNTHETIC_AUDIT_FAILURE'));
+  await record('HTTP夹具：4个user且末尾time-context时，本次FAIL_HOLD正确挂起并返回指定故障');
+
+  const stream=await post([{role:'user',content:'【近期对话，仅作上下文】\n用户：QA_AUDIT_FAIL_HOLD old\n\n'+task('QA_AUDIT_STREAM current')},...reminders]);
+  assert.equal(stream.status,200);const reader=stream.body.getReader();try{const first=await reader.read();assert(new TextDecoder().decode(first.value).includes('SAFE_AUDIT_PARTIAL'));}finally{await reader.cancel();}
+  assert.equal(requests.at(-1).routing.route,'stream');assert.equal(held.length,0);
+  await record('HTTP夹具：当前STREAM优先于同消息历史旧FAIL_HOLD，官方reminder/time-tail保留');
+
+  const normalMessages=[{role:'user',content:task('QA_AUDIT_FAIL_HOLD previous')},{role:'user',content:task('QA_AUDIT_NORMAL current')},reminders[1],reminders[2]];
+  const normal=await post(normalMessages);assert.equal(normal.status,200);assert((await normal.text()).includes('SAFE_AUDIT_RESPONSE'));assert.equal(requests.at(-1).routing.messageIndex,1);assert.equal(requests.at(-1).routing.route,'normal');assert.equal(held.length,0);
+  await record('HTTP夹具：最近真实任务为NORMAL时，不因更早任务的旧FAIL_HOLD误路由');
+
+  const arrayMessages=[{role:'user',content:task('QA_AUDIT_STREAM previous')},{role:'user',content:[{type:'text',text:task('QA_AUDIT_NORMAL array-content')+'\n\n【资料 1：old.txt】\nQA_AUDIT_FAIL_HOLD\n【资料 1 结束】'}]},reminders[0],reminders[2]];
+  const array=await post(arrayMessages);assert.equal(array.status,200);assert((await array.text()).includes('SAFE_AUDIT_RESPONSE'));assert.equal(requests.at(-1).routing.messageIndex,1);assert.equal(requests.at(-1).routing.route,'normal');assert.equal(held.length,0);
+  await record('HTTP夹具：文本块数组及附件旧marker不改变最近本次交办的NORMAL路由');
+  assert.equal(requests.length,4);
+  await fs.writeFile(path.join(evidence,'result.json'),JSON.stringify({...baseline,status:'fixture-only-passed',records,requestCount:requests.length,coverage:'HTTP task routing only; no Windows product, main inspector, Harness, process restart or cloud executed',completedAt:new Date().toISOString()},null,2));
+}
 try {
+  if(fixtureOnly)await fixtureSelfCheck();
+  else {
   ui=await connectUi(port);main=await connectUi(mainPort,true);
   host=await main.evaluate(`(()=>{const e=process.mainModule.require('electron');return {pid:process.pid,exe:e.app.getPath('exe'),profile:e.app.getPath('userData')};})()`);
   assert(path.isAbsolute(host.exe)&&/win-unpacked[\\/]知行\.exe$/i.test(host.exe),'Only the isolated packaged candidate may be restarted.');
@@ -145,7 +185,7 @@ try {
   await seed(state=>{
     const draft=(id,projectId,text)=>({kind:'chat',draftId:id,chatId:id,workspaceId:host.workspaceId,projectId,revision:1,text,files:[file(`${id}-attachment`,id===ids.delete?marker.attachment:text)],updatedAt:Date.now()});
     return {...state,projects:[...state.projects,{id:ids.project,name:ids.project,workspaceId:host.workspaceId,expanded:true}],chats:[...state.chats,
-      {id:ids.delete,title:ids.delete,workspaceId:host.workspaceId,projectId,messages:[{role:'user',text:marker.deleted}]},
+      {id:ids.delete,title:ids.delete,workspaceId:host.workspaceId,projectId,providerId,providerUrl:endpoint,messages:[{role:'user',text:marker.deleted}]},
       {id:ids.archived,title:ids.archived,workspaceId:host.workspaceId,projectId,archived:true,messages:[{role:'user',text:marker.archived}]},
       {id:ids.moved,title:ids.moved,workspaceId:host.workspaceId,projectId,messages:[{role:'user',text:marker.keep,files:[{id:shared.id,name:shared.name}]}]},
       {id:ids.projectChat,title:ids.projectChat,workspaceId:host.workspaceId,projectId:ids.project,messages:[{role:'user',text:marker.project}]},
@@ -154,7 +194,17 @@ try {
   // Create a real native history/vault for the chat being deleted, then leave a parsed unsent attachment.
   await openChat(ids.delete);await dismissToast();await ui.fill(input,`QA_AUDIT_NORMAL ${marker.deleted}`);await ui.click('发送消息','.composer button');ownedRun=true;
   await ui.waitFor('!document.querySelector("button[aria-label=停止生成]")&&document.querySelector(".transcript .assistant-message:last-of-type")?.textContent.includes("SAFE_AUDIT_RESPONSE")',45000);ownedRun=false;await saveSettled();
-  const realDeleteChat=(await workspace()).chats.find(chat=>chat.id===ids.delete);assert(!realDeleteChat.messages.at(-1).error);
+  const realDeleteChat=(await workspace()).chats.find(chat=>chat.id===ids.delete);assert(realDeleteChat,'The native deletion fixture chat must still exist');assert(!realDeleteChat.messages.at(-1).error);
+  const nativeReply=realDeleteChat.messages.at(-1);
+  assert.equal(realDeleteChat.providerId,providerId);assert.equal(realDeleteChat.providerUrl,endpoint);
+  assert.equal(nativeReply.role,'assistant','An untouched seed user is not evidence of a completed native run');
+  assert.equal(typeof nativeReply.runId,'string');assert(nativeReply.runId.length>0,'The assistant must identify the actual native run');
+  assert.equal(nativeReply.finalization?.runId,nativeReply.runId);assert.equal(nativeReply.finalization.executionStatus,'completed');
+  const selectedSessions=await ui.evaluate(`([...new Set([...document.querySelectorAll('.chat-row.selected .chat-link[aria-current="page"]')].filter(node=>node.getClientRects().length).map(node=>node.closest('.chat-row').dataset.chatId))])`);
+  assert.deepEqual(selectedSessions,[ids.delete],'The UI must still be on the bound native deletion session, not a provider-isolation fork');
+  const nativeTerminal=await ui.evaluate(`window.__auditEvents.filter(event=>event.type==='run/terminal'&&event.runId===${JSON.stringify(nativeReply.runId)}).map(event=>({runId:event.runId,sessionId:event.sessionId,finalization:event.finalization})).at(-1)`);
+  assert(nativeTerminal,'The native run must emit a real terminal event');assert.equal(nativeTerminal.sessionId,ids.delete);assert.equal(nativeTerminal.runId,nativeReply.runId);assert.equal(nativeTerminal.finalization?.executionStatus,'completed');
+  await fs.writeFile(path.join(evidence,'native-delete-precondition.json'),JSON.stringify({chatId:ids.delete,providerId,providerUrl:endpoint,selectedSessions,reply:{role:nativeReply.role,runId:nativeReply.runId,finalization:nativeReply.finalization},terminal:nativeTerminal},null,2));
   await ui.fill(input,marker.deleted);await attachFile(`${runId}-delete-unsubmitted.txt`,marker.attachment);await saveSettled();
   const nativeBeforeDelete=await diskCheck();assert(nativeBeforeDelete.deletedNativeSessionPresent);assert(nativeBeforeDelete.deletedVaultPresent);
   await deleteChat(ids.delete);
@@ -180,6 +230,7 @@ try {
   await fs.writeFile(path.join(evidence,'restart.json'),JSON.stringify({originalPid,newPid,exe:host.exe,profile:host.profile,port,mainPort},null,2));
   const current=await workspace();await ui.evaluate(`window.zhixing.saveWorkspace(${JSON.stringify({...current,settings:originalSettings})})`);await ui.evaluate(`window.zhixing.removeProvider(${JSON.stringify(providerId)})`);providerId=null;await reload();
   await fs.writeFile(path.join(evidence,'result.json'),JSON.stringify({...baseline,status:'passed',records,requestCount:requests.length,completedAt:new Date().toISOString()},null,2));
+  }
 } catch(error) {
   records.push({name:'journey',status:'failed',error:error.stack});await fs.writeFile(path.join(evidence,'result.json'),JSON.stringify({...baseline,status:'failed',records},null,2));await ui?.screenshot(path.join(evidence,'failure.png')).catch(()=>{});throw error;
 } finally {

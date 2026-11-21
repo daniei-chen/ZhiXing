@@ -2,6 +2,20 @@ import { randomBytes, createCipheriv, createDecipheriv, randomUUID } from 'node:
 import fs from 'node:fs/promises';
 import { pid as processId } from 'node:process';
 
+const WINDOWS_RENAME_ERRORS = new Set(['EPERM', 'EACCES', 'EBUSY']);
+async function renameBridgeTemp(temp, file) {
+  let delay = 20;
+  for (let retries = 0; ; retries++) {
+    try { await fs.rename(temp, file); return; }
+    catch (error) {
+      if (process.platform !== 'win32' || !WINDOWS_RENAME_ERRORS.has(error?.code) || retries >= 8) throw error;
+    }
+    // Retry only the commit of this already-encrypted temp; never rerun its producer.
+    await new Promise(resolve => setTimeout(resolve, delay));
+    delay = Math.min(delay * 2, 200);
+  }
+}
+
 export function createBridgeKey() { return randomBytes(32).toString('hex'); }
 export async function writeBridge(file, key, value) {
   const iv = randomBytes(12), cipher = createCipheriv('aes-256-gcm', Buffer.from(key, 'hex'), iv);
@@ -9,7 +23,7 @@ export async function writeBridge(file, key, value) {
   const temp = `${file}.${randomUUID()}.tmp`;
   try {
     await fs.writeFile(temp, Buffer.concat([iv, cipher.getAuthTag(), body]),{mode:0o600});
-    await fs.rename(temp, file);
+    await renameBridgeTemp(temp, file);
   } finally { await fs.unlink(temp).catch(()=>{}); }
 }
 
