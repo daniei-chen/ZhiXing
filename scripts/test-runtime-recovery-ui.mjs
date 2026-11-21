@@ -327,7 +327,7 @@ try{
     const beforeRepeat=requests.length;
     await ui.waitFor('document.querySelector(".transcript .assistant-message:last-of-type button[aria-label=再次执行]")?.disabled===false');
     await ui.click('再次执行','.transcript .assistant-message:last-of-type .answer-actions button');
-    await ui.waitFor('!document.querySelector("button[aria-label=停止生成]")&&[...document.querySelectorAll(".run-error-detail,.toast")].some(node=>/会话正在执行|先停止当前任务|正在执行/.test(node.textContent))',30000);
+    await ui.waitFor('!document.querySelector("button[aria-label=停止生成]")&&[...document.querySelectorAll(".run-error-detail,.toast")].some(node=>/会话正在执行|先停止当前任务|正在执行|该会话正在运行/.test(node.textContent))',30000);
     assert.equal(requests.length,beforeRepeat);const blocked=await evaluate(mainStatus,mainKey);assert.equal(blocked.harnesses.length,1);assert.equal(blocked.cleanup[0].runId,pending.runId);
     await record('R03：UI再次执行同session被拒绝，没有第二个Harness或模型出站',{requestCount:requests.length,attempts:blocked.attempts,harnesses:blocked.harnesses});
 
