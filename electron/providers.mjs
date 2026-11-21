@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { PROVIDER_PRESETS } from '../src/provider-options.js';
+import { PROVIDER_PRESETS, assertModelCredential } from '../src/provider-options.js';
+export { assertModelCredential } from '../src/provider-options.js';
 import { builtinModels, fetchModels, MODEL_ID } from './model-catalog.mjs';
 
 const presetById = new Map(PROVIDER_PRESETS.map(preset => [preset.id, preset]));
@@ -75,7 +76,11 @@ export function legacyProvider(configuration, key) {
 }
 
 export function publicProviders(providers) {
-  return providers.map(({ key, ...provider }) => ({ ...provider, configured: Boolean(key) }));
+  return providers.map(({ key, ...provider }) => {
+    let credentialReentryRequired=false;
+    try { assertModelCredential(key); } catch { credentialReentryRequired=true; }
+    return { ...provider, configured: Boolean(key), credentialReentryRequired };
+  });
 }
 
 export function providerModels(providers) {
@@ -140,7 +145,7 @@ export async function saveProvider(input, providers) {
   const baseUrl = normalizeEndpoint(preset ? previous?.baseUrl || preset.baseUrl : input.baseUrl, protocol);
   const sameRoute = previous?.baseUrl === baseUrl && previous?.protocol === protocol;
   const key = input.apiKey?.trim() || (sameRoute ? previous.key : '');
-  if (!key || key.length > 1024 || /[^\x21-\x7e]/.test(key)) throw new Error('请输入该 API 地址的有效 API Key。');
+  assertModelCredential(key);
   const name = preset?.name || input.name?.trim();
   if (!name || name.length > 60) throw new Error('请输入 1–60 字的供应商名称。');
   const contextWindow = tokenLimit(input.contextWindow, previous?.contextWindow, 128000, 8192, 2000000);

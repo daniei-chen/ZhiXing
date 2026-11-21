@@ -12,8 +12,10 @@ import {ConversationResources} from './ConversationResources.jsx';
 import {AnswerText} from './AnswerText.jsx';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
 import { BrandMark, IconButton, MenuItem } from './ui.jsx';
-import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText } from './store.js';
+import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText, workspaceDeletion, orphanDrafts, appendDraftFiles, recoverSubmittedDraft } from './store.js';
+import { finalizeConversationRun } from './conversation-state.js';
 import { PrivacySession } from './privacy-core.js';
+import { privacyPolicyForMode } from './privacy-policy.js';
 import { composePrompt, workflows } from './office-workflows.js';
 import { REASONING_LEVELS } from './model-options.js';
 import { selectedModel } from './provider-options.js';
@@ -53,6 +55,9 @@ export function App() {
   const [unread, setUnread] = useState(false);
   const [running, setRunning] = useState(null);
   const [automationState, setAutomationState] = useState({ revision: -1, tasks: [], runs: [] });
+  const [cleanupPending, setCleanupPending] = useState([]);
+  const [recoveryAction, setRecoveryAction] = useState('');
+  const [deletionError, setDeletionError] = useState('');
   const [systemDark, setSystemDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches);
   const composer = useRef(null);
   const picker = useRef(null);
@@ -72,11 +77,17 @@ export function App() {
   const draftMap = useRef({});
   const newDraftIds = useRef(new Map());
   const draftScopes = useRef({});
+  const removedDraftKeys = useRef(new Set());
+  const runJobs = useRef(new Map());
+  const forgottenRuntimeIds = useRef({ sessions: new Set(), runs: new Set() });
+  const deletionBusy = useRef(false);
+  const automationLatest = useRef(automationState);
   const activeDraftKey = useRef('');
   const saveSequence = useRef(0);
   const latestSaveSequence = useRef(0);
   latest.current = state;
   loadedRef.current = loaded;
+  automationLatest.current = automationState;
 
   function setToast(message, type) {
     if (!message) { setToastState(null); return; }
@@ -115,10 +126,10 @@ export function App() {
   }
 
   function persistDraft(key, patch, expectedRevision) {
-    if (!key) return null;
+    if (!key || removedDraftKeys.current.has(key)) return null;
     const previous = draftMap.current[key] || { revision: 0, text: '', files: [], updatedAt: Date.now() };
     if (expectedRevision !== undefined && previous.revision !== expectedRevision) return null;
-    const next = { ...previous, ...(draftScopes.current[key] || {}), ...patch, revision: previous.revision + 1, updatedAt: Date.now() };
+    const next = { ...previous, ...(draftScopes.current[key] || {}), ...patch, revision: previous.revision + 1, filesRevision: (previous.filesRevision || 0) + (Object.hasOwn(patch, 'files') ? 1 : 0), updatedAt: Date.now() };
     draftMap.current = { ...draftMap.current, [key]: next };
     setState(current => ({ ...current, drafts: draftMap.current }));
     return next;
@@ -127,7 +138,7 @@ export function App() {
   function clearSubmittedDraft(key, revision) {
     const current = draftMap.current[key] || { revision: 0, text: '', files: [] };
     if (current.revision !== revision) return false;
-    const cleared = { ...current, revision: current.revision + 1, text: '', files: [], updatedAt: Date.now() };
+    const cleared = { ...current, revision: current.revision + 1, filesRevision: (current.filesRevision || 0) + 1, text: '', files: [], updatedAt: Date.now() };
     draftMap.current = { ...draftMap.current, [key]: cleared };
     setState(value => ({ ...value, drafts: draftMap.current }));
     if (activeDraftKey.current === key) {
@@ -213,7 +224,26 @@ export function App() {
 
   useEffect(() => {
     if (desktop && loaded && automationState.runs.length) {
-      setState(current => applyAutomationResults(current, automationState.runs));
+      setState(current => {
+        const next = applyAutomationResults(current, automationState.runs);
+        const outcomes = new Map(automationState.runs.map(run => [run.id, run]));
+        let changed = next !== current;
+        const chats = next.chats.map(chat => {
+          let updated = false;
+          const messages = chat.messages.map(message => {
+            const run = message.role === 'assistant' && outcomes.get(message.automationRunId);
+            if (!run?.finalization && !run?.result?.finalization) return message;
+            const finalization = run.finalization || run.result.finalization;
+            if (JSON.stringify(message.finalization) === JSON.stringify(finalization)) return message;
+            updated = true;
+            return { ...message, finalization, trace: run.result?.trace || message.trace, children: finalization.children || run.result?.children || message.children, deliverables: finalization.deliverables || run.result?.deliverables || message.deliverables };
+          });
+          if (!updated) return chat;
+          changed = true;
+          return { ...chat, messages };
+        });
+        return changed ? { ...next, chats } : current;
+      });
     }
   }, [loaded, automationState]);
 
@@ -238,7 +268,9 @@ export function App() {
       setToast('本地工作空间无法读取，已保留磁盘上的数据。');
     }).finally(() => { if (mounted) setLoaded(true); });
     desktop.runtimeStatus().then(status => { if (mounted) setRuntime(status); }).catch(() => {});
+    desktop.runtimeCleanupStatus?.().then(value => { if (mounted) setCleanupPending(value); }).catch(() => {});
     const unsubscribe = desktop.onRuntimeEvent(event => {
+      if (forgottenRuntimeIds.current.sessions.has(event.sessionId) || forgottenRuntimeIds.current.runs.has(event.runId)) return;
       const job = active.current;
       if(event.type==='question'){setQuestion(event);return;}
       if(event.type==='question-closed'){setQuestion(previous=>previous?.requestId===event.requestId?null:previous);return;}
@@ -251,22 +283,14 @@ export function App() {
         return;
       }
       if(event.type==='run/terminal'){
-        if(job?.runId===event.runId)job.terminalStatus=event.status;
-        if(event.status!=='succeeded'){
-          const stopped=event.status==='cancelled';
-          setState(current=>({
-            ...current,
-            chats:current.chats.map(item=>({
-              ...item,
-              messages:item.messages.map(message=>{
-                if(message.runId!==event.runId)return message;
-                const partial=message.progressText||(job?.runId===event.runId?job.progressText:'')||'';
-                return {...message,text:stopped?partial||'已停止生成。':partial||'本轮未完成，未确认任务结果。',progressText:'',pending:false,stopped,error:!stopped,status:event.status,errorMessage:stopped?undefined:'本轮未完成。以上部分输出已保留。'};
-              }),
-            })),
-          }));
-          if(job?.runId===event.runId){active.current=null;setRunning(null);}
-        }
+        const archived = runJobs.current.get(event.runId);
+        if (archived) {
+          archived.terminalStatus = event.status;
+          finalizeRun(archived, event);
+        } else if (event.finalization) setState(current => ({ ...current, chats: current.chats.map(chat => ({ ...chat, messages: chat.messages.map(message => message.runId === event.runId ? { ...message, finalization: event.finalization } : message) })) }));
+        if (event.finalization?.processStatus === 'cleanup_pending') setCleanupPending(old => [...old.filter(row => row.runId !== event.runId), { runId: event.runId, sessionId: event.sessionId, finalization: event.finalization }]);
+        else if (event.finalization?.processStatus === 'exited') setCleanupPending(old => old.filter(row => row.runId !== event.runId));
+        if(event.status!=='succeeded' && job?.runId===event.runId){active.current=null;setRunning(null);}
         setEvents(old=>[...old.slice(-599),{...event,time:event.time??Date.now()}]);
         return;
       }
@@ -275,6 +299,9 @@ export function App() {
         // Store the trace summary without duplicating full plans and agent snapshots.
         const {children,plan,...summary} = event;
         job.trace.push({...summary,time});
+        if (children) job.children = children;
+        if (plan) job.plan = plan;
+        if (event.deliverables) job.deliverables = event.deliverables;
         if(job.trace.length>400){job.trace.shift();job.traceTruncated=true;}
       }
       setEvents(old => [...old.slice(-599), { ...event, time }]);
@@ -319,7 +346,7 @@ export function App() {
     });
     const applyAutomations = snapshot => {
       if (!mounted) return;
-      setAutomationState(previous => snapshot.revision > previous.revision ? snapshot : previous);
+      setAutomationState(previous => snapshot.revision >= previous.revision ? snapshot : previous);
       if (snapshot.runs.some(run => run.finishedAt && run.finishedAt > Date.now() - 5000)) setUnread(true);
     };
     const unsubscribeAutomations = desktop.onAutomationChange(applyAutomations);
@@ -551,22 +578,24 @@ export function App() {
     requestAnimationFrame(() => composer.current?.focus());
   }
 
-  function addParsed(imported, target, spaceId, token, draftKey = activeDraftKey.current, requestRevision) {
+  function addParsed(imported, target, spaceId, token, draftKey = activeDraftKey.current, requestFilesRevision) {
     if (!imported.length) return;
     if (target === 'library') {
       setState(current => ({ ...current, documents: [...current.documents, ...imported.map(file => ({ ...file, workspaceId: spaceId }))] }));
     } else {
       const current = draftMap.current[draftKey] || { revision: 0, text: '', files: [], updatedAt: Date.now() };
-      const known = new Set(current.files.map(file => file.id));
-      const nextFiles = [...current.files, ...imported.filter(file => !known.has(file.id))].slice(0, 12);
-      if (!persistDraft(draftKey, { files: nextFiles }, requestRevision)) {
-        setToast('读取附件期间，这份交办已修改。请重新添加附件。', 'warning');
+      if (requestFilesRevision !== undefined && (current.filesRevision || 0) !== requestFilesRevision) {
+        setToast('读取附件期间，附件列表已修改。请重新添加附件。', 'warning');
         return;
       }
+      const appended = appendDraftFiles(current.files, imported);
+      const nextFiles = appended.files;
+      if (!persistDraft(draftKey, { files: nextFiles }, current.revision)) return;
       if (draftKey === activeDraftKey.current && token === viewToken.current) {
         filesRef.current = nextFiles;
         setFilesValue(nextFiles);
       }
+      if (appended.rejected) { setToast(`每份交办最多 12 个附件，${appended.rejected} 个未加入。已有附件已保留。`, 'warning'); return; }
     }
     if (imported.some(file => file.status !== 'ready')) setToast('部分文件无法解析。点击文件可查看原因。');
   }
@@ -574,17 +603,16 @@ export function App() {
   async function chooseFiles(target = 'draft') {
     setMenu(null);
     if (opening.current || busy || !loaded) return;
-    const request = { target, spaceId: workspace.id, token: viewToken.current, draftKey: activeDraftKey.current, draftRevision: (draftMap.current[activeDraftKey.current] || { revision: 0 }).revision };
+    const request = { target, spaceId: workspace.id, token: viewToken.current, draftKey: activeDraftKey.current, filesRevision: draftMap.current[activeDraftKey.current]?.filesRevision || 0 };
     if (!desktop?.pickFiles) { fileTarget.current = request; picker.current?.click(); return; }
     opening.current = request;
     setBusy(true);
-    try { addParsed(await desktop.pickFiles(project?.directory), target, request.spaceId, request.token, request.draftKey, request.draftRevision); }
+    try { addParsed(await desktop.pickFiles(project?.directory), target, request.spaceId, request.token, request.draftKey, request.filesRevision); }
     catch (error) { setToast(errorText(error)); }
     finally { opening.current = null; setBusy(false); }
   }
 
-  async function addFiles(list, target = 'draft', spaceId = workspace.id, token = viewToken.current, draftKey = activeDraftKey.current) {
-    const draftRevision = (draftMap.current[draftKey] || { revision: 0 }).revision;
+  async function addFiles(list, target = 'draft', spaceId = workspace.id, token = viewToken.current, draftKey = activeDraftKey.current, filesRevision = draftMap.current[draftKey]?.filesRevision || 0) {
     setBusy(true);
     try {
       const imported = [];
@@ -602,16 +630,24 @@ export function App() {
           }
         } catch (error) { imported.push({ ...meta, status: 'error', reason: errorText(error), text: '' }); }
       }
-      addParsed(imported, target, spaceId, token, draftKey, draftRevision);
+      addParsed(imported, target, spaceId, token, draftKey, filesRevision);
     } finally { setBusy(false); }
   }
 
   function attach(document) {
     if (!modeWorkspaceIds.has(document.workspaceId)) return;
     if (document.status !== 'ready') { openModal({ type: 'document', value: document }); return; }
-    if (!room) { navigate('home'); setFiles([document]); }
-    else setFiles(previous => previous.some(file => file.id === document.id) ? previous : [...previous, document].slice(0, 12));
+    if (!room) navigate('home');
+    appendMaterials([document]);
     setModal(null);
+  }
+
+  function appendMaterials(incoming) {
+    const appended = appendDraftFiles(filesRef.current, incoming);
+    if (appended.added) setFiles(appended.files);
+    if (appended.rejected) setToast(`每份交办最多 12 个附件，${appended.rejected} 个未加入。已有附件已保留。`, 'warning');
+    else if (appended.added) setToast('已加入本次交办，发送时按设置自动处理。');
+    else setToast('这份资料已在本次交办中。');
   }
 
   function patchReply(job, patch) {
@@ -619,6 +655,13 @@ export function App() {
     setState(current => ({ ...current, chats: current.chats.map(item => item.id !== job.chatId ? item : {
       ...item, updatedAt: Date.now(), messages: item.messages.map(message => message.id === job.replyId ? { ...message, ...patch } : message),
     }) }));
+  }
+
+  function finalizeRun(job, outcome) {
+    const incoming = outcome.finalization || outcome.result?.finalization;
+    // A late promise resolution must not undo a host-confirmed cleanup retry.
+    if (incoming && !(job.finalization?.processStatus === 'exited' && incoming.processStatus === 'cleanup_pending')) job.finalization = incoming;
+    setState(current => finalizeConversationRun(current, job, { ...outcome, finalization: job.finalization }));
   }
 
   function localCommand(command) {
@@ -671,9 +714,9 @@ export function App() {
     const model = selection?.id || state.settings.model;
     const modelProviderId = selection?.providerId;
     const bootstrapPrompt=repeatMessageId || providerChanged ? prompt : composePrompt(taskText, attachments, targetMessages, project?.instructions, preferences);
-    const draft = { sessionId, workspaceId: workspace.id, projectId: project?.id || null, text: text || '请处理附件。', attachments, files: repeatedFiles, prompt, repeatExecution: !!repeatMessageId, draftKey, submittedRevision, mode, model, reasoning, privacyMode, startInPlanMode, sideScope: sideTarget?.scope };
+    const draft = { sessionId, workspaceId: workspace.id, projectId: project?.id || null, text: text || '请处理附件。', restoreText: sourceDraft.text, attachments, files: repeatedFiles, prompt, repeatExecution: !!repeatMessageId, draftKey, submittedRevision, mode, model, reasoning, privacyMode, startInPlanMode, sideScope: sideTarget?.scope };
     if (demo) {
-      const local = new PrivacySession(sessionId).protect(prompt, customTerms,privacyPolicy);
+      const local = new PrivacySession(sessionId).protect(prompt, customTerms,privacyPolicyForMode(privacyPolicy,privacyMode));
       if (local.blocked) { openModal({ type: 'privacy', original: prompt, preview: local, blocked: true }); return; }
       await startReply(draft, { text: privacyMode === 'raw' ? prompt : local.text, privacyMode }, true);
       return;
@@ -699,6 +742,10 @@ export function App() {
     if (active.current || draft.workspaceId !== latest.current.workspaceId) return;
     if (draft.draftKey) clearSubmittedDraft(draft.draftKey, draft.submittedRevision);
     const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [] };
+    runJobs.current.set(job.runId, job);
+    if (runJobs.current.size > 80) for (const [id, old] of runJobs.current) {
+      if (old !== job && old.finalization?.processStatus !== 'cleanup_pending' && old !== active.current) { runJobs.current.delete(id); break; }
+    }
     active.current = job; setRunning(job);
     const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl }) => ({ id, name, size, path, sourceUrl })) };
     const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0 };
@@ -720,18 +767,21 @@ export function App() {
     else navigate('home', draft.sessionId, draft.projectId);
     try {
       const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
-      if (active.current === job) patchReply(job, { text: result.text || '内核没有返回正文。', masked: result.masked,plan:result.plan,context:result.context,children:result.children,deliverables:result.deliverables,protectCount:result.protectCount||0,pending: false, finishReason: result.finishReason, trace:job.trace, traceTruncated:job.traceTruncated });
+      finalizeRun(job, { result });
     } catch (error) {
-      if (draft.draftKey && job.terminalStatus !== 'cancelled') {
+      const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;
+      if (draft.draftKey && !['completed', 'cancelled'].includes(executionStatus) && job.terminalStatus !== 'cancelled') {
         const currentDraft = draftMap.current[draft.draftKey];
-        if (currentDraft?.revision === draft.submittedRevision + 1 && !currentDraft.text && !currentDraft.files.length) {
-          persistDraft(draft.draftKey, { text: draft.text, files: draft.attachments }, currentDraft.revision);
+        const restored = recoverSubmittedDraft(currentDraft, draft);
+        if (restored) {
+          const next = persistDraft(draft.draftKey, restored, currentDraft.revision);
+          if (next && activeDraftKey.current === draft.draftKey && !inputRef.current && !filesRef.current.length) {
+            inputRef.current = next.text; filesRef.current = next.files;
+            setInputValue(next.text); setFilesValue(next.files);
+          }
         }
       }
-      if (active.current === job) {
-        const partialText=job.progressText||'';
-        patchReply(job,{text:partialText,progressText:partialText,pending:false,error:true,errorMessage:`运行未完成：${errorText(error)}`,trace:job.trace,traceTruncated:job.traceTruncated});
-      }
+      finalizeRun(job, { status: job.terminalStatus || 'failed', result: error.result, output: error.output, finalization: error.finalization, error: { code: error.code, stage: error.stage, message: `运行未完成：${errorText(error)}` } });
     } finally {
       if (active.current === job) { active.current = null; setRunning(null); }
     }
@@ -741,8 +791,8 @@ export function App() {
     const job = active.current;
     if (!job) return;
     if(job.demo){
-      const partial=job.progressText||'';
-      patchReply(job,{text:partial||'已停止生成。',pending:false,stopped:true,trace:job.trace,traceTruncated:job.traceTruncated});
+      job.terminalStatus = 'cancelled';
+      finalizeRun(job, { status: 'cancelled' });
       active.current=null;setRunning(null);return;
     }
     setRunning(previous => previous?.runId === job.runId ? { ...previous, status: 'cancelling' } : previous);
@@ -793,23 +843,129 @@ export function App() {
   }
 
   async function removeItem(item) {
-    const ids = item.type === 'delete-project' ? spaceChats.filter(child => child.projectId === item.id).map(child => child.id) : [item.id];
+    if (!loaded || storageFailed.current) throw new Error('请先完成本机工作空间读取。');
+    if (deletionBusy.current) throw new Error('另一项删除正在保存，请稍后重试。');
+    const current = { ...latest.current, drafts: draftMap.current };
+    const following = workspaceDeletion(current, item);
+    const ids = current.chats.filter(chat => !following.chats.some(next => next.id === chat.id)).map(chat => chat.id);
+    if (item.type === 'delete-chat' && !ids.includes(item.id)) ids.push(item.id);
     if (ids.includes(active.current?.chatId)) throw new Error('请先停止此会话的生成。');
-    if (item.type === 'delete-project' && automations.some(task => task.projectId === item.id && task.status === '运行中')) throw new Error('请等此项目的任务运行结束。');
-    if (item.type === 'delete-project' && desktop) for (const task of automations.filter(task => task.projectId === item.id)) await desktop.removeAutomation(task.id);
-    for (const id of ids) await desktop?.forgetSession(id);
-    setState(current => {
-      const following = { ...current, chats: current.chats.filter(entry => !ids.includes(entry.id)) };
-      if (item.type !== 'delete-project') return following;
-      return { ...following,
-        projects: current.projects.filter(project => project.id !== item.id),
-        workspaces: current.workspaces.map(space => space.projectId === item.id ? { ...space, projectId: null } : space),
-        automations: current.automations.filter(task => task.projectId !== item.id),
-        documents: current.documents.map(document => document.projectId === item.id ? { ...document, projectId: null } : document),
-      };
-    });
+    const tasks = item.type === 'delete-project' ? (desktop ? automationLatest.current.tasks : current.automations).filter(task => task.projectId === item.id) : [];
+    if (tasks.some(task => task.status === '运行中')) throw new Error('请等此项目的任务运行结束。');
+    const operation = { id: uuid(), projectId: item.type === 'delete-project' ? item.id : null, chatIds: ids, taskIds: tasks.map(task => task.id) };
+    for (const key of Object.keys(draftMap.current)) if (!Object.hasOwn(following.drafts, key)) {
+      removedDraftKeys.current.add(key);
+      delete draftScopes.current[key];
+    }
+    draftMap.current = following.drafts;
+    const next = { ...following, pendingWorkspaceDeletes: [...(current.pendingWorkspaceDeletes || []), operation] };
+    latest.current = next;
+    setState(next);
     if (ids.includes(chatId) || (item.type === 'delete-project' && view.projectId === item.id)) navigate('home');
     setModal(null);
+    await finishWorkspaceDeletion(operation);
+  }
+
+  async function persistWorkspaceSnapshot(snapshot) {
+    const saved = snapshot.settings.persist ? snapshot : { ...snapshot, chats: [], drafts: {}, documents: [], automations: [], settings: { ...snapshot.settings, customTerms: [] } };
+    if (desktop) await desktop.saveWorkspace(saved);
+    else saveState(saved);
+  }
+
+  async function finishWorkspaceDeletion(operation) {
+    deletionBusy.current = true;
+    setRecoveryAction(`delete:${operation.id}`);
+    setDeletionError('');
+    try {
+      // First persist the removal and its cleanup intent. A failed save never masquerades as a finished delete.
+      await persistWorkspaceSnapshot(latest.current);
+      for (const id of operation.taskIds) {
+        const task = automationLatest.current.tasks.find(task => task.id === id);
+        if (task && task.projectId === operation.projectId) await desktop?.removeAutomation(id);
+      }
+      for (const id of operation.chatIds) {
+        // A moved chat is not part of this deletion; its native session must be preserved too.
+        if (latest.current.chats.some(chat => chat.id === id)) continue;
+        await desktop?.forgetSession(id);
+        // Only a confirmed host forget releases this chat's renderer caches.
+        // Keep ID-only tombstones so queued events cannot retain its body again.
+        const removedRuns = new Set();
+        for (const [runId, job] of runJobs.current) if (job.chatId === id && job !== active.current) {
+          removedRuns.add(runId);
+          runJobs.current.delete(runId);
+        }
+        for (const event of events) if (event.sessionId === id && event.runId) removedRuns.add(event.runId);
+        forgottenRuntimeIds.current.sessions.add(id);
+        for (const runId of removedRuns) forgottenRuntimeIds.current.runs.add(runId);
+        transcriptPositions.current.delete(id);
+        if (transcriptChatId.current === id) transcriptChatId.current = null;
+        for (const [key, scope] of Object.entries(draftScopes.current)) if (key === `chat:${id}` || scope.chatId === id) delete draftScopes.current[key];
+        setEvents(previous => previous.filter(event => event.sessionId !== id && !removedRuns.has(event.runId)));
+        setLiveStats(previous => removedRuns.has(previous?.runId) ? null : previous);
+        setQuestion(previous => previous?.sessionId === id || removedRuns.has(previous?.runId) ? null : previous);
+        setCleanupPending(previous => previous.filter(row => row.sessionId !== id && !removedRuns.has(row.runId)));
+        setSideSelection(previous => previous.id === id ? { scope: '', id: null } : previous);
+      }
+      const next = { ...latest.current, pendingWorkspaceDeletes: (latest.current.pendingWorkspaceDeletes || []).filter(item => item.id !== operation.id) };
+      await persistWorkspaceSnapshot(next);
+      latest.current = { ...latest.current, pendingWorkspaceDeletes: (latest.current.pendingWorkspaceDeletes || []).filter(item => item.id !== operation.id) };
+      setState(current => ({ ...current, pendingWorkspaceDeletes: (current.pendingWorkspaceDeletes || []).filter(item => item.id !== operation.id) }));
+    } catch (error) {
+      const message = errorText(error);
+      setDeletionError(`删除尚未完成保存或内核记录清理：${message}。可重试，原磁盘记录可能仍在。`);
+      throw error;
+    } finally {
+      deletionBusy.current = false;
+      setRecoveryAction('');
+    }
+  }
+
+  function recoverOrphanDraft(key) {
+    const draft = draftMap.current[key];
+    if (!draft || !orphanDrafts({ ...latest.current, drafts: draftMap.current }).some(item => item.key === key)) return;
+    const id = uuid();
+    const targetWorkspaceId = latest.current.workspaceId;
+    const targetKey = draftKeyFor({ workspaceId: targetWorkspaceId, projectId: null, chatId: null, newDraftId: id });
+    const next = { ...draft, ...draftScopes.current[targetKey], revision: draft.revision + 1, updatedAt: Date.now() };
+    const drafts = { ...draftMap.current, [targetKey]: next };
+    delete drafts[key];
+    removedDraftKeys.current.add(key);
+    draftMap.current = drafts;
+    setState(current => ({ ...current, drafts }));
+    newDraftIds.current.set(`${targetWorkspaceId}:home`, id);
+    navigate('home');
+    setToast('已恢复为当前空间的交办草稿，请核对附件后发送。');
+  }
+
+  function discardOrphanDraft(key) {
+    if (!orphanDrafts({ ...latest.current, drafts: draftMap.current }).some(item => item.key === key)) return;
+    const drafts = { ...draftMap.current };
+    delete drafts[key];
+    removedDraftKeys.current.add(key);
+    delete draftScopes.current[key];
+    draftMap.current = drafts;
+    setState(current => ({ ...current, drafts }));
+  }
+
+  async function retryCleanup(runId) {
+    setRecoveryAction(`cleanup:${runId}`);
+    try {
+      const result = await desktop.retryRuntimeCleanup(runId);
+      if (result.status === 'exited') setCleanupPending(old => old.filter(item => item.runId !== runId));
+      else setCleanupPending(old => old.map(item => item.runId === runId ? result : item));
+      if (result.finalization) setState(current => ({ ...current, chats: current.chats.map(chat => ({ ...chat, messages: chat.messages.map(message => message.runId === runId ? { ...message, finalization: result.finalization } : message) })) }));
+    } catch (error) { setToast(`内核退出仍未确认：${errorText(error)}`, 'error'); }
+    finally { setRecoveryAction(''); }
+  }
+
+  async function retryAutomationSave(runId) {
+    setRecoveryAction(`automation:${runId}`);
+    try {
+      const snapshot = await desktop.retryAutomationSave(runId);
+      if (snapshot?.tasks && snapshot?.runs) setAutomationState(snapshot);
+      else setAutomationState(await desktop.listAutomations());
+    } catch (error) { setToast(`自动化结果仍未保存：${errorText(error)}`, 'error'); }
+    finally { setRecoveryAction(''); }
   }
 
   function openExport(message, { format, titleSuffix = '' } = {}) {
@@ -818,14 +974,14 @@ export function App() {
     openModal({ type: 'export-review', original, masked: message?.masked ?? (message ? undefined : chatText(chat, { protectedView: true })), title: `${chat?.title || '知行成果'}${titleSuffix}`, ...(format?{format}:{}) });
   }
 
-  async function saveExport({ text, name, format }) {
+  async function saveExport(delivery) {
     try {
       if (desktop) {
-        const result = await desktop.exportFile({ text, name, format, directory: project?.directory });
-        if (result.cancelled) return false;
-      } else downloadText(`${name}.txt`, text);
+        const result = await desktop.exportFile(delivery);
+        if (result.cancelled) return { cancelled: true };
+      } else downloadText(`${delivery.name}.txt`, delivery.text);
       setToast('已保存交付文件。'); setModal(null); return true;
-    } catch (error) { setToast(`导出失败：${errorText(error)}`); return false; }
+    } catch (error) { setToast(`导出失败：${errorText(error)}`); if (desktop) throw error; return false; }
   }
 
   async function saveCurrentChat() {
@@ -857,19 +1013,23 @@ export function App() {
     return desktop?.writeClipboardText ? desktop.writeClipboardText(text) : navigator.clipboard.writeText(text);
   }
 
-  async function shareReviewedChat({ text }) {
+  async function shareReviewedChat(delivery) {
     try {
-      if (navigator.share) {
-        await navigator.share({ title: modal.title, text });
+      if (desktop) {
+        await desktop.shareReviewed(delivery);
+        setToast('已复制经主机审阅的会话内容，可粘贴到其他应用。');
+      } else if (navigator.share) {
+        await navigator.share({ title: modal.title, text: delivery.text });
         setToast('已交给系统分享。');
       } else {
-        await writeClipboardText(text);
+        await writeClipboardText(delivery.text);
         setToast('已复制审阅后的会话内容，可粘贴到其他应用。');
       }
       setModal(null);
       return true;
     } catch (error) {
       if (error.name !== 'AbortError') setToast(error.message || '分享失败。');
+      if (desktop) throw error;
       return false;
     }
   }
@@ -936,13 +1096,15 @@ export function App() {
       openModal({type:'document',value:{...parsed,status:'ready',text:parsed.text||'',size:parsed.size||reference.size}});
     } catch(error) { if(token===viewToken.current)setToast(`打开交付文件失败：${errorText(error)}`,'error'); }
   }
-  function attachWorkingMaterial(file){if(file.status!=='ready'){setToast('这份资料尚未解析。');return;}setFiles(old=>old.some(item=>item.id===file.id)?old:[...old,{...file,workspaceId:workspace.id}].slice(0,12));setToast('已加入本次交办，发送时按设置自动处理。');}
+  function attachWorkingMaterial(file){if(file.status!=='ready'){setToast('这份资料尚未解析。');return;}appendMaterials([{...file,workspaceId:workspace.id}]);}
   async function openAnswerUrl(url){showWorkPage('browser');if(desktop)try{await desktop.browserAction({...workContext,action:'new',url});}catch(error){setToast(errorText(error));}}
   function openConversationSource(source) {
     if (source.url) { void openAnswerUrl(source.url); return; }
     if (source.file) openModal({type:'document',value:{...source.file,status:source.file.status||'record',reason:source.recordOnly?'仅保留附件记录，原文件内容没有保存在此会话中。':source.file.reason}});
   }
-  const scopeProps = { workspace, projects, chats, spaceChats, documents, automations, taskRuns, project, mode };
+  const unresolvedDrafts = orphanDrafts(state);
+  const pendingOutcomes = automationState.pendingOutcomes || [];
+  const scopeProps = { workspace, projects, chats, spaceChats, documents, automations, taskRuns, project, mode, orphanDrafts: unresolvedDrafts };
 
   return <div className={`app-shell ${isDark ? 'dark' : ''} ${sidebarOpen ? '' : 'sidebar-hidden'} ${settingsPage ? 'settings-open' : ''}`}>
     <div className="app-body" inert={!!modal || !!settingsPage||!!question} aria-hidden={settingsPage ? true : undefined}>
@@ -973,6 +1135,11 @@ export function App() {
             </>}
           </div>
         </div>
+            {!!state.pendingWorkspaceDeletes?.length && <section className="running-return deletion-pending" role="alert"><WarningCircle size={15}/><span title={deletionError || '删除需要保存并完成内核记录清理。'}>{deletionError || '删除正在保存或等待清理，尚未确认完成。'}</span>{state.pendingWorkspaceDeletes.map(item => <button key={item.id} type="button" disabled={!!recoveryAction} onClick={() => void finishWorkspaceDeletion(item).catch(() => {})}>重试完成删除</button>)}</section>}
+            {!!unresolvedDrafts.length && <section className="running-return orphan-drafts" role="status"><Info size={15}/><span>有 {unresolvedDrafts.length} 份旧草稿的聊天或项目已不存在，内容仍保留。</span><button type="button" onClick={() => openModal({ type: 'orphan-drafts' })}>恢复或删除</button></section>}
+            {cleanupPending.map(item => <section className="running-return runtime-cleanup-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.finalization?.error?.message}>内核退出尚未确认，该会话暂不能重新执行。</span>{desktop?.retryRuntimeCleanup && <button type="button" disabled={!!recoveryAction} onClick={() => void retryCleanup(item.runId)}>重试清理</button>}</section>)}
+            {pendingOutcomes.map(item => <section className="running-return automation-save-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.persistenceError?.message}>自动化执行已结束，结果尚未保存；后续调度已暂停。</span>{item.result && <button type="button" onClick={() => openRun(item)}>查看结果</button>}{desktop?.retryAutomationSave && <button type="button" disabled={!!recoveryAction} onClick={() => void retryAutomationSave(item.runId)}>重试保存结果</button>}</section>)}
+            {automationState.persistenceError && !pendingOutcomes.length && <section className="running-return automation-save-error" role="alert"><WarningCircle size={15}/><span>{automationState.persistenceError.message || '自动化记录保存失败，待恢复。'}</span></section>}
             {running&&!runningHere&&<div className="running-return" role="status"><CircleNotch size={14}/><span>{state.chats.find(item=>item.id===running.chatId)?.title||'另一段聊天'}正在执行</span><button type="button" onClick={returnToRunningChat}>返回任务</button></div>}
             {room ? <>
               {chat ? <section className="transcript" ref={transcript} onScroll={onTranscriptScroll} aria-label="聊天记录">
@@ -989,9 +1156,11 @@ export function App() {
                   {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':events.findLast(event => event.runId===running?.runId&&event.label)?.label || '正在生成…'}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl}/>}
                   {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
                   {message.context?.measurement&&<p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow||128000).toLocaleString()} tokens · <button type="button" onClick={()=>setInput('/compact')} disabled={!!running}>压缩上下文</button></p>}
+                  {message.finalization?.processStatus === 'cleanup_pending' && <p className="muted" role="status">执行已结束，内核退出仍待确认；请使用上方的重试清理。</p>}
+                  {['pending', 'failed'].includes(message.finalization?.persistenceStatus) && <p className="muted" role="status">本次执行结果尚未保存。重试保存不会重新运行工具。</p>}
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}
                   {!message.pending && <div className="answer-actions">
-                    {!!message.text && <><IconButton icon={Copy} label="复制回复" onClick={() => writeClipboardText(message.text).then(() => setToast('已复制。')).catch(() => setToast('请选中文字后复制。'))}/><IconButton icon={DownloadSimple} label="导出成果" onClick={() => openExport(message)}/></>}
+                    {!!message.text && <><IconButton icon={Copy} label="复制回复" onClick={() => writeClipboardText(message.text).then(() => setToast('已复制。')).catch(error => setToast(errorText(error), 'error'))}/><IconButton icon={DownloadSimple} label="导出成果" onClick={() => openExport(message)}/></>}
                     {index === messages.length - 1 && !message.imported && <IconButton icon={ArrowCounterClockwise} label="再次执行" disabled={!!running || busy} onClick={() => submit(message.id)}/>}
                     {message.masked && <IconButton icon={ShieldCheck} label="查看发送详情" onClick={() => {
                       const source = messages.slice(0, index).findLast(item => item.role === 'user');
@@ -1023,7 +1192,7 @@ export function App() {
     <input hidden ref={picker} type="file" accept=".txt,.md,.csv,.tsv,.json,.docx,.xlsx,.pptx,.pdf,.png,.jpg,.jpeg,.bmp,.tif,.tiff" multiple onChange={event => {
       const list = Array.from(event.target.files); event.target.value = '';
       const request = fileTarget.current; fileTarget.current = null;
-      if (request) void addFiles(list, request.target, request.spaceId, request.token);
+      if (request) void addFiles(list, request.target, request.spaceId, request.token, request.draftKey, request.filesRevision);
     }}/>
     <section hidden={workspaceSave.status==='saved'} data-save-status={workspaceSave.status} className={`workspace-save-banner ${workspaceSave.status}`} role={workspaceSave.status === 'failed' ? 'alert' : 'status'} aria-live={workspaceSave.status === 'failed' ? 'assertive' : 'polite'}>
       {workspaceSave.status === 'failed' ? <WarningCircle size={17}/> : workspaceSave.status === 'saved' ? <Check size={17}/> : <CircleNotch className={workspaceSave.status === 'saving' ? 'spinning' : ''} size={17}/>}
@@ -1033,8 +1202,8 @@ export function App() {
     {toast && <div className={`toast ${toast.type}`} role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'}>{toast.type === 'error' ? <WarningCircle size={15}/> : toast.type === 'success' ? <Check size={15}/> : <Info size={15}/>}<span>{toast.message}</span>{toast.type === 'error'&&<button type="button" className="toast-dismiss" aria-label="关闭错误提示" onClick={()=>setToast(null)}>×</button>}</div>}
     {question&&<AgentQuestion key={question.requestId} request={question} onAnswer={value=>desktop.answerQuestion(value)}/>}
     {privacyView && <PrivacyReview key={modal.type} modal={modal} original={reviewOriginal} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} currentMode={state.settings.privacyMode} onClose={() => setModal(null)} onSettings={() => openModal({ type: 'settings', tab: '隐私与数据' })} onSend={() => startReply(modal.draft, modal.preview)}/>}
-    {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} terms={state.settings.customTerms} desktop={!!desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
-    {modal && !privacyView && modal.type !== 'export-review' && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={state} setState={setState} scope={scopeProps} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={useTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
+    {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} privacyMode={state.settings.privacyMode} desktop={desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
+    {modal && !privacyView && modal.type !== 'export-review' && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={state} setState={setState} scope={scopeProps} recoverDraft={recoverOrphanDraft} discardDraft={discardOrphanDraft} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={useTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
   </div>;
 }
 

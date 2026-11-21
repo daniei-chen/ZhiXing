@@ -183,14 +183,18 @@ test('停止保留已生成正文，重复取消与关闭等待最终保存后�
 
   releaseSave.resolve();
   const [, settled] = await within(Promise.all([stopped, terminal, closing]));
-  assert.deepEqual(settled, {runId, sessionId, status: 'cancelled', finishReason: undefined});
+  assert.deepEqual(settled, {runId, sessionId, status: 'cancelled', finishReason: undefined, finalization: settled.finalization});
+  assert.equal(settled.finalization.executionStatus, 'cancelled');
+  assert.equal(settled.finalization.persistenceStatus, 'saved');
+  assert.equal(settled.finalization.processStatus, 'exited');
+  assert(Number.isSafeInteger(settled.finalization.eventWatermark) && settled.finalization.eventWatermark > 0);
   assert.equal(finalSaved, true);
   assert.equal(closed, true);
   assert.equal(manager.runs.size, 0);
   assert.equal(manager.busy.size, 0);
   assert.equal(manager.questions.size, 0);
   assert.equal(requests.length, 1);
-  assert.deepEqual(events.filter(event => event.type === 'run/terminal'), [{runId, sessionId, type: 'run/terminal', status: 'cancelled'}]);
+  assert.deepEqual(events.filter(event => event.type === 'run/terminal'), [{runId, sessionId, type: 'run/terminal', status: 'cancelled', finalization: settled.finalization}]);
   assert.equal(events.filter(event => event.type === 'draft').at(-1).text, partialText);
   assert.deepEqual(await manager.cancel(runId), {cancelled: false, accepted: false, settled: true});
   const history = await readBridge(path.join(fixture.root, sessionId, 'history-redact', `${sessionId}.bin`), fixture.vaults.get(sessionId).historyKey);
@@ -215,7 +219,10 @@ test('再次执行在真实模型请求与加密历史中追加相同交办和�
   for (const runId of ['initial-execution', 'repeat-execution']) {
    const preview = await manager.preview({sessionId, prompt, bootstrapPrompt: prompt, privacyMode: 'redact'}, config);
    results.push(await within(manager.runPrepared({runId, preparationId: preview.preparationId}, config, fixtureKey)));
-   assert.deepEqual(await within(manager.waitForRun(runId)), {runId, sessionId, status: 'succeeded', finishReason: 'completed'});
+   assert.deepEqual(await within(manager.waitForRun(runId)), {runId, sessionId, status: 'succeeded', finishReason: 'completed', finalization: results.at(-1).finalization});
+   assert.equal(results.at(-1).finalization.executionStatus, 'completed');
+   assert.equal(results.at(-1).finalization.persistenceStatus, 'saved');
+   assert.equal(results.at(-1).finalization.processStatus, 'exited');
    if (runId === 'initial-execution') {
     const history = await readBridge(historyFile, vaults.get(sessionId).historyKey);
     firstMessages = history.events.filter(event => ['user/message', 'assistant/message'].includes(event.type));
@@ -278,7 +285,10 @@ test('原生取消通道失效时强制收尾标记 interrupted 并释放运行'
   const [, settled] = await within(Promise.all([stopped, terminal]));
 
   assert.equal(settled.status, 'interrupted');
-  assert.deepEqual(events.filter(event => event.type === 'run/terminal'), [{runId, sessionId, type: 'run/terminal', status: 'interrupted'}]);
+  assert.deepEqual(events.filter(event => event.type === 'run/terminal'), [{runId, sessionId, type: 'run/terminal', status: 'interrupted', finalization: settled.finalization}]);
+  assert.equal(settled.finalization.executionStatus, 'cancelled');
+  assert.equal(settled.finalization.persistenceStatus, 'saved');
+  assert.equal(settled.finalization.processStatus, 'exited');
   assert.equal(manager.runs.size, 0);
   assert.equal(manager.busy.size, 0);
   assert.equal(manager.questions.size, 0);

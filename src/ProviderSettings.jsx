@@ -54,7 +54,7 @@ export function ProviderSettings({ runtime, setRuntime, desktop }) {
         <h3 className="settings-section-title">已连接</h3>
         <div className="settings-card provider-list">{providers.map(provider => <button key={provider.id} type="button" className="provider-row" onClick={() => open(provider, true)}>
           <span className="provider-glyph"><Plug size={17}/></span>
-          <span className="provider-row-name"><strong>{provider.name}</strong><small>{provider.models.length} 个模型 · {protocolLabel[provider.protocol]}</small></span>
+          <span className="provider-row-name"><strong>{provider.name}</strong><small>{provider.credentialReentryRequired?'需重新配置 API Key':`${provider.models.length} 个模型 · ${protocolLabel[provider.protocol]}`}</small></span>
           <SlidersHorizontal size={16}/>
         </button>)}</div>
       </section>}
@@ -80,7 +80,7 @@ export function ProviderSettings({ runtime, setRuntime, desktop }) {
             }}><option value="openai">OpenAI Chat Completions</option><option value="anthropic">Anthropic Messages</option></select></label>
             <label className="form-label">API 地址<input required type="url" value={draft.baseUrl} onChange={event => update('baseUrl', event.target.value)} placeholder="https://api.example.com/v1"/></label>
           </div>}
-          <label className="form-label">API Key<input type="password" autoComplete="off" maxLength={1024} value={draft.apiKey} onChange={event => update('apiKey', event.target.value)} placeholder={draft.configured && !changedEndpoint ? '留空沿用已保存的密钥' : '输入 API Key'}/></label>
+          <label className="form-label">API Key<input type="password" autoComplete="off" minLength={8} maxLength={1024} value={draft.apiKey} onChange={event => update('apiKey', event.target.value)} placeholder={draft.configured && !changedEndpoint && !draft.credentialReentryRequired ? '留空沿用已保存的密钥' : '输入 API Key'}/><small>8–1024 个可打印 ASCII 字符，不含空格。旧的过短密钥需重新配置。</small></label>
           <button type="button" className="text-button provider-back" aria-expanded={advanced} onClick={() => setAdvanced(value => !value)}><SlidersHorizontal size={15}/>高级设置</button>
           {advanced && <div className="model-limits">
             <label className="form-label">上下文窗口<input type="number" min={8192} max={2000000} value={draft.contextWindow ?? 128000} onChange={event => update('contextWindow', event.target.value)}/></label>

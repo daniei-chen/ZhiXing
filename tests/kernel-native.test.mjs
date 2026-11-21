@@ -29,9 +29,39 @@ async function fixture(handler){
  const server=http.createServer(async(req,res)=>{try{const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=JSON.parse(Buffer.concat(chunks));requests.push(body);if(requests.length>18)throw new Error('Native fixture exceeded expected turns');respond(res,handler(body,requests.length));}catch(error){res.writeHead(422,{'content-type':'application/json'}).end(JSON.stringify({error:{message:error.message}}));}});
  server.listen(0,'127.0.0.1');await once(server,'listening');
  const manager=new RuntimeManager({root,readVault:async id=>vaults.get(id),writeVault:async(id,value)=>vaults.set(id,value),onEvent:event=>events.push(event)});
+ // Test-only diagnostics against the pinned SDK; never exposed by product IPC.
+ const clients=[],createHarness=manager.createHarness;
+ manager.createHarness=async(...args)=>{const harness=await createHarness(...args);clients.push(harness.client);return harness;};
  const config={baseUrl:`http://127.0.0.1:${server.address().port}/anthropic`,model:'native-fixture',reasoning:'off',kernel:{...KERNEL_DEFAULTS,taskTimeoutSeconds:60}};
- return {root,manager,config,requests,events,async close(){await manager.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));const resolved=await fs.realpath(root);assert.equal(path.dirname(resolved),parent);assert(path.basename(resolved).startsWith('zhixing-native-capabilities-'));await fs.rm(resolved,{recursive:true,force:true,maxRetries:6,retryDelay:150});}};
+ return {root,manager,config,requests,events,diagnostics:()=>clients.map(client=>(client.stderrTail||[]).slice(-12)),async close(){await manager.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));const resolved=await fs.realpath(root);assert.equal(path.dirname(resolved),parent);assert(path.basename(resolved).startsWith('zhixing-native-capabilities-'));await fs.rm(resolved,{recursive:true,force:true,maxRetries:6,retryDelay:150});}};
 }
+
+test('真实 Harness 非脱敏模式在工具返回和流式/最终回复中仍拦截凭证',{timeout:90000},async()=>{
+ const secret='password=synthetic-raw-tool-secret';
+ const f=await fixture((body,index)=>results(body).length?[{type:'text',text:'TOOL_PROTECTION_VERIFIED'}]:call('office_read_file',{file_path:'credential-fixture.txt'},index));
+ try {
+  const project=path.join(f.root,'synthetic-project');await fs.mkdir(project);await fs.writeFile(path.join(project,'credential-fixture.txt'),secret);
+  const config={...f.config,workspaceRoot:project,permission:'full',privacyPolicy:{actions:{SECRET:'mask'}}};
+  const result=await f.manager.run({runId:'raw-tool-boundary',sessionId:'raw-tool-boundary',prompt:'读取 credential-fixture.txt，报告是否可用。',privacyMode:'raw'},config,'fixture8');
+  assert.equal(result.text,'TOOL_PROTECTION_VERIFIED');assert(f.requests.length>=2);
+  const wire=JSON.stringify(f.requests);assert(!wire.includes('synthetic-raw-tool-secret'));assert(wire.includes('疑似凭证'));
+ } finally {await f.close();}
+ const output=await fixture(()=>[{type:'text',text:'password=synthetic-raw-output-secret'}]);
+ try {
+  await assert.rejects(output.manager.run({runId:'raw-output',sessionId:'raw-output',prompt:'写一行测试结果',privacyMode:'raw'},{...output.config,privacyPolicy:{actions:{SECRET:'mask'}}},'fixture8'),/疑似凭证/);
+  assert(!JSON.stringify(output.events).includes('synthetic-raw-output-secret'));
+ } finally {await output.close();}
+});
+
+test('真实 Harness 的工作计划事件不能显示当前模型凭证',{timeout:45000},async()=>{
+ const key='Ab7!xyZ9';
+ const f=await fixture((_body,index)=>call('todo_write',{todos:[{content:`核对 ${key} 的状态`,status:'in_progress'}]},index));
+ try {
+  await assert.rejects(f.manager.run({runId:'plan-key',sessionId:'plan-key',prompt:'更新合成工作计划。',privacyMode:'raw'},f.config,key),/模型未完成/);
+  assert(f.events.some(event=>event.type==='plan'&&event.plan.some(item=>item.content.includes('检测到凭证'))));
+  assert(!JSON.stringify(f.events).includes(key));assert.equal(f.requests.length,1);
+ } finally {await f.close();}
+});
 
 test('原生 Agent Teams 创建、CAS 领取/完成、列表及加密重启恢复',async()=>{
  let phase='create';
@@ -76,7 +106,7 @@ test('原生 PTC run_code 实际编排办公工具、保留受控环境并遵守
   planning=true;
   let planned;
   try{planned=await f.manager.run({sessionId:'ptc-plan',runId:'ptc-planning',prompt:'只调查，不运行程序。',startInPlanMode:true},config,'synthetic-native-key');}
-  catch(error){error.message+=` Synthetic PTC diagnostic: ${JSON.stringify({requests:f.requests.length,lastMessages:f.requests.at(-1)?.messages,events:f.events.filter(event=>event.runId==='ptc-planning').slice(-12)})}`;throw error;}
+  catch(error){error.message+=` Synthetic PTC diagnostic: ${JSON.stringify({details:error.details,stderr:f.diagnostics(),requests:f.requests.length,lastMessages:f.requests.at(-1)?.messages,events:f.events.filter(event=>event.runId==='ptc-planning').slice(-12)})}`;throw error;}
   assert.equal(planned.finishReason,'completed');const plannedWire=JSON.stringify(f.requests.at(-1));assert(!plannedWire.includes('CALCULATED=10'));assert(plannedWire.includes('规划模式'));
  }finally{await f.close();}
 },{timeout:60000});

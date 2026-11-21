@@ -1,5 +1,5 @@
 import {PRIVACY_TYPES,normalisePrivacyPolicy} from './privacy-policy.js';
-import {detectionView, validIban, fieldLabel, literalPattern} from './privacy-recognizers.js';
+import {detectionView, validIban, fieldLabel, literalPattern, fixedStructureKey, childPrivacyContext} from './privacy-recognizers.js';
 export const TYPE_LABELS = Object.fromEntries(PRIVACY_TYPES.map(([id,label]) => [id,label]));
 const TOKEN = /⟦ZX-[^⟧\r\n]+⟧/g;
 const RULES = [
@@ -121,24 +121,53 @@ export class PrivacySession {
     parts.push(source.slice(offset));
     return { text: parts.join(''), entities: [...used.values()], blocked: spans.some(s => s.blocked), findings:spans.filter(span=>span.type).map(({start,end,type,method,blocked})=>({start,end,type,label:TYPE_LABELS[type],method,action:blocked?'block':policy.actions[type]})) };
   }
-  protectValue(value, terms=[], configuration={}) {
-    const entities=new Map();let blocked=false;
-    const visit=(item,depth)=>{
+  assertSafeKeys(value, terms=[], configuration={}, {context='data',privacyMode='redact'}={}) {
+    const inspect=(text,code='SENSITIVE_DYNAMIC_KEY')=>{
+      const checked=this.protect(text,terms,configuration);
+      if(checked.blocked||privacyMode!=='raw'&&checked.entities.length)throw Object.assign(new Error(code==='SENSITIVE_DYNAMIC_KEY'?'SENSITIVE_DYNAMIC_KEY: 结构化字段名称包含需保护的信息，请使用不含敏感值的字段名。':'SENSITIVE_SCHEMA_VALUE: 工具约束含需保护的信息，无法安全改写。'),{code});
+    };
+    const visit=(item,kind,depth)=>{
       if(depth>40)throw new Error('请求结构过深，已停止发送。');
+      if(kind==='schemaDependency')kind=Array.isArray(item)?'schemaIdentity':'schema';
+      if(kind==='jsonArguments'&&typeof item==='string'){visit(JSON.parse(item||'{}'),'data',depth+1);return;}
+      if((kind==='schemaIdentity'||kind==='schemaLiteral')&&typeof item==='string'){inspect(item,kind==='schemaIdentity'?'SENSITIVE_DYNAMIC_KEY':'SENSITIVE_SCHEMA_VALUE');return;}
+      if(kind==='schemaLiteral'&&typeof item==='number'&&Number.isInteger(item)&&String(item).length>=11)inspect(String(item),'SENSITIVE_SCHEMA_VALUE');
+      if(kind==='schemaFixed'&&typeof item==='string'&&!['array','boolean','integer','null','number','object','string'].includes(item))inspect(item,'SENSITIVE_SCHEMA_VALUE');
+      if(Array.isArray(item)){for(const child of item)visit(child,kind==='schemaDependencies'?'schemaIdentity':kind,depth+1);return;}
+      if(item&&typeof item==='object')for(const [key,child]of Object.entries(item)){
+        if(!fixedStructureKey(kind,key))inspect(key);
+        if(['schemaLiteral','schemaFixed','schemaIdentity'].includes(kind)&&(typeof child==='string'||typeof child==='number'&&Number.isFinite(child))){
+          const field=fieldLabel(key),label=field==='姓名'&&/^[A-Z]/i.test(String(child))?'full_name':field;
+          if(label)inspect(`${label}: ${child}`,'SENSITIVE_SCHEMA_VALUE');
+        }
+        visit(child,childPrivacyContext(kind,key),depth+1);
+      }
+    };
+    visit(value,context,0);
+  }
+  protectValue(value, terms=[], configuration={}, options={}) {
+    this.assertSafeKeys(value,terms,configuration,options);
+    const entities=new Map();let blocked=false;
+    const visit=(item,depth,context='data')=>{
+      if(depth>40)throw new Error('请求结构过深，已停止发送。');
+      if(context==='schemaDependency')context=Array.isArray(item)?'schemaIdentity':'schema';
+      // These are executable schema identities/constraints, not prose. Their
+      // sensitivity was checked above; changing them would break tool meaning.
+      if(['schemaFixed','schemaIdentity','schemaLiteral'].includes(context))return item;
       if(typeof item==='string') { const checked=this.protect(item,terms,configuration);blocked ||= checked.blocked;for(const entity of checked.entities)entities.set(entity.token,entity);return checked.text; }
       if(typeof item==='number'&&Number.isInteger(item)&&String(item).length>=11){const checked=this.protect(String(item),terms,configuration);blocked ||= checked.blocked;for(const entity of checked.entities)entities.set(entity.token,entity);return checked.entities.length?checked.text:item;}
-      if(Array.isArray(item))return item.map(child=>visit(child,depth+1));
+      if(Array.isArray(item))return item.map(child=>visit(child,depth+1,context));
       if(item&&typeof item==='object')return Object.fromEntries(Object.entries(item).map(([key,child])=>{
-        const field=fieldLabel(key),label=field==='姓名'&&/^[A-Z]/i.test(String(child))?'full_name':field;
+        const field=fixedStructureKey(context,key)?null:fieldLabel(key),label=field==='姓名'&&/^[A-Z]/i.test(String(child))?'full_name':field;
         if(label&&(typeof child==='string'||typeof child==='number'&&Number.isFinite(child))){
           const checked=this.protect(`${label}: ${child}`,terms,configuration);blocked ||= checked.blocked;for(const entity of checked.entities)entities.set(entity.token,entity);
           return [key,checked.entities.length?(checked.text.startsWith(`${label}: `)?checked.text.slice(label.length+2):checked.text):child];
         }
-        return [key,visit(child,depth+1)];
+        return [key,visit(child,depth+1,childPrivacyContext(context,key))];
       }));
       return item;
     };
-    return {value:visit(value,0),entities:[...entities.values()],blocked};
+    return {value:visit(value,0,options.context),entities:[...entities.values()],blocked};
   }
   restore(input, { allowedTypes = null, allowedTokens = null } = {}) {
     const source = String(input ?? ''), unknown = [];

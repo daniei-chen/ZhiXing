@@ -14,6 +14,7 @@ const seedState = {
   ],
   chats: [],
   drafts: {},
+  pendingWorkspaceDeletes: [],
   automations: [],
   appliedAutomationRuns: [],
   documents: [],
@@ -59,20 +60,29 @@ export function mergeState(saved) {
     : saved.mode === 'government' ? 'government-home' : workspaces[0].id;
   projects=projects.map(project=>({...project,directory:Object.hasOwn(project,'directory')?project.directory:workspaces.find(space=>space.id===project.workspaceId)?.directory||null}));
   const projectById = new Map(projects.map(project => [project.id, project]));
+  const chatById = new Map(chats.map(chat => [chat.id, chat]));
   return {
     version: 2, workspaceId, workspaces, projects, settings,
+    pendingWorkspaceDeletes: Array.isArray(saved.pendingWorkspaceDeletes) ? saved.pendingWorkspaceDeletes.filter(item => item && typeof item.id === 'string' && Array.isArray(item.chatIds) && Array.isArray(item.taskIds)).map(item => ({
+      id: item.id, projectId: typeof item.projectId === 'string' ? item.projectId : null,
+      chatIds: item.chatIds.filter(id => typeof id === 'string'), taskIds: item.taskIds.filter(id => typeof id === 'string'),
+    })) : [],
     drafts: settings.persist && saved.drafts && typeof saved.drafts === 'object' && !Array.isArray(saved.drafts)
-      ? Object.fromEntries(Object.entries(saved.drafts).filter(([, draft]) => draft && typeof draft.text === 'string' && Array.isArray(draft.files)).map(([id, draft]) => [id, {
+      ? Object.fromEntries(Object.entries(saved.drafts).filter(([, draft]) => draft && typeof draft.text === 'string' && Array.isArray(draft.files)).map(([id, draft]) => {
+        const owner = chatById.get(draft.chatId || (id.startsWith('chat:') ? id.slice(5) : null));
+        const ownerProject = owner && projectById.get(owner.projectId);
+        return [id, {
         draftId: typeof draft.draftId === 'string' ? draft.draftId : undefined,
-        kind: draft.kind === 'chat' || draft.kind === 'new' ? draft.kind : undefined,
-        workspaceId: typeof draft.workspaceId === 'string' ? draft.workspaceId : undefined,
-        projectId: typeof draft.projectId === 'string' ? draft.projectId : null,
-        chatId: typeof draft.chatId === 'string' ? draft.chatId : null,
+        kind: owner ? 'chat' : draft.kind === 'chat' || draft.kind === 'new' ? draft.kind : undefined,
+        workspaceId: owner ? ownerProject?.workspaceId || owner.workspaceId || workspaceId : typeof draft.workspaceId === 'string' ? draft.workspaceId : undefined,
+        projectId: owner ? owner.projectId || null : typeof draft.projectId === 'string' ? draft.projectId : null,
+        chatId: owner ? owner.id : typeof draft.chatId === 'string' ? draft.chatId : null,
         revision: Number.isSafeInteger(draft.revision) && draft.revision >= 0 ? draft.revision : 0,
+        filesRevision: Number.isSafeInteger(draft.filesRevision) && draft.filesRevision >= 0 ? draft.filesRevision : 0,
         text: draft.text.slice(0, 60000),
         files: draft.files.slice(0, 12),
         updatedAt: Number.isFinite(draft.updatedAt) ? draft.updatedAt : Date.now(),
-      }]))
+      }]; }))
       : {},
     appliedAutomationRuns: Array.isArray(saved.appliedAutomationRuns) ? saved.appliedAutomationRuns.filter(id => typeof id === 'string').slice(-240) : [],
     chats: chats.map(chat => ({
@@ -83,6 +93,69 @@ export function mergeState(saved) {
     automations: automations.map(task => ({ ...task, workspaceId: task.workspaceId || projectById.get(task.projectId)?.workspaceId || workspaceId, kind: task.kind || 'reminder', status: task.status === '运行中' ? '上次运行已中断' : task.status })),
     documents: documents.map(document => ({ ...document, workspaceId: document.workspaceId || workspaceId })),
   };
+}
+
+// A live chat owns its draft even when a saved draft still names its former project.
+export function workspaceDeletion(state, item, drafts = state.drafts || {}) {
+  const projectId = item.type === 'delete-project' ? item.id : null;
+  const chatIds = new Set(state.chats.filter(chat => projectId ? chat.projectId === projectId : chat.id === item.id).map(chat => chat.id));
+  // Also remove an explicitly deleted chat's legacy orphan draft.
+  if (!projectId) chatIds.add(item.id);
+  const chatById = new Map(state.chats.map(chat => [chat.id, chat]));
+  const nextDrafts = Object.fromEntries(Object.entries(drafts).filter(([key, draft]) => {
+    const chatId = draft.chatId || (key.startsWith('chat:') ? key.slice(5) : null);
+    if (chatIds.has(chatId)) return false;
+    if (chatId && chatById.has(chatId)) return true;
+    return !projectId || draft.projectId !== projectId;
+  }).map(([key, draft]) => {
+    const owner = chatById.get(draft.chatId || (key.startsWith('chat:') ? key.slice(5) : null));
+    return [key, owner ? { ...draft, kind: 'chat', chatId: owner.id, projectId: owner.projectId || null, workspaceId: state.projects.find(project => project.id === owner.projectId)?.workspaceId || owner.workspaceId || draft.workspaceId } : draft];
+  }));
+  return {
+    ...state,
+    chats: state.chats.filter(chat => !chatIds.has(chat.id)), drafts: nextDrafts,
+    ...(projectId ? {
+      projects: state.projects.filter(project => project.id !== projectId),
+      workspaces: state.workspaces.map(space => space.projectId === projectId ? { ...space, projectId: null } : space),
+      automations: state.automations.filter(task => task.projectId !== projectId),
+      // Library documents are shared, independent records. Unassign rather than destroy them.
+      documents: state.documents.map(document => document.projectId === projectId ? { ...document, projectId: null } : document),
+    } : {}),
+  };
+}
+
+export function orphanDrafts(state) {
+  return Object.entries(state.drafts || {}).filter(([key, draft]) => {
+    if (!draft.text && !draft.files?.length) return false;
+    const chatId = draft.chatId || (key.startsWith('chat:') ? key.slice(5) : null);
+    if (chatId) return !state.chats.some(chat => chat.id === chatId);
+    return draft.kind !== 'new' || !draft.draftId || !state.workspaces.some(space => space.id === draft.workspaceId)
+      || !!draft.projectId && !state.projects.some(project => project.id === draft.projectId && project.workspaceId === draft.workspaceId);
+  }).map(([key, draft]) => ({ key, ...draft }));
+}
+
+export function appendDraftFiles(existing = [], incoming = [], limit = 12) {
+  const identities = file => [
+    file.id && `id:${file.id}`,
+    file.path && `path:${/^(?:[a-z]:|\\\\)/i.test(file.path) ? file.path.replaceAll('\\', '/').toLowerCase() : file.path}`,
+    file.sourceUrl && `url:${file.sourceUrl}`,
+  ].filter(Boolean);
+  const known = new Set(existing.flatMap(identities));
+  const files = [...existing];
+  let duplicates = 0, rejected = 0;
+  for (const file of incoming) {
+    const keys = identities(file);
+    if (keys.some(key => known.has(key)) || files.includes(file)) { duplicates++; continue; }
+    if (files.length >= limit) { rejected++; continue; }
+    files.push(file);
+    keys.forEach(key => known.add(key));
+  }
+  return { files, added: files.length - existing.length, duplicates, rejected };
+}
+
+export function recoverSubmittedDraft(current, submission) {
+  if (!current || current.revision !== submission.submittedRevision + 1 || current.text || current.files?.length) return null;
+  return { text: submission.restoreText ?? submission.text, files: submission.attachments || [] };
 }
 
 export function restoredDraftView(state) {

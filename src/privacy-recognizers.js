@@ -5,9 +5,79 @@ export function canonicalText(value) {
   return String(value??'').normalize('NFKC').replace(/[\u00ad\u034f\u061c\u180e\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/gu,'').replace(/[‐‑‒–−]/g,'-');
 }
 export function containsCredential(value, credential) {
-  if(typeof credential!=='string'||credential.length<12)return false;
+  if(typeof credential!=='string'||!credential)return false;
   const source=String(value??'');
-  return source.includes(credential)||canonicalText(source).includes(canonicalText(credential));
+  const key=canonicalText(credential);
+  return source.includes(credential)||!!key&&canonicalText(source).includes(key);
+}
+// Inspect decoded values as well as property names. JSON stringification alone
+// changes quotes and backslashes inside otherwise valid API keys.
+export function containsCredentialValue(value, credential, depth = 0) {
+  if (depth > 40) throw new Error('凭证检查结构过深，已停止处理。');
+  if (Array.isArray(value)) return value.some(item=>containsCredentialValue(item,credential,depth+1));
+  if (value && typeof value === 'object') return Object.entries(value).some(([key,item])=>containsCredential(key,credential)||containsCredentialValue(item,credential,depth+1));
+  return containsCredential(value,credential);
+}
+
+// Context belongs to the serialization boundary, never to data supplied by a
+// model/tool. Only keys defined by that protocol are structural. A property
+// named "type" inside an ordinary dictionary is still a dynamic data key.
+const STRUCTURE_KEYS = Object.fromEntries(Object.entries({
+  openai: 'model messages tools tool_choice parallel_tool_calls max_tokens max_completion_tokens temperature top_p stream stop presence_penalty frequency_penalty seed n user metadata response_format stream_options logprobs top_logprobs logit_bias reasoning_effort reasoning service_tier store modalities prediction audio verbosity',
+  anthropic: 'model messages system tools tool_choice max_tokens temperature top_p top_k stream stop_sequences metadata thinking output_config service_tier container context_management',
+  message: 'role content name tool_calls tool_call_id reasoning_content reasoning refusal function_call',
+  block: 'type text name id input content tool_use_id is_error thinking signature data cache_control',
+  openaiTool: 'type function',
+  tool: 'name description parameters input_schema strict cache_control',
+  toolCall: 'id type function',
+  functionCall: 'name arguments',
+  toolChoice: 'type name function mode disable_parallel_tool_use',
+  responseFormat: 'type json_schema',
+  jsonSchema: 'name description strict schema',
+  thinkingConfig: 'type budget_tokens display',
+  reasoningConfig: 'effort summary max_tokens',
+  outputConfig: 'effort format',
+  streamOptions: 'include_usage continuous_usage_stats',
+  cacheControl: 'type ttl',
+  schema: '$schema $id $ref $anchor $dynamicRef $dynamicAnchor $vocabulary $comment $defs definitions type properties patternProperties additionalProperties unevaluatedProperties propertyNames required dependentRequired dependentSchemas dependencies items prefixItems additionalItems unevaluatedItems contains minContains maxContains allOf anyOf oneOf not if then else enum const default examples title description format pattern minLength maxLength minimum maximum exclusiveMinimum exclusiveMaximum multipleOf minItems maxItems uniqueItems minProperties maxProperties readOnly writeOnly deprecated contentEncoding contentMediaType contentSchema discriminator',
+}).map(([context, keys])=>[context,new Set(keys.split(' '))]));
+export const fixedStructureKey = (context, key) => STRUCTURE_KEYS[context]?.has(key) === true;
+export function childPrivacyContext(context, key) {
+  if(context === 'schemaMap')return 'schema';
+  if(context === 'requiredMap')return 'schemaIdentity';
+  if(context === 'schemaIdentity'||context === 'schemaLiteral')return context;
+  if(context === 'schema') {
+    if(['properties','patternProperties','$defs','definitions','dependentSchemas'].includes(key))return 'schemaMap';
+    if(key === 'dependentRequired')return 'requiredMap';
+    if(key === 'dependencies')return 'schemaDependencies';
+    if(['required','$ref','$dynamicRef','$id','$anchor','$dynamicAnchor','$schema','format','pattern'].includes(key))return 'schemaIdentity';
+    if(['enum','const','default'].includes(key))return 'schemaLiteral';
+    if(key==='type')return 'schemaFixed';
+    if(['items','prefixItems','additionalItems','additionalProperties','unevaluatedProperties','unevaluatedItems','propertyNames','contains','allOf','anyOf','oneOf','not','if','then','else','contentSchema'].includes(key))return 'schema';
+    return 'data';
+  }
+  if(context === 'schemaDependencies')return 'schemaDependency';
+  if(context === 'openai'||context === 'anthropic') {
+    if(key === 'messages')return 'message';
+    if(key === 'system')return 'block';
+    if(key === 'tools')return context === 'openai'?'openaiTool':'tool';
+    return ({tool_choice:'toolChoice',response_format:'responseFormat',thinking:'thinkingConfig',reasoning:'reasoningConfig',output_config:'outputConfig',stream_options:'streamOptions'})[key]||'data';
+  }
+  if(key==='cache_control'&&['tool','block'].includes(context))return 'cacheControl';
+  if(context==='toolChoice'&&key==='function')return 'functionCall';
+  if(context==='responseFormat'&&key==='json_schema')return 'jsonSchema';
+  if(context==='jsonSchema'&&key==='schema')return 'schema';
+  if(context==='outputConfig'&&key==='format')return 'responseFormat';
+  if(context === 'message') {
+    if(key === 'content')return 'block';
+    if(key === 'tool_calls')return 'toolCall';
+  }
+  if(context === 'block'&&key === 'content')return 'block';
+  if(context === 'openaiTool'&&key === 'function')return 'tool';
+  if(context === 'toolCall'&&key === 'function')return 'functionCall';
+  if(context === 'functionCall'&&key === 'arguments')return 'jsonArguments';
+  if(context === 'tool'&&['parameters','input_schema'].includes(key))return 'schema';
+  return 'data';
 }
 export function detectionView(source) {
   const parts = [], starts = [], ends = [];

@@ -20,7 +20,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  const [controls,setControls] = useState({});
  const [error,setError] = useState('');
  const [selectedItem,setSelectedItem] = useState(null);
- const runs = messages.filter(message=>message.trace?.length || message.children?.length).slice(-40).reverse();
+ const runs = messages.filter(message=>message.trace?.length || message.children?.length || message.finalization).slice(-40).reverse();
  const archived = runs.find(run=>run.id===selected) ?? (!liveRun ? runs[0] : undefined);
  const reply = selected==='live'&&liveRun ? undefined : archived;
  const live = !reply && !!liveRun;
@@ -51,6 +51,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  }
  return <div className="execution-panel">
   <div className="execution-head"><h3>执行轨迹</h3>{live && <span><CircleNotch size={13}/>正在执行</span>}</div>
+  {reply?.finalization && <div className="settings-note" role="status"><p>主机终态：{({completed:'执行完成',cancelled:'已取消',failed:'执行失败'})[reply.finalization.executionStatus]} · {({saved:'内核结果已保存',pending:'结果待保存',failed:'结果保存失败'})[reply.finalization.persistenceStatus]} · {reply.finalization.processStatus==='exited'?'内核已退出':'内核退出待确认'}</p>{reply.finalization.error && <p>{reply.finalization.error.code} · {reply.finalization.error.stage}：{reply.finalization.error.message}</p>}<p>下列为本机界面保存的有界事件摘要，非完整审计日志。</p></div>}
   <TeamBoard board={live?liveTeam:reply?.context?.team}/>
   {(live || runs.length>0) && <div className="execution-filters">
    <label>交办

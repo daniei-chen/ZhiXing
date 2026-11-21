@@ -8,13 +8,13 @@ const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
 if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
 const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
 const firstInstance=app.requestSingleInstanceLock();
-let windowRef,manager,automations,browserService,terminalService,speechService,deliverableAccess,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
+let windowRef,manager,automations,browserService,terminalService,speechService,deliverableAccess,deliveryService,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
 let worktreeOperation;
 let configuration={model:'deepseek-flash',reasoning:'high',baseUrl:'https://api.deepseek.com/anthropic',credentialRevision:0,contextWindow:128000,maxTokens:8192};
-let normaliseKernel,validateKernel,projectCoreApi;
+let normaliseKernel,validateKernel,projectCoreApi,containsCredential;
 const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
 const WORKSPACE_FILE=path.join(ROOT,'workspace.bin');
 async function writeEncrypted(target,text){
@@ -28,6 +28,7 @@ async function readEncrypted(target){
 async function initialise(){
  await fs.mkdir(VAULTS,{recursive:true});
  ({normaliseKernel,validateKernel}=await import('../src/kernel-config.js'));
+ ({containsCredential}=await import('../src/privacy-recognizers.js'));
  configuration.kernel=normaliseKernel();
  try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));for(const key of ['model','reasoning'])if(typeof saved[key]==='string')configuration[key]=saved[key];for(const key of ['contextWindow','maxTokens'])if(Number.isSafeInteger(saved[key])&&saved[key]>=1024&&saved[key]<=2000000)configuration[key]=saved[key];if(saved.baseUrl)configuration.baseUrl=validEndpoint(saved.baseUrl);if(Number.isSafeInteger(saved.credentialRevision))configuration.credentialRevision=saved.credentialRevision;}catch{}
  try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));configuration.kernel=normaliseKernel(saved.kernel);}catch{}
@@ -47,6 +48,8 @@ async function initialise(){
  projectCoreApi=await import('../src/project-core.js');
  resolveProjectContext=projectCoreApi.projectContext;
  workspaceContext=mergeState(JSON.parse(await readEncrypted(WORKSPACE_FILE)));
+ const {DeliveryService}=await import('./delivery-service.mjs');
+ deliveryService=new DeliveryService({getSettings:()=>workspaceContext.settings,getSecrets:deliverySecrets});
  const {WorkspaceSaveQueue}=await import('./workspace-save-queue.mjs');
  workspaceSaveQueue=new WorkspaceSaveQueue({
   write:async state=>{
@@ -73,7 +76,7 @@ async function initialise(){
   const sequence=(runtimeEventSequences.get(e.runId)||0)+1;
   runtimeEventSequences.set(e.runId,sequence);
   const event={...e,sequence,time:e.time??Date.now()};
-  if(event.type==='run/terminal'){runtimeEventSequences.delete(event.runId);}
+  if(event.type==='run/terminal'&&event.finalization?.processStatus!=='cleanup_pending'){runtimeEventSequences.delete(event.runId);}
   if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('agent:event',event);
   void automations?.recordEvent(event).catch(()=>{});
  }});
@@ -93,6 +96,13 @@ async function initialise(){
 
 }
 function workScope(options={}){const {workspace,project,workspaceRoot}=resolveProjectContext(workspaceContext,options);return {key:`${workspace.id}:${project?.id||options.sessionId||'home'}`,workspaceRoot};}
+function deliverySecrets(){return [
+ ...providers.map(provider=>provider.key),
+ ...mcpServers.flatMap(server=>[
+  ...Object.values(server.headers||{}).flatMap(value=>typeof value==='string'&&/^\s*(?:Bearer|Basic)\s+\S+\s*$/i.test(value)?[value,value.trim().replace(/^(?:Bearer|Basic)\s+/i,'')]:[value]),
+  ...Object.entries(server.env||{}).filter(([name])=>/key|token|secret|password|credential|authorization/i.test(name)).map(([,value])=>value),
+ ]),
+];}
 function notifyTask(payload){if(Notification.isSupported())new Notification({title:'知行 · 定时任务',body:String(payload?.label||'任务状态已更新').slice(0,160)}).show();}
 async function persistProviders(next){
  await writeEncrypted(path.join(ROOT,'providers.bin'),JSON.stringify(next));providers=next;
@@ -109,6 +119,7 @@ function changeProviders(update){
 function currentCredential(config){
  const provider=providers.find(row=>row.id===config.providerId);
  if(!provider||provider.credentialRevision!==config.credentialRevision||provider.baseUrl!==config.baseUrl||provider.protocol!==config.protocol)throw new Error('供应商连接已更新，请重新选择模型或审阅。');
+ providerApi.assertModelCredential(provider.key);
  const current=providerApi.resolveProvider(providers,{providerId:config.providerId,modelId:config.model,reasoning:config.requestedReasoning||config.reasoning});
  if(['model','reasoning','requestedReasoning','effectiveReasoning','wireReasoning','maxTokens','contextWindow','compat','reasoningMap'].some(field=>JSON.stringify(current[field])!==JSON.stringify(config[field])))throw new Error('模型目录或推理设置已更新，请重新交办。');
  if(config.extensions&&(pluginService.operation||JSON.stringify(config.extensions)!==JSON.stringify(pluginService.selection())))throw new Error('已启用的插件有变化，请重新交办。');
@@ -282,12 +293,14 @@ function registerHandlers(){
  handle('agent:prepare',async options=>{
   await workspaceSaveQueue.flush();
   const config=route(options);
-  const prompt=options?.bootstrapPrompt||options?.prompt;
-  if(typeof prompt==='string'&&providers.some(({key})=>key.length>=12&&prompt.includes(key)))throw new Error('检测到已配置的模型凭证，请从输入中移除。');
+  currentCredential(config);
+  if([options?.prompt,options?.bootstrapPrompt,options?.command].some(prompt=>typeof prompt==='string'&&providers.some(({key})=>containsCredential(prompt,key))))throw new Error('检测到已配置的模型凭证，请从输入中移除。');
   return manager.preview(options,{...config,manualControls:true});
  });
  handle('agent:run-prepared',options=>manager.runPrepared(options,currentCredential));
  handle('agent:cancel',async({runId})=>manager.cancel(runId));
+ handle('agent:cleanup-status',()=>manager.getCleanupStatus());
+ handle('agent:retry-cleanup',({runId})=>manager.retryCleanup(runId));
  handle('agent:control-execution',value=>manager.controlExecution(value));
  handle('agent:answer-question',value=>manager.answerQuestion(value));
  handle('automation:list',()=>automations.snapshot());
@@ -299,14 +312,17 @@ function registerHandlers(){
  handle('automation:remove',({id})=>automations.remove(id));
  handle('automation:remind',({id})=>automations.runReminder(id));
  handle('automation:cancel',({id})=>automations.cancel(id));
+ handle('automation:retry-save',({runId})=>automations.retrySave(runId));
  handle('agent:forget',async({sessionId})=>{
   if(typeof sessionId!=='string'||!SAFE_ID.test(sessionId))throw new Error('会话编号无效。');
-  if(manager.busy.has(sessionId))throw new Error('请先等待会话停止。');
+  await manager.forgetSessionState(sessionId,async()=>{
   const parent=path.join(ROOT,'harness'),target=path.resolve(parent,sessionId);
   if(path.dirname(target)!==parent)throw new Error('会话目录不在应用工作区内。');
   const stat=await fs.lstat(target).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
   if(stat){if(stat.isSymbolicLink()||path.dirname(await fs.realpath(target))!==path.join(await fs.realpath(ROOT),'harness'))throw new Error('会话目录不在应用工作区内。');await fs.rm(target,{recursive:true,force:true});}
   await fs.unlink(path.join(VAULTS,`${sessionId}.bin`)).catch(e=>{if(e.code!=='ENOENT')throw e;});
+  });
+  deliveryService.invalidateAll();
   return true;
  });
  handle('files:parse',async({name,bytes})=>{
@@ -336,15 +352,29 @@ function registerHandlers(){
   }
   return files;
  });
- handle('file:export',async({name,text,format='txt',directory})=>{
-  if(typeof text!=='string'||text.length>2000000||!['txt','docx','xlsx'].includes(format))throw new Error('导出参数无效。');
-  const filename=`${path.basename(String(name||'知行成果')).replace(/[<>:"/\\|?*]/g,'_').slice(0,90)}.${format}`;
+ handle('delivery:prepare',async options=>{await workspaceSaveQueue.flush();return deliveryService.prepare(options);});
+ handle('file:export',async(options={})=>{
+  await workspaceSaveQueue.flush();
+  return deliveryService.execute(options,'export',async(snapshot,validate)=>{
+  const {name,format}=snapshot,{directory}=options;
+  const filename=`${name}.${format}`;
   const folder=typeof directory==='string'&&path.isAbsolute(directory)&&(await fs.stat(directory).catch(()=>null))?.isDirectory()?directory:undefined;
   const result=await dialog.showSaveDialog(windowRef,{defaultPath:folder?path.join(folder,filename):filename,filters:[{name:format.toUpperCase(),extensions:[format]}]});
   if(result.canceled)return {cancelled:true};
-  const {exportOfficeFile}=await import('./office-files.mjs');await fs.writeFile(result.filePath,await exportOfficeFile(text,format));return {cancelled:false,path:result.filePath};
+  await workspaceSaveQueue.flush();
+  const {exportOfficeFile}=await import('./office-files.mjs');
+  const bytes=await exportOfficeFile(validate().text,format);
+  await workspaceSaveQueue.flush();validate();
+  await fs.writeFile(result.filePath,bytes);return {cancelled:false,path:result.filePath,reviewId:snapshot.reviewId,contentHash:snapshot.contentHash};
+  });
  });
- handle('app:clipboard-write',({text}={})=>{if(typeof text!=='string'||Buffer.byteLength(text,'utf8')>2*1024*1024)throw new Error('剪贴板内容无效或过长。');clipboard.writeText(text);return true;});
+ handle('delivery:share',async options=>{await workspaceSaveQueue.flush();return deliveryService.execute(options,'share',async(snapshot,validate)=>{validate();clipboard.writeText(snapshot.text);return {copied:true,reviewId:snapshot.reviewId,contentHash:snapshot.contentHash};});});
+ handle('app:clipboard-write',async({text}={})=>{
+  await workspaceSaveQueue.flush();
+  const snapshot=deliveryService.prepare({original:text,recipientScope:'self',action:'share'});
+  const {reviewId,contentHash,policyRevision,recipientScope,format}=snapshot;
+  return deliveryService.execute({reviewId,contentHash,policyRevision,recipientScope,format},'share',async reviewed=>{clipboard.writeText(reviewed.text);return true;});
+ });
  handle('app:window-control',action=>{if(action==='minimize')windowRef.minimize();else if(action==='maximize')windowRef.isMaximized()?windowRef.unmaximize():windowRef.maximize();else if(action==='close')windowRef.close();return true;});
  handle('schedule:notify',payload=>{notifyTask(payload);return true;});
 }
@@ -399,7 +429,8 @@ app.on('before-quit',event=>{
   }
   if(speechService?.speech)await speechService.cancelPreparation();
   await automations?.close();
-  await manager?.close();
+  const shutdown=await manager?.close();
+  if(shutdown?.cleanupPending?.length)throw new Error('任务已结束，但仍有内核退出未确认。请返回执行详情重试停止，确认退出前知行会保留会话隔离和恢复资料。');
   for(;;){
    try{await requestRendererFlush();await workspaceSaveQueue?.flush();break;}
    catch(error){

@@ -1,4 +1,4 @@
-export const PRIVACY_ENGINE_VERSION = '0.12.0-local-v2';
+export const PRIVACY_ENGINE_VERSION = '0.12.1-local-v4';
 export const PRIVACY_TYPES = [
   ['PERSON','姓名','带姓名、联系人、经办人等字段的人名'],
   ['ORG','机构名称','公司、机关和机构字段及常见单位名称'],
@@ -28,4 +28,12 @@ export function normalisePrivacyPolicy(value) {
   if(actions.SECRET === 'allow')actions.SECRET = 'block';
   const words = list => Array.isArray(list) ? [...new Set(list.filter(word => typeof word === 'string' && word.trim() && word.length <= 120).map(word => word.trim()))].slice(0,100) : [];
   return {actions,neverMask:words(value?.neverMask),caseInsensitive:value?.caseInsensitive !== false,secretPrefixes:words(value?.secretPrefixes).filter(word => word.length >= 4)};
+}
+
+// Raw mode may preserve personal information, but must never turn a credential
+// replacement rule into permission to send the credential itself.
+export function privacyPolicyForMode(value, mode = 'redact') {
+  const policy = normalisePrivacyPolicy(value);
+  if (mode === 'raw') policy.actions.SECRET = 'block';
+  return policy;
 }

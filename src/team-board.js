@@ -1,10 +1,10 @@
 import {PrivacySession, TYPE_LABELS} from './privacy-core.js';
-import {containsCredential} from './privacy-recognizers.js';
+import {containsCredentialValue} from './privacy-recognizers.js';
 
 // The actual provider credential stays in the host. A Harness projection only
 // knows the loopback credential and cannot perform this independent check.
 export function protectTeamContext(context, credential) {
-  if(!context?.team||!containsCredential(JSON.stringify(context.team),credential))return context;
+  if(!context?.team||!containsCredentialValue(context.team,credential))return context;
   return {...context,team:{enabled:context.team.enabled===true,tasks:[],failure:'共享任务内容含模型凭证，已隐藏。'}};
 }
 

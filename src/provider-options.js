@@ -1,3 +1,10 @@
+export const MODEL_CREDENTIAL_MIN_LENGTH = 8;
+export function assertModelCredential(key) {
+  if (typeof key !== 'string' || key.length < MODEL_CREDENTIAL_MIN_LENGTH || key.length > 1024 || /[^\x21-\x7e]/.test(key)) {
+    throw new Error('API Key 需为 8–1024 个可打印 ASCII 字符，且不能含空格。请在供应商设置中重新配置。');
+  }
+}
+
 export const PROVIDER_PRESETS = [
   { id: 'deepseek', name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/anthropic', protocol: 'deepseek' },
   { id: 'zhipu', name: '智谱 GLM', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', protocol: 'openai' },

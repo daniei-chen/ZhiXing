@@ -188,8 +188,8 @@ function PrivacySettings({ settings, setSetting, setModal, desktop }) {
         <Icon size={21}/><span><strong>{title}</strong><small>{detail}</small></span><input type="radio" name="privacy-mode" value={id} checked={settings.privacyMode === id} onChange={() => setSetting('privacyMode', id)}/>
       </label>)}</div>
     </fieldset>
-    <p className="settings-note"><LockKey size={15}/>脱敏模式自动处理后直接发送，回复在本机还原。可在回复旁按需查看发送详情。</p>
-    <details className="privacy-rules" open><summary>识别与处理规则 · {PRIVACY_TYPES.length} 类</summary><p className="muted">按类型选择替换、原样或拦截。规则识别有边界，姓名和地址并不保证全量识别。</p>{PRIVACY_TYPES.map(([id,label,detail])=><label className="privacy-rule-row" key={id}><span><strong>{label}</strong><small>{detail}</small></span><select aria-label={`${label}处理方式`} value={policy.actions[id]} onChange={event=>updatePolicy({actions:{...policy.actions,[id]:event.target.value}})}><option value="mask">替换</option>{id!=='SECRET'&&<option value="allow">原样</option>}<option value="block">拦截</option></select></label>)}</details>
+    <p className="settings-note"><LockKey size={15}/>脱敏模式自动处理后直接发送，回复在本机还原。非脱敏模式仍拦截识别到的凭证；凭证的「替换」选项仅在脱敏模式生效。</p>
+    <details className="privacy-rules" open><summary>识别与处理规则 · {PRIVACY_TYPES.length} 类</summary><p className="muted">按类型选择替换、原样或拦截。规则识别有边界，姓名和地址并不保证全量识别。</p>{PRIVACY_TYPES.map(([id,label,detail])=><label className="privacy-rule-row" key={id}><span><strong>{label}</strong><small>{detail}</small></span><select aria-label={`${label}处理方式`} disabled={id==='SECRET'&&settings.privacyMode==='raw'} value={id==='SECRET'&&settings.privacyMode==='raw'?'block':policy.actions[id]} onChange={event=>updatePolicy({actions:{...policy.actions,[id]:event.target.value}})}><option value="mask">替换</option>{id!=='SECRET'&&<option value="allow">原样</option>}<option value="block">拦截</option></select></label>)}</details>
     <div className="setting-section"><h3>敏感词表</h3><p className="muted">添加客户名、机构名或项目代号，用于自动脱敏和导出审阅。</p>
       <form className="term-form" onSubmit={addTerm}><input aria-label="自定义敏感词" maxLength={120} value={term} onChange={event => setTerm(event.target.value)} placeholder="例如，项目代号"/><button className="secondary-button" disabled={!term.trim() || settings.customTerms.length >= 100}>添加</button></form>
       {!!settings.customTerms.length && <div className="term-chips">{settings.customTerms.map(word => <span key={word}>{word}<IconButton icon={X} label={`移除词条 ${word}`} onClick={() => setSetting('customTerms', settings.customTerms.filter(item => item !== word))}/></span>)}</div>}
@@ -197,7 +197,7 @@ function PrivacySettings({ settings, setSetting, setModal, desktop }) {
       <label className="form-label">从不脱敏<textarea aria-label="从不脱敏" rows={2} value={exclusions} onChange={event=>setExclusions(event.target.value)} onBlur={()=>updatePolicy({neverMask:exclusions.split(/[\n,，]/)})} placeholder="每行一个完整值，凭证不受此项豁免"/></label>
       <label className="form-label">自定义密钥前缀<textarea aria-label="自定义密钥前缀" rows={2} value={prefixes} onChange={event=>setPrefixes(event.target.value)} onBlur={()=>updatePolicy({secretPrefixes:prefixes.split(/[\n,，]/)})} placeholder="每行一个，至少 4 个字符"/></label>
     </div>
-    <PrivacyTest terms={settings.customTerms} policy={policy}/>
+    <PrivacyTest terms={settings.customTerms} policy={policy} privacyMode={settings.privacyMode}/>
     <div className="setting-row"><span><strong>保存聊天与资料</strong><small>{desktop ? '保存在本机，使用 Windows 用户加密' : '保存在当前浏览器'}</small></span><Switch label="保存聊天与资料" value={settings.persist} onChange={value => value ? setSetting('persist', true) : setModal({ type: 'disable-history' })}/></div>
     <div className="setting-row"><span><strong>已归档聊天</strong></span><button className="secondary-button" onClick={() => setModal({ type: 'archive' })}><Archive size={15}/>管理</button></div>
   </>;

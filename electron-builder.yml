@@ -16,6 +16,7 @@
     "src/project-core.js",
     "src/permissions.js",
     "src/store.js",
+    "src/conversation-state.js",
     "src/provider-options.js",
     "src/scheduler.js",
     "src/automation-core.js",

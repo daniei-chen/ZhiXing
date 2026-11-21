@@ -1,6 +1,7 @@
 import {defineTool} from '@deepseek-ai/dsh-tools';
 import {PrivacySession} from '../src/privacy-core.js';
-import {containsCredential} from '../src/privacy-recognizers.js';
+import {containsCredentialValue} from '../src/privacy-recognizers.js';
+import {privacyPolicyForMode} from '../src/privacy-policy.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readBridge, updateBridge } from './privacy-bridge.mjs';
@@ -32,7 +33,7 @@ export function apply(ctx){
  const root=process.env.ZHIXING_WORKSPACE_ROOT;
  const mode=process.env.ZHIXING_PERMISSION_MODE||'ask';
  const raw=process.env.ZHIXING_PRIVACY_MODE==='raw';
- const privacyPolicy=JSON.parse(process.env.ZHIXING_PRIVACY_POLICY||'{}');
+ const privacyPolicy=privacyPolicyForMode(JSON.parse(process.env.ZHIXING_PRIVACY_POLICY||'{}'),raw?'raw':'redact');
  const bridgeFile=process.env.ZHIXING_BRIDGE_FILE,bridgeKey=process.env.ZHIXING_BRIDGE_KEY;
  let vault,terms=[];
  async function getVault(){
@@ -53,10 +54,10 @@ export function apply(ctx){
   const outcome=await ctx.approval.request({agent:exec.agent,callId:exec.callId,toolName:exec.name,reason:JSON.stringify({operation,path:info.target,overwrite:info.exists&&info.write}),signal:exec.signal});
   if(outcome!=='allowed-once')throw new Error('本次文件操作未获批准。');
  }
- async function protectedValue(value){
+ async function protectedValue(value,context='data'){
   return updateBridge(bridgeFile,bridgeKey,saved=>{
-  const v=new PrivacySession(saved.id,saved),text=JSON.stringify(value),checked=v.protectValue(value,terms,privacyPolicy);
-  if(checked.blocked||containsCredential(text,process.env.DEEPSEEK_API_KEY))throw new Error('文件结果含疑似凭证，已停止向模型返回。');
+  const v=new PrivacySession(saved.id,saved),checked=v.protectValue(value,terms,privacyPolicy,{context,privacyMode:raw?'raw':'redact'});
+  if(checked.blocked||containsCredentialValue(value,process.env.DEEPSEEK_API_KEY))throw new Error('文件结果含疑似凭证，已停止向模型返回。');
   return {state:v.exportState(),value:raw?value:checked.value};
   });
  }
@@ -131,10 +132,15 @@ export function apply(ctx){
    for(const file of exec.arguments.files){const info=await localPath(file.path);await permit(exec,{...info,write:false},'交付成果文件');}
   }
   if(exec.name==='web_search'&&process.env.ZHIXING_WEB_SEARCH_AVAILABLE==='false')return {kind:'deny',reason:'当前模型服务未配置独立的网页搜索凭据，网页搜索暂不可用。请连接 DeepSeek 路由或配置独立搜索服务。'};
-  const decision=await next();if(exec.name==='office_schedule'&&['delete','edit','pause'].includes(exec.arguments.operation)&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'修改定时任务',path:exec.arguments.id||'当前项目',network:{operation:exec.arguments.operation}})};if(exec.name==='workflow'&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'运行多 Agent 工作流',path:root||'当前任务',command:exec.arguments.script})};if(exec.name==='create_goal'&&Number(exec.arguments.max_goal_rounds)>kernel.goalRounds)return {kind:'deny',reason:`单个目标最多自动继续 ${kernel.goalRounds} 轮。`};if(decision.kind!=='allow'||!['web_search','web_fetch','office_browser'].includes(exec.name)&&!isMcp(exec.name)&&!extensionTool(exec.name))return decision;
+  const decision=await next();if(exec.name==='office_schedule'&&['delete','edit','pause'].includes(exec.arguments.operation)&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'修改定时任务',path:exec.arguments.id||'当前项目',network:{operation:exec.arguments.operation}})};if(exec.name==='workflow'&&mode!=='full')return {kind:'ask',reason:JSON.stringify({operation:'运行多 Agent 工作流',path:root||'当前任务',command:exec.arguments.script})};if(exec.name==='create_goal'&&Number(exec.arguments.max_goal_rounds)>kernel.goalRounds)return {kind:'deny',reason:`单个目标最多自动继续 ${kernel.goalRounds} 轮。`};if(decision.kind==='deny'||!['web_search','web_fetch','office_browser'].includes(exec.name)&&!isMcp(exec.name)&&!extensionTool(exec.name))return decision;
   if(process.env.ZHIXING_ALLOW_NETWORK==='false')return {kind:'deny',reason:'本次任务未授权联网。'};
-  const v=await getVault(),checked=v.protectValue(exec.arguments,terms,privacyPolicy);
+  const v=await getVault();let checked;
+  try{checked=v.protectValue(exec.arguments,terms,privacyPolicy,{privacyMode:raw?'raw':'redact'});}
+  catch(error){if(['SENSITIVE_DYNAMIC_KEY','SENSITIVE_SCHEMA_VALUE'].includes(error.code))return {kind:'deny',reason:`${error.code}: 联网参数的字段名称或工具约束包含需保护的信息，请使用安全字段名。`};throw error;}
+  if(containsCredentialValue(exec.arguments,process.env.DEEPSEEK_API_KEY))return {kind:'deny',reason:'联网参数包含配置凭据，已阻止发送。'};
   if(checked.blocked||(!raw&&checked.entities.length))return {kind:'deny',reason:'联网参数含未经替换的敏感值，请改用占位符或不含敏感值的关键词。'};
+  // Execution approval never grants permission to bypass the privacy boundary.
+  if(decision.kind!=='allow')return decision;
   if(mode==='full')return {kind:'allow'};
   return {kind:'ask',reason:JSON.stringify({operation:exec.name==='office_browser'?'操作内置浏览器':isMcp(exec.name)?'调用 MCP 工具或资料':exec.name==='web_search'?'搜索互联网':'读取网页',path:exec.name==='office_browser'?(exec.arguments.url||exec.arguments.tab_id||'内置浏览器'):isMcp(exec.name)?exec.name:exec.name==='web_fetch'?exec.arguments.url:'DeepSeek 搜索',network:exec.arguments})};
  });
@@ -142,7 +148,7 @@ export function apply(ctx){
   const decision=await next();if((!isMcp(exec.name)&&!extensionTool(exec.name))||decision.kind!=='accept')return decision;
   const content=decision.content||result.content;
   if(content?.some(block=>block.type!=='text'))return {kind:'block',feedback:[{type:'text',text:'外部工具返回非文本内容，尚未接入附件隐私处理。'}]};
-  try{return {kind:'accept',content:await protectedValue(content)};}
+  try{return {kind:'accept',content:await protectedValue(content,'block')};}
   catch{return {kind:'block',feedback:[{type:'text',text:'外部工具返回内容被隐私策略拦截。'}]};}
  });
  // Provider turns stay text-only; office-file values pass through the local privacy bridge.

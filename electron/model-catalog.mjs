@@ -1,4 +1,6 @@
 import { resolveAdapterOptions } from '@deepseek-ai/dsh-llm-deepseek';
+import {assertModelCredential} from '../src/provider-options.js';
+import {containsCredential} from '../src/privacy-recognizers.js';
 export const MODEL_ID = /^[\w./:+-]{1,160}$/;
 
 export function builtinModels() {
@@ -19,7 +21,7 @@ export function decodeModels(body) {
 }
 
 export async function fetchModels(configuration, key) {
-  if (!key) throw new Error('请先在模型连接中配置 API Key。');
+  assertModelCredential(key);
   const base = new URL(configuration.baseUrl);
   const root = base.pathname.replace(/\/$/, '');
   const native = configuration.protocol === 'anthropic';
@@ -39,7 +41,7 @@ export async function fetchModels(configuration, key) {
   finally { await reader.cancel().catch(() => {}); }
   try {
     const rows = decodeModels(JSON.parse(text + decoder.decode()));
-    const clean = key.length >= 8 ? rows.filter(row => !Object.values(row).some(value => typeof value === 'string' && value.includes(key))) : rows;
+    const clean = rows.filter(row => !Object.values(row).some(value => typeof value === 'string' && containsCredential(value,key)));
     if (!clean.length) throw new Error('模型列表没有可用记录。');
     return clean;
   } catch (error) { if (/模型/.test(error.message)) throw error; throw new Error('模型服务返回格式无效。'); }

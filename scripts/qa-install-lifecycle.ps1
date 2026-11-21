@@ -438,7 +438,9 @@ function Invoke-TestInstall($Asset, [string]$Label) {
             Assert-NoReparsePath $target
             if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ine $file.sha256) { throw "Installed source differs from the tested directory: $($file.file)" }
         }
-        Add-Step ($Label + '-tested-source-identity') 'passed' @{ matchedFiles = @($packedIdentity.files).Count; sourceFingerprint = $packedIdentity.sourceFingerprint }
+        $provenance = Get-Content -LiteralPath (Join-Path $appRoot 'build-provenance.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($provenance.sourceDirty -ne $false -or $provenance.sourceCommit -ne $packedIdentity.sourceCommit -or $provenance.lockSha256 -ne $packedIdentity.lockSha256) { throw 'Installed source provenance differs from the tested directory.' }
+        Add-Step ($Label + '-tested-source-identity') 'passed' @{ matchedFiles = @($packedIdentity.files).Count; sourceFingerprint = $packedIdentity.sourceFingerprint; sourceCommit = $provenance.sourceCommit; lockSha256 = $provenance.lockSha256 }
     }
 }
 
@@ -687,12 +689,16 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
     const drafts = draftKeys.map(key => {
       const draft = state.drafts?.[key];
       if (!draft || typeof draft.text !== 'string' || !Array.isArray(draft.files)) throw Error('Expected synthetic draft record is missing');
-      return [key, draft];
+      // 0.12.1 adds an attachment generation with the defined legacy default
+      // zero. Preserve and compare every old field and any nonzero generation.
+      return [key, {...draft, filesRevision: Number.isSafeInteger(draft.filesRevision) ? draft.filesRevision : 0}];
     });
     if (drafts.length && !drafts.some(([, draft]) => draft.text.length || draft.files.length)) throw Error('Fixture has no retained draft content');
     const providers = snapshot.runtime.providers || [];
     if (Number.isInteger(manifest.expectedProviderCount) && providers.length !== manifest.expectedProviderCount) throw Error('Encrypted provider configuration did not restore its expected records');
     if (Number.isInteger(manifest.expectedMcpCount) && snapshot.mcp.length !== manifest.expectedMcpCount) throw Error('Encrypted MCP configuration did not restore its expected records');
+    // Older versions omit this public status flag. Compare its effective false
+    // default, while retaining byte checks on the encrypted provider registry.
     const output = {
       appVersion: snapshot.runtime.appVersion,
       ...(smoke ? {smoke} : {}),
@@ -705,7 +711,7 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
         draftAttachments: drafts.reduce((count, [, draft]) => count + draft.files.length, 0),
         mcp: snapshot.mcp.length, providers: providers.length
       },
-      hashes: { projects: hash(projects), chats: hash(chats), drafts: hash(drafts), settings: hash(state.settings), publicMcp: hash(snapshot.mcp.map(server => ({...server, credentialReentryRequired: Boolean(server.credentialReentryRequired)}))), publicProviders: hash(providers) },
+      hashes: { projects: hash(projects), chats: hash(chats), drafts: hash(drafts), settings: hash(state.settings), publicMcp: hash(snapshot.mcp.map(server => ({...server, credentialReentryRequired: Boolean(server.credentialReentryRequired)}))), publicProviders: hash(providers.map(provider => ({...provider, credentialReentryRequired: Boolean(provider.credentialReentryRequired)}))) },
       evidenceBoundary: 'Actual preload reads and ciphertext readability. No UI, external account, or visual acceptance.'
     };
     await fs.writeFile(outputFile, JSON.stringify(output, null, 2));

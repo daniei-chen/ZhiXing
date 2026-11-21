@@ -54,6 +54,16 @@ async function drain(service) {
   throw new Error('Test did not drain its running task.');
 }
 
+test('过期隐私引擎授权在重启时暂停，规范化后的模型凭证不能进入自动化预览',async()=>{
+ const f=fixture(),service=f.create();await service.initialise();await service.save(f.value);
+ const id=service.snapshot().tasks[0].id;
+ const preview=await service.prepare(id,'enable');await service.confirm(preview.approvalId);await service.close();
+ const saved=structuredClone(f.saved);saved.tasks[0].approval.privacyEngineVersion='0.12.0-local-v2';f.setSaved(saved);
+ const restarted=f.create();await restarted.initialise();assert.equal(restarted.task(id).enabled,false);assert.equal(restarted.task(id).approval,null);
+ f.context.documents[0].text='f\u200bｉｘｔｕｒｅ－ｏｎｌｙ';
+ await assert.rejects(restarted.prepare(id,'run'),/模型凭证/);await restarted.close();
+});
+
 test('Agent 定时任务工具复用同一调度器、草稿暂停及项目隔离',async()=>{
  const f=fixture(),s=f.create();await s.initialise();const scope={workspaceId:'office',projectId:'project'};
  try{

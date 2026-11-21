@@ -1,5 +1,6 @@
 import {TYPE_LABELS} from '../src/privacy-core.js';
-import {canonicalText,detectionView} from '../src/privacy-recognizers.js';
+import {canonicalText,containsCredential,detectionView} from '../src/privacy-recognizers.js';
+import {privacyPolicyForMode} from '../src/privacy-policy.js';
 import {randomUUID} from 'node:crypto';
 
 const HOLD_BACK = 320;
@@ -7,10 +8,10 @@ const MAX_STREAM_LENGTH = 2 * 1024 * 1024;
 const TOKEN = /⟦ZX-[a-f0-9]{12}-([A-Z]+)-\d+⟧/g;
 
 export class AssistantTextStream {
-  constructor({session, terms = [], policy = {}, apiKey = ''}) {
+  constructor({session, terms = [], policy = {}, apiKey = '', privacyMode = 'redact'}) {
     this.session = session;
     this.terms = terms;
-    this.policy = policy;
+    this.policy = privacyPolicyForMode(policy,privacyMode);
     this.apiKey = apiKey;
     this.canonicalKey = canonicalText(apiKey);
     this.allowedTokens = new Set(session.entries().map(entry => entry.token));
@@ -87,14 +88,14 @@ export class AssistantTextStream {
 
   update(final) {
     const view=detectionView(this.raw);
-    if (this.blocked || (this.apiKey.length >= 12 && view.text.includes(this.canonicalKey))) {
+    if (this.blocked || (this.canonicalKey && view.text.includes(this.canonicalKey))) {
       this.blocked = true;
       return {text: this.text, changed: false, blocked: true};
     }
 
     const visibleEnd=Math.max(0,view.text.length-HOLD_BACK);
     let rawEnd = final ? this.raw.length : visibleEnd?view.range(visibleEnd,1).start:0;
-    if (this.apiKey.length >= 12) {
+    if (this.canonicalKey) {
       const earliestCandidate = Math.max(0, view.text.length - this.canonicalKey.length + 1);
       for (let start = earliestCandidate; start < view.text.length; start += 1) {
         const suffix = view.text.slice(start);
@@ -107,6 +108,10 @@ export class AssistantTextStream {
       return {text: this.text, changed: false, blocked: true};
     }
     const restored = this.session.restore(checked.text, {allowedTokens: this.allowedTokens});
+    if (containsCredential(restored.text,this.apiKey)) {
+      this.blocked = true;
+      return {text:this.text,changed:false,blocked:true};
+    }
     const text = restored.text.replace(TOKEN, (_token, type) => `【${TYPE_LABELS[type] || '敏感信息'}已隐藏】`)
       .replace(/⟦ZX-[^⟧]+⟧/g, '【敏感值待核实】');
     const next = this.attemptBase + text;

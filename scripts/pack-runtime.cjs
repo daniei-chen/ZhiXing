@@ -1,5 +1,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const {createHash} = require('node:crypto');
+const {execFileSync} = require('node:child_process');
 
 // Copy the installed production tree at its lockfile paths. Harness resolves
 // plugins dynamically and depends on peers below several nested packages.
@@ -35,4 +37,13 @@ module.exports = async function packRuntime(context) {
   // runtime so workflows work after installation without a system Node install.
   await fs.copyFile(process.execPath,path.join(runtime,'node.exe'));
   await fs.copyFile(path.join(source,'resources','licenses',`NODE-${process.version}-LICENSE.txt`),path.join(runtime,'NODE-LICENSE.txt'));
+  let sourceCommit = null, sourceDirty = null;
+  try {
+    sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: source, encoding: 'utf8', windowsHide: true}).trim();
+    sourceDirty = Boolean(execFileSync('git', ['status', '--porcelain', '--untracked-files=normal', '--', 'src', 'electron', 'harness', 'scripts', 'package.json', 'package-lock.json', 'electron-builder.yml', 'installer.nsh', 'public', 'resources'], {cwd: source, encoding: 'utf8', windowsHide: true}).trim());
+  } catch { /* A source archive can build, but cannot claim a Git commit. */ }
+  const provenance = {schemaVersion: 1, version: JSON.parse(await fs.readFile(path.join(source,'package.json'),'utf8')).version,
+    sourceCommit, sourceDirty, builtAt: new Date().toISOString(), nodeVersion: process.version,
+    lockSha256: createHash('sha256').update(await fs.readFile(path.join(source,'package-lock.json'))).digest('hex')};
+  await fs.writeFile(path.join(target,'build-provenance.json'),JSON.stringify(provenance,null,2));
 };

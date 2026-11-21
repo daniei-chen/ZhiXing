@@ -86,7 +86,11 @@ test('运行管理器关闭会等待最终保存，晚到取消不改写成功�
   assert.deepEqual(await manager.cancel('settled-success'),{cancelled:false,accepted:false,settled:false,status:'settling'});
   await new Promise(resolve=>setTimeout(resolve,20));assert.equal(closed,false);
   releaseFinalSave();assert.equal((await run).text,'已完成');
-  assert.deepEqual(await terminal,{runId:'settled-success',sessionId:'settled-success',status:'succeeded',finishReason:'completed'});
+  const settled=await terminal,terminalEvent=events.filter(event=>event.type==='run/terminal').at(-1);
+  assert.deepEqual(settled,{runId:'settled-success',sessionId:'settled-success',status:'succeeded',finishReason:'completed',finalization:settled.finalization});
+  assert(Number.isSafeInteger(settled.finalization.eventWatermark));assert(settled.finalization.eventWatermark>0);
+  assert.deepEqual(settled.finalization,{runId:'settled-success',executionStatus:'completed',persistenceStatus:'saved',processStatus:'exited',eventWatermark:settled.finalization.eventWatermark,deliverables:[],children:[]});
+  assert.deepEqual(terminalEvent.finalization,settled.finalization);
   await closing;assert.equal(closed,true);
   assert.equal(events.filter(event=>event.type==='run/terminal').at(-1).status,'succeeded');
  }finally{releaseFinalSave();await manager.close();const resolved=await fs.realpath(root);if(path.dirname(resolved)===await fs.realpath(os.tmpdir())&&path.basename(resolved).startsWith('zhixing-run-settled-'))await fs.rm(resolved,{recursive:true,force:true});}

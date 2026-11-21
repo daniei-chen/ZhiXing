@@ -6,6 +6,8 @@ import {fileURLToPath} from 'node:url';
 import {DeepSeekHarness,HarnessClient} from '@deepseek-ai/dsh-sdk-client';
 import {PrivacySession} from '../src/privacy-core.js';
 import {containsCredential} from '../src/privacy-recognizers.js';
+import {privacyPolicyForMode} from '../src/privacy-policy.js';
+import {assertModelCredential} from '../src/provider-options.js';
 import {protectTeamContext} from '../src/team-board.js';
 import { createBridgeKey, readBridge, writeBridge, updateBridge } from '../harness/privacy-bridge.mjs';
 import { permissionMode } from '../src/permissions.js';
@@ -150,16 +152,38 @@ export async function makeHarness(directory,configuration,apiKey){
  });
  const harness=new DeepSeekHarness(options,clientFactory);
  harness.client.start();
+ // rc.5 memoizes a rejected close(). Retain the exact spawned handle so a
+ // later bounded cleanup can reap it without clearing that SDK state or
+ // targeting a potentially reused PID. This seam is pinned by launch tests.
+ harness.zhixingProcess=harness.client.child;
+ harness.retryClose=()=>terminateKnownProcess(harness.zhixingProcess,options.disposeGraceMs);
  harness.client.onRequest(async(method,params)=>{
   if(method!=='approval/request')throw new Error('未知的内核请求。');
   return configuration.onApproval?configuration.onApproval(params):{outcome:'rejected'};
  });
  return harness;
 }
-function closeHarness(active,harness){
- if(!active.closePromise)active.closePromise=Promise.resolve().then(async()=>{
-  await harness?.close();
- }).catch(cause=>{
+function processExited(child){return Boolean(child&&(Number.isInteger(child.exitCode)||typeof child.signalCode==='string'&&child.signalCode));}
+async function bounded(operation,timeoutMs){
+ let timer;
+ try{return await Promise.race([Promise.resolve().then(operation),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error('内核收尾等待超时。'),{code:'RUNTIME_CLOSE_TIMEOUT'})),timeoutMs);})]);}
+ finally{clearTimeout(timer);}
+}
+async function terminateKnownProcess(child,timeoutMs){
+ if(!child)throw new Error('未找到可核验的内核进程句柄。');
+ if(processExited(child))return;
+ let onExit;
+ try{
+  await bounded(()=>new Promise((resolve,reject)=>{
+   onExit=resolve;child.once('exit',onExit);
+   try{child.stdin?.end();child.kill('SIGKILL');if(processExited(child))resolve();}catch(error){reject(error);}
+  }),timeoutMs);
+ }finally{if(onExit)child.off('exit',onExit);}
+}
+function closeHarness(active,harness,{retry=false}={}){
+ if(!harness||active.processExited||processExited(harness.zhixingProcess)){active.processExited=true;return Promise.resolve();}
+ if(!active.closePromise||retry)active.closePromise=bounded(()=>retry&&harness.retryClose?harness.retryClose():harness.close(),active.cleanupTimeoutMs||10000).then(()=>{active.processExited=true;}).catch(cause=>{
+  if(processExited(harness.zhixingProcess)){active.processExited=true;return;}
   const error=new Error('无法确认内核已退出，已保留会话恢复文件。',{cause});
   error.code='RUNTIME_CLOSE_FAILED';
   error.stage='close';
@@ -210,7 +234,65 @@ export async function waitForStoppedJobs(jobs,timeoutMs,onTimeout){
 }
 
 export class RuntimeManager{
- constructor({root,readVault,writeVault,onEvent,onApproval,createHarness=makeHarness,createGateway=startPrivacyGateway}){this.root=root;this.readVault=readVault;this.writeVault=writeVault;this.onEvent=onEvent;this.onApproval=onApproval;this.createHarness=createHarness;this.createGateway=createGateway;this.runs=new Map();this.runSettlements=new Map();this.busy=new Set();this.prepared=new Map();this.cancelled=new Map();this.questions=new Map();this.volatileVaults=new Map();}
+ constructor({root,readVault,writeVault,onEvent,onApproval,createHarness=makeHarness,createGateway=startPrivacyGateway,cleanupTimeoutMs=10000,cleanupRetryDelays=[1000,3000,10000]}){this.root=root;this.readVault=readVault;this.writeVault=writeVault;this.onEvent=onEvent;this.onApproval=onApproval;this.createHarness=createHarness;this.createGateway=createGateway;this.cleanupTimeoutMs=Math.min(30000,Math.max(20,cleanupTimeoutMs));this.cleanupRetryDelays=cleanupRetryDelays.slice(0,3);this.runs=new Map();this.runSettlements=new Map();this.runSettlementSessions=new Map();this.sessionStateVersions=new Map();this.busy=new Set();this.prepared=new Map();this.cancelled=new Map();this.questions=new Map();this.volatileVaults=new Map();}
+ emitEvent(event){const active=this.runs.get(event.runId);if(active){active.eventWatermark=(active.eventWatermark||0)+1;if(event.finalization)event.finalization.eventWatermark=active.eventWatermark;}try{this.onEvent?.(event);}catch{}}
+ resultFields(active){
+  if(!active.output)return {};
+  active.output.finalization=active.finalization;
+  // Execution traces carry a protected summary. Restored local content stays
+  // on the dedicated draft channel and the private call's result/error.result.
+  const text=this.executionDisplay(active.output.text,active.safeContext);
+  const result={runId:active.runId,sessionId:active.sessionId,text,masked:text,privacyMode:active.output.privacyMode,finishReason:active.output.finishReason,displayRedacted:true};
+  return {result,output:result};
+ }
+ watchHarness(active,harness){
+  const child=harness?.zhixingProcess;if(!child)return;
+  const exited=()=>{active.processExited=true;if(active.status==='cleanup_pending')void this.retryCleanup(active.runId).catch(()=>{});};
+  if(processExited(child))exited();else child.once('exit',exited);
+ }
+ safeMetadata(active,value,pattern){return typeof value==='string'&&pattern.test(value)&&(!active.safeContext||this.executionDisplay(value,active.safeContext)===value);}
+ cleanupError(active,error){return {code:this.safeMetadata(active,error?.code,/^[A-Z][A-Z0-9_]{0,79}$/)?error.code:'RUNTIME_CLOSE_FAILED',stage:this.safeMetadata(active,error?.stage,/^[a-z][a-z0-9_-]{0,39}$/)?error.stage:'close',message:active.safeContext?this.executionDisplay(error?.message||'内核退出仍待确认。',active.safeContext).slice(0,400):'内核退出仍待确认，恢复文件已保留。'};}
+ getCleanupStatus(){return [...this.runs.values()].filter(active=>active.status==='cleanup_pending'||active.shutdownPending).map(active=>({runId:active.runId,sessionId:active.sessionId,status:'cleanup_pending',attempts:active.cleanupAttempts||0,error:active.cleanupError,finalization:structuredClone(active.finalization||{runId:active.runId,executionStatus:active.cancelled?'cancelled':'failed',persistenceStatus:'pending',processStatus:active.processExited?'exited':'cleanup_pending',eventWatermark:active.eventWatermark||0,error:active.cleanupError})}));}
+ scheduleCleanup(active){
+  if(active.cleanupTimer||active.cleanupAttempts>=this.cleanupRetryDelays.length)return;
+  const delay=this.cleanupRetryDelays[active.cleanupAttempts||0];
+  active.cleanupTimer=setTimeout(()=>{active.cleanupTimer=null;void this.retryCleanup(active.runId).catch(()=>{});},delay);active.cleanupTimer.unref?.();
+ }
+ releaseRun(active){clearTimeout(active.cleanupTimer);active.cleanupTimer=null;this.runs.delete(active.runId);this.busy.delete(active.sessionId);}
+ async retryCleanup(runId){
+  if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');
+  const active=this.runs.get(runId);
+  if(!active){const settled=await this.runSettlements.get(runId);if(settled?.finalization)return {...settled,status:'exited'};throw new Error('没有对应的内核收尾记录。');}
+  if(active.cleanupPromise)return active.cleanupPromise;
+  if(active.shutdownPending&&!active.finalization){
+   try{await bounded(()=>active.settled,this.cleanupTimeoutMs);}catch{}
+   if(!active.finalization)return {...this.getCleanupStatus().find(item=>item.runId===runId),status:'cleanup_pending'};
+   if(!this.runs.has(runId))return {...active.settlement,status:'exited'};
+  }
+  if(active.status!=='cleanup_pending')throw new Error('任务仍在执行，请先停止后等待收尾。');
+  clearTimeout(active.cleanupTimer);active.cleanupTimer=null;
+  active.cleanupPromise=(async()=>{
+   active.cleanupAttempts=(active.cleanupAttempts||0)+1;
+   let error;
+   try{await closeHarness(active,active.h,{retry:true});}catch(cause){error=cause;}
+   if(active.processExited){
+    let saved;try{saved=await active.finishCleanup?.(true);}catch(cause){saved={error:cause,persistenceStatus:'pending'};}error=saved?.error||error;
+    active.finalization={...active.finalization,processStatus:'exited',persistenceStatus:saved?.persistenceStatus||active.finalization.persistenceStatus};
+    if(active.finalization.error?.stage==='close'&&!error)delete active.finalization.error;
+    if(error)active.finalization.error=this.cleanupError(active,error);
+    active.settlement.finalization=active.finalization;
+    this.emitEvent({runId,sessionId:active.sessionId,type:'run/terminal',status:active.settlement.status,finalization:active.finalization,...this.resultFields(active)});
+    this.releaseRun(active);
+    return {...active.settlement,status:'exited'};
+   }
+   active.cleanupError=this.cleanupError(active,error);
+   active.finalization={...active.finalization,error:active.finalization.error||active.cleanupError};active.settlement.finalization=active.finalization;
+   this.emitEvent({runId,sessionId:active.sessionId,type:'run/terminal',status:active.settlement.status,finalization:active.finalization,...this.resultFields(active)});
+   this.scheduleCleanup(active);
+   return {...active.settlement,status:'cleanup_pending'};
+  })().finally(()=>{active.cleanupPromise=null;});
+  return active.cleanupPromise;
+ }
  answerQuestion({requestId,answers,cancelled=false}){
   const entry=this.questions.get(requestId);if(!entry)throw new Error('问题已结束或任务已停止。');
   if(cancelled){entry.finish({cancelled:true});return true;}
@@ -221,19 +303,33 @@ export class RuntimeManager{
  async askQuestion(request,signal,context){
   if(context.allowQuestions===false||signal.aborted||!Array.isArray(request.questions)||!request.questions.length||request.questions.length>4)return {cancelled:true};
   const saved=await readBridge(context.bridgeFile,context.bridgeKey),vault=new PrivacySession(saved.id,saved);
-  const show=value=>vault.restore(String(value||'')).text.replace(/⟦ZX-[^⟧]+⟧/g,'【已保护信息】').slice(0,16000);
+  const show=value=>{const text=vault.restore(String(value||'')).text;return containsCredential(text,context.providerKey)?'【检测到凭证，已隐藏此段】':text.replace(/⟦ZX-[^⟧]+⟧/g,'【已保护信息】').slice(0,16000);};
   const translated=value=>({'Approve':'批准并执行','Keep planning':'继续完善方案','Plan review':'方案审批','Approve this plan and leave plan mode?':'是否批准此方案并开始执行？','Leave plan mode; the plan is carried out from the next step.':'批准后离开规划模式，从下一步开始执行。','Stay in plan mode; feedback goes back to the model.':'保留规划模式，把补充要求交回模型。'})[value]||show(value);
   const questions=request.questions.map(question=>({id:question.id,question:translated(question.question),detail:show(question.detail),header:translated(question.header),multiSelect:!!question.multiSelect,options:question.options?.slice(0,8).map(option=>({label:translated(option.label),description:translated(option.description)}))}));
-  return new Promise(resolve=>{const finish=value=>{if(!this.questions.delete(request.requestId))return;signal.removeEventListener('abort',abort);this.onEvent?.({runId:context.runId,sessionId:request.sessionId,type:'question-closed',requestId:request.requestId});if(value.answers)value={answers:value.answers.map(answer=>({...answer,selected:answer.selected.map(label=>request.questions.find(question=>question.id===answer.id)?.options?.find(option=>translated(option.label)===label)?.label||label)}))};resolve(value);};const abort=()=>finish({cancelled:true});this.questions.set(request.requestId,{questions,finish});signal.addEventListener('abort',abort,{once:true});this.onEvent?.({runId:context.runId,sessionId:request.sessionId,type:'question',requestId:request.requestId,questions});if(signal.aborted)abort();});
+  return new Promise(resolve=>{const finish=value=>{if(!this.questions.delete(request.requestId))return;signal.removeEventListener('abort',abort);this.emitEvent({runId:context.runId,sessionId:request.sessionId,type:'question-closed',requestId:request.requestId});if(value.answers)value={answers:value.answers.map(answer=>({...answer,selected:answer.selected.map(label=>request.questions.find(question=>question.id===answer.id)?.options?.find(option=>translated(option.label)===label)?.label||label)}))};resolve(value);};const abort=()=>finish({cancelled:true});this.questions.set(request.requestId,{questions,finish});signal.addEventListener('abort',abort,{once:true});this.emitEvent({runId:context.runId,sessionId:request.sessionId,type:'question',requestId:request.requestId,questions});if(signal.aborted)abort();});
  }
  async check(config,key){
-  const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h,failure;const active={};
-  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);h=await this.createHarness(directory,{...config,bridgeKey,mcpFile},key);await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await closeHarness(active,h);return {tools:report.tools||[],skills:report.skills||[],...(report.capabilities?{capabilities:report.capabilities}:{})};}
+  if(this.closing)throw new Error('内核管理器正在关闭。');
+  if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
+  const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h,failure,resolveSettled;
+  const active={runId:path.basename(directory),sessionId:path.basename(directory),status:'checking',isCheck:true,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,controller:new AbortController(),settled:new Promise(resolve=>{resolveSettled=resolve;}),safeContext:{providerKey:key,customTerms:[],privacyPolicy:privacyPolicyForMode(config.privacyPolicy,'redact')}};
+  this.runs.set(active.runId,active);this.busy.add(active.sessionId);this.runSettlements.set(active.runId,active.settled);this.runSettlementSessions.set(active.runId,active.sessionId);
+  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);active.controller.signal.throwIfAborted();h=await this.createHarness(directory,{...config,bridgeKey,mcpFile},key);active.h=h;this.watchHarness(active,h);active.controller.signal.throwIfAborted();await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await closeHarness(active,h);return {tools:report.tools||[],skills:report.skills||[],...(report.capabilities?{capabilities:report.capabilities}:{})};}
   catch(error){failure=error;throw error;}
   finally{
    try{await closeHarness(active,h);}
-   catch(error){if(failure&&failure!==error)throw new AggregateError([failure,error],'内核检查与关闭均失败。',{cause:failure});throw error;}
-   await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});
+   catch(error){
+    active.status='cleanup_pending';active.cleanupError=this.cleanupError(active,error);
+    active.finalization={runId:active.runId,executionStatus:'failed',persistenceStatus:'saved',processStatus:'cleanup_pending',eventWatermark:0,error:active.cleanupError};
+    active.settlement={runId:active.runId,sessionId:active.sessionId,status:'failed',finalization:active.finalization};resolveSettled(active.settlement);
+    active.finishCleanup=async()=>{await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});return {persistenceStatus:'saved'};};
+    this.emitEvent({runId:active.runId,sessionId:active.sessionId,type:'run/terminal',status:'failed',finalization:active.finalization});this.scheduleCleanup(active);
+    const exposed=failure&&failure!==error?new AggregateError([failure,error],'内核检查与关闭均失败。',{cause:failure}):error;exposed.finalization=active.finalization;exposed.code=active.finalization.error.code;exposed.stage=active.finalization.error.stage;throw exposed;
+   }
+   let removeError;try{await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});}catch(error){removeError=error;}
+   active.finalization={runId:active.runId,executionStatus:failure?'failed':'completed',persistenceStatus:'saved',processStatus:'exited',eventWatermark:active.eventWatermark};
+   active.settlement={runId:active.runId,sessionId:active.sessionId,status:failure?'failed':'succeeded',finalization:active.finalization};resolveSettled(active.settlement);this.releaseRun(active);
+   if(removeError){removeError.finalization=active.finalization;throw removeError;}
   }
  }
  async prepare(options,config){
@@ -251,21 +347,29 @@ export class RuntimeManager{
   const resume=!!saved?.historyKey&&await fs.stat(historyFile).then(()=>true,()=>false);
   const selectedPrompt=!resume&&typeof options.bootstrapPrompt==='string'&&options.bootstrapPrompt.length<=600000?options.bootstrapPrompt:prompt;
   const original=options.command||`任务模式：${options.mode==='government'?'政务':'办公'}\n\n${selectedPrompt}`;
-  const checked=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(original,customTerms,config.privacyPolicy);
+  const checked=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(original,customTerms,privacyPolicyForMode(config.privacyPolicy,privacyMode));
   const input=privacyMode==='raw'&&!checked.blocked?{text:original,entities:[],blocked:false}:checked;
-  return {input,vault,privacyMode,historyKey:saved?.historyKey||createBridgeKey(),resume};
+  return {input,vault,privacyMode,historyKey:saved?.historyKey||createBridgeKey(),resume,credentialSource:original};
  }
  async preview(options,config){
+  if(this.closing)throw new Error('内核管理器正在关闭。');
   if(this.busy.has(options.sessionId))throw new Error('该会话正在运行。');
-  const {vault,input,privacyMode,historyKey,resume}=await this.prepare(options,config);
+  const stateVersion=this.sessionStateVersions.get(options.sessionId)||0;
+  const {vault,input,privacyMode,historyKey,resume,credentialSource}=await this.prepare(options,config);
+  if(this.busy.has(options.sessionId))throw new Error('该会话正在运行或删除，请稍后重试。');
+  if((this.sessionStateVersions.get(options.sessionId)||0)!==stateVersion)throw new Error('会话已删除，旧预览已失效。');
   const preparationId=crypto.randomUUID(),now=Date.now();
   for(const [id,p] of this.prepared)if(p.expires<=now||p.options.sessionId===options.sessionId)this.prepared.delete(id);
   if(this.prepared.size>=12)this.prepared.delete(this.prepared.keys().next().value);
-  if(!input.blocked)this.prepared.set(preparationId,{vault,input,privacyMode,historyKey,resume,options:{sessionId:options.sessionId,mode:options.mode,customTerms:options.customTerms,command:options.command,startInPlanMode:options.startInPlanMode===true},config:{...config},expires:now+10*60*1000});
+  if(!input.blocked)this.prepared.set(preparationId,{vault,input,privacyMode,historyKey,resume,credentialSource,options:{sessionId:options.sessionId,mode:options.mode,customTerms:options.customTerms,command:options.command,startInPlanMode:options.startInPlanMode===true},config:{...config},expires:now+10*60*1000});
   return {preparationId:input.blocked?null:preparationId,...input,baseUrl:config.baseUrl,providerId:config.providerId,model:config.model,reasoning:config.reasoning,privacyMode,permission:config.permission||'ask',workspaceRoot:config.workspaceRoot||null};
  }
  async runPrepared({runId,preparationId},config,key){
-  const p=this.prepared.get(preparationId);this.prepared.delete(preparationId);
+  const p=this.prepared.get(preparationId);
+  // Do not consume a reusable preview while its session is being deleted.
+  // A failed host deletion must leave the original caches recoverable.
+  if(p&&this.busy.has(p.options.sessionId))throw new Error('该会话正在执行或删除，请先等待当前操作结束。');
+  this.prepared.delete(preparationId);
   if(!p||p.expires<Date.now())throw new Error('发送预览已过期，请重新预览。');
   if(typeof config==='function')({config,key}=config(p.config));
   if(!config||['baseUrl','credentialRevision','providerId','protocol'].some(field=>p.config[field]!==config[field]))throw new Error('供应商连接已更新，请重新预览。');
@@ -279,30 +383,34 @@ export class RuntimeManager{
  }
  async run(options,config,key,prepared=null){
   const {runId,sessionId,customTerms=[]}=options;
+  if(this.closing)throw new Error('内核管理器正在关闭。');
   if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');
   if(!key)throw new Error('尚未配置所选供应商的 API Key。');
+  assertModelCredential(key);
   if((this.cancelled.get(runId)||0)>Date.now()){this.cancelled.delete(runId);throw new Error('任务已停止。');}
   if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
   if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error('该会话正在执行，请先停止当前任务。');
   for(const [id,p] of this.prepared)if(p.options.sessionId===sessionId)this.prepared.delete(id);
-  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,persistKey,persistBridgeKey,failure;const active={cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128)this.runSettlements.delete(this.runSettlements.keys().next().value);this.runSettlements.set(runId,active.settled);this.runs.set(runId,active);
+  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,persistKey,persistBridgeKey,failure;const active={runId,sessionId,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128){const oldest=this.runSettlements.keys().next().value;this.runSettlements.delete(oldest);this.runSettlementSessions.delete(oldest);}this.runSettlements.set(runId,active.settled);this.runSettlementSessions.set(runId,sessionId);this.runs.set(runId,active);
   const connection={endpoint:config.baseUrl,providerId:config.providerId,protocol:config.protocol};
   try{
-   let {vault,input,privacyMode,historyKey,resume}=prepared||await this.prepare(options,config);
+   let {vault,input,privacyMode,historyKey,resume,credentialSource}=prepared||await this.prepare(options,config);
+   const effectivePolicy=privacyPolicyForMode(config.privacyPolicy,privacyMode);
+   active.safeContext={providerKey:key,customTerms,privacyPolicy:effectivePolicy};
    persistKey=historyKey;
-   if(input.blocked||containsCredential(input.text,key))throw new Error('检测到疑似凭证，请移除后再发送。');
+   if(input.blocked||containsCredential(credentialSource,key)||containsCredential(input.text,key))throw new Error('检测到疑似凭证，请移除后再发送。');
    if(privacyMode==='redact'&&vault.restore(input.text,{allowedTypes:[]}).unknown.length)throw new Error('输入含有其他任务的占位符，请提供原文或删除占位符。');
    // Save before invoking the provider: a crash must not orphan the mapping.
-   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey},config);
+   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey},config);active.vaultSaved=true;
    const directory=path.join(this.root,sessionId),bridgeKey=historyKey;persistBridgeKey=bridgeKey;bridgeFile=path.join(directory,'privacy-bridge.bin');
    mcpFile=path.join(directory,'mcp-config.bin');
    await fs.mkdir(directory,{recursive:true});await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);await writeBridge(bridgeFile,bridgeKey,vault.exportState());
-   active.assistantPreview=new AssistantTextStream({session:vault,terms:customTerms,policy:config.privacyPolicy,apiKey:key});
+   active.assistantPreview=new AssistantTextStream({session:vault,terms:customTerms,policy:effectivePolicy,apiKey:key,privacyMode});
    const kernel=normaliseKernel(config.kernel);
    if(config.browserScope&&this.browserAction&&config.allowNetwork!==false&&kernel.webEnabled)toolBridge=await startToolBridge({invoke:(input,signal)=>this.browserAction(config.browserScope,input,signal),signal:active.controller.signal});
    if(config.automationScope&&this.automationAction)automationBridge=await startToolBridge({route:'/automation',invoke:(input,signal)=>this.automationAction(config.automationScope,input,signal),signal:active.controller.signal});
    const publishAssistantPreview=result=>{
-    if(result?.changed&&!result.blocked)this.onEvent?.({runId,sessionId,type:'draft',text:result.text,source:'assistant-stream'});
+    if(result?.changed&&!result.blocked)this.emitEvent({runId,sessionId,type:'draft',text:result.text,source:'assistant-stream'});
    };
    active.assistantTextBuffer='';
    active.assistantFlushTimer=null;
@@ -313,7 +421,7 @@ export class RuntimeManager{
     if(!text)return;
     try{publishAssistantPreview(active.assistantPreview.appendText(text));}
     catch(error){
-     if(!active.assistantPreviewError)this.onEvent?.({runId,sessionId,type:'status',label:'实时预览暂停，任务最终正文仍会在完成后显示。'});
+     if(!active.assistantPreviewError)this.emitEvent({runId,sessionId,type:'status',label:'实时预览暂停，任务最终正文仍会在完成后显示。'});
      active.assistantPreviewError=error;
     }
    };
@@ -339,11 +447,12 @@ export class RuntimeManager{
    }});
    const transcripts=new Map();
    active.cancellation={file:path.join(directory,`cancel-${runId}.bin`),key:createBridgeKey(),sessionId};
-   if(config.manualControls)active.controls={file:path.join(directory,`control-${runId}.bin`),key:createBridgeKey(),sessionId,targets:new Map(),transcripts,bridgeFile,bridgeKey,privacyMode,customTerms,privacyPolicy:config.privacyPolicy,providerKey:key};
-   h=await this.createHarness(directory,{...config,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
+   if(config.manualControls)active.controls={file:path.join(directory,`control-${runId}.bin`),key:createBridgeKey(),sessionId,targets:new Map(),transcripts,bridgeFile,bridgeKey,privacyMode,customTerms,privacyPolicy:effectivePolicy,providerKey:key};
+   h=await this.createHarness(directory,{...config,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,providerKey:key,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
+   this.watchHarness(active,h);
    if(active.cancelled)throw new Error('任务已停止。');
    const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void (active.readyForCancel?interruptHarness(active,h):closeHarness(active,h)).catch(()=>{});},kernel.taskTimeoutSeconds*1000);
-   let result;let plan=[];const children=new Map(),deliverables=[],calls=new Map(),jobs=new Map();active.jobs=jobs;
+   let result;let plan=[];const children=new Map(),deliverables=[],calls=new Map(),jobs=new Map();active.jobs=jobs;active.children=children;active.deliverables=deliverables;
    let nextStats=0;
    const emitStats=()=>{
     if(Date.now()<nextStats)return;
@@ -351,7 +460,7 @@ export class RuntimeManager{
     void readBridge(path.join(directory,'context.bin'),bridgeKey).then(reports=>{
      const report=protectTeamContext(reports[sessionId],key);
      if(report?.stats&&this.runs.get(runId)===active&&!active.controller.signal.aborted){
-      this.onEvent?.({runId,sessionId,type:'live-stats',context:{stats:report.stats,measurement:report.measurement,pressure:report.pressure,team:report.team}});
+      this.emitEvent({runId,sessionId,type:'live-stats',context:{stats:report.stats,measurement:report.measurement,pressure:report.pressure,team:report.team}});
      }
     }).catch(()=>{});
    };
@@ -383,7 +492,7 @@ export class RuntimeManager{
        active.controls.targets.set(`send-agent:${id}`,sessionId);
       }
       children.set(id,{id,parentId,status,startedAt:previous?.startedAt||time,finishedAt:started?undefined:time});
-      this.onEvent?.({runId,sessionId,type:'subagents',category:'agents',label:started?'子任务已启动':'子任务已结束',status,childSessionId:id,children:[...children.values()]});
+      this.emitEvent({runId,sessionId,type:'subagents',category:'agents',label:started?'子任务已启动':'子任务已结束',status,childSessionId:id,children:[...children.values()]});
      }
     }
     if(n.method==='session.event'){
@@ -399,19 +508,19 @@ export class RuntimeManager{
        transcripts.set(eventSession,rows);
       }
      }
-     if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.onEvent?.({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
+     if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.emitEvent({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
      if(n.params.sessionId===sessionId&&e?.type==='assistant/message'){
       const partial=e.data?.message?.content?.filter(block=>block.type==='text').map(block=>block.text).join('');
       if(partial)active.draftTail=active.draftTail.then(async()=>{
-       const saved=await readBridge(bridgeFile,bridgeKey),v=new PrivacySession(saved.id,saved),checked=v.protect(partial,customTerms,config.privacyPolicy);
+       const saved=await readBridge(bridgeFile,bridgeKey),v=new PrivacySession(saved.id,saved),checked=v.protect(partial,customTerms,effectivePolicy);
        if(checked.blocked||containsCredential(partial,key))return;
        const restored=privacyMode==='raw'?{text:partial,unknown:[]}:v.restore(checked.text,{allowedTokens:new Set(saved.entries.map(entry=>entry.token))});
-       if(restored.unknown.length)return;
+       if(restored.unknown.length||containsCredential(restored.text,key))return;
        active.partialText=restored.text.replace(/⟦ZX-[^⟧]+⟧/g,'【敏感值待核实】');
-       this.onEvent?.({runId,sessionId,type:'draft',text:active.partialText});
+       this.emitEvent({runId,sessionId,type:'draft',text:active.partialText});
       }).catch(()=>{});
      }
-     if(n.params.sessionId===sessionId&&e?.type==='todo/write'&&Array.isArray(e.data?.todos)){plan=e.data.todos.filter(item=>typeof item.content==='string'&&['pending','in_progress','completed'].includes(item.status)).slice(0,30).map(item=>({...item,content:item.content.slice(0,200)}));this.onEvent?.({runId,sessionId,type:'plan',label:'工作计划已更新',plan});}
+     if(n.params.sessionId===sessionId&&e?.type==='todo/write'&&Array.isArray(e.data?.todos)){plan=e.data.todos.filter(item=>typeof item.content==='string'&&['pending','in_progress','completed'].includes(item.status)).slice(0,30).map(item=>({status:item.status,content:this.executionDisplay(item.content,{providerKey:key,customTerms,privacyPolicy:effectivePolicy}).slice(0,200)}));this.emitEvent({runId,sessionId,type:'plan',label:'工作计划已更新',plan});}
      const trace=e&&projectExecutionEvent(e,n.params.sessionId===sessionId?undefined:n.params.sessionId,calls);
     if(trace?.type==='job/registered'&&trace.itemId){
       let resolveJob;const job={id:trace.itemId,sessionId:n.params.sessionId,settled:false,stopRequested:false,settledPromise:new Promise(resolve=>{resolveJob=resolve;})};job.resolve=resolveJob;jobs.set(`${n.params.sessionId}:${trace.itemId}`,job);
@@ -421,10 +530,10 @@ export class RuntimeManager{
       active.controls?.targets.delete(`stop-job:${trace.itemId}`);
       const job=jobs.get(`${n.params.sessionId}:${trace.itemId}`);if(job&&!job.settled){job.settled=true;job.resolve(trace.status);}
      }
-   if(trace)this.onEvent?.({runId,sessionId,...trace});
+   if(trace)this.emitEvent({runId,sessionId,...trace});
      if(n.params.sessionId===sessionId&&e?.type!=='assistant/message')emitStats();
     }
-    if(n.method==='session.status'&&n.params.sessionId===sessionId)this.onEvent?.({runId,sessionId,type:'status',label:n.params.status==='idle'?'内核空闲':'内核运行中'});
+    if(n.method==='session.status'&&n.params.sessionId===sessionId)this.emitEvent({runId,sessionId,type:'status',label:n.params.status==='idle'?'内核空闲':'内核运行中'});
     };
     // The SDK query resolves at root idle. Keep observing independently until
     // the native host also joins managed descendants and their final events.
@@ -438,7 +547,7 @@ export class RuntimeManager{
      result=await session.run(input.text);
      if(active.cancelPromise)await active.cancelPromise;
      await h.client.request('session/wait',{sessionId},kernel.taskTimeoutSeconds*1000);
-     await waitForStoppedJobs(jobs,5000,job=>this.onEvent?.({runId,sessionId,type:'job/settlement-timeout',childSessionId:job.sessionId===sessionId?undefined:job.sessionId,itemId:job.id,status:'stopping'}));
+     await waitForStoppedJobs(jobs,5000,job=>this.emitEvent({runId,sessionId,type:'job/settlement-timeout',childSessionId:job.sessionId===sessionId?undefined:job.sessionId,itemId:job.id,status:'stopping'}));
     }finally{
      try{
       if(active.cancelPromise)await active.cancelPromise;
@@ -452,17 +561,19 @@ export class RuntimeManager{
     if(observerError)throw observerError;
    }catch(e){if(active.timedOut)throw new Error(`任务超过 ${kernel.taskTimeoutSeconds} 秒，内核已停止。`);if(active.cancelled)throw new Error('任务已停止。');throw e;}finally{clearTimeout(timeout);}
    if(active.cancelled)throw new Error('任务已停止。');
-   if(['error','blocked','aborted','interrupted'].includes(result.finishReason)){throw new Error('模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。');}
-   active.resultReady=true;active.finishReason=result.finishReason;
+   if(['error','blocked','aborted','interrupted'].includes(result.finishReason)){
+    const reason=result.events?.findLast(event=>event.type==='turn/end')?.data?.reason;
+    const diagnostic=this.executionDisplay(String(reason?JSON.stringify(reason):result.finalResponse||'').slice(0,2000),{providerKey:key,customTerms,privacyPolicy:effectivePolicy});
+    throw Object.assign(new Error('模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。'),{code:'RUNTIME_TURN_FAILED',stage:'query',details:{finishReason:result.finishReason,diagnostic}});
+   }
+   active.finishReason=result.finishReason;
    await waitContext(directory,bridgeKey,sessionId);
-    await closeHarness(active,h);await active.draftTail;
-   active.resultReady=true;active.finishReason=result.finishReason;
+   await active.draftTail;
    vault=new PrivacySession(sessionId,await readBridge(bridgeFile,bridgeKey));
-   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey},config);
    let context;try{const reports=await readBridge(path.join(directory,'context.bin'),bridgeKey);context=protectTeamContext(reports[sessionId],key);}catch{}
    const response=result.finalResponse||'';
    const originalTokens=new Set(vault.entries().map(entry=>entry.token));
-   const final=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(response,customTerms,config.privacyPolicy);
+   const final=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(response,customTerms,effectivePolicy);
    if(final.blocked||containsCredential(response,key))throw new Error('模型输出包含疑似凭证，已停止显示。');
    let text=response;
    if(privacyMode==='redact'){
@@ -470,26 +581,46 @@ export class RuntimeManager{
     if(restored.unknown.length)throw new Error('输出包含无法归属本任务的占位符，已停止还原。');
     text=restored.text.replace(/⟦ZX-[^⟧]+⟧/g,'【敏感值待核实】');
    }
+   if(containsCredential(text,key))throw new Error('还原后的输出包含模型凭证，已停止显示。');
    const childDetails=[...children.values()].map(child=>({...child,messages:(transcripts.get(child.id)||[]).map(row=>({...row,text:this.executionDisplay(row.text,active.controls)}))}));
-   return {runId,sessionId,text,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,children:childDetails,plan:plan.map(item=>({...item,content:vault.restore(item.content,{allowedTokens:originalTokens}).text}))};
+   active.output={runId,sessionId,text,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,children:childDetails,plan:plan.map(item=>({...item,content:this.executionDisplay(vault.restore(item.content,{allowedTokens:originalTokens}).text,{providerKey:key,customTerms,privacyPolicy:effectivePolicy})}))};
+   active.resultReady=true;
+   this.emitEvent({runId,sessionId,type:'draft',source:'validated-result',final:true,text});
+   await closeHarness(active,h);await active.draftTail;
+   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey},config);
+   return active.output;
   }catch(error){failure=error;active.terminalStatus=active.cancelError?'interrupted':active.cancelled?'cancelled':'failed';throw error;}
   finally{
    active.controller.abort();
    const harnessClosing=await Promise.allSettled([closeHarness(active,h)]);
-   const closing=await Promise.allSettled([toolBridge?.close(),automationBridge?.close(),gateway?.close()].filter(Boolean));if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}active.assistantTextBuffer='';await active.draftTail;
+   const closing=await Promise.allSettled([toolBridge,automationBridge,gateway].filter(Boolean).map(bridge=>bounded(()=>bridge.close(),this.cleanupTimeoutMs)));if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}active.assistantTextBuffer='';await active.draftTail;
    let cleanupError=harnessClosing[0].status==='rejected'?harnessClosing[0].reason:closing.find(result=>result.status==='rejected')?.reason;
-   const harnessClosed=harnessClosing[0].status==='fulfilled';
-   let savedBridge=false;
-   if(bridgeFile&&persistKey){try{const state=await readBridge(bridgeFile,persistBridgeKey);await this.saveVault(sessionId,{...state,...connection,historyKey:persistKey},config);savedBridge=true;}catch(error){cleanupError??=error;}}
-   if(savedBridge&&harnessClosed){if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});}
-   if(harnessClosed&&active.controls)await fs.unlink(active.controls.file).catch(()=>{});
-   if(harnessClosed&&active.cancellation)await fs.unlink(active.cancellation.file).catch(()=>{});
-   if(savedBridge&&harnessClosed&&config.persist===false){const target=path.resolve(this.root,sessionId);if(path.dirname(target)===path.resolve(this.root)&&await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150}).then(()=>true,()=>false)===false)cleanupError??=new Error('临时会话目录未能清理。');}
+   const harnessClosed=harnessClosing[0].status==='fulfilled'||active.processExited===true;
+   active.finishCleanup=async exited=>{
+    let savedBridge=false,error;
+    if(bridgeFile&&persistKey){try{const state=await readBridge(bridgeFile,persistBridgeKey);await this.saveVault(sessionId,{...state,...connection,historyKey:persistKey},config);savedBridge=true;}catch(cause){error=cause;error.stage||='persist';error.code||='RUNTIME_PERSIST_FAILED';}}
+    if(savedBridge&&exited){if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});}
+    if(exited&&active.controls)await fs.unlink(active.controls.file).catch(()=>{});
+    if(exited&&active.cancellation)await fs.unlink(active.cancellation.file).catch(()=>{});
+    if(savedBridge&&exited&&config.persist===false){const target=path.resolve(this.root,sessionId);if(path.dirname(target)===path.resolve(this.root)&&await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150}).then(()=>true,()=>false)===false)error??=new Error('临时会话目录未能清理。');}
+    return {error,persistenceStatus:savedBridge||!bridgeFile&&active.vaultSaved?'saved':bridgeFile?'pending':'failed'};
+   };
+   const saved=await active.finishCleanup(harnessClosed);cleanupError??=saved.error;
    if(cleanupError)active.terminalStatus='failed';
    const status=active.terminalStatus||(active.resultReady?'succeeded':active.cancelled?'cancelled':'failed');
-   const terminal={runId,sessionId,type:'run/terminal',status,...active.finishReason?{finishReason:active.finishReason}:{}};
-   this.runs.delete(runId);this.busy.delete(sessionId);try{this.onEvent?.(terminal);}catch{}active.resolveSettled({runId,sessionId,status,finishReason:active.finishReason});
-   if(cleanupError&&!active.cancelled){if(failure&&failure!==cleanupError)throw new AggregateError([failure,cleanupError],'交办执行与收尾均失败。',{cause:failure});throw cleanupError;}
+   const safeError=failure||cleanupError;
+   let publicError;
+   if(safeError){publicError=this.cleanupError(active,safeError);if(!this.safeMetadata(active,safeError.code,/^[A-Z][A-Z0-9_]{0,79}$/))publicError.code=active.cancelled?'RUNTIME_CANCELLED':'RUNTIME_EXECUTION_FAILED';if(!this.safeMetadata(active,safeError.stage,/^[a-z][a-z0-9_-]{0,39}$/))publicError.stage=cleanupError===safeError?'close':'query';}
+   active.finalization={runId,executionStatus:active.cancelled?'cancelled':active.output?'completed':'failed',persistenceStatus:saved.persistenceStatus,processStatus:harnessClosed?'exited':'cleanup_pending',eventWatermark:active.eventWatermark,
+    ...(publicError?{error:publicError}:{}),
+    deliverables:active.output?.deliverables||[],children:active.output?.children||[...(active.children?.values()||[])]};
+   active.settlement={runId,sessionId,status,finishReason:active.finishReason,finalization:active.finalization};
+   const terminal={runId,sessionId,type:'run/terminal',status,finalization:active.finalization,...active.finishReason?{finishReason:active.finishReason}:{},...this.resultFields(active)};
+   if(!harnessClosed){active.status='cleanup_pending';active.cleanupError=this.cleanupError(active,cleanupError);this.scheduleCleanup(active);}
+   this.emitEvent(terminal);if(active.output)active.output.finalization=active.finalization;
+   if(failure){failure.finalization=active.finalization;if(active.output)failure.result=active.output;failure.code=active.finalization.error?.code;failure.stage=active.finalization.error?.stage;if(active.safeContext)failure.message=this.executionDisplay(failure.message,active.safeContext).slice(0,400);}
+   active.resolveSettled(active.settlement);if(harnessClosed)this.releaseRun(active);
+   if(cleanupError&&!active.cancelled){const exposed=failure&&failure!==cleanupError?new AggregateError([failure,cleanupError],'交办执行与收尾均失败。',{cause:failure}):cleanupError;exposed.finalization=active.finalization;if(active.output)exposed.result=active.output;exposed.code=active.finalization.error?.code;exposed.stage=active.finalization.error?.stage;throw exposed;}
   }
  }
  executionDisplay(text,controls){
@@ -511,7 +642,7 @@ export class RuntimeManager{
    if(containsCredential(text,controls.providerKey))throw new Error('检测到凭证，请从补充内容中移除。');
    text=await updateBridge(controls.bridgeFile,controls.bridgeKey,saved=>{
     const vault=new PrivacySession(saved.id,saved);
-    const checked=vault.protect(text.trim(),controls.customTerms,controls.privacyPolicy);
+    const checked=vault.protect(text.trim(),controls.customTerms,privacyPolicyForMode(controls.privacyPolicy,controls.privacyMode));
     if(checked.blocked)throw new Error('检测到被规则拦截的内容，未发送。');
     return {state:vault.exportState(),value:controls.privacyMode==='raw'?text.trim():checked.text};
    },{signal:active.controller.signal});
@@ -528,16 +659,44 @@ export class RuntimeManager{
    if(action==='stop-job'){
     const job=active.jobs?.get(`${owner}:${target}`);
     if(job&&value==='requested')job.stopRequested=true;
-    this.onEvent?.({runId,sessionId,type:'job/stop-requested',childSessionId:owner===sessionId?undefined:owner,itemId:target,status:value==='requested'?'stopping':'already-finished'});
+    this.emitEvent({runId,sessionId,type:'job/stop-requested',childSessionId:owner===sessionId?undefined:owner,itemId:target,status:value==='requested'?'stopping':'already-finished'});
    }
    return {requested:value==='requested'};
   }catch{throw new Error('内核未能完成此操作，请核对当前交办是否仍在运行。');}
  }
- async cancel(runId){if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');const run=this.runs.get(runId);if(!run){if(this.runSettlements.has(runId))return {cancelled:false,accepted:false,settled:true};if(this.cancelled.size>=64)this.cancelled.delete(this.cancelled.keys().next().value);this.cancelled.set(runId,Date.now()+30000);return {cancelled:true,accepted:true};}if(run.resultReady)return {cancelled:false,accepted:false,settled:false,status:'settling'};run.cancelled=true;run.cancelRequested=true;run.status='cancelling';run.controller.abort();if(run.h&&run.readyForCancel)void interruptHarness(run,run.h).catch(()=>{});return {cancelled:true,accepted:true};}
- async saveVault(id,value,config){if(config.persist===false)this.volatileVaults.set(id,value);else await this.writeVault(id,value);}
+ async cancel(runId){if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');const run=this.runs.get(runId);if(!run){if(this.runSettlements.has(runId))return {cancelled:false,accepted:false,settled:true};if(this.cancelled.size>=64)this.cancelled.delete(this.cancelled.keys().next().value);this.cancelled.set(runId,Date.now()+30000);return {cancelled:true,accepted:true};}if(run.status==='cleanup_pending')return {cancelled:false,accepted:false,settled:true,status:'cleanup_pending',finalization:run.finalization};if(run.resultReady)return {cancelled:false,accepted:false,settled:false,status:'settling'};run.cancelled=true;run.cancelRequested=true;run.status='cancelling';run.controller?.abort();if(run.isCheck&&run.h)void closeHarness(run,run.h).catch(()=>{});else if(run.h&&run.readyForCancel)void interruptHarness(run,run.h).catch(()=>{});return {cancelled:true,accepted:true};}
+ async saveVault(id,value,config){try{if(config.persist===false)this.volatileVaults.set(id,value);else await this.writeVault(id,value);}catch(error){error.code||='RUNTIME_PERSIST_FAILED';error.stage||='persist';throw error;}}
+ async forgetSessionState(sessionId,removeSavedState=async()=>{}){
+  if(typeof sessionId!=='string'||!SAFE_ID.test(sessionId)||typeof removeSavedState!=='function')throw new Error('会话删除参数无效。');
+  if(this.busy.has(sessionId)||[...this.runs.values()].some(run=>run.sessionId===sessionId))throw new Error('请先等待会话停止并确认内核退出，再删除会话。');
+  // Hold this session before invoking any asynchronous host filesystem work.
+  // Other sessions and their unresolved settlements are never joined here.
+  this.busy.add(sessionId);
+  try{
+   await removeSavedState();
+   this.sessionStateVersions.set(sessionId,(this.sessionStateVersions.get(sessionId)||0)+1);
+   this.volatileVaults.delete(sessionId);
+   for(const [id,preview] of this.prepared)if(preview.options.sessionId===sessionId)this.prepared.delete(id);
+   for(const [runId,owner] of this.runSettlementSessions)if(owner===sessionId){this.runSettlements.delete(runId);this.runSettlementSessions.delete(runId);this.cancelled.delete(runId);}
+   return {forgotten:true,sessionId};
+  }finally{this.busy.delete(sessionId);}
+ }
  async clearSavedHistory(){
   const items=await fs.readdir(this.root,{withFileTypes:true}).catch(error=>{if(error.code==='ENOENT')return [];throw error;});
   for(const item of items){if(!item.isDirectory()||!SAFE_ID.test(item.name)||this.busy.has(item.name))continue;const target=path.resolve(this.root,item.name);if(path.dirname(target)!==path.resolve(this.root))throw new Error('会话目录无效。');const stat=await fs.lstat(target);if(stat.isSymbolicLink())throw new Error('会话目录不能是链接。');await fs.rm(target,{recursive:true,force:true,maxRetries:6,retryDelay:150});}
  }
- async close(){const runs=[...this.runs.entries()];await Promise.allSettled(runs.map(async([id,run])=>{await this.cancel(id);return run.settled;}));}
+ async close(){
+  this.closing=true;
+  try{
+   const runs=[...this.runs.entries()];
+   await Promise.allSettled(runs.map(async([id,run])=>{
+    if(run.status==='cleanup_pending')return this.retryCleanup(id);
+    await this.cancel(id);
+    try{await bounded(()=>run.settled,this.cleanupTimeoutMs+5000);}
+    catch(error){run.shutdownPending=true;run.cleanupError=this.cleanupError(run,error);return;}
+    if(this.runs.get(id)?.status==='cleanup_pending')return this.retryCleanup(id);
+   }));
+   return {cleanupPending:this.getCleanupStatus()};
+  }finally{this.closing=false;}
+ }
 }

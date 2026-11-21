@@ -13,6 +13,19 @@ const load=name=>import(packed?pathToFileURL(path.join(packed,'electron',name)).
 const { modelReasoning, ProviderSelectionError, publicProviders, resolveProvider, saveProvider } = await load('providers.mjs');
 const { RuntimeManager } = await load('runtime.mjs');
 
+test('模型目录不回传明文或 Unicode 凭证，旧短密钥必须重配且不发起请求',async()=>{
+ const {fetchModels}=await load('model-catalog.mjs');const key='Ab7!xyZ9';let requests=0;
+ const server=http.createServer((req,res)=>{requests++;res.writeHead(200,{'content-type':'application/json'}).end(JSON.stringify({data:[{id:'safe-model'},{id:'leaked-model',description:key},{id:'disguised-model',description:[...key].join('\u200b')}]}));});
+ server.listen(0,'127.0.0.1');await once(server,'listening');
+ try {
+  const config={baseUrl:`http://127.0.0.1:${server.address().port}/v1`,protocol:'openai'};
+  await assert.rejects(fetchModels(config,'short'),/8–1024/);assert.equal(requests,0);
+  assert.deepEqual((await fetchModels(config,key)).map(row=>row.id),['safe-model']);assert.equal(requests,1);
+  await assert.rejects(saveProvider({...config,name:'短密钥',apiKey:'short',manualModels:'safe-model'},[]),/8–1024/);
+  const [legacy]=publicProviders([{id:'old',key:'short',models:[]}]);assert(legacy.credentialReentryRequired);assert(!JSON.stringify(legacy).includes('short'));
+ } finally {server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+});
+
 test('同名模型按供应商和凭据区分，换地址不能沿用原密钥',async()=>{
   const a=await saveProvider({name:'公司甲',apiKey:'fixture-a-key',baseUrl:'https://a.example/v1',protocol:'openai',reasoningStyle:'standard',manualModels:'same-model'},[]);
   const b=await saveProvider({name:'公司乙',apiKey:'fixture-b-key',baseUrl:'https://b.example/v1',protocol:'openai',reasoningStyle:'standard',manualModels:'same-model'},[a]);

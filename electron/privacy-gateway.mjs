@@ -2,7 +2,9 @@ import http from 'node:http';
 import {randomBytes} from 'node:crypto';
 import {once} from 'node:events';
 import {PrivacySession} from '../src/privacy-core.js';
-import {containsCredential} from '../src/privacy-recognizers.js';
+import {containsCredentialValue,childPrivacyContext} from '../src/privacy-recognizers.js';
+import {privacyPolicyForMode} from '../src/privacy-policy.js';
+import {assertModelCredential} from '../src/provider-options.js';
 import {updateBridge} from '../harness/privacy-bridge.mjs';
 import {goalWire} from './goal-wire.mjs';
 import {createAssistantStreamDecoder} from './assistant-stream.mjs';
@@ -10,6 +12,8 @@ import {createAssistantStreamDecoder} from './assistant-stream.mjs';
 // A request-local loopback gateway is the serialization boundary. Harness loop
 // messages are immutable; do not mutate its event-sourced request projection.
 export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,bridgeFile,bridgeKey,privacyMode,customTerms=[],privacyPolicy,onAssistantText,mainSessionId}) {
+  assertModelCredential(apiKey);
+  privacyPolicy=privacyPolicyForMode(privacyPolicy,privacyMode);
   const openAI=protocol==='openai';
   const inbound=openAI?'/v1/chat/completions':protocol==='deepseek'?'/anthropic/v1/messages':'/v1/messages';
   const token=`zx-local-${randomBytes(24).toString('hex')}`;
@@ -25,43 +29,54 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
       const job=tail.then(async()=>{
         await updateBridge(bridgeFile,bridgeKey,async saved=>{
         const vault=new PrivacySession(saved.id,saved);
-        if(containsCredential(JSON.stringify(body),apiKey))throw new Error('请求内容含模型凭证，已阻止发送。');
-        const protect=value=>{const checked=vault.protectValue(value,customTerms,privacyPolicy);if(checked.blocked)throw new Error('请求内容含被拦截的敏感值，已阻止发送。');return privacyMode==='raw'?value:checked.value;};
+        if(containsCredentialValue(body,apiKey))throw new Error('请求内容含模型凭证，已阻止发送。');
+        vault.assertSafeKeys(body,customTerms,privacyPolicy,{context:openAI?'openai':'anthropic',privacyMode});
+        const protect=(value,context='data')=>{const checked=vault.protectValue(value,customTerms,privacyPolicy,{context,privacyMode});if(checked.blocked)throw new Error('请求内容含被拦截的敏感值，已阻止发送。');return privacyMode==='raw'?value:checked.value;};
+        const identity=value=>{if(typeof value==='string')vault.assertSafeKeys({[value]:null},customTerms,privacyPolicy,{privacyMode});else if(Array.isArray(value))value.forEach(identity);else if(value&&typeof value==='object')Object.values(value).forEach(identity);return value;};
+        // Extra provider/plugin fields are data, not an uninspected escape
+        // hatch. Only fields handled explicitly below retain protocol meaning.
+        const extras=(value,handled,context='data')=>Object.fromEntries(Object.entries(value).map(([key,item])=>[key,handled.includes(key)?item:protect(item,childPrivacyContext(context,key))]));
         const goal=goalWire(body.messages,protect);
         const content=(value,toolId)=>{
           if(typeof value==='string')return goal.result(toolId,value);
           if(!Array.isArray(value))throw new Error('消息结构无效。');
           return value.map(block=>{
-            if(block.type==='text')return {...block,text:goal.result(toolId,block.text)};
-            if(block.type==='tool_use')return {...block,input:goal.input(block.name,block.input)};
-            if(block.type==='tool_result')return {...block,content:content(block.content,block.tool_use_id)};
+            if(block.type==='text')return {...extras(block,['type','text'],'block'),text:goal.result(toolId,block.text)};
+            if(block.type==='tool_use')return {...extras(block,['type','input','name','id'],'block'),name:identity(block.name),id:identity(block.id),input:goal.input(block.name,block.input)};
+            if(block.type==='tool_result')return {...extras(block,['type','content','tool_use_id'],'block'),tool_use_id:identity(block.tool_use_id),content:content(block.content,block.tool_use_id)};
             if(block.type==='thinking'){
               const checked=vault.protect(String(block.thinking||''),customTerms,privacyPolicy);
               if(checked.blocked||privacyMode!=='raw'&&checked.entities.length)throw new Error('带签名推理包含未保护内容，已停止重放。');
-              return block;
+              identity(block.signature);return extras(block,['type','thinking','signature'],'block');
             }
-            if(block.type==='redacted_thinking')return block;
+            if(block.type==='redacted_thinking'){identity(block.data);return extras(block,['type','data'],'block');}
             throw new Error('消息包含尚未接入隐私边界的内容类型。');
           });
         };
-        const toolDefinition=(tool, schema)=>({...tool,...(typeof tool.description==='string'?{description:protect(tool.description)}:{}),...(tool[schema]?{[schema]:protect(tool[schema])}:{})});
+        const toolDefinition=(tool, schema)=>({...extras(tool,['name','description',schema],'tool'),name:identity(tool.name),...(typeof tool.description==='string'?{description:protect(tool.description)}:{}),...(tool[schema]?{[schema]:protect(tool[schema],'schema')}:{})});
         if(openAI){
           body.messages=body.messages.map(message=>{
-            const copy={...message};
+            const copy=extras(message,['role','content','name','tool_calls','tool_call_id','reasoning_content','reasoning','refusal','function_call']);
+            if(copy.name!==undefined)identity(copy.name);if(copy.tool_call_id!==undefined)identity(copy.tool_call_id);
             if(copy.content!=null)copy.content=content(copy.content,message.role==='tool'?message.tool_call_id:undefined);
             for(const field of ['reasoning_content','reasoning','refusal'])if(typeof copy[field]==='string')copy[field]=protect(copy[field]);
-            if(Array.isArray(copy.tool_calls))copy.tool_calls=copy.tool_calls.map(call=>({...call,function:{...call.function,arguments:JSON.stringify(goal.input(call.function.name,JSON.parse(call.function.arguments||'{}')))}}));
+            if(Array.isArray(copy.tool_calls))copy.tool_calls=copy.tool_calls.map(call=>({...extras(call,['type','id','function']),id:identity(call.id),function:{...extras(call.function,['name','arguments']),name:identity(call.function.name),arguments:JSON.stringify(goal.input(call.function.name,JSON.parse(call.function.arguments||'{}')))}}));
             if(copy.function_call)throw new Error('不支持旧版函数调用。');
             return copy;
           });
           if(Array.isArray(body.tools))body.tools=body.tools.map(tool=>{
             if(tool.type!=='function')throw new Error('不支持服务端工具。');
-            return {...tool,function:toolDefinition(tool.function,'parameters')};
+            return {...extras(tool,['type','function']),function:toolDefinition(tool.function,'parameters')};
           });
         }else{
           if(body.system!==undefined)body.system=content(body.system);
-          body.messages=body.messages.map(message=>({...message,content:content(message.content)}));
+          body.messages=body.messages.map(message=>({...extras(message,['role','content']),content:content(message.content)}));
           if(Array.isArray(body.tools))body.tools=body.tools.map(tool=>toolDefinition(tool,'input_schema'));
+        }
+        identity(body.model);
+        for(const key of Object.keys(body))if(!['model','messages','system','tools'].includes(key)){
+          const context=childPrivacyContext(openAI?'openai':'anthropic',key);
+          body[key]=['tool_choice','thinking','reasoning','reasoning_effort','output_config','stream_options','stop','stop_sequences'].includes(key)?identity(body[key]):protect(body[key],context);
         }
         previewState=vault.exportState();
         return {state:previewState};
@@ -96,7 +111,8 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
       res.end();
     }catch(error){
       const cancelled=controller.signal.aborted||error.name==='AbortError',upstream=stage==='upstream'&&!cancelled;
-      if(!res.headersSent&&!res.destroyed)res.writeHead(upstream?502:400,{'content-type':'application/json','cache-control':'no-store'}).end(JSON.stringify({type:'error',error:{type:upstream?'api_error':'invalid_request_error',code:cancelled?'REQUEST_CANCELLED':upstream?'UPSTREAM_UNAVAILABLE':'PRIVACY_BOUNDARY_REJECTED',message:cancelled?'任务已停止。':upstream?'模型服务暂时无法连接，请稍后重试。':'本机隐私边界未完成请求，请检查脱敏规则和连接。'}}));
+      const structuredCode=['SENSITIVE_DYNAMIC_KEY','SENSITIVE_SCHEMA_VALUE'].includes(error.code)?error.code:null;
+      if(!res.headersSent&&!res.destroyed)res.writeHead(upstream?502:400,{'content-type':'application/json','cache-control':'no-store'}).end(JSON.stringify({type:'error',error:{type:upstream?'api_error':'invalid_request_error',code:cancelled?'REQUEST_CANCELLED':upstream?'UPSTREAM_UNAVAILABLE':structuredCode||'PRIVACY_BOUNDARY_REJECTED',message:cancelled?'任务已停止。':upstream?'模型服务暂时无法连接，请稍后重试。':structuredCode?'结构化字段或工具约束包含需保护的信息，请使用不含敏感值的字段和约束。':'本机隐私边界未完成请求，请检查脱敏规则和连接。'}}));
       else res.destroy();
     }
     finally{controllers.delete(controller);}
