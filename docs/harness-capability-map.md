@@ -2,9 +2,9 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
-## 0.12.1 当前状态与证据分层
+## 0.12.2 当前状态与证据分层
 
-当前构建源码为 `25c6e69165cb019b834861e7bc33e9ddf46938f2`，固定 Harness `0.2.2-rc.5`。本轮处理边界和恢复合同，没有把所有上游可选插件接进桌面。具体安装器、实际包内回归及 Windows 旅程以 [0.12.1 验收页](windows-acceptance-0.12.1.md) 为准；下面的接线状态不代替该页的逐层结果。
+当前源码版本为 `0.12.2`，固定 Harness `0.2.2-rc.5`。构建提交和最终安装器哈希在 [0.12.2 Windows 验收页](windows-acceptance-0.12.2.md) 的构建完成后补入。上一版的已发布安装器仍见 [0.12.1 验收页](windows-acceptance-0.12.1.md)。
 
 | 能力 | 真实接入状态 | 可确认与未覆盖 |
 | --- | --- | --- |
@@ -14,13 +14,23 @@
 | 模型网关与 MCP 动态字段隐私 | 本轮新增语义检查及敏感动态键拒绝 | 两协议真实本机收件、原生 MCP 拒绝/通行计数；普通 raw 信息与 SECRET 分开。不是全部未知秘密或任意编码识别 |
 | 交付审阅与文件/剪贴板 | 本轮主进程快照与当前策略接入 | 绑定内容、策略、范围、格式和动作；文件字节与真实 Windows 操作的层级见验收页。基础导出不等于正式模板/typed XLSX |
 | 退出与保存恢复 | 本轮隔离未确认 handle，自动化 pending outcome 与只保存重试 | 根进程退出、正文持久化、业务完成分轴。持续不可写时强杀/断电前未落盘正文不能保证恢复 |
-| 草稿、取消与删除 | 本轮级联草稿、终态归档、失败原地恢复、资料去重追加 | 独立资料库/磁盘原件和明确保留的任务历史不是全局擦除对象；多份新草稿列表仍待补 |
+| 草稿、取消与删除 | 级联草稿、终态归档、失败原地恢复、资料去重追加，多份新草稿可见列表和实际聊天归属 | 独立资料库/磁盘原件和明确保留的任务历史不是全局擦除对象；持续不可写时强杀/断电前未落盘结果仍可能丢失 |
 | 插件独立运行时 | 随包 Node / pnpm / npm 11.21.3；脚本审阅和安装/更新后停用保留 | 实际生产路径 high/critical 为零仍有 moderate；不覆盖所有原生插件、恶意归档或任意自行联网 |
-| 文件 / Office 工具 | 自有 office_list/read/write 与 OfficeKit 部分替代 | 原生 read/edit/apply_patch/glob/grep、模型端 Office convert/recalculate/render 未全部挂载；目录超过120项完整性仍有 R10 |
+| 文件 / Office 工具 | 自有 office_list/read/write 与 OfficeKit 部分替代；目录工具支持有界分页和完整性字段 | 原生 read/edit/apply_patch/glob/grep、模型端 Office convert/recalculate/render 未全部挂载；分页假设目录在页间未变化 |
 | 搜索、MCP、Host 与存储扩展 | DeepSeek 官方搜索、本机网页/浏览器、当前 MCP 及自有加密调度可用 | 独立搜索、MCP OAuth/重连/按需工具、跨启动 live jobs、常驻 Host、增量事件/Blob 未完成 |
 | 附件与视觉 | Office/PDF 文字提取、本机 OCR 与 SenseVoice 有真实实现 | 模型视觉、原图遮罩、全面 NER 未接入；真人麦克风、物理 DPI 与全量读屏仍待专项验证 |
 
-隐私仍自动处理普通交办，不增加逐次脱敏确认；自定义秘密、禁止规则和配置凭据的当前合同见 [审计修复说明](audit-remediation-0.12.1.md)。统一的运行时 `registered/effective/enabled/blockedReason` manifest 尚未实现，设置中的目录存在、当前可执行与已完成验证必须分开理解。
+隐私仍自动处理普通交办，不增加逐次脱敏确认；自定义秘密、禁止规则和配置凭据的当前合同见 [审计修复说明](audit-remediation-0.12.1.md)。0.12.2 已将运行时 `registered/effective/enabled/blockedReason` manifest 接入 Agent 内核设置和 Harness 上下文。它反映实际注册目录、模型工具声明和当前门槛，不代表真实云端质量或全部上游能力完成。
+
+## 0.12.2 新增状态字段
+
+能力清单为每项能力记录 `registered`、`effective`、`enabled`、`blockedReason`、调用方式和证据层级。`registered` 来自当前 Harness 工具目录，PTC 的 `run_code` 来自模型实际工具声明。`effective` 还会检查项目目录、完全访问、协议、联网授权、规划模式以及浏览器和自动化桥接。未接入能力固定显示 `not_integrated`，不会因同名工具、配置开关或插件目录存在而变成已完成。
+
+0.12.2 的源码回归为 335 项，其中 334 项通过、1 项因 Windows 文件符号链接权限条件跳过。R09、R10、草稿恢复和能力 UI 另有 14/14 的 Windows Electron 隔离组件门禁。最终安装器结果以 [0.12.2 Windows 验收页](windows-acceptance-0.12.2.md) 的实际包证据为准。
+
+## 0.12.1 已发布增量（历史基线）
+
+0.12.1 完成动态键和 schema 隐私边界、交付审阅快照、退出隔离、自动化待保存结果、删除级联、终态轨迹、失败恢复、资料去重和 bundled npm 路径处置。具体结果见 [0.12.1 Windows 验收页](windows-acceptance-0.12.1.md)。
 
 ## 0.12.0 已发布增量（历史基线）
 

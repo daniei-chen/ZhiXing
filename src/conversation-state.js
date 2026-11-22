@@ -1,3 +1,23 @@
+// Consume only the submitted revision. Once a new conversation exists, its
+// recoverable input belongs to that chat and participates in chat deletion.
+export function consumeConversationDraft(drafts, submission) {
+  const sourceKey = submission.draftKey;
+  if (!sourceKey) return null;
+  const current = drafts[sourceKey] || { revision: 0, text: '', files: [] };
+  if (current.revision !== submission.submittedRevision) return null;
+  const key = current.kind === 'new' ? `chat:${submission.sessionId}` : sourceKey;
+  if (key !== sourceKey && Object.hasOwn(drafts, key)) return null;
+  const cleared = {
+    ...current,
+    ...(key !== sourceKey ? { kind: 'chat', draftId: submission.sessionId, chatId: submission.sessionId, workspaceId: submission.workspaceId, projectId: submission.projectId || null } : {}),
+    revision: current.revision + 1, filesRevision: (current.filesRevision || 0) + 1,
+    text: '', files: [], updatedAt: Date.now(),
+  };
+  const next = { ...drafts, [key]: cleared };
+  if (key !== sourceKey) delete next[sourceKey];
+  return { drafts: next, key, cleared };
+}
+
 // Renderer projection only. The host's finalization is authoritative; this is not a full audit log.
 export function finalizeConversationRun(state, job, outcome = {}) {
   const result = outcome.result || outcome.output || {};

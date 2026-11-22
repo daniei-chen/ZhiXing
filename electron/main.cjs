@@ -248,7 +248,15 @@ function registerHandlers(){
  handle('app:open-official-release',async({tag})=>{const {officialReleaseUrl}=await import('./desktop-release.mjs');await shell.openExternal(officialReleaseUrl(tag));return true;});
  handle('app:check-kernel-version',async()=>{const {checkOfficialKernel}=await import('./kernel-version.mjs');return checkOfficialKernel();});
  handle('app:configure-kernel',async value=>{const kernel=validateKernel(value),next={...configuration,kernel};await fs.writeFile(path.join(ROOT,'config.json'),JSON.stringify(next,null,2));configuration=next;return runtimeStatus();});
- handle('app:inspect-kernel',async()=>manager.check(configuration,'zhixing-local-inspection'));
+ handle('app:inspect-kernel',async(options={})=>{
+  await workspaceSaveQueue.flush();
+  const {workspaceRoot}=resolveProjectContext(workspaceContext,options);
+  const selected=options.providerId!==undefined||options.modelId!==undefined;
+  const resolved=selected?providerApi.resolveProvider(providers,{providerId:options.providerId,modelId:options.modelId,reasoning:options.reasoning}):null;
+  const permission=['ask','auto','full'].includes(options.permission)?options.permission:workspaceContext.settings.permission||'ask';
+  const report=await manager.check({...configuration,...resolved,permission,workspaceRoot,mcpServers:[]},'zhixing-local-inspection');
+  return {...report,inspection:{selectedRoute:selected,projectBound:Boolean(workspaceRoot),externalConnections:false}};
+ });
  handle('skills:list',async options=>manager.check({...configuration,workspaceRoot:workScope(options).workspaceRoot,mcpServers:[]},'zhixing-local-inspection').then(value=>value.skills));
  handle('mcp:list',async()=>{const {publicMcpServers}=await import('./mcp-config.mjs');return publicMcpServers(mcpServers);});
  handle('mcp:save',async value=>{

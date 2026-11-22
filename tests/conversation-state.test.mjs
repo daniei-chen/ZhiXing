@@ -5,8 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 const moduleUrl=name=>process.env.ZHIXING_TEST_PACKED_APP?pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP,name)).href:new URL(`../${name}`,import.meta.url).href;
-const {mergeState,workspaceDeletion,orphanDrafts,appendDraftFiles,recoverSubmittedDraft}=await import(moduleUrl('src/store.js'));
-const {finalizeConversationRun}=await import(moduleUrl('src/conversation-state.js'));
+const {mergeState,workspaceDeletion,orphanDrafts,newConversationDrafts,appendDraftFiles,recoverSubmittedDraft,saveState,initialState}=await import(moduleUrl('src/store.js'));
+const {consumeConversationDraft,finalizeConversationRun}=await import(moduleUrl('src/conversation-state.js'));
 
 const draft = (chatId, projectId, text) => ({draftId:chatId,kind:'chat',chatId,projectId,workspaceId:'office-home',revision:3,filesRevision:2,text,files:[{id:`${chatId}-file`,text:`${text}_ATTACHMENT`}],updatedAt:1});
 async function roundtrip(state, verify) {
@@ -85,6 +85,77 @@ test('R08 失败恢复须匹配提交revision和空正文/空附件，不能覆�
   const submission={submittedRevision:7,text:'sent',restoreText:'  exact original  ',attachments:[{id:'a'}]};
   assert.deepEqual(recoverSubmittedDraft({revision:8,text:'',files:[]},submission),{text:'  exact original  ',files:submission.attachments});
   for(const current of [undefined,{revision:9,text:'',files:[]},{revision:8,text:'new input',files:[]},{revision:8,text:'',files:[{id:'new'}]}]) assert.equal(recoverSubmittedDraft(current,submission),null);
+});
+
+test('多份新草稿保留独立键和归属，列举所有有效草稿而非仅最近一份，排除空草稿/孤儿/待删除项目',async()=>{
+  const state=mergeState(null);
+  const fresh=(id,projectId,text,updatedAt)=>({...draft(null,projectId,text),kind:'new',draftId:id,chatId:null,updatedAt});
+  state.drafts={
+    'new:office-home:home:one':fresh('one',null,'FIRST_BODY',1),
+    'new:office-home:home:two':fresh('two',null,'SECOND_BODY',3),
+    legacy: fresh('project','office-general','PROJECT_BODY',2),
+    empty:{...fresh('empty',null,'',9),files:[]},
+    attachment:{...fresh('attachment',null,'',4),files:[{id:'only-file'}]},
+    orphan:fresh('orphan','removed-project','ORPHAN_BODY',5),
+    wrongSpace:{...fresh('wrong','government-general','WRONG_SPACE_BODY',6)},
+    'chat:missing':{...fresh('missing',null,'MISSING_CHAT_BODY',7),chatId:'missing'},
+  };
+  const before=structuredClone(state);
+  await roundtrip(state,restored=>{
+    assert.deepEqual(newConversationDrafts(restored).map(item=>item.key),['attachment','new:office-home:home:two','legacy','new:office-home:home:one']);
+    assert.equal(newConversationDrafts(restored)[2].projectId,'office-general');
+    assert.equal(newConversationDrafts(restored)[2].files[0].text,'PROJECT_BODY_ATTACHMENT');
+    restored.pendingWorkspaceDeletes=[{id:'pending',projectId:'office-general',chatIds:[],taskIds:[]}];
+    assert(!newConversationDrafts(restored).some(item=>item.key==='legacy'));
+  });
+  assert.deepEqual(state,before,'listing does not mutate or migrate storage');
+});
+
+test('首次发送消费新草稿时绑定实际聊天，失败正文/附件可恢复并随聊天删除，重载无残留',async()=>{
+  const state=mergeState(null),key='new:office-home:home:new-one';
+  state.drafts[key]={...draft(null,null,'FIRST_SEND_BODY'),kind:'new',draftId:'new-one',chatId:null};
+  const original=structuredClone(state.drafts);
+  const submission={draftKey:key,submittedRevision:3,sessionId:'created-chat',workspaceId:'office-home',projectId:null,restoreText:'FIRST_SEND_BODY',attachments:original[key].files};
+  const consumed=consumeConversationDraft(state.drafts,submission);
+  assert.deepEqual(state.drafts,original);
+  assert.equal(consumed.key,'chat:created-chat');assert(!Object.hasOwn(consumed.drafts,key));
+  assert.equal(consumed.cleared.revision,4);assert.equal(consumed.cleared.filesRevision,3);
+  assert.equal(consumed.cleared.chatId,'created-chat');assert.equal(consumed.cleared.kind,'chat');
+  const restored=recoverSubmittedDraft(consumed.cleared,submission);
+  state.chats=[{id:'created-chat',workspaceId:'office-home',projectId:null,messages:[]}];
+  state.drafts={...consumed.drafts,[consumed.key]:{...consumed.cleared,...restored,revision:5}};
+  assert.deepEqual(newConversationDrafts(state),[]);
+  await roundtrip(state,loaded=>assert.equal(loaded.drafts[consumed.key].text,'FIRST_SEND_BODY'));
+  await roundtrip(workspaceDeletion(state,{type:'delete-chat',id:'created-chat'}),(loaded,bytes)=>{
+    assert.doesNotMatch(bytes,/FIRST_SEND_BODY/);assert.deepEqual(newConversationDrafts(loaded),[]);assert.deepEqual(orphanDrafts(loaded),[]);
+  });
+});
+
+test('发送只消费匹配revision，不覆盖prepare期间的新编辑或目标已有草稿；普通聊天保持原键',()=>{
+  const key='new:office-home:home:one',source={...draft(null,null,'ORIGINAL'),kind:'new',draftId:'one',chatId:null};
+  const submission={draftKey:key,submittedRevision:3,sessionId:'chat',workspaceId:'office-home',projectId:null};
+  assert.equal(consumeConversationDraft({[key]:{...source,revision:4,text:'NEWER_BODY'}},submission),null);
+  assert.equal(consumeConversationDraft({[key]:source,'chat:chat':draft('chat',null,'TARGET_NEWER')},submission),null);
+  const current=draft('existing','office-general','EXISTING_BODY');
+  const consumed=consumeConversationDraft({'chat:existing':current},{...submission,draftKey:'chat:existing',sessionId:'existing'});
+  assert.equal(consumed.key,'chat:existing');assert.equal(consumed.cleared.projectId,'office-general');
+  assert.equal(consumed.cleared.text,'');assert.deepEqual(consumed.cleared.files,[]);
+});
+
+test('浏览器localStorage不保存草稿正文/附件，浏览器初始化也不恢复注入的旧草稿',()=>{
+  const previousWindow=globalThis.window,previousStorage=globalThis.localStorage;
+  const state=mergeState(null);state.drafts={legacy:{...draft(null,null,'PRIVATE_DRAFT_BODY'),kind:'new',draftId:'one'}};
+  let stored;
+  try{
+    globalThis.window={};
+    globalThis.localStorage={setItem:(_key,value)=>{stored=value;},getItem:()=>JSON.stringify(state),removeItem:()=>{stored=null;}};
+    saveState(state);assert.doesNotMatch(stored,/PRIVATE_DRAFT_BODY/);assert(!Object.hasOwn(JSON.parse(stored),'drafts'));
+    assert.deepEqual(initialState().drafts,{});
+    state.settings.persist=false;saveState(state);assert.equal(stored,null);
+  }finally{
+    if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;
+    if(previousStorage===undefined)delete globalThis.localStorage;else globalThis.localStorage=previousStorage;
+  }
 });
 
 for (const [status,code] of [['failed','NETWORK_DISCONNECTED'],['failed','QUOTA_EXCEEDED'],['failed','PERMISSION_DENIED'],['cancelled','RUNTIME_CANCELLED']]) {

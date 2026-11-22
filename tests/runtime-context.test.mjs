@@ -28,6 +28,7 @@ async function createFixture({listSkills} = {}) {
   tokenMeter: {measure: () => ({totalTokens: 12}), contextPressure: () => ({ratio: 0.1})},
   sessionProjections: {snapshot: () => ({values: {sessionStats: {turns: 1}}})},
   tools: {definitions: () => [{name: 'office_calculate', description: 'Synthetic calculation'}]},
+  systemPrompt: {assemble: async () => ({tools:[{name:'office_calculate'}]})},
   skills: {list: listSkills || (async () => [{name: 'synthetic-office', description: 'Synthetic skill'}])},
   logger: {error: (...args) => errors.push(args)},
  });
@@ -229,6 +230,7 @@ test('加密桥 rename 重试期间保持跨调用锁独占，更新回调仅执
  try {
   t.mock.method(fs, 'writeFile', async (...args) => {if (String(args[0]).startsWith(`${f.file}.`) && String(args[0]).endsWith('.tmp')) writes++;return writeFile(...args);});
   t.mock.method(fs, 'rename', async (temp, target) => {
+   if (target !== f.file) return rename(temp, target);
    attempts++;assert.equal(target, f.file);
    const current = JSON.parse(await fs.readFile(path.join(`${f.file}.lock`, 'owner.json'), 'utf8'));
    owner ??= current;assert.deepEqual(current, owner);

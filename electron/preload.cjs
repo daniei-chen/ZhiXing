@@ -34,7 +34,7 @@ contextBridge.exposeInMainWorld('zhixing',{
  onSpeechEvent:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('speech:event',fn);return()=>ipcRenderer.removeListener('speech:event',fn);},
  checkKernelVersion:()=>ipcRenderer.invoke('app:check-kernel-version'),
  configureKernel:options=>ipcRenderer.invoke('app:configure-kernel',options),
- inspectKernel:()=>ipcRenderer.invoke('app:inspect-kernel'),
+ inspectKernel:options=>ipcRenderer.invoke('app:inspect-kernel',options),
  listSkills:options=>ipcRenderer.invoke('skills:list',options),
  loadWorkspace:()=>ipcRenderer.invoke('data:load'),
  importDeepSeekChats:options=>ipcRenderer.invoke('data:import-deepseek',options),

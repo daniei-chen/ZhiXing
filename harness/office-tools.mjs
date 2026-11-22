@@ -28,6 +28,32 @@ export function checkTable(rows){
  rows.forEach((r,i)=>{if(r.length!==width)uneven.push(i+1);r.forEach((v,j)=>{if(v===null||v==='')missing.push({row:i+1,column:j+1});});const key=JSON.stringify(r);if(seen.has(key))duplicates.push({row:i+1,sameAs:seen.get(key)});else seen.set(key,i+1);});
  return {rowCount:rows.length,columnCount:width,duplicateRows:duplicates,missingCells:missing,unevenRows:uneven};
 }
+const DIRECTORY_SCAN_LIMIT=10000;
+async function listOfficeDirectory(target,{offset,limit,signal,forbidden}){
+ signal.throwIfAborted();
+ const before=await fs.lstat(target);
+ if(!before.isDirectory()||before.isSymbolicLink())throw new Error('NOT_DIRECTORY: 请选择真实目录。');
+ if(await fs.realpath(target)!==target)throw new Error('DIRECTORY_CHANGED: 目录位置已变化，请重新操作并按需审批。');
+ const entries=[];let scanned=0;
+ // Read directory metadata only. Count excluded entries too, so a hidden-only
+ // directory cannot bypass the work bound. Iteration closes the handle on errors.
+ const directory=await fs.opendir(target);
+ for await(const item of directory){
+  signal.throwIfAborted();
+  if(++scanned>DIRECTORY_SCAN_LIMIT)throw new Error('DIRECTORY_SCAN_LIMIT: 目录超过 10000 个直接条目，未返回不完整清单；请指定范围更小的子目录。');
+  if(item.name.startsWith('.')||item.isSymbolicLink()||forbidden(path.join(target,item.name)))continue;
+  if(item.isDirectory()||item.isFile())entries.push({name:item.name,type:item.isDirectory()?'directory':'file'});
+ }
+ signal.throwIfAborted();
+ const after=await fs.lstat(target);
+ if(!after.isDirectory()||after.isSymbolicLink()||before.dev!==after.dev||before.ino!==after.ino||before.mtimeMs!==after.mtimeMs||before.ctimeMs!==after.ctimeMs||await fs.realpath(target)!==target)throw new Error('DIRECTORY_CHANGED: 枚举期间目录已变化，请从第一页重新操作。');
+ // Locale-independent UTF-16 order, before privacy replacement. Each call is
+ // a fresh scan; pagination assumes the directory is unchanged between calls.
+ entries.sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0);
+ if(offset>entries.length)throw new Error('INVALID_DIRECTORY_PAGE: 分页起点超过可见条目数，请从第一页重新操作。');
+ const end=Math.min(offset+limit,entries.length),truncated=end<entries.length;
+ return {directory:target,entries:entries.slice(offset,end),offset,limit,total_entries:entries.length,next_offset:truncated?end:null,truncated};
+}
 export function apply(ctx){
  const kernel=normaliseKernel(JSON.parse(process.env.ZHIXING_KERNEL||'{}'));
  const root=process.env.ZHIXING_WORKSPACE_ROOT;
@@ -93,10 +119,20 @@ export function apply(ctx){
    const parsed=await parseOfficeFile(path.basename(info.target),await fs.readFile(info.target),{signal:exec.signal});exec.signal.throwIfAborted();
    if(start_character>parsed.text.length)throw new Error('读取起点超过文字长度。');const end=Math.min(parsed.text.length,start_character+max_characters);return protectedValue({path:info.target,text:parsed.text.slice(start_character,end),coverage:parsed.coverage,warnings:parsed.warnings,total_characters:parsed.text.length,start_character,next_character:end<parsed.text.length?end:null,truncated:end<parsed.text.length});
   }}));
-  ctx.tools.register(defineTool({name:'office_list_files',description:'列出指定目录中的办公文件名，不递归，不自动读取内容。',parameters:{directory:{type:'string',required:true}},output,async execute({directory},exec){
-   const info=await localPath(directory);await permit(exec,{...info,write:false},'列出目录');
-   const entries=(await fs.readdir(info.target,{withFileTypes:true})).filter(item=>!item.name.startsWith('.')&&!item.isSymbolicLink()).slice(0,120).map(item=>({name:item.name,type:item.isDirectory()?'directory':'file'}));
-   exec.signal.throwIfAborted();return protectedValue({directory:info.target,entries});
+  ctx.tools.register(defineTool({name:'office_list_files',description:'分页列出指定目录的可见普通文件和子目录，不递归、不读取内容；排除点开头、链接和禁止位置。按原始文件名 UTF-16 升序，默认每页 120 项；total_entries 仅统计可见条目，truncated 表示仍有后续页，使用 next_offset 继续直到 null。每页重新扫描，目录变化后应从第一页重查；单次最多扫描 10000 个直接条目，超限明确报错而不返回不完整清单。',parameters:{directory:{type:'string',required:true},offset:{type:'integer',description:'可见条目的零基起点，默认 0，范围 0–10000。'},limit:{type:'integer',description:'每页条目数，默认 120，范围 1–120。'}},output,async execute({directory,offset=0,limit=120},exec){
+   exec.signal.throwIfAborted();
+   if(!Number.isSafeInteger(offset)||offset<0||offset>DIRECTORY_SCAN_LIMIT||!Number.isSafeInteger(limit)||limit<1||limit>120)throw new Error('INVALID_DIRECTORY_PAGE: offset 须为 0–10000 的整数，limit 须为 1–120 的整数。');
+   try{
+    const info=await localPath(directory);await permit(exec,{...info,write:false},'列出目录');
+    const result=await listOfficeDirectory(info.target,{offset,limit,signal:exec.signal,forbidden});
+    exec.signal.throwIfAborted();const value=await protectedValue(result);exec.signal.throwIfAborted();return value;
+   }catch(error){
+    exec.signal.throwIfAborted();
+    // Native filesystem errors contain unprotected absolute paths. Keep their
+    // bounded error code useful without sending directory/file names in errors.
+    if(/^E[A-Z0-9]+$/.test(error?.code))throw new Error(`DIRECTORY_READ_FAILED (${error.code}): 无法读取目录元数据，请检查位置和访问权限。`);
+    throw error;
+   }
   }}));
   ctx.tools.register(defineTool({name:'office_write_file',description:'创建或覆盖TXT、Markdown、CSV、DOCX、XLSX办公成果。仅写入用户交办的成果；敏感占位符由本机还原。覆盖或外部路径可能需要用户批准。',parameters:{file_path:{type:'string',required:true},content:{type:'string',required:true}},output,async execute({file_path,content},exec){
    if(typeof content!=='string'||content.length>200000)throw new Error('成果内容超过20万字符。');

@@ -127,6 +127,8 @@ export async function makeHarness(directory,configuration,apiKey){
  const patch=await prepareRuntime(directory,configuration);
  // Only OS essentials and this app's explicit key are inherited by the child.
  const env={ZHIXING_KERNEL:JSON.stringify(normaliseKernel(configuration.kernel))};for(const name of ['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','USERPROFILE','APPDATA','LOCALAPPDATA','COMSPEC','PATHEXT'])if(process.env[name])env[name]=process.env[name];
+ env.ZHIXING_MODEL_PROTOCOL=configuration.protocol||'deepseek';
+ env.ZHIXING_CAPABILITY_SCOPE=configuration.capabilityScope==='diagnostic'?'diagnostic':'run';
  if(allowExtensions&&configuration.extensions?.bundles.length)env.ZHIXING_ALLOW_EXTENSIONS='1';
  if(configuration.controls)Object.assign(env,{ZHIXING_CONTROL_PATH:configuration.controls.file,ZHIXING_CONTROL_KEY:configuration.controls.key,ZHIXING_CONTROL_SESSION:configuration.controls.sessionId});
  if(configuration.cancellation)Object.assign(env,{ZHIXING_CANCEL_FILE:configuration.cancellation.file,ZHIXING_CANCEL_KEY:configuration.cancellation.key,ZHIXING_CANCEL_SESSION:configuration.cancellation.sessionId});
@@ -314,7 +316,7 @@ export class RuntimeManager{
   const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h,failure,resolveSettled;
   const active={runId:path.basename(directory),sessionId:path.basename(directory),status:'checking',isCheck:true,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,controller:new AbortController(),settled:new Promise(resolve=>{resolveSettled=resolve;}),safeContext:{providerKey:key,customTerms:[],privacyPolicy:privacyPolicyForMode(config.privacyPolicy,'redact')}};
   this.runs.set(active.runId,active);this.busy.add(active.sessionId);this.runSettlements.set(active.runId,active.settled);this.runSettlementSessions.set(active.runId,active.sessionId);
-  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);active.controller.signal.throwIfAborted();h=await this.createHarness(directory,{...config,bridgeKey,mcpFile},key);active.h=h;this.watchHarness(active,h);active.controller.signal.throwIfAborted();await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await closeHarness(active,h);return {tools:report.tools||[],skills:report.skills||[],...(report.capabilities?{capabilities:report.capabilities}:{})};}
+  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);active.controller.signal.throwIfAborted();h=await this.createHarness(directory,{...config,bridgeKey,mcpFile,capabilityScope:'diagnostic'},key);active.h=h;this.watchHarness(active,h);active.controller.signal.throwIfAborted();await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await closeHarness(active,h);return {tools:report.tools||[],skills:report.skills||[],...(report.capabilities?{capabilities:report.capabilities}:{}),...(report.capabilityManifest?{capabilityManifest:report.capabilityManifest}:{})};}
   catch(error){failure=error;throw error;}
   finally{
    try{await closeHarness(active,h);}

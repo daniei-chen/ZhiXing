@@ -77,7 +77,7 @@ export function Settings({ modal, close, setModal, state, scope, setSetting, run
         </>}
         {tab === '供应商' && <ProviderSettings runtime={runtime} setRuntime={setRuntime} desktop={window.zhixing}/>}
         {tab === 'MCP 连接' && <McpSettings/>}
-        {tab === 'Agent 内核' && <KernelSettings runtime={runtime} setRuntime={setRuntime}/>}
+        {tab === 'Agent 内核' && <KernelSettings runtime={runtime} setRuntime={setRuntime} inspectionScope={{workspaceId:scope.workspace.id,projectId:scope.project?.id||null,permission:state.settings.permission,...(state.settings.modelProviderId?{providerId:state.settings.modelProviderId,modelId:state.settings.model,reasoning:state.settings.reasoning}:{})}}/>}
         {tab === '通知' && <>
           <div className="setting-row"><span><strong>系统通知</strong><small>提醒到时或 AI 任务完成时通知</small></span><Switch label="系统通知" value={state.settings.notifications} onChange={value => setSetting('notifications', value)}/></div>
           <div className="setting-row"><span><strong>最近任务活动</strong></span><button className="secondary-button" onClick={() => setModal({ type: 'notifications' })}>查看</button></div>

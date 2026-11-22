@@ -134,6 +134,19 @@ export function orphanDrafts(state) {
   }).map(([key, draft]) => ({ key, ...draft }));
 }
 
+// Unsent new conversations are independent drafts, not missing-chat orphans.
+// Keep their stored keys so legacy keys can also be opened without copying.
+export function newConversationDrafts(state) {
+  const deletingProjects = new Set((state.pendingWorkspaceDeletes || []).map(item => item.projectId).filter(Boolean));
+  return Object.entries(state.drafts || {}).filter(([key, draft]) => draft.kind === 'new' && draft.draftId
+    && !draft.chatId && !key.startsWith('chat:') && (draft.text || draft.files?.length)
+    && state.workspaces.some(space => space.id === draft.workspaceId)
+    && (!draft.projectId || !deletingProjects.has(draft.projectId)
+      && state.projects.some(project => project.id === draft.projectId && project.workspaceId === draft.workspaceId)))
+    .map(([key, draft]) => ({ ...draft, key }))
+    .sort((left, right) => (right.updatedAt || 0) - (left.updatedAt || 0) || left.key.localeCompare(right.key));
+}
+
 export function appendDraftFiles(existing = [], incoming = [], limit = 12) {
   const identities = file => [
     file.id && `id:${file.id}`,

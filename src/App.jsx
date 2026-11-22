@@ -11,9 +11,9 @@ import {Workbench} from './Workbench.jsx';
 import {ConversationResources} from './ConversationResources.jsx';
 import {AnswerText} from './AnswerText.jsx';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
-import { BrandMark, IconButton, MenuItem } from './ui.jsx';
-import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText, workspaceDeletion, orphanDrafts, appendDraftFiles, recoverSubmittedDraft } from './store.js';
-import { finalizeConversationRun } from './conversation-state.js';
+import { BrandMark, IconButton, MenuItem, Modal } from './ui.jsx';
+import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText, workspaceDeletion, orphanDrafts, newConversationDrafts, appendDraftFiles, recoverSubmittedDraft } from './store.js';
+import { consumeConversationDraft, finalizeConversationRun } from './conversation-state.js';
 import { PrivacySession } from './privacy-core.js';
 import { privacyPolicyForMode } from './privacy-policy.js';
 import { composePrompt, workflows } from './office-workflows.js';
@@ -111,7 +111,12 @@ export function App() {
   }
 
   function draftKeyFor({ workspaceId, projectId, chatId, newDraftId }) {
-    const key = chatId ? `chat:${chatId}` : `new:${workspaceId}:${projectId || 'home'}:${newDraftId}`;
+    const canonicalKey = chatId ? `chat:${chatId}` : `new:${workspaceId}:${projectId || 'home'}:${newDraftId}`;
+    const key = chatId || Object.hasOwn(draftMap.current, canonicalKey) ? canonicalKey
+      : Object.keys(draftMap.current).find(key => {
+        const draft = draftMap.current[key];
+        return !key.startsWith('chat:') && draft.kind === 'new' && !draft.chatId && draft.draftId === newDraftId && draft.workspaceId === workspaceId && (draft.projectId || null) === (projectId || null);
+      }) || canonicalKey;
     draftScopes.current[key] = { kind: chatId ? 'chat' : 'new', workspaceId, projectId: projectId || null, chatId: chatId || null, draftId: chatId || newDraftId };
     return key;
   }
@@ -119,7 +124,7 @@ export function App() {
   function newDraftIdFor(workspaceId, projectId, fresh = false) {
     const scopeKey = `${workspaceId}:${projectId || 'home'}`;
     if (fresh || !newDraftIds.current.has(scopeKey)) {
-      const existing = !fresh && Object.values(draftMap.current).filter(draft => draft.kind === 'new' && draft.workspaceId === workspaceId && (draft.projectId || null) === (projectId || null)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0];
+      const existing = !fresh && newConversationDrafts({ ...latest.current, drafts: draftMap.current }).find(draft => draft.workspaceId === workspaceId && (draft.projectId || null) === (projectId || null));
       newDraftIds.current.set(scopeKey, existing?.draftId || uuid());
     }
     return newDraftIds.current.get(scopeKey);
@@ -135,17 +140,30 @@ export function App() {
     return next;
   }
 
-  function clearSubmittedDraft(key, revision) {
-    const current = draftMap.current[key] || { revision: 0, text: '', files: [] };
-    if (current.revision !== revision) return false;
-    const cleared = { ...current, revision: current.revision + 1, filesRevision: (current.filesRevision || 0) + 1, text: '', files: [], updatedAt: Date.now() };
-    draftMap.current = { ...draftMap.current, [key]: cleared };
+  function retireDraft(key) {
+    const scope = draftMap.current[key] || draftScopes.current[key];
+    removedDraftKeys.current.add(key);
+    delete draftScopes.current[key];
+    const scopeKey = scope && `${scope.workspaceId}:${scope.projectId || 'home'}`;
+    if (scope?.kind === 'new' && newDraftIds.current.get(scopeKey) === scope.draftId) newDraftIds.current.delete(scopeKey);
+  }
+
+  function clearSubmittedDraft(submission) {
+    const key = submission.draftKey;
+    if (removedDraftKeys.current.has(key)) return null;
+    const consumed = consumeConversationDraft(draftMap.current, submission);
+    if (!consumed) return null;
+    if (consumed.key !== key) {
+      retireDraft(key);
+      draftScopes.current[consumed.key] = { kind: 'chat', draftId: submission.sessionId, chatId: submission.sessionId, workspaceId: submission.workspaceId, projectId: submission.projectId || null };
+    }
+    draftMap.current = consumed.drafts;
     setState(value => ({ ...value, drafts: draftMap.current }));
     if (activeDraftKey.current === key) {
       inputRef.current = ''; filesRef.current = [];
       setInputValue(''); setFilesValue([]);
     }
-    return true;
+    return { draftKey: consumed.key, submittedRevision: consumed.cleared.revision - 1 };
   }
 
   async function retryWorkspaceSave() {
@@ -489,14 +507,14 @@ export function App() {
   }
   function toggleMenu(name, event) { event?.stopPropagation(); setMenu(previous => previous?.name === name ? null : { name }); }
 
-  function navigate(next, nextChat = null, nextProject = null, freshDraft = false, workspaceOverride = null) {
+  function navigate(next, nextChat = null, nextProject = null, freshDraft = false, workspaceOverride = null, draftId = null) {
     viewToken.current++;
     if(chatId&&transcript.current)transcriptPositions.current.set(chatId,transcript.current.scrollTop);
     if(nextChat!==chatId||!['home','project'].includes(next))transcriptChatId.current=null;
     setSettingsPage(null);
     const projectWorkspaceId = nextProject ? latest.current.projects.find(item => item.id === nextProject)?.workspaceId : null;
     const targetWorkspaceId = workspaceOverride || projectWorkspaceId || (nextChat ? latest.current.chats.find(item => item.id === nextChat)?.workspaceId : null) || latest.current.workspaceId;
-    const nextView = { section: next, chatId: nextChat, projectId: nextProject, newDraftId: newDraftIdFor(targetWorkspaceId, nextProject, freshDraft) };
+    const nextView = { section: next, chatId: nextChat, projectId: nextProject, newDraftId: draftId || newDraftIdFor(targetWorkspaceId, nextProject, freshDraft) };
     const nextDraftKey = draftKeyFor({ ...nextView, workspaceId: targetWorkspaceId });
     const nextDraft = draftMap.current[nextDraftKey] || { text: '', files: [] };
     activeDraftKey.current = nextDraftKey;
@@ -517,6 +535,16 @@ export function App() {
       setState(current => ({ ...current, workspaceId: target.workspaceId, workspaces: current.workspaces.map(space => space.id === target.workspaceId ? { ...space, projectId: nextProject } : space) }));
       navigate('project', null, nextProject, true);
     } else navigate('home', null, null, true);
+    requestAnimationFrame(() => composer.current?.focus());
+  }
+
+  function openNewDraft(key) {
+    if (!loaded || storageFailed.current || removedDraftKeys.current.has(key)) return;
+    const draft = newConversationDrafts({ ...latest.current, drafts: draftMap.current }).find(item => item.key === key);
+    if (!draft || !modeWorkspaceIds.has(draft.workspaceId)) return;
+    setState(current => ({ ...current, workspaceId: draft.workspaceId }));
+    newDraftIds.current.set(`${draft.workspaceId}:${draft.projectId || 'home'}`, draft.draftId);
+    navigate(draft.projectId ? 'project' : 'home', null, draft.projectId, false, draft.workspaceId, draft.draftId);
     requestAnimationFrame(() => composer.current?.focus());
   }
 
@@ -740,7 +768,7 @@ export function App() {
 
   async function startReply(draft, preview, demo = false) {
     if (active.current || draft.workspaceId !== latest.current.workspaceId) return;
-    if (draft.draftKey) clearSubmittedDraft(draft.draftKey, draft.submittedRevision);
+    const recovery = draft.draftKey ? clearSubmittedDraft(draft) : null;
     const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [] };
     runJobs.current.set(job.runId, job);
     if (runJobs.current.size > 80) for (const [id, old] of runJobs.current) {
@@ -770,12 +798,12 @@ export function App() {
       finalizeRun(job, { result });
     } catch (error) {
       const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;
-      if (draft.draftKey && !['completed', 'cancelled'].includes(executionStatus) && job.terminalStatus !== 'cancelled') {
-        const currentDraft = draftMap.current[draft.draftKey];
-        const restored = recoverSubmittedDraft(currentDraft, draft);
+      if (recovery && !['completed', 'cancelled'].includes(executionStatus) && job.terminalStatus !== 'cancelled') {
+        const currentDraft = draftMap.current[recovery.draftKey];
+        const restored = recoverSubmittedDraft(currentDraft, { ...draft, ...recovery });
         if (restored) {
-          const next = persistDraft(draft.draftKey, restored, currentDraft.revision);
-          if (next && activeDraftKey.current === draft.draftKey && !inputRef.current && !filesRef.current.length) {
+          const next = persistDraft(recovery.draftKey, restored, currentDraft.revision);
+          if (next && activeDraftKey.current === recovery.draftKey && !inputRef.current && !filesRef.current.length) {
             inputRef.current = next.text; filesRef.current = next.files;
             setInputValue(next.text); setFilesValue(next.files);
           }
@@ -853,9 +881,11 @@ export function App() {
     const tasks = item.type === 'delete-project' ? (desktop ? automationLatest.current.tasks : current.automations).filter(task => task.projectId === item.id) : [];
     if (tasks.some(task => task.status === '运行中')) throw new Error('请等此项目的任务运行结束。');
     const operation = { id: uuid(), projectId: item.type === 'delete-project' ? item.id : null, chatIds: ids, taskIds: tasks.map(task => task.id) };
-    for (const key of Object.keys(draftMap.current)) if (!Object.hasOwn(following.drafts, key)) {
-      removedDraftKeys.current.add(key);
-      delete draftScopes.current[key];
+    // A pending file read may own a scope before it has any persisted content.
+    const scopedDrafts = { ...draftScopes.current, ...draftMap.current };
+    const survivingScopes = workspaceDeletion(current, item, scopedDrafts).drafts;
+    for (const key of Object.keys(scopedDrafts)) if (!Object.hasOwn(survivingScopes, key)) {
+      retireDraft(key);
     }
     draftMap.current = following.drafts;
     const next = { ...following, pendingWorkspaceDeletes: [...(current.pendingWorkspaceDeletes || []), operation] };
@@ -929,7 +959,7 @@ export function App() {
     const next = { ...draft, ...draftScopes.current[targetKey], revision: draft.revision + 1, updatedAt: Date.now() };
     const drafts = { ...draftMap.current, [targetKey]: next };
     delete drafts[key];
-    removedDraftKeys.current.add(key);
+    retireDraft(key);
     draftMap.current = drafts;
     setState(current => ({ ...current, drafts }));
     newDraftIds.current.set(`${targetWorkspaceId}:home`, id);
@@ -941,8 +971,7 @@ export function App() {
     if (!orphanDrafts({ ...latest.current, drafts: draftMap.current }).some(item => item.key === key)) return;
     const drafts = { ...draftMap.current };
     delete drafts[key];
-    removedDraftKeys.current.add(key);
-    delete draftScopes.current[key];
+    retireDraft(key);
     draftMap.current = drafts;
     setState(current => ({ ...current, drafts }));
   }
@@ -1103,6 +1132,7 @@ export function App() {
     if (source.file) openModal({type:'document',value:{...source.file,status:source.file.status||'record',reason:source.recordOnly?'仅保留附件记录，原文件内容没有保存在此会话中。':source.file.reason}});
   }
   const unresolvedDrafts = orphanDrafts(state);
+  const unsentDrafts = newConversationDrafts(state).filter(draft => modeWorkspaceIds.has(draft.workspaceId));
   const pendingOutcomes = automationState.pendingOutcomes || [];
   const scopeProps = { workspace, projects, chats, spaceChats, documents, automations, taskRuns, project, mode, orphanDrafts: unresolvedDrafts };
 
@@ -1137,6 +1167,7 @@ export function App() {
         </div>
             {!!state.pendingWorkspaceDeletes?.length && <section className="running-return deletion-pending" role="alert"><WarningCircle size={15}/><span title={deletionError || '删除需要保存并完成内核记录清理。'}>{deletionError || '删除正在保存或等待清理，尚未确认完成。'}</span>{state.pendingWorkspaceDeletes.map(item => <button key={item.id} type="button" disabled={!!recoveryAction} onClick={() => void finishWorkspaceDeletion(item).catch(() => {})}>重试完成删除</button>)}</section>}
             {!!unresolvedDrafts.length && <section className="running-return orphan-drafts" role="status"><Info size={15}/><span>有 {unresolvedDrafts.length} 份旧草稿的聊天或项目已不存在，内容仍保留。</span><button type="button" onClick={() => openModal({ type: 'orphan-drafts' })}>恢复或删除</button></section>}
+            {!!unsentDrafts.length && <section className="running-return unsent-drafts" role="status"><NotePencil size={15}/><span>有 {unsentDrafts.length} 份未发送的新草稿。</span><button type="button" onClick={() => openModal({ type: 'new-drafts' })}>查看草稿</button></section>}
             {cleanupPending.map(item => <section className="running-return runtime-cleanup-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.finalization?.error?.message}>内核退出尚未确认，该会话暂不能重新执行。</span>{desktop?.retryRuntimeCleanup && <button type="button" disabled={!!recoveryAction} onClick={() => void retryCleanup(item.runId)}>重试清理</button>}</section>)}
             {pendingOutcomes.map(item => <section className="running-return automation-save-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.persistenceError?.message}>自动化执行已结束，结果尚未保存；后续调度已暂停。</span>{item.result && <button type="button" onClick={() => openRun(item)}>查看结果</button>}{desktop?.retryAutomationSave && <button type="button" disabled={!!recoveryAction} onClick={() => void retryAutomationSave(item.runId)}>重试保存结果</button>}</section>)}
             {automationState.persistenceError && !pendingOutcomes.length && <section className="running-return automation-save-error" role="alert"><WarningCircle size={15}/><span>{automationState.persistenceError.message || '自动化记录保存失败，待恢复。'}</span></section>}
@@ -1203,7 +1234,8 @@ export function App() {
     {question&&<AgentQuestion key={question.requestId} request={question} onAnswer={value=>desktop.answerQuestion(value)}/>}
     {privacyView && <PrivacyReview key={modal.type} modal={modal} original={reviewOriginal} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} currentMode={state.settings.privacyMode} onClose={() => setModal(null)} onSettings={() => openModal({ type: 'settings', tab: '隐私与数据' })} onSend={() => startReply(modal.draft, modal.preview)}/>}
     {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} privacyMode={state.settings.privacyMode} desktop={desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
-    {modal && !privacyView && modal.type !== 'export-review' && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={state} setState={setState} scope={scopeProps} recoverDraft={recoverOrphanDraft} discardDraft={discardOrphanDraft} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={useTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
+    {modal?.type === 'new-drafts' && <Modal title="未发送的新草稿" onClose={() => setModal(null)}><p className="modal-copy">选择一份继续编辑。草稿保留在各自的空间和项目中。</p><div className="record-list">{unsentDrafts.map(draft => <article key={draft.key} data-draft-key={draft.key}><NotePencil size={16}/><span><strong>{draft.text.trim().replace(/\s+/g, ' ').slice(0, 80) || '仅附件草稿'}</strong><small>{state.workspaces.find(space => space.id === draft.workspaceId)?.name} · {state.projects.find(project => project.id === draft.projectId)?.name || '未归入项目'}</small><small>{draft.text.length} 字 · {draft.files.length} 个附件 · {new Date(draft.updatedAt).toLocaleString('zh-CN')}</small></span><button type="button" className="secondary-button" onClick={() => openNewDraft(draft.key)}>继续编辑</button></article>)}{!unsentDrafts.length && <p className="empty-note">没有未发送的新草稿。</p>}</div></Modal>}
+    {modal && !privacyView && !['export-review', 'new-drafts'].includes(modal.type) && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={state} setState={setState} scope={scopeProps} recoverDraft={recoverOrphanDraft} discardDraft={discardOrphanDraft} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={useTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
   </div>;
 }
 
