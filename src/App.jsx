@@ -635,7 +635,7 @@ export function App() {
     if (!desktop?.pickFiles) { fileTarget.current = request; picker.current?.click(); return; }
     opening.current = request;
     setBusy(true);
-    try { addParsed(await desktop.pickFiles(project?.directory), target, request.spaceId, request.token, request.draftKey, request.filesRevision); }
+    try { addParsed(await desktop.pickFiles({directory:project?.directory,privacyMode:state.settings.privacyMode,customTerms:state.settings.customTerms,privacyPolicy:state.settings.privacyPolicy}), target, request.spaceId, request.token, request.draftKey, request.filesRevision); }
     catch (error) { setToast(errorText(error)); }
     finally { opening.current = null; setBusy(false); }
   }
@@ -649,7 +649,7 @@ export function App() {
         try {
           if (file.size > 10 * 1024 * 1024) throw new Error('文件超过 10 MB。');
           const bytes = new Uint8Array(await file.arrayBuffer());
-          if (desktop) imported.push({ ...meta, ...await desktop.parseFile({ name: file.name, bytes }) });
+          if (desktop) imported.push({ ...meta, ...await desktop.parseFile({ name: file.name, bytes, privacyMode:state.settings.privacyMode, customTerms:state.settings.customTerms, privacyPolicy:state.settings.privacyPolicy }) });
           else {
             if (!readyFiles.test(file.name)) throw new Error('浏览器预览仅解析文本。');
             const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
@@ -753,7 +753,8 @@ export function App() {
     const token = viewToken.current;
     setBusy(true);
     try {
-      const preview = await desktop.prepareRun({ sessionId, prompt,bootstrapPrompt,command,startInPlanMode,mode, model, modelProviderId, reasoning, permission, workspaceId: workspace.id,projectId:project?.id||null,customTerms,privacyMode,privacyPolicy });
+      const visualAttachments = attachments.flatMap(file => file.visual?.visualId ? [{...file.visual,name:file.name,mimeType:file.visual.mediaType||'image/png'}] : []);
+      const preview = await desktop.prepareRun({ sessionId, prompt,bootstrapPrompt,command,startInPlanMode,mode, model, modelProviderId, reasoning, permission, workspaceId: workspace.id,projectId:project?.id||null,customTerms,privacyMode,privacyPolicy,visualAttachments });
       if (token === viewToken.current) {
         if(preview.blocked)openModal({ type: 'privacy', original: `任务模式：${mode === 'government' ? '政务' : '办公'}\n\n${prompt}`, preview, blocked:true });
         else {

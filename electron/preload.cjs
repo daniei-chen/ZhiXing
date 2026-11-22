@@ -54,7 +54,7 @@ contextBridge.exposeInMainWorld('zhixing',{
  answerQuestion:value=>ipcRenderer.invoke('agent:answer-question',value),
  forgetSession:sessionId=>ipcRenderer.invoke('agent:forget',{sessionId}),
  parseFile:options=>ipcRenderer.invoke('files:parse',options),
- pickFiles:directory=>ipcRenderer.invoke('files:pick',directory),
+ pickFiles:options=>ipcRenderer.invoke('files:pick',options),
  chooseWorkspaceFolder:()=>ipcRenderer.invoke('space:choose-folder'),
  exportFile:options=>ipcRenderer.invoke('file:export',options),
  prepareDelivery:options=>ipcRenderer.invoke('delivery:prepare',options),

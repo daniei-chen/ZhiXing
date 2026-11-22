@@ -4,7 +4,7 @@ import {containsCredential} from '../src/privacy-recognizers.js';
 export const MODEL_ID = /^[\w./:+-]{1,160}$/;
 
 export function builtinModels() {
-  return resolveAdapterOptions({}).models.map(model => ({ id: model.id, name: model.name || model.id, description: model.description || '', source: 'builtin' }));
+  return resolveAdapterOptions({}).models.map(model => ({ id: model.id, name: model.name || model.id, description: model.description || '', inputModalities: Array.isArray(model.inputModalities) ? [...model.inputModalities] : ['text'], source: 'builtin' }));
 }
 
 export function decodeModels(body) {
@@ -14,7 +14,8 @@ export function decodeModels(body) {
   for (const item of body.data.slice(0, 300)) {
     if (!item || typeof item.id !== 'string' || !MODEL_ID.test(item.id) || seen.has(item.id) || /(?:^|[\/_-])(?:embeddings?|rerank|moderation|whisper|tts|dall-e|gpt-image)(?:$|[-_0-9])/i.test(item.id)) continue;
     seen.add(item.id);
-    rows.push({ id: item.id, name: String(item.name || item.display_name || item.id).slice(0, 100), description: typeof item.description === 'string' ? item.description.slice(0, 180) : '', source: 'provider' });
+    const modalities = item.input_modalities || item.inputModalities;
+    rows.push({ id: item.id, name: String(item.name || item.display_name || item.id).slice(0, 100), description: typeof item.description === 'string' ? item.description.slice(0, 180) : '', ...(Array.isArray(modalities) && modalities.every(value => value === 'text' || value === 'image') ? { inputModalities: [...new Set(modalities)] } : {}), source: 'provider' });
   }
   if (!rows.length) throw new Error('服务返回的模型列表为空，已保留当前配置。');
   return rows;

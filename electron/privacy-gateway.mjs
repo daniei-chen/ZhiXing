@@ -8,15 +8,17 @@ import {assertModelCredential} from '../src/provider-options.js';
 import {updateBridge} from '../harness/privacy-bridge.mjs';
 import {goalWire} from './goal-wire.mjs';
 import {createAssistantStreamDecoder} from './assistant-stream.mjs';
+import {createHash} from 'node:crypto';
 
 // A request-local loopback gateway is the serialization boundary. Harness loop
 // messages are immutable; do not mutate its event-sourced request projection.
-export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,bridgeFile,bridgeKey,privacyMode,customTerms=[],privacyPolicy,onAssistantText,mainSessionId}) {
+export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,bridgeFile,bridgeKey,privacyMode,customTerms=[],privacyPolicy,onAssistantText,mainSessionId,visualAttachments=[]}) {
   assertModelCredential(apiKey);
   privacyPolicy=privacyPolicyForMode(privacyPolicy,privacyMode);
   const openAI=protocol==='openai';
   const inbound=openAI?'/v1/chat/completions':protocol==='deepseek'?'/anthropic/v1/messages':'/v1/messages';
   const token=`zx-local-${randomBytes(24).toString('hex')}`;
+  const approvedImages=new Map((Array.isArray(visualAttachments)?visualAttachments:[]).filter(image=>typeof image?.sha256==='string'&&typeof image?.data==='string').map(image=>[image.sha256,image]));
   const controllers=new Set();let tail=Promise.resolve();
   const server=http.createServer(async(req,res)=>{
     const controller=new AbortController();controllers.add(controller);
@@ -44,6 +46,27 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
             if(block.type==='text')return {...extras(block,['type','text'],'block'),text:goal.result(toolId,block.text)};
             if(block.type==='tool_use')return {...extras(block,['type','input','name','id'],'block'),name:identity(block.name),id:identity(block.id),input:goal.input(block.name,block.input)};
             if(block.type==='tool_result')return {...extras(block,['type','content','tool_use_id'],'block'),tool_use_id:identity(block.tool_use_id),content:content(block.content,block.tool_use_id)};
+            if(block.type==='image'){
+              const source=block.source;
+              if(!source||source.type!=='base64'||typeof source.data!=='string'||typeof source.media_type!=='string')throw new Error('图片内容未通过本机视觉附件边界。');
+              const bytes=Buffer.from(source.data,'base64');
+              if(!bytes.length||bytes.toString('base64')!==source.data)throw new Error('图片编码无效。');
+              const sha256=createHash('sha256').update(bytes).digest('hex');
+              const approved=approvedImages.get(sha256);
+              if(!approved||approved.mediaType!==source.media_type)throw new Error('图片不是本次交办准备的本机副本。');
+              return {...extras(block,['type','source'],'block'),source:{type:'base64',media_type:source.media_type,data:source.data}};
+            }
+            if(block.type==='image_url'){
+              const url=block.image_url?.url;
+              const match=typeof url==='string'?url.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,(.+)$/):null;
+              if(!match)throw new Error('图片内容未通过本机视觉附件边界。');
+              const bytes=Buffer.from(match[2],'base64');
+              if(!bytes.length||bytes.toString('base64')!==match[2])throw new Error('图片编码无效。');
+              const sha256=createHash('sha256').update(bytes).digest('hex');
+              const approved=approvedImages.get(sha256);
+              if(!approved||approved.mediaType!==match[1])throw new Error('图片不是本次交办准备的本机副本。');
+              return {...extras(block,['type','image_url'],'block'),image_url:{...extras(block.image_url,['url','detail'],'data'),url:`data:${match[1]};base64,${match[2]}`}};
+            }
             if(block.type==='thinking'){
               const checked=vault.protect(String(block.thinking||''),customTerms,privacyPolicy);
               if(checked.blocked||privacyMode!=='raw'&&checked.entities.length)throw new Error('带签名推理包含未保护内容，已停止重放。');
@@ -58,7 +81,7 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
           body.messages=body.messages.map(message=>{
             const copy=extras(message,['role','content','name','tool_calls','tool_call_id','reasoning_content','reasoning','refusal','function_call']);
             if(copy.name!==undefined)identity(copy.name);if(copy.tool_call_id!==undefined)identity(copy.tool_call_id);
-            if(copy.content!=null)copy.content=content(copy.content,message.role==='tool'?message.tool_call_id:undefined);
+          if(copy.content!=null)copy.content=content(copy.content,message.role==='tool'?message.tool_call_id:undefined);
             for(const field of ['reasoning_content','reasoning','refusal'])if(typeof copy[field]==='string')copy[field]=protect(copy[field]);
             if(Array.isArray(copy.tool_calls))copy.tool_calls=copy.tool_calls.map(call=>({...extras(call,['type','id','function']),id:identity(call.id),function:{...extras(call.function,['name','arguments']),name:identity(call.function.name),arguments:JSON.stringify(goal.input(call.function.name,JSON.parse(call.function.arguments||'{}')))}}));
             if(copy.function_call)throw new Error('不支持旧版函数调用。');

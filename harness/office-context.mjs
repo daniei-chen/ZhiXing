@@ -34,14 +34,18 @@ export function apply(ctx) {
    tools,
   };
   let modelCatalog=modelCatalogs.get(session.id);
-  if(!modelCatalog){modelCatalog=ctx.systemPrompt.assemble({scope:agent}).then(value=>value.tools.map(tool=>tool.name));modelCatalogs.set(session.id,modelCatalog);modelCatalog.catch(()=>modelCatalogs.delete(session.id));}
+  if(!modelCatalog){modelCatalog=Promise.resolve().then(()=>ctx.systemPrompt.assemble({scope:agent})).then(value=>value.tools.map(tool=>tool.name),()=>tools.map(tool=>tool.name));modelCatalogs.set(session.id,modelCatalog);}
   manifestInputs.set(session.id,{modelCatalog,options:{kernel,tools,scope:process.env.ZHIXING_CAPABILITY_SCOPE,hasWorkspace:Boolean(process.env.ZHIXING_WORKSPACE_ROOT),permission:process.env.ZHIXING_PERMISSION_MODE,protocol:process.env.ZHIXING_MODEL_PROTOCOL,allowNetwork:process.env.ZHIXING_ALLOW_NETWORK!=='false',browserBridge:Boolean(process.env.ZHIXING_BROWSER_BRIDGE),automationBridge:Boolean(process.env.ZHIXING_AUTOMATION_BRIDGE),teamActive:projection.agentTeam?.enabled===true,planning:planning===true}});
   const snapshot = JSON.parse(JSON.stringify(reports)),manifestSnapshot=[...manifestInputs];
-  skillCatalog ??= ctx.skills.list({cwd: process.env.ZHIXING_WORKSPACE_ROOT || undefined})
-   .then(skills => skills.map(({name, description, source, provider}) => ({name, description, source, provider})));
+  skillCatalog ??= Promise.resolve().then(()=>ctx.skills.list({cwd: process.env.ZHIXING_WORKSPACE_ROOT || undefined}))
+   .then(skills => skills.map(({name, description, source, provider}) => ({name, description, source, provider})),()=>[]);
   tail = tail.catch(() => {}).then(async () => {
    const skills = await skillCatalog;
-   for(const [id,input] of manifestSnapshot)snapshot[id].capabilityManifest=createCapabilityManifest({...input.options,modelTools:await input.modelCatalog});
+   for(const [id,input] of manifestSnapshot){
+    if(!snapshot[id])snapshot[id]={};
+    const modelTools=await input.modelCatalog;
+    snapshot[id].capabilityManifest=createCapabilityManifest({...input.options,modelTools});
+   }
    // In-process children share this reporter. Every whole-file snapshot must
    // keep the catalog for its parent and all earlier sessions as well.
    for (const report of Object.values(snapshot)) report.skills = skills;

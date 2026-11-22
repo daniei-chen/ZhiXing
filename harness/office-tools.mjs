@@ -188,13 +188,15 @@ export function apply(ctx){
   try{return {kind:'accept',content:await protectedValue(content,'block')};}
   catch{return {kind:'block',feedback:[{type:'text',text:'外部工具返回内容被隐私策略拦截。'}]};}
  });
- // Provider turns stay text-only; office-file values pass through the local privacy bridge.
+ // Generic files still use the local text/file boundary. Images are admitted
+ // through the official durable attachment service and are checked by the
+ // main-process privacy gateway before reaching the selected model route.
  ctx.on('llm-pi-ai/request-headers',(request,headers)=>{
   if(request.sessionId!==undefined)headers.set('x-zhixing-session-id',String(request.sessionId));
   return headers;
  });
  ctx.on('llm/stream',async function*(options,next){
-  if(options.messages.some(message=>message.content.some(block=>['file','image'].includes(block.type)))){yield {type:'finish',reason:{kind:'error',failure:{code:'UNKNOWN',message:'原始附件尚未接入脱敏，请先解析为文本。'}}};return;}
+  if(options.messages.some(message=>message.content.some(block=>block.type==='file'))){yield {type:'finish',reason:{kind:'error',failure:{code:'UNKNOWN',message:'通用文件附件尚未接入脱敏，请先解析为文本。'}}};return;}
   yield* next();
  });
 }

@@ -127,6 +127,7 @@ export function resolveProvider(providers, selection = {}) {
     } : effort.compat,
     credentialRevision: provider.credentialRevision,
     contextWindow: selected.contextWindow || provider.contextWindow, maxTokens: selected.maxTokens || provider.maxTokens,
+    inputModalities: Array.isArray(selected.inputModalities) ? [...selected.inputModalities] : ['text'],
   };
 }
 

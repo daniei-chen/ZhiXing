@@ -31,8 +31,17 @@ try {
  }
  $bitmap=Wait-WinRt ($decoder.GetSoftwareBitmapAsync([Windows.Graphics.Imaging.BitmapPixelFormat]::Bgra8,[Windows.Graphics.Imaging.BitmapAlphaMode]::Premultiplied)) ([Windows.Graphics.Imaging.SoftwareBitmap])
  $ocr=Wait-WinRt ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
- $text=($ocr.Lines | ForEach-Object {$_.Text}) -join [Environment]::NewLine
- @{language=$engine.RecognizerLanguage.LanguageTag; text=$text} | ConvertTo-Json -Compress
+ $lines=@($ocr.Lines | ForEach-Object {
+   $line=$_
+   $words=@($line.Words | ForEach-Object {
+     $word=$_
+     $rect=$word.BoundingRect
+     [ordered]@{text=[string]$word.Text; x=[double]$rect.X; y=[double]$rect.Y; width=[double]$rect.Width; height=[double]$rect.Height}
+   })
+   [ordered]@{text=[string]$line.Text; words=$words}
+ })
+ $text=($lines | ForEach-Object {$_.text}) -join [Environment]::NewLine
+ @{language=$engine.RecognizerLanguage.LanguageTag; width=[int]$decoder.PixelWidth; height=[int]$decoder.PixelHeight; text=$text; lines=$lines} | ConvertTo-Json -Compress -Depth 8
 } catch {
  @{error='failed'} | ConvertTo-Json -Compress
 } finally {

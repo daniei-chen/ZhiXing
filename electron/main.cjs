@@ -303,7 +303,12 @@ function registerHandlers(){
   const config=route(options);
   currentCredential(config);
   if([options?.prompt,options?.bootstrapPrompt,options?.command].some(prompt=>typeof prompt==='string'&&providers.some(({key})=>containsCredential(prompt,key))))throw new Error('检测到已配置的模型凭证，请从输入中移除。');
-  return manager.preview(options,{...config,manualControls:true});
+  const visualAttachments=[];
+  for(const visual of Array.isArray(options?.visualAttachments)?options.visualAttachments:[]) {
+   const {readVisualAttachment}=await import('./visual-attachments.mjs');
+   visualAttachments.push(await readVisualAttachment(path.join(ROOT,'visual'),visual,options.privacyMode==='raw'?'raw':'redact'));
+  }
+  return manager.preview({...options,visualAttachments},{...config,manualControls:true});
  });
  handle('agent:run-prepared',options=>manager.runPrepared(options,currentCredential));
  handle('agent:cancel',async({runId})=>manager.cancel(runId));
@@ -333,16 +338,24 @@ function registerHandlers(){
   deliveryService.invalidateAll();
   return true;
  });
- handle('files:parse',async({name,bytes})=>{
+ handle('files:parse',async({name,bytes,privacyMode='redact',customTerms=[],privacyPolicy={}})=>{
   if(typeof name!=='string'||!ArrayBuffer.isView(bytes)||bytes.byteLength>10*1024*1024)throw new Error('文件超过 10 MB 或参数无效。');
-  const {parseLocalMaterial}=await import('./office-files.mjs');return parseLocalMaterial(name,Buffer.from(bytes));
+  const buffer=Buffer.from(bytes),{parseLocalMaterial}=await import('./office-files.mjs');
+  const parsed=await parseLocalMaterial(name,buffer);
+  if (/\.(?:png|jpe?g|bmp|tiff?)$/i.test(name)) {
+   const {prepareVisualAttachment}=await import('./visual-attachments.mjs');
+   parsed.visual=await prepareVisualAttachment({root:path.join(ROOT,'visual'),name,bytes:buffer,privacyMode,customTerms,privacyPolicy});
+  }
+  return parsed;
  });
  handle('space:choose-folder',async()=>{
   const chosen=await dialog.showOpenDialog(windowRef,{title:'选择工作空间目录',properties:['openDirectory']});
   if(chosen.canceled)return null;
   return fs.realpath(chosen.filePaths[0]);
  });
- handle('files:pick',async(directory)=>{
+ handle('files:pick',async(input)=>{
+  const directory=typeof input==='string'?input:input?.directory;
+  const privacyMode=input?.privacyMode==='raw'?'raw':'redact',customTerms=Array.isArray(input?.customTerms)?input.customTerms:[],privacyPolicy=input?.privacyPolicy||{};
   let defaultPath;
   if(typeof directory==='string'&&path.isAbsolute(directory)){
    const stat=await fs.stat(directory).catch(()=>null);
@@ -355,7 +368,12 @@ function registerHandlers(){
   for(const filePath of result.filePaths.slice(0,12)){
    const name=path.basename(filePath),id=randomUUID();let size=0;
    try{const stat=await fs.stat(filePath);size=stat.size;if(!stat.isFile()||size>10*1024*1024)throw new Error('请选用不超过 10 MB 的文件。');
-   files.push({...await parseLocalMaterial(name,await fs.readFile(filePath)),id});}
+   const buffer=await fs.readFile(filePath),parsed=await parseLocalMaterial(name,buffer);
+   if (/\.(?:png|jpe?g|bmp|tiff?)$/i.test(name)) {
+    const {prepareVisualAttachment}=await import('./visual-attachments.mjs');
+    parsed.visual=await prepareVisualAttachment({root:path.join(ROOT,'visual'),name,bytes:buffer,privacyMode,customTerms,privacyPolicy});
+   }
+   files.push({...parsed,id});}
    catch(error){files.push({id,name,size,status:'error',reason:error.message,text:''});}
   }
   return files;

@@ -24,17 +24,23 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前版本为 **0.12.3 Windows x64 未签名预发布候选**，内核依赖固定为 **DeepSeek Harness 0.2.2-rc.5**。本轮把 Windows 本机 OCR 真正接入 Agent `office_read_file`，修复规划模式结束后的状态投影，并补上 OCR 取消的子进程信号。最终安装器、哈希、源码 provenance、Windows 实包和 NSIS 生命周期结果已写入 [0.12.3 Windows 验收记录](docs/windows-acceptance-0.12.3.md)。
+当前版本为 **0.12.4 Windows x64 未签名预发布候选**，内核依赖固定为 **DeepSeek Harness 0.2.2-rc.5**。本轮把图片资料接入官方 Harness 视觉输入：主进程先生成本机遮罩副本，再通过官方 `attachment-local` 和 SDK 图片块发送；原图不进入 renderer 工作区或模型线缆。最终安装器、哈希、源码 provenance、Windows 实包和 NSIS 生命周期结果会写入 [0.12.4 Windows 验收记录](docs/windows-acceptance-0.12.4.md)。
 
 <div align="center">
 
 <img src="docs/assets/readme-workbench-0.11.0.png" alt="知行 0.11.0 Windows 工作台，展示项目侧栏、墨竹欢迎页和交办输入区" width="100%" />
 
-知行 Windows 工作台 · 0.12.3
+知行 Windows 工作台 · 0.12.4
 
 </div>
 
-## 0.12.3 本轮更新
+## 0.12.4 本轮更新
+
+- **模型视觉输入已接线**：选择声明 `image` 输入的模型后，图片通过官方 SDK 编码图片块进入模型；不支持图片输入的模型会在发送前阻断，不静默换模型。
+- **原图遮罩在主进程完成**：Windows OCR 返回词级坐标，本机规则命中的敏感区域生成遮罩副本；renderer 和加密工作区只保存视觉副本 UUID、哈希和覆盖范围。
+- **视觉隐私边界可回环验收**：`tests/runtime-vision.test.mjs` 检查原图 base64 不出站、遮罩副本出站、`image` 内容块存在和任务只执行一次。未识别文字、图表语义和全面 NER 仍需人工核对。
+
+## 0.12.3 历史更新
 
 - **图片资料真正进入 Agent 文件工具**：`office_read_file` 现在支持 PNG、JPEG、BMP 和 TIFF，调用 Windows 本机 OCR 后只把识别文字送入现有脱敏网关；原始图片字节不会进入模型请求。
 - **规划状态与命令一致**：`/plan` 和 `/plan off` 会等待与命令相符的最终上下文投影，避免界面显示“已开启”而运行结果仍是关闭。
@@ -68,13 +74,13 @@
 
 <img src="docs/assets/readme-privacy-0.12.0.png" alt="知行 0.12.0 实包的本机脱敏测试，展示全角及隐藏字符电话号码的替换、识别依据和未覆盖说明" width="100%" />
 
-以上工作台和隐私截图分别来自 0.11.0、0.12.0，保留为历史界面背景。0.12.0 的原始验收见 [历史记录](docs/windows-acceptance-0.12.0.md)；0.12.1 的发布结果见 [0.12.1 验收页](docs/windows-acceptance-0.12.1.md)，0.12.2 的历史门禁见 [0.12.2 验收页](docs/windows-acceptance-0.12.2.md)，当前 0.12.3 门禁见 [0.12.3 验收页](docs/windows-acceptance-0.12.3.md)。常驻 Host、OAuth、模型视觉、独立搜索、增量加密存储及完整原生 Office/文件工具仍未全部完成。
+以上工作台和隐私截图分别来自 0.11.0、0.12.0，保留为历史界面背景。0.12.0 的原始验收见 [历史记录](docs/windows-acceptance-0.12.0.md)；0.12.1 的发布结果见 [0.12.1 验收页](docs/windows-acceptance-0.12.1.md)，0.12.2 的历史门禁见 [0.12.2 验收页](docs/windows-acceptance-0.12.2.md)，当前 0.12.4 门禁见 [0.12.4 Windows 验收页](docs/windows-acceptance-0.12.4.md)。常驻 Host、OAuth、全面 NER、独立搜索、增量加密存储及完整原生 Office/文件工具仍未全部完成。
 
 ## 开始使用
 
 ### 获取已发布的 Windows 预发布候选
 
-1. 打开 [0.12.3 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.12.3)，下载公开资产 `ZhiXing-0.12.3-x64.exe`，并核对发行页及 `SHA256SUMS-release.txt` 公布的 SHA-256。仓库本地构建文件名仍为 `知行-0.12.3-x64.exe`。
+1. 打开 [0.12.4 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.12.4)，下载公开资产 `ZhiXing-0.12.4-x64.exe`，并核对发行页及 `SHA256SUMS-release.txt` 公布的 SHA-256。仓库本地构建文件名仍为 `知行-0.12.4-x64.exe`。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
@@ -85,18 +91,18 @@
 
 | Windows x64 候选资产 | 值 |
 | --- | --- |
-| 文件 | `ZhiXing-0.12.3-x64.exe`（公开下载名） |
-| 发行状态 | 0.12.3 未签名预发布候选；目录包、安装器和 NSIS 生命周期以专项验收页为准 |
-| 文件大小 | 562,803,952 bytes |
+| 文件 | `ZhiXing-0.12.4-x64.exe`（公开下载名） |
+| 发行状态 | 0.12.4 未签名预发布候选；目录包、安装器和 NSIS 生命周期以专项验收页为准 |
+| 文件大小 | 构建后填写 |
 | SHA-256 | `3954C5785DF26EF110DC0B156BA4B4397670153E2E90BE98245B87F9451F0B26` |
 
-发行包携带独立 Node、Harness 和插件 npm CLI。验收分源码、包内模块、真实 Windows 页面和 NSIS 安装生命周期；测试使用本机合成服务，不代表真实云端账户矩阵通过。具体条件、数据保留和未覆盖分支见 [0.12.3 Windows 验收记录](docs/windows-acceptance-0.12.3.md)。
+发行包携带独立 Node、Harness 和插件 npm CLI。验收分源码、包内模块、真实 Windows 页面和 NSIS 安装生命周期；测试使用本机合成服务，不代表真实云端账户矩阵通过。具体条件、数据保留和未覆盖分支见 [0.12.4 Windows 验收记录](docs/windows-acceptance-0.12.4.md)。
 
-0.12.3 源码回归 **337 项，336 通过，0 失败，0 取消，1 条件跳过**；组件与隔离 Windows Electron 旅程 **14/14**，Sites **4/4**；目录包回归 **305 项，304 通过，0 失败，0 取消，1 条件跳过**。Windows 实包的内核隐私、交付、运行恢复、审计会话和既有会话旅程分别为 **15/15、7/7、8/8、8/8、12/12**，页面矩阵 **336/336**；NSIS 生命周期为 **53 步骤，38 passed，15 observed，0 failed**。页面检查点数量不是业务覆盖率或全部内核能力的覆盖率。
+0.12.4 源码回归当前为 **338 项，337 通过，0 失败，0 取消，1 条件跳过**；其中视觉回环通过。组件、Sites、目录包、Windows 页面矩阵和 NSIS 生命周期以同一包的 0.12.4 专项验收记录为准。
 
 安装生命周期使用同 Windows 账户、隔离 `--user-data-dir` 和合成资料；真实默认 AppData 只作字节保护/恢复，不作真实业务迁移。空配置 NSIS 新装、交互/所有用户安装、普通卸载快捷方式清理、跨账户及真实资料迁移不能由该范围推断。每一版的升级、覆盖、卸载和重装结论以其实际安装器哈希和专项记录为准。
 
-交给外部 AI 审计时，请同时提供 [v0.12.3 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.12.3)、完整安装包和 [审计说明](docs/audit-request.md)。发行材料包含机器可读验收摘要、生产依赖路径清单/组件 SBOM、完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交。
+交给外部 AI 审计时，请同时提供 [v0.12.4 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.12.4)、完整安装包和 [审计说明](docs/audit-request.md)。发行材料包含机器可读验收摘要、生产依赖路径清单/组件 SBOM、完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交。
 
 ### 连接模型
 
@@ -135,7 +141,7 @@
 
 ## 隐私与本机数据
 
-**默认启用本机脱敏。** 文本和 Windows 本机 OCR 结果在发送给模型前按本机规则处理，工具结果经过同一保护链，映射按任务隔离。原始图片字节不会上传；模型视觉、原图遮罩和全面 NER 仍未接入。设置支持分类控制、自定义词、排除词和本地测试。识别范围取决于规则与输入内容，重要资料仍需人工检查。
+**默认启用本机脱敏。** 文本和 Windows 本机 OCR 结果在发送给模型前按本机规则处理，工具结果经过同一保护链，映射按任务隔离。原始图片字节不会上传；模型视觉已接入源码回环；原图遮罩副本已接入主进程，全面 NER 仍未接入。设置支持分类控制、自定义词、排除词和本地测试。识别范围取决于规则与输入内容，重要资料仍需人工检查。
 
 | 数据或操作 | 处理方式 |
 | --- | --- |
@@ -161,7 +167,7 @@
 
 | 能力 | 当前范围 |
 | --- | --- |
-| 文档理解 | Office/PDF 文字提取、本机版面和 Windows OCR 已接入 Agent `office_read_file`；图片、截图和图表只以本机 OCR 文字进入上下文，模型视觉输入待补齐 |
+| 文档理解 | Office/PDF 文字提取、本机版面和 Windows OCR 已接入 Agent `office_read_file`；图片资料在支持 `image` 的模型上可进入真实视觉上下文，先经过主进程本机遮罩副本；截图和图表语义、未识别文字仍待专项验证 |
 | 供应商认证 | 当前使用 API Key。完整 OAuth、刷新与账号切换隔离待实现 |
 | 会话导入 | 支持 DeepSeek 导出 ZIP 的当前分支、随包图片和部分活动记录。全分支与完整工具轨迹迁移待实现 |
 | 协作执行 | 子 Agent、工作流、作业及 Agent Teams 已接入；真实 PTC 默认关闭，需项目和完全访问。跨启动 live jobs、复杂多 Agent 负载及长期稳定性仍待验证 |
@@ -170,7 +176,7 @@
 | Office 交付 | 支持现有 DOCX/XLSX/TXT 导出及本机转换。复杂排版、类型正确的结构化报表和模型原生 Office 三工具仍需完善 |
 | 平台 | 当前面向 Windows x64。macOS、Linux 分发以及系统桌面 Computer Use 等扩展待独立验证 |
 
-[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.12.3.md) · [界面对照记录](design-qa.md)
+[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.12.4.md) · [界面对照记录](design-qa.md)
 
 ## 0.11.0 的工作重点
 
@@ -212,10 +218,10 @@ npm run test:browser
 npm run electron:install
 npm run test:packed -- ".\release\win-unpacked\知行.exe"
 npm run test:browser -- ".\release\win-unpacked\知行.exe"
-Get-FileHash ".\release\知行-0.12.3-x64.exe" -Algorithm SHA256
+Get-FileHash ".\release\知行-0.12.4-x64.exe" -Algorithm SHA256
 ```
 
-目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。0.12.3 的构建提交、包内 provenance、source fingerprint 和 lock SHA 以 [0.12.3 Windows 验收记录](docs/windows-acceptance-0.12.3.md) 中的同包结果为准；0.12.2 的旧指纹仍只用于历史包核对。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留，不能沿用旧包指纹和结论。打包携带与 Node.js 版本一致的许可证文件，变更 Node 版本时请同步真实许可证和构建清单。
+目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。0.12.4 的构建提交、包内 provenance、source fingerprint 和 lock SHA 以 [0.12.4 Windows 验收记录](docs/windows-acceptance-0.12.4.md) 中的同包结果为准；0.12.2 的旧指纹仍只用于历史包核对。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留，不能沿用旧包指纹和结论。打包携带与 Node.js 版本一致的许可证文件，变更 Node 版本时请同步真实许可证和构建清单。
 
 ## 参与完善
 
