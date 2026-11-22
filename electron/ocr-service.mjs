@@ -12,7 +12,8 @@ const worker=fileURLToPath(new URL('./ocr-worker.ps1',import.meta.url));
 const run=promisify(execFile);
 let running=0;
 
-export async function recognizeImage(name,bytes){
+export async function recognizeImage(name,bytes,{signal}={}){
+ signal?.throwIfAborted();
  if(process.platform!=='win32')throw new Error('图片文字识别需要 Windows 桌面版。');
  if(!supportsOcrImage(name)||!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>10*1024*1024)throw new Error('请选择 10 MB 以内的 PNG、JPEG、BMP 或 TIFF 图片。');
  if(running>=2)throw new Error('本机文字识别正忙，请稍后重试。');
@@ -26,9 +27,13 @@ export async function recognizeImage(name,bytes){
   const env=Object.fromEntries(['SystemRoot','WINDIR','TEMP','TMP','USERPROFILE','APPDATA','LOCALAPPDATA','PATH'].filter(key=>process.env[key]).map(key=>[key,process.env[key]]));
   let result;
   try{
-   const {stdout}=await run(executable,['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',worker,'-Image',image],{windowsHide:true,timeout:25000,maxBuffer:750000,env});
+  const {stdout}=await run(executable,['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',worker,'-Image',image],{windowsHide:true,timeout:25000,maxBuffer:750000,env,signal});
+   signal?.throwIfAborted();
    result=JSON.parse(stdout.replace(/^\uFEFF/,'').trim());
-  }catch{throw new Error('Windows 文字识别未能启动或已超时。');}
+  }catch(error){
+   if(error?.name==='AbortError'||error?.code==='ABORT_ERR')throw new Error('图片文字识别已取消。');
+   throw new Error('Windows 文字识别未能启动或已超时。');
+  }
   if(result.error==='no-language')throw new Error('请先在 Windows「语言和区域」中安装具有文字识别功能的语言。');
   if(result.error==='dimensions')throw new Error(`图片尺寸超过本机引擎上限（单边 ${result.max} 像素）。`);
   if(result.error||typeof result.text!=='string')throw new Error('本机文字识别无法处理此图片。');

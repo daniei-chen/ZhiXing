@@ -3,7 +3,7 @@ import {Document,Packer,Paragraph,TextRun,HeadingLevel} from 'docx';
 import {parseDocumentFile} from './document-service.mjs';
 import {recognizeImage,supportsOcrImage} from './ocr-service.mjs';
 export {parseDocumentFile as parseOfficeFile};
-export const parseLocalMaterial=(name,bytes)=>supportsOcrImage(name)?recognizeImage(name,bytes):parseDocumentFile(name,bytes);
+export const parseLocalMaterial=(name,bytes,options={})=>supportsOcrImage(name)?recognizeImage(name,bytes,options):parseDocumentFile(name,bytes,options);
 
 export async function exportOfficeFile(text,format){
  if(format==='txt')return Buffer.from(text,'utf8');

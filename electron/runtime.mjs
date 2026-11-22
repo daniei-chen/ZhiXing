@@ -28,13 +28,13 @@ async function checkMcpReady(file,key,servers=[]){
  const status=await readBridge(`${file}.status`,key).catch(()=>[]);
  if(enabled.some(server=>!status.some(item=>item.server===server.serverName&&item.connected)))throw new Error('部分 MCP 服务未能连接，请在设置中检查或停用。');
 }
-async function waitContext(directory,key,sessionId,{planning=false}={}){
+async function waitContext(directory,key,sessionId,{planning}={}){
  const deadline=Date.now()+5000;
  let reports,readError;
  while(Date.now()<deadline){
   try{reports=await readBridge(path.join(directory,'context.bin'),key);readError=undefined;}
   catch(error){readError=error;}
-  if(Array.isArray(reports?.[sessionId]?.skills)&&(!planning||reports[sessionId].planning))return reports[sessionId];
+  if(Array.isArray(reports?.[sessionId]?.skills)&&(planning===undefined||reports[sessionId].planning===planning))return reports[sessionId];
   await new Promise(resolve=>setTimeout(resolve,30));
  }
  const error=new Error('内核目录读取超时，请重新检查。',readError?{cause:readError}:undefined);
@@ -569,7 +569,8 @@ export class RuntimeManager{
     throw Object.assign(new Error('模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。'),{code:'RUNTIME_TURN_FAILED',stage:'query',details:{finishReason:result.finishReason,diagnostic}});
    }
    active.finishReason=result.finishReason;
-   await waitContext(directory,bridgeKey,sessionId);
+   const expectedPlanning=options.command==='/plan'?true:options.command==='/plan off'?false:undefined;
+   await waitContext(directory,bridgeKey,sessionId,{planning:expectedPlanning});
    await active.draftTail;
    vault=new PrivacySession(sessionId,await readBridge(bridgeFile,bridgeKey));
    let context;try{const reports=await readBridge(path.join(directory,'context.bin'),bridgeKey);context=protectTeamContext(reports[sessionId],key);}catch{}

@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readBridge, updateBridge } from './privacy-bridge.mjs';
 import { resolveOfficePath, needsApproval, writeOfficeFile, nextOfficePath } from './file-policy.mjs';
-import { parseOfficeFile, exportOfficeFile } from '../electron/office-files.mjs';
+import { parseOfficeFile, parseLocalMaterial, exportOfficeFile } from '../electron/office-files.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
 import {shellEnvironment, planningAllows} from './shell-policy.mjs';
 
@@ -113,11 +113,12 @@ export function apply(ctx){
    const process=await ctx.shell.execute(spec),result=await process.result();
    return protectedValue({exitCode:result.exitCode,timedOut:result.timedOut,aborted:result.aborted,sandbox:result.sandbox,stdout:result.stdout.text,stderr:result.stderr.text,truncated:result.stdout.truncated||result.stderr.truncated});
   }}));
-  ctx.tools.register(defineTool({name:'office_read_file',description:'读取工作空间或经批准的本机办公文件。支持TXT、Markdown、CSV、DOCX、XLSX、PPTX和文字PDF。仅返回本机提取文本，图片和扫描区域未识别；公式只有缓存值。返回的敏感占位符必须原样保留。大文件按 start_character 和 max_characters 分段读取，直到 next_character 为 null。',parameters:{file_path:{type:'string',required:true},start_character:{type:'integer'},max_characters:{type:'integer'}},output,async execute({file_path,start_character=0,max_characters=80000},exec){
+  ctx.tools.register(defineTool({name:'office_read_file',description:'读取工作空间或经批准的本机办公文件。支持TXT、Markdown、CSV、DOCX、XLSX、PPTX、文字PDF，以及 Windows 本机 OCR 支持的 PNG、JPEG、BMP、TIFF。仅返回本机提取或 OCR 文字，原始文件和图片字节不会上传；未识别区域、版式和模型视觉仍不覆盖；公式只有缓存值。返回的敏感占位符必须原样保留。大文件按 start_character 和 max_characters 分段读取，直到 next_character 为 null。',parameters:{file_path:{type:'string',required:true},start_character:{type:'integer'},max_characters:{type:'integer'}},output,async execute({file_path,start_character=0,max_characters=80000},exec){
    exec.signal.throwIfAborted();if(!Number.isInteger(start_character)||start_character<0||!Number.isInteger(max_characters)||max_characters<1||max_characters>80000)throw new Error('读取范围无效，单次最多 80000 字符。');const info=await localPath(file_path);await permit(exec,{...info,write:false},'读取文件');
    const stat=await fs.stat(info.target);if(!stat.isFile()||stat.size>10*1024*1024)throw new Error('请选择不超过10MB的普通办公文件。');
-   const parsed=await parseOfficeFile(path.basename(info.target),await fs.readFile(info.target),{signal:exec.signal});exec.signal.throwIfAborted();
-   if(start_character>parsed.text.length)throw new Error('读取起点超过文字长度。');const end=Math.min(parsed.text.length,start_character+max_characters);return protectedValue({path:info.target,text:parsed.text.slice(start_character,end),coverage:parsed.coverage,warnings:parsed.warnings,total_characters:parsed.text.length,start_character,next_character:end<parsed.text.length?end:null,truncated:end<parsed.text.length});
+   const bytes=await fs.readFile(info.target);
+   const parsed=await parseLocalMaterial(path.basename(info.target),bytes,{signal:exec.signal});exec.signal.throwIfAborted();
+    if(start_character>parsed.text.length)throw new Error('读取起点超过文字长度。');const end=Math.min(parsed.text.length,start_character+max_characters);return protectedValue({path:info.target,text:parsed.text.slice(start_character,end),coverage:parsed.coverage,warnings:parsed.warnings||[],total_characters:parsed.text.length,start_character,next_character:end<parsed.text.length?end:null,truncated:end<parsed.text.length});
   }}));
   ctx.tools.register(defineTool({name:'office_list_files',description:'分页列出指定目录的可见普通文件和子目录，不递归、不读取内容；排除点开头、链接和禁止位置。按原始文件名 UTF-16 升序，默认每页 120 项；total_entries 仅统计可见条目，truncated 表示仍有后续页，使用 next_offset 继续直到 null。每页重新扫描，目录变化后应从第一页重查；单次最多扫描 10000 个直接条目，超限明确报错而不返回不完整清单。',parameters:{directory:{type:'string',required:true},offset:{type:'integer',description:'可见条目的零基起点，默认 0，范围 0–10000。'},limit:{type:'integer',description:'每页条目数，默认 120，范围 1–120。'}},output,async execute({directory,offset=0,limit=120},exec){
    exec.signal.throwIfAborted();

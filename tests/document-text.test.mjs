@@ -9,6 +9,7 @@ import {officeZip,makePdf,makeUnicodePdf} from './fixtures/documents.mjs';
 const {parseOfficeFile}=await import(process.env.ZHIXING_TEST_PACKED_APP?pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP,'electron','office-files.mjs')).href:'../electron/office-files.mjs');
 import {PrivacySession} from '../src/privacy-core.js';
 import {composePrompt} from '../src/office-workflows.js';
+import {recognizeImage} from '../electron/ocr-service.mjs';
 const W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 test('Word 提取正文、页眉页脚、修订和批注，图片只记录范围',async()=>{
  const file=officeZip({'word/document.xml':`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t>正文电话 13800000000</w:t></w:r><w:del><w:r><w:delText>已删除内容</w:delText></w:r></w:del><w:ins><w:r><w:t>新内容</w:t></w:r></w:ins></w:p></w:body></w:document>`,'word/header1.xml':`<w:hdr xmlns:w="${W}"><w:p><w:r><w:t>页眉电话 13911112222</w:t></w:r></w:p></w:hdr>`,'word/comments.xml':`<w:comments xmlns:w="${W}"><w:comment><w:p><w:r><w:t>批注电话 13611112222</w:t></w:r></w:p></w:comment></w:comments>`,'word/media/image1.png':new Uint8Array([0,1,2,3])});
@@ -43,4 +44,17 @@ test('中文 PDF 的 ToUnicode 文字映射可本机读取',async()=>{
 test('图片型 PPTX 不会把生成的页码误当作已提取正文',async()=>{
  const file=officeZip({'ppt/presentation.xml':'<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:sldIdLst><p:sldId id="1" r:id="rId1"/></p:sldIdLst></p:presentation>','ppt/_rels/presentation.xml.rels':'<Relationships><Relationship Id="rId1" Target="slides/slide1.xml"/></Relationships>','ppt/slides/slide1.xml':'<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld/></p:sld>','ppt/media/image1.png':new Uint8Array([0])});
  await assert.rejects(parseOfficeFile('图片演示.pptx',file),/没有可提取文字/);
+});
+test('Windows 图片 OCR 返回本机文字覆盖范围，不返回原始图片字节',{skip:process.platform!=='win32',timeout:35000},async t=>{
+ const file=new URL('./fixtures/ocr-office-read.png',import.meta.url);
+ try {
+  const result=await recognizeImage('ocr-office-read.png',await (await import('node:fs/promises')).readFile(file));
+  assert.equal(result.coverage.kind,'ocr-text');
+  assert.match(result.text,/13800000000/);
+  assert.match(result.coverage.notice,/本机 OCR/);
+  assert.equal(result.image,undefined);
+ } catch(error) {
+  if(error.message.includes('安装具有文字识别功能的语言'))return t.skip('Windows 未安装 OCR 语言');
+  throw error;
+ }
 });
