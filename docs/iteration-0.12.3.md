@@ -19,6 +19,7 @@
 | `npm run test:components` | 14/14 |
 | `npm run test:sites` | 4/4 |
 | `npm run build` | 通过 |
+| `npm run test:packed` | 305 项，304 通过，0 失败，0 取消，1 条件跳过 |
 | OCR/文档/上下文聚焦回归 | 20/20；包含真实 Windows OCR、图片工具出站脱敏和规划状态投影 |
 
 唯一条件跳过是 Windows 不授予文件符号链接权限时的 `owner.json` 符号链接测试；真实 junction、owner-entry junction、恶意元数据和不确定 PID 检查仍执行并通过。组件日志中故意注入的 `SYNTHETIC_*_FAILED` 是失败恢复路径的输入，随后相应断言通过。
@@ -37,4 +38,4 @@
 
 ## 版本与构建身份
 
-生产包由本轮提交中的生产代码构建；最终构建提交、`sourceDirty`、lock SHA、source fingerprint、安装器和应用 EXE SHA-256 由构建后实际生成的 `build-provenance.json` 和 [0.12.3 Windows 验收记录](windows-acceptance-0.12.3.md) 填写。文档收口提交可能晚于二进制构建提交，文档和 QA 适配不会被冒充为包内生产代码。
+生产包由提交 `621a26112afe720399c583ef537f1e8e96b5a8f5` 构建，`sourceDirty=false`，79 个业务文件匹配，source fingerprint 为 `68b95aad07df7bb8805b68091e2dd4bd54d9d94bf6de2ef1d0337011c2e288f8`，Node 为 `v24.19.0`，lock SHA-256 为 `944c4dc6d91dc8169a762801ca5d1bfc067cbcaf16d19678557e86109322e1a4`。安装器 SHA-256 为 `3954C5785DF26EF110DC0B156BA4B4397670153E2E90BE98245B87F9451F0B26`，应用 EXE SHA-256 为 `54D1B7C25FF13566782268593292718B4061E0AA1E01A456F3A6B6C7D83E15A1`。文档收口提交可能晚于二进制构建提交，文档和 QA 适配不会被冒充为包内生产代码。

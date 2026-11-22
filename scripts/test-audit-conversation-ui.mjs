@@ -11,10 +11,11 @@ import {connectUi} from './qa-cdp.mjs';
 // This script closes/relaunches ONLY the verified isolated QA process and leaves it running.
 const repository=path.resolve(import.meta.dirname,'..');
 const fixtureOnly=process.argv.includes('--check-fixtures');
+const version=JSON.parse(await fs.readFile(path.join(repository,'package.json'),'utf8')).version;
 const port=Number(process.env.QA_PORT||process.env.ZHIXING_QA_PORT||9343);
 const mainPort=Number(process.env.QA_MAIN_PORT||process.env.MAIN_PORT||9344);
-const projectId=process.env.QA_PROJECT_ID||'qa-0122-project';
-const evidence=path.resolve(process.env.QA_EVIDENCE||path.join(repository,'.preview/qa-0.12.2-audit/agent-c',fixtureOnly?'conversation-fixture-check':'packed-journey'));
+const projectId=process.env.QA_PROJECT_ID||`qa-${version.replaceAll('.','')}-project`;
+const evidence=path.resolve(process.env.QA_EVIDENCE||path.join(repository,`.preview/qa-${version}-audit/agent-c`,fixtureOnly?'conversation-fixture-check':'packed-journey'));
 const runId=`audit-c-${Date.now().toString(36)}-${crypto.randomUUID().slice(0,6)}`;
 const input='textarea[aria-label="聊天输入框"]';
 const records=[],requests=[],held=[];
@@ -120,7 +121,7 @@ try {
   ui=await connectUi(port);main=await connectUi(mainPort,true);
   host=await main.evaluate(`(()=>{const e=process.mainModule.require('electron');return {pid:process.pid,exe:e.app.getPath('exe'),profile:e.app.getPath('userData')};})()`);
   assert(path.isAbsolute(host.exe)&&/win-unpacked[\\/]知行\.exe$/i.test(host.exe),'Only the isolated packaged candidate may be restarted.');
-  assert(host.profile.toLowerCase().includes(`${path.sep}.preview${path.sep}qa-0.12.2${path.sep}`.toLowerCase()),'Refusing to touch a non-QA profile.');
+  assert(host.profile.toLowerCase().includes(`${path.sep}.preview${path.sep}qa-${version}${path.sep}`.toLowerCase()),'Refusing to touch a non-QA profile.');
   if(process.env.QA_PROFILE)assert.equal(path.resolve(host.profile),path.resolve(process.env.QA_PROFILE));
   await ready();assert.equal(await ui.evaluate('!!document.querySelector("button[aria-label=停止生成]")'),false);
   assert.deepEqual(await ui.evaluate('window.zhixing.runtimeCleanupStatus()'),[],'Finish prior cleanup before this journey');
