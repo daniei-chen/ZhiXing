@@ -11,28 +11,28 @@
 | Agent loop、子任务、plan/goal/compact/token meter | 已接入真实 SDK 与官方服务 | 本机合成模型和原生内核合同测试；非所有真实云端/长任务保证 |
 | Agent Teams / PTC | Teams 已接入；PTC 原生 run_code 已接入且默认关闭 | PTC 需完全访问并绑定项目；文件分工不是访问控制。曾有间歇启动失败，长期稳定性未覆盖 |
 | 模型路由与推理 | DeepSeek 原生、Chat Completions、Messages；严格指定 provider/model/effort | 不支持档位时要求重选。OAuth、Responses/Gemini、异构子模型路由未接入 |
-| 模型网关与 MCP 动态字段隐私 | 本轮新增语义检查及敏感动态键拒绝 | 两协议真实本机收件、原生 MCP 拒绝/通行计数；普通 raw 信息与 SECRET 分开。不是全部未知秘密或任意编码识别 |
-| 交付审阅与文件/剪贴板 | 本轮主进程快照与当前策略接入 | 绑定内容、策略、范围、格式和动作；文件字节与真实 Windows 操作的层级见验收页。基础导出不等于正式模板/typed XLSX |
-| 退出与保存恢复 | 本轮隔离未确认 handle，自动化 pending outcome 与只保存重试 | 根进程退出、正文持久化、业务完成分轴。持续不可写时强杀/断电前未落盘正文不能保证恢复 |
+| 模型网关与 MCP 动态字段隐私 | 0.12.1 接入语义检查及敏感动态键拒绝 | 两协议真实本机收件、原生 MCP 拒绝/通行计数，普通 raw 信息与 SECRET 分开。未知秘密和任意编码的召回率待验 |
+| 交付审阅与文件/剪贴板 | 0.12.1 接入主进程快照和当前策略 | 绑定内容、策略、范围、格式和动作。文件字节与真实 Windows 操作分层记录。正式模板与 typed XLSX 尚待验证 |
+| 退出与保存恢复 | 0.12.1 接入退出未确认隔离、自动化待保存结果与只保存重试 | 分别记录进程退出、正文持久化和业务完成。持续不可写时，强杀或断电仍可能丢失未落盘正文 |
 | 草稿、取消与删除 | 级联草稿、终态归档、失败原地恢复、资料去重追加，多份新草稿可见列表和实际聊天归属 | 独立资料库/磁盘原件和明确保留的任务历史不是全局擦除对象；持续不可写时强杀/断电前未落盘结果仍可能丢失 |
 | 插件独立运行时 | 随包 Node / pnpm / npm 11.21.3；脚本审阅和安装/更新后停用保留 | 实际生产路径 high/critical 为零仍有 moderate；不覆盖所有原生插件、恶意归档或任意自行联网 |
 | 文件 / Office 工具 | 自有 office_list/read/write 与 OfficeKit 部分替代；目录工具支持有界分页和完整性字段 | 原生 read/edit/apply_patch/glob/grep、模型端 Office convert/recalculate/render 未全部挂载；分页假设目录在页间未变化 |
 | 搜索、MCP、Host 与存储扩展 | DeepSeek 官方搜索、本机网页/浏览器、当前 MCP 及自有加密调度可用 | 独立搜索、MCP OAuth/重连/按需工具、跨启动 live jobs、常驻 Host、增量事件/Blob 未完成 |
-| 附件与视觉 | Windows OCR 词级坐标、本机敏感区域遮罩副本、官方 `dsh-attachment-local`、SDK 编码图片块与模型 `image` 输入已接入；能力 manifest 按模型模态和本次副本准备状态报告 | 源码回环和 0.12.4 Windows 目录包均证明原图字节不出站、遮罩副本出站和单次执行；真实云端模型质量、未识别文字/图表语义、全面 NER、真人麦克风、物理 DPI 与全量读屏仍待专项验证 |
+| 手动交办的图片输入 | 单帧 PNG/JPEG 经 Windows OCR 及主进程遮罩，使用官方 `dsh-attachment-local` 和 SDK 图片块。当前模型须声明 `image`，运行时清单核对真实 attachment 服务和副本就绪状态 | 三种协议的同包回环核对实际图片字节、MIME、出站次数、重开会话和策略变化后的阻断。真实云端视觉质量、OCR 漏检、全面 NER、手写、无文字敏感内容和语义识别待验 |
 
 隐私仍自动处理普通交办，不增加逐次脱敏确认；自定义秘密、禁止规则和配置凭据的当前合同见 [审计修复说明](audit-remediation-0.12.1.md)。0.12.2 已将运行时 `registered/effective/enabled/blockedReason` manifest 接入 Agent 内核设置和 Harness 上下文；0.12.3 又把同一 OCR 读取链接入 Agent `office_read_file`，并修正 `/plan` 结束后的状态投影；0.12.4 增加视觉输入、主进程遮罩副本和图片字节边界。它反映实际注册目录、模型工具声明和当前门槛，不代表真实云端质量或全部上游能力完成。
 
 ## 0.12.4 新增与修复
 
-图片资料进入交办时，主进程调用 Windows OCR 取得词框；脱敏模式只把本机规则命中的词框覆盖到遮罩副本，副本保存于应用私有目录。renderer 和工作区只保存 UUID、哈希、策略和覆盖范围，发送前主进程重新读取并校验哈希。DeepSeek SDK 使用官方编码图片块，DeepSeek 路由与兼容 Chat/Messages 网关均拒绝未获批准的图片字节。
+图片资料进入手动交办时，主进程按实际方向解码，移除元数据并在白底上展开透明像素。Windows OCR 读取同一图像，脱敏模式对规则命中的词框遮罩。非脱敏模式保留图像内容，依然去除元数据并检查 OCR 中的已知或规则识别凭证。工作区保存 OCR 文本及副本引用，图片数据由主进程管理。持久保存开启时，副本使用 Windows 用户加密。官方附件插件另有当前 Windows 用户的本地会话缓存，应与工作区加密副本分开评估。
 
-`tests/runtime-vision.test.mjs` 通过本机 Messages 回环确认：模型请求包含 `image` 内容块和遮罩副本 base64，不包含原图 base64；模型声明不含 `image` 时发送前失败，不静默换模型。
+DeepSeek 原生 Messages、兼容 Messages 和 Chat Completions 通过官方 SDK 接收编码图片块。网关按批准副本的 MIME、长度和 SHA-256 核验实际出站数据。会话重开时只有同一隐私策略下的批准图片可以重放。兼容供应商需在模型目录声明 `image` 模态。官方 DeepSeek Flash 能力来自固定模型目录和供应商文档。 [DeepSeek 视觉文档](https://api-docs.deepseek.com/guides/vision/)
 
 `office_read_file` 对 PNG、JPEG、BMP、TIFF 走 Windows 本机 OCR，返回 `ocr-text` 覆盖范围和本机提示；识别出的文本经过现有任务脱敏映射后才进入模型工具结果。真实回环测试确认原始电话和图片字节都没有出现在模型线缆中。OCR 取消信号会传给 PowerShell 子进程。
 
 `/plan` 和 `/plan off` 的命令结果现在按命令目标等待最终上下文投影；进入规划模式的检查不会把“命令已返回”误当成“状态已落盘”。
 
-0.12.4 源码回归为 338 项（337 通过、1 条件跳过），组件 14/14，Sites 4/4，包内回归 305 项（304 通过、1 条件跳过）；Windows 目录包页面矩阵 336/336，业务旅程 15/15、7/7、7/7、8/8、12/12，NSIS 生命周期 53 步（38 passed、15 observed、0 failed）。精确资产、提交和证据路径以 [0.12.4 Windows 验收页](windows-acceptance-0.12.4.md) 为准。
+源码回归、同包视觉测试、Windows 页面和实际 NSIS 验收分别记录。资产、提交、检查计数和证据路径见 [0.12.4 Windows 验收页](windows-acceptance-0.12.4.md)。
 
 ## 0.12.2 新增状态字段（历史基线）
 

@@ -1,58 +1,69 @@
-# 知行 0.12.4 Windows 验收记录
+# 知行 0.12.4 Windows 验收
 
-记录日期：2026-11-22，Asia/Shanghai。版本为 Windows x64 未签名预发布候选，内核固定 DeepSeek Harness `0.2.2-rc.5`。本文区分源码确认、合成运行、Windows 实包、真实云端验证和待验范围；所有资产字段均来自同一 0.12.4 生产构建。
+Windows x64 未签名预发布构建，DeepSeek Harness 固定为 `0.2.2-rc.5`。源码回归、原生 Harness 本机合成收件、Windows 目录包交互、NSIS 安装保留和真实云端分别记录。 [迭代记录](iteration-0.12.4.md) · [能力地图](harness-capability-map.md)
 
-## 同包资产与门禁
+## 资产与门禁
 
-| 层级 | 结果 | 证据 |
-| --- | --- | --- |
-| 构建源码提交 | **`2e5db25458eb60897449e37e718cd4ac8b9a7266`** | `release/win-unpacked/resources/app/build-provenance.json` |
-| 包内 provenance | **`sourceDirty=false`；Node `v24.19.0`；lock SHA `83d1d4536ef2346ed19bce141f24e5693b11eef0f70ae51c09e991583826bb60`** | 同上 |
-| 包内 source manifest | **80 个业务文件匹配；source fingerprint `d4376bf01aef58401c7bfaf0e04fbbf51d29cab0584472fca67f79a7b0aa6a85`** | `.preview/qa-0.12.4/packed-source-manifest-0.12.4.json` |
-| 源码全量 | **338 项，337 通过，0 失败，0 取消，1 条件跳过** | `npm test` 终态记录；唯一跳过为 Windows 文件符号链接权限条件 |
-| 组件 | **14/14** | `npm run test:components` |
-| Sites worker | **4/4** | `npm run test:sites` |
-| 目录包回归 | **305 项，304 通过，0 失败，0 取消，1 条件跳过** | `npm run test:packed -- ".\\release\\win-unpacked\\知行.exe"` |
-| 应用 EXE | **246,317,568 bytes；SHA-256 `3BBB30BCD4A139CED609348BF70953178777EDFE3C51994406A5EBF463159575`** | `release/win-unpacked/知行.exe` |
-| 安装器 | **562,809,342 bytes；SHA-256 `6F2FF27B5DEA129A45690955B7272E54105DEBA8C546A081C278FA42F1F9ECC3`** | `release/知行-0.12.4-x64.exe` |
-| blockmap | **489,641 bytes；SHA-256 `3E2FD34629BEB23E3262F8478D1A4D6FC74EE55D10134407D89D0825E223231A`** | `release/知行-0.12.4-x64.exe.blockmap` |
-| 品牌资源 | **应用 EXE 与安装器均为 9 个墨竹图标尺寸；原始 PNG SHA-256 未变** | `node scripts/verify-brand.mjs ...` |
+| 检查 | 结果 |
+| --- | --- |
+| 生产构建源码 | `7f2ad3ed18629de2ec4561127ee7688ce68efb48`，`sourceDirty=false`，Node `v24.19.0` |
+| 源码指纹 | `fa2aab105c7831e4f20776cc0a263814f14d81bf714bc7926d71d107999cb00c`，80 个业务文件与编译前端文件匹配 |
+| 锁文件 SHA-256 | `72451470024ed52a817b8a50db301e1b68e8768d5b48a9d78b7539deb44a3bc1` |
+| 源码 `npm test` | 341 项，340 通过，0 失败，0 取消，1 条件跳过 |
+| 最终源码视觉、供应商、网关和能力检测 | 19/19 |
+| 组件、Sites 与构建 | 14/14，4/4，Vite/Sites 生产构建通过 |
+| `test:packed` | 309 项，308 通过，0 失败，0 取消，1 条件跳过。包含视觉回环 |
+| 应用 `知行.exe` | 246,317,568 bytes，SHA-256 `3BBB30BCD4A139CED609348BF70953178777EDFE3C51994406A5EBF463159575` |
+| `ZhiXing-0.12.4-x64.exe` | 562,812,582 bytes，SHA-256 `962F2EC9E787444D334EE90D81215F017219A33693512856B406A4C39B16A2D1` |
+| `ZhiXing-0.12.4-x64.exe.blockmap` | 489,703 bytes，SHA-256 `934D96EDDB6C21C18CF28F57412CD1EBC800BAA0D55031876A668CD8D8BCACB9` |
+| 品牌与签名 | 应用及安装器各核对 9 种墨竹图标尺寸，原图 SHA-256 保持。安装器 Authenticode 状态为 `NotSigned` |
 
-## 视觉输入和脱敏边界
+使用 `--prepackaged release/win-unpacked` 生成安装器。源码提交是包内程序的构建来源。公开标签包含其后的验收文档和复验脚本。校验应用时同时核对 EXE、`build-provenance.json` 和 `packed-source-manifest.json`，以识别 EXE 旁边的实际业务资源。
 
-| 检查 | 结果 | 证据与解释 |
-| --- | --- | --- |
-| 视觉回环 | **通过** | `tests/runtime-vision.test.mjs` 使用真实 Windows OCR、主进程遮罩副本、官方 `attachment-local`、SDK `image` block 和本机 Messages 收件 |
-| 图片出站边界 | **通过** | 收件请求包含遮罩副本 base64 和 `image` block，不包含原图 base64；一次交办只产生一次模型请求 |
-| 模型模态门槛 | **通过** | 未声明 `image` 的模型发送前返回 `VISION_MODEL_UNSUPPORTED`，不静默换模型 |
-| 原图隔离 | **通过源码确认** | renderer/工作区只保存 UUID、哈希、隐私策略和覆盖范围；主进程发送前重读并校验批准副本 |
+源码和包内回归各有 1 项因 Windows 文件符号链接权限条件跳过，涉及真实 `owner.json` 文件符号链接。真实目录 junction、owner 路径 junction 和注入式 owner 文件符号链接检查仍执行。
 
-普通脱敏继续自动处理，不增加逐次发送确认；raw/非脱敏模式仍阻断凭证。遮罩只覆盖 OCR 识别且命中现有规则的词框，不能宣称覆盖所有图像隐私内容。
+## 图片与模型出站
 
-## Windows 实包业务旅程
+| 层级 | 对应实测 |
+| --- | --- |
+| 源码和包内原生回环 | Windows OCR 可读取合成手机号，对命中像素遮罩后复 OCR 无原号码。EXIF 方向校正，零命中去除合成 EXIF，不含文字的图片也生成新副本。非脱敏模式阻断可识别的已配置凭证 |
+| 原生 Harness 协议 | DeepSeek Messages、兼容 Messages 和 Chat Completions 都收到已批准图片，核对实际字节、MIME、选择的模型及请求数。仅文字模型在发出请求前拒绝。网关拒绝原图、错误 MIME 与未批准数据 |
+| Windows 目录包视觉旅程 | 5/5。真实拖放、主进程和 Windows 用户加密落盘。完成两次完整关窗重启，首次发送和重开追问各触发一次 Chat Completions 请求，模型 `qa-visual-model`、推理 `high`、实际图片字节和 MIME 一致。改变规则后第三轮没有出站，草稿保留。三个进程退出码均为 0 |
+| 真实云端 | 供应商账号、视觉答案质量、真实限流与云端协议矩阵待验。本机服务只提供合成协议应答 |
 
-| 旅程 | 结果 | 证据 |
-| --- | --- | --- |
-| 内核/隐私设置与能力目录 | **15/15** | `.preview/qa-0.12.4-audit/windows-kernel-privacy-0.12.4/journey.json` |
-| 交付边界 | **7/7** | `.preview/qa-0.12.4-audit/windows-delivery-0.12.4/journey.json` |
-| 运行恢复与保存重试 | **7/7** | `.preview/qa-0.12.4-audit/windows-runtime-recovery-0.12.4/result.json` |
-| 审计会话、删除级联与资料去重 | **8/8** | `.preview/qa-0.12.4-audit/windows-audit-conversation-0.12.4/result.json` |
-| 既有会话、双供应商、侧边聊天与流式停止 | **12/12** | `.preview/qa-0.12.4-audit/windows-conversation-0.12.4-rerun/journey.json` |
-| 页面/入口/面板矩阵 | **336/336** | `.preview/qa-0.12.4-audit/windows-pages-0.12.4-rerun/pages.json` |
-| 实包正常关闭 | **通过，退出码 0** | `.preview/qa-0.12.4-audit/lead/qa-normal-exit-final.json` |
+实包桌面旅程的合成输入 SHA-256 为 `3f43e6fbc83b1a9fccdcc73533466110098d9ef1f30dd8b39f16170b029a9fc0`。两次实收均为 7,712 bytes 的 `image/png`，SHA-256 `d224a7345a1134dea0c77b518b196c80c06ed843c395c0cffcf2545c8088b54d`。工作区只记录图片引用并保留提取的 OCR 文字及覆盖信息，持久图片副本由主进程通过 Windows 用户加密保存。官方附件插件另有当前用户可访问的会话缓存。
 
-页面矩阵覆盖三种窗口尺寸、100%/125%/150%/200% 缩放、设置页、三个顶栏入口和八个工作面板。第一次运行因前一轮实包已正常退出而连接失败，未计入通过数；随后重新启动同一目录包，最终 `pages.json` 为 336 条全通过记录。
+## Windows 目录包回归
+
+| 旅程 | 结果 |
+| --- | --- |
+| 内核与隐私设置 | 15/15。全角和零宽字符、非脱敏联动、IPC 凭证阻断、Teams 目录与配置失效 |
+| 交付与分享 | 7/7。检查实际 TXT、DOCX、XLSX 和 Windows 剪贴板。保存对话框选择用合成适配器 |
+| 运行恢复 | 8/8。退出未确认继续隔离，保存重试执行次数保持，重载后读回加密保存的正文 |
+| 审计会话 | 8/8。失败原地恢复、取消轨迹、去重追加、级联删除及完整进程重启后的保留和删除 |
+| 双供应商与侧边聊天 | 12/12。项目文件实际写入，浏览器、来源与产出，保存/导出，独立历史和流式停止 |
+| 页面、入口、工作面板 | 336/336。三种窗口尺寸、100%/125%/150%/200% 缩放，逐项检查页面内容、控件可达与溢出 |
+| 目录包关窗 | 实际窗口触发正常退出，进程已结束 |
+
+会话测试首次连接时，前一项审计脚本的重启进程已经退出。用同一目录包和隔离档案重新打开后，完成全套会话检查与页面矩阵。公开 `windows-journeys.json` 保留终态检查清单，`windows-vision-journey.json` 保留合成图片的包内构建资料、哈希、模型请求次数及退出码。视觉旅程可在独立 QA profile 中复跑 `node scripts/test-vision-ui.mjs`。
 
 ## NSIS 安装生命周期
 
-报告：`.preview/qa-0.12.4/install-evidence-20261122-220223-bfde781b/report.json`
+2026-11-22 至 11-23（Asia/Shanghai）以表中 SHA-256 对应的安装器执行。终态 `passed_configured_nonvisual_lifecycle`，共 53 步，其中 **38 通过、15 过程观察、0 失败**。
 
-最终状态为 **`passed_configured_nonvisual_lifecycle`**：53 步中 **38 passed、15 observed、0 failed**。同一 Windows SID、同一候选安装器和合成资料完成首次安装、0.12.0 历史升级、0.12.4 同版覆盖、默认卸载保留、0.12.4 重装保留、包外 cwd 启动和最终清理。项目、聊天、草稿、MCP、供应商和加密配置的实际读取与字节保持均通过；产品注册项、原快捷方式字节和默认 AppData 冷备份恢复到运行前状态。
+- 在同一 Windows 账户中静默安装 0.12.0，读回隔离合成资料后正常关窗，再升级至 0.12.4。同一安装器还通过 0.12.4 同版本覆盖和卸载后重装。
+- 在历史升级、同版覆盖和重装后核对已安装业务资源与受测目录包的实际构建标识。应用从包外工作目录启动，从合成档案读回项目、会话、草稿、供应商和 MCP 配置。
+- 比对进程关闭后的加密档案字节。卸载采用保留资料的分支，实际检查卸载及重装期间的保留情况。最终清理测试注册项，恢复并核对原有默认 AppData 和快捷方式字节。
 
-生命周期证据不代表真实用户资料迁移、跨 Windows 账户解密、交互式安装、所有用户安装、普通卸载快捷方式清理或真实云端账户矩阵。报告明确将视觉验收和跨 Windows 用户解密列为范围外。
+公开 `windows-install-lifecycle.json` 保留安装器标识、检查名、时序和覆盖结果。首次安装使用已有合成配置的 0.12.0 基线。空配置直接新装 0.12.4、交互式安装、所有用户安装、跨账户解密及真正用户档案迁移待验。快捷方式使用 QA 清理与冷备份恢复路径。安装后的接口探针负责资料读回和关窗，图片拖放与页面矩阵在同一构建的目录包运行。
 
-## 未覆盖范围
+## 依赖验收
 
-本版没有证明真实云端账户和模型质量、所有视觉模型的输出效果、OCR 漏检、无文字图像敏感内容、图表/手写/复杂扫描版式理解、全面 NER/Presidio、浏览器截图自动进入模型、跨 Windows 账户解密、交互式安装、物理 DPI、真人麦克风、全量读屏、常驻 Host、OAuth、Responses/Gemini、独立搜索和跨启动 live jobs。Office 复杂排版、typed XLSX、正式 DOCX 模板、任意原生文件编辑工具和恶意插件/归档场景也没有由本版扩展验收。
+比对实际目录包、锁文件中的 1,170 个已安装生产路径，包含 Node 独立运行时配套插件 npm `11.21.3`。`sharp@0.35.5` 由间接依赖改为明示，沿用同一锁定安装路径。安装保留合成资料的生命周期和插件独立运行各有单独证据。npm audit 的锁文件生产投影返回 0 high、0 critical、34 moderate 影响记录，其中 3 条独立公告命中实际安装路径。依赖路径清单、CycloneDX SBOM 和已安装路径公告随发行提供。清单范围为已安装 npm 包的 manifest 与锁文件，Electron、Node、原生库内部、编译产物内联代码、独立插件和完整许可证合规另验。
 
-外部审计应同时核对源码标签、安装器、blockmap、应用 EXE、`SHA256SUMS-release.txt`、包内 provenance/source manifest、Windows 页面/旅程 JSON 和 NSIS lifecycle report。安装包未签名，下载后应先核对 SHA-256。
+## 未覆盖
+
+- OCR 无法识别的文字、复杂版面、手写、二维码、人脸、照片和图表语义都可能保留敏感像素。当前遮罩覆盖词框和已检测规则，全面 NER 与独立检测召回率待验。
+- 手动交办支持单帧 PNG/JPEG。BMP/TIFF、扫描文档和 `office_read_file` 的已接入范围为 OCR 文字。浏览器截图自动随交办发送、自动化视觉、图片型 MCP 输出和远程 Files API 尚未接入。
+- Windows OCR 使用本机临时图像文件，正常收尾时删除。异常中止后的临时文件残留和 Harness 缓存的安全擦除待验。
+- 真实用户档案迁移、跨 Windows 账户解密、交互式与所有用户安装、普通卸载的快捷方式清理、物理 DPI、真人麦克风和全量读屏待验。上游 Host、OAuth、Responses/Gemini、独立搜索、跨启动 live jobs 和部分原生 Office/文件能力仍有未接入范围。 [完整能力地图](harness-capability-map.md)
