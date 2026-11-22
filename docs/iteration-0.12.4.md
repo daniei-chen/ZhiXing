@@ -15,7 +15,7 @@
 
 `tests/runtime-vision.test.mjs` 是本轮核心回环：在 Windows 上运行真实 Harness 和本机 Messages 收件服务，断言模型请求包含 `image` 内容块和遮罩副本 base64，原始图片 base64 不出站，且一次交办只产生一次模型请求并正常收尾。
 
-源码门禁当前为 `npm test` **338 项，337 通过，0 失败，0 取消，1 条件跳过**。唯一条件跳过仍是 Windows 不授予文件符号链接权限时的 owner symlink 测试；真实 junction、恶意元数据和 owner-file symlink 检查仍执行。组件、Sites、包内测试、Windows 页面矩阵和安装生命周期必须引用同一 0.12.4 包的最终记录。
+源码门禁为 `npm test` **338 项，337 通过，0 失败，0 取消，1 条件跳过**；组件 **14/14**，Sites **4/4**。唯一条件跳过仍是 Windows 不授予文件符号链接权限时的 owner symlink 测试；真实 junction、恶意元数据和 owner-file symlink 检查仍执行。0.12.4 目录包回归为 **305 项，304 通过，0 失败，0 取消，1 条件跳过**，Windows 页面矩阵为 **336/336**，安装生命周期为 **53 步，38 passed，15 observed，0 failed**。这些数字均来自同一生产包，详见 Windows 验收记录。
 
 ## 脱敏边界
 
@@ -25,4 +25,4 @@
 
 本轮仍未证明真实云端账户矩阵、所有真实视觉模型的质量、复杂扫描版式、图表/手写/无文字敏感内容的召回、全面 NER/Presidio、浏览器截图自动进入模型、跨 Windows 账户解密、交互式安装、物理 DPI、真人麦克风、全量读屏、常驻 Host、OAuth、Responses/Gemini、独立搜索和跨启动 live jobs。
 
-生产包构建、provenance、SHA-256、Windows 实包旅程和 NSIS 生命周期只在 [0.12.4 Windows 验收记录](windows-acceptance-0.12.4.md) 具备同包证据后标记通过。
+生产包构建、provenance、SHA-256、Windows 实包旅程和 NSIS 生命周期已在 [0.12.4 Windows 验收记录](windows-acceptance-0.12.4.md) 以同包证据收口。真实云端视觉质量、OCR 漏检、无文字敏感内容、图表/手写理解和全面 NER 仍未验收。
