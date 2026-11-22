@@ -1,5 +1,5 @@
 import http from 'node:http';
-import {randomBytes} from 'node:crypto';
+import {createHash,randomBytes} from 'node:crypto';
 import {once} from 'node:events';
 import {PrivacySession} from '../src/privacy-core.js';
 import {containsCredentialValue,childPrivacyContext} from '../src/privacy-recognizers.js';
@@ -8,7 +8,6 @@ import {assertModelCredential} from '../src/provider-options.js';
 import {updateBridge} from '../harness/privacy-bridge.mjs';
 import {goalWire} from './goal-wire.mjs';
 import {createAssistantStreamDecoder} from './assistant-stream.mjs';
-import {createHash} from 'node:crypto';
 
 // A request-local loopback gateway is the serialization boundary. Harness loop
 // messages are immutable; do not mutate its event-sourced request projection.
@@ -18,7 +17,14 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
   const openAI=protocol==='openai';
   const inbound=openAI?'/v1/chat/completions':protocol==='deepseek'?'/anthropic/v1/messages':'/v1/messages';
   const token=`zx-local-${randomBytes(24).toString('hex')}`;
-  const approvedImages=new Map((Array.isArray(visualAttachments)?visualAttachments:[]).filter(image=>typeof image?.sha256==='string'&&typeof image?.data==='string').map(image=>[image.sha256,image]));
+  const approvedImages=new Map(visualAttachments.map(image=>[image.sha256,image]));
+  function requireApprovedImage(data,mediaType){
+    if(typeof data!=='string'||!['image/png','image/jpeg'].includes(mediaType))throw new Error('图片内容未通过本机视觉附件边界。');
+    const bytes=Buffer.from(data,'base64');
+    if(!bytes.length||bytes.toString('base64')!==data)throw new Error('图片编码无效。');
+    const approved=approvedImages.get(createHash('sha256').update(bytes).digest('hex'));
+    if(!approved||approved.mediaType!==mediaType||approved.bytes!==bytes.length)throw new Error('图片未通过当前交办的本机副本校验。');
+  }
   const controllers=new Set();let tail=Promise.resolve();
   const server=http.createServer(async(req,res)=>{
     const controller=new AbortController();controllers.add(controller);
@@ -48,24 +54,16 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
             if(block.type==='tool_result')return {...extras(block,['type','content','tool_use_id'],'block'),tool_use_id:identity(block.tool_use_id),content:content(block.content,block.tool_use_id)};
             if(block.type==='image'){
               const source=block.source;
-              if(!source||source.type!=='base64'||typeof source.data!=='string'||typeof source.media_type!=='string')throw new Error('图片内容未通过本机视觉附件边界。');
-              const bytes=Buffer.from(source.data,'base64');
-              if(!bytes.length||bytes.toString('base64')!==source.data)throw new Error('图片编码无效。');
-              const sha256=createHash('sha256').update(bytes).digest('hex');
-              const approved=approvedImages.get(sha256);
-              if(!approved||approved.mediaType!==source.media_type)throw new Error('图片不是本次交办准备的本机副本。');
+              if(source?.type!=='base64')throw new Error('图片内容未通过本机视觉附件边界。');
+              requireApprovedImage(source.data,source.media_type);
               return {...extras(block,['type','source'],'block'),source:{type:'base64',media_type:source.media_type,data:source.data}};
             }
             if(block.type==='image_url'){
               const url=block.image_url?.url;
-              const match=typeof url==='string'?url.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,(.+)$/):null;
+              const match=typeof url==='string'?url.match(/^data:(image\/(?:png|jpeg));base64,([A-Za-z0-9+/=]+)$/):null;
               if(!match)throw new Error('图片内容未通过本机视觉附件边界。');
-              const bytes=Buffer.from(match[2],'base64');
-              if(!bytes.length||bytes.toString('base64')!==match[2])throw new Error('图片编码无效。');
-              const sha256=createHash('sha256').update(bytes).digest('hex');
-              const approved=approvedImages.get(sha256);
-              if(!approved||approved.mediaType!==match[1])throw new Error('图片不是本次交办准备的本机副本。');
-              return {...extras(block,['type','image_url'],'block'),image_url:{...extras(block.image_url,['url','detail'],'data'),url:`data:${match[1]};base64,${match[2]}`}};
+              requireApprovedImage(match[2],match[1]);
+              return {...extras(block,['type','image_url'],'block'),image_url:{...extras(block.image_url,['url'],'data'),url}};
             }
             if(block.type==='thinking'){
               const checked=vault.protect(String(block.thinking||''),customTerms,privacyPolicy);

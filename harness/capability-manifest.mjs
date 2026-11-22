@@ -48,7 +48,7 @@ export function createCapabilityManifest(options={}) {
  const entries=definitions.map(definition=>{
   const enabled=definition.setting?definition.setting(kernel):true;
   const catalog=definition.modelTool?modelNames:names,inspected=definition.modelTool?modelObserved:observed;
-  const registered=inspected?(definition.prefix?[...catalog].some(name=>name.startsWith(definition.prefix)):definition.tools.every(name=>catalog.has(name))):null;
+  const registered=inspected?(definition.imageModel?options.attachmentRegistered===true:definition.prefix?[...catalog].some(name=>name.startsWith(definition.prefix)):definition.tools.every(name=>catalog.has(name))):null;
   let blockedReason=null;
   if(!enabled)blockedReason='disabled';
   else if(definition.workspace&&!options.hasWorkspace)blockedReason='workspace_required';
@@ -66,14 +66,14 @@ export function createCapabilityManifest(options={}) {
    if(!observed||!modelObserved)blockedReason='not_inspected';
    else {
     const imageCap=Array.isArray(options.inputModalities)&&options.inputModalities.includes('image');
-    blockedReason=!imageCap?'model_image_input_unavailable':!options.visualBridge?'visual_bridge_unavailable':null;
+    blockedReason=!imageCap?'model_image_input_unavailable':!registered?'not_registered':!options.visualBridge?'visual_bridge_unavailable':null;
    }
   }
   const effective=blockedReason===null;
   const readOnly=effective&&options.planning===true&&(definition.bridge==='browser'||definition.bridge==='automation'||definition.tools?.some(name=>!planningAllows(name)));
   return {id:definition.id,label:definition.label,integrated:true,enabled,registered,effective,blockedReason,
    restrictions:readOnly?['planning_read_only']:[],
-   invocation:registered===true?(definition.modelTool||!programmatic?'direct':'programmatic'):null,
+   invocation:registered===true?(definition.imageModel?'image_input':definition.modelTool||!programmatic?'direct':'programmatic'):null,
    approvalRequired:effective&&options.permission!=='full'&&Boolean(definition.write||definition.network||definition.workspace),
    evidence:inspected?(definition.modelTool?'model_catalog':'runtime_catalog'):'configuration_only'};
  });

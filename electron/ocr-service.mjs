@@ -12,10 +12,10 @@ const worker=fileURLToPath(new URL('./ocr-worker.ps1',import.meta.url));
 const run=promisify(execFile);
 let running=0;
 
-export async function recognizeImage(name,bytes,{signal,includeLayout=false}={}){
+export async function recognizeImage(name,bytes,{signal,includeLayout=false,allowEmpty=false,maxBytes=10*1024*1024}={}){
  signal?.throwIfAborted();
  if(process.platform!=='win32')throw new Error('图片文字识别需要 Windows 桌面版。');
- if(!supportsOcrImage(name)||!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>10*1024*1024)throw new Error('请选择 10 MB 以内的 PNG、JPEG、BMP 或 TIFF 图片。');
+ if(!supportsOcrImage(name)||!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>maxBytes)throw new Error('请选择支持格式和大小的图片。');
  if(running>=2)throw new Error('本机文字识别正忙，请稍后重试。');
  running++;
  let directory;
@@ -37,11 +37,11 @@ export async function recognizeImage(name,bytes,{signal,includeLayout=false}={})
   if(result.error==='no-language')throw new Error('请先在 Windows「语言和区域」中安装具有文字识别功能的语言。');
   if(result.error==='dimensions')throw new Error(`图片尺寸超过本机引擎上限（单边 ${result.max} 像素）。`);
   if(result.error||typeof result.text!=='string')throw new Error('本机文字识别无法处理此图片。');
-  if(!result.text.trim())throw new Error('未在图片中识别到文字。');
+  if(!allowEmpty&&!result.text.trim())throw new Error('未在图片中识别到文字。');
   return {id:randomUUID(),name,size:bytes.length,status:'ready',text:result.text.slice(0,60000),coverage:{
    kind:'ocr-text',language:result.language,
    notice:'文字由本机 OCR 识别，可能出现错字或顺序变化。加入交办时仅使用识别出的文字。',
-  },...(includeLayout?{layout:{width:result.width,height:result.height,lines:Array.isArray(result.lines)?result.lines:[]}}:{})};
+  },...(includeLayout?{layout:{width:result.width,height:result.height,lines:result.lines}}:{})};
  }finally{
   try{if(directory)await fs.rm(directory,{recursive:true,force:true,maxRetries:3,retryDelay:100});}
   finally{running--;}

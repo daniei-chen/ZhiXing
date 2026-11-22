@@ -38,7 +38,7 @@ contextBridge.exposeInMainWorld('zhixing',{
  listSkills:options=>ipcRenderer.invoke('skills:list',options),
  loadWorkspace:()=>ipcRenderer.invoke('data:load'),
  importDeepSeekChats:options=>ipcRenderer.invoke('data:import-deepseek',options),
- saveWorkspace:state=>ipcRenderer.invoke('data:save',state),
+ saveWorkspace:(state,volatileTerms)=>ipcRenderer.invoke('data:save',state,volatileTerms),
  writeClipboardText:text=>ipcRenderer.invoke('app:clipboard-write',{text}),
  workspaceSaveStatus:()=>ipcRenderer.invoke('data:save-status'),
  retryWorkspaceSave:()=>ipcRenderer.invoke('data:save-retry'),

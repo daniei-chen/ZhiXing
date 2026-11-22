@@ -12,6 +12,16 @@ const unknownEffort = () => ({ capability: 'unknown', levels: [], map: null, com
 // guessing a reasoning dialect. false instructs the native adapter to omit it.
 const defaultEffort = () => ({ capability: 'known', levels: ['off'], map: false, compat: {supportsReasoningEffort: false} });
 
+function modelInputModalities(provider, model) {
+  if (Array.isArray(model.inputModalities)) return ['text', ...(model.inputModalities.includes('image') ? ['image'] : [])];
+  // Some provider lists omit input modalities. Only the official endpoint may
+  // use the pinned Harness model declaration as a fallback.
+  if (provider.protocol === 'deepseek' && /^https:\/\/api\.deepseek\.com\/anthropic(?:\/v1)?$/.test(provider.baseUrl)) {
+    return builtinModels().find(entry => entry.id === model.id)?.inputModalities ?? ['text'];
+  }
+  return ['text'];
+}
+
 export class ProviderSelectionError extends Error {
   constructor(code, reason, requested) {
     super(reason);
@@ -86,6 +96,7 @@ export function publicProviders(providers) {
 export function providerModels(providers) {
   return providers.flatMap(provider => provider.models.map(model => ({
     ...model, providerId: provider.id, providerName: provider.name,
+    inputModalities: modelInputModalities(provider, model),
     levels: modelReasoning(provider, model).levels,
     reasoningCapability: modelReasoning(provider, model).capability,
   })));
@@ -127,7 +138,7 @@ export function resolveProvider(providers, selection = {}) {
     } : effort.compat,
     credentialRevision: provider.credentialRevision,
     contextWindow: selected.contextWindow || provider.contextWindow, maxTokens: selected.maxTokens || provider.maxTokens,
-    inputModalities: Array.isArray(selected.inputModalities) ? [...selected.inputModalities] : ['text'],
+    inputModalities: modelInputModalities(provider, selected),
   };
 }
 

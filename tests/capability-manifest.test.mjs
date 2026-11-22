@@ -5,7 +5,7 @@ import {pathToFileURL} from 'node:url';
 const url=name=>process.env.ZHIXING_TEST_PACKED_APP?pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP,name)).href:new URL(`../${name}`,import.meta.url).href;
 const {createCapabilityManifest,CAPABILITY_REASONS}=await import(url('harness/capability-manifest.mjs'));
 const tools=['office_calculate','office_calendar','office_table_check','office_read_file','office_write_file','office_list_files','office_execute','exit_plan_mode','get_goal','create_goal','update_goal','todo_write','ask_user_question','skill','subagent','subagent_fork','list_agents','wait_agent','send_message','interrupt_agent','team_task_create','team_task_get','team_task_list','team_task_update','workflow','job_list','job_output','job_kill','run_code','web_fetch','web_search','office_browser','office_schedule','mcp__synthetic__lookup','present'];
-const options={tools,modelTools:tools,hasWorkspace:true,permission:'full',protocol:'deepseek',inputModalities:['text','image'],visualBridge:true,kernel:{ptcEnabled:true},browserBridge:true,automationBridge:true,teamActive:true,scope:'run'};
+const options={tools,modelTools:tools,hasWorkspace:true,permission:'full',protocol:'deepseek',inputModalities:['text','image'],visualBridge:true,attachmentRegistered:true,kernel:{ptcEnabled:true},browserBridge:true,automationBridge:true,teamActive:true,scope:'run'};
 const entry=(manifest,id)=>manifest.entries.find(item=>item.id===id);
 
 test('未检查目录时不能把配置开关当作已注册或可执行',()=>{

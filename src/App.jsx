@@ -391,7 +391,7 @@ export function App() {
       latestSaveSequence.current = sequence;
       const snapshot = state.settings.persist ? state : { ...state, chats: [], documents: [], drafts: {}, automations: [], settings: { ...state.settings, customTerms: [] } };
       setWorkspaceSave(previous => previous.status === 'failed' ? previous : ({ ...previous, status: 'saving', errorCode: undefined }));
-      desktop.saveWorkspace(snapshot).then(()=>{
+      desktop.saveWorkspace(snapshot, state.settings.persist ? undefined : state.settings.customTerms).then(()=>{
         if (sequence !== latestSaveSequence.current) return;
         setNativeProjects(snapshot.projects);
         if (desktop.workspaceSaveStatus) desktop.workspaceSaveStatus().then(status => {
@@ -635,7 +635,7 @@ export function App() {
     if (!desktop?.pickFiles) { fileTarget.current = request; picker.current?.click(); return; }
     opening.current = request;
     setBusy(true);
-    try { addParsed(await desktop.pickFiles({directory:project?.directory,privacyMode:state.settings.privacyMode,customTerms:state.settings.customTerms,privacyPolicy:state.settings.privacyPolicy}), target, request.spaceId, request.token, request.draftKey, request.filesRevision); }
+    try { addParsed(await desktop.pickFiles(project?.directory), target, request.spaceId, request.token, request.draftKey, request.filesRevision); }
     catch (error) { setToast(errorText(error)); }
     finally { opening.current = null; setBusy(false); }
   }
@@ -649,7 +649,7 @@ export function App() {
         try {
           if (file.size > 10 * 1024 * 1024) throw new Error('文件超过 10 MB。');
           const bytes = new Uint8Array(await file.arrayBuffer());
-          if (desktop) imported.push({ ...meta, ...await desktop.parseFile({ name: file.name, bytes, privacyMode:state.settings.privacyMode, customTerms:state.settings.customTerms, privacyPolicy:state.settings.privacyPolicy }) });
+          if (desktop) imported.push({ ...meta, ...await desktop.parseFile({ name: file.name, bytes }) });
           else {
             if (!readyFiles.test(file.name)) throw new Error('浏览器预览仅解析文本。');
             const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
@@ -753,8 +753,8 @@ export function App() {
     const token = viewToken.current;
     setBusy(true);
     try {
-      const visualAttachments = attachments.flatMap(file => file.visual?.visualId ? [{...file.visual,name:file.name,mimeType:file.visual.mediaType||'image/png'}] : []);
-      const preview = await desktop.prepareRun({ sessionId, prompt,bootstrapPrompt,command,startInPlanMode,mode, model, modelProviderId, reasoning, permission, workspaceId: workspace.id,projectId:project?.id||null,customTerms,privacyMode,privacyPolicy,visualAttachments });
+      const visualIds = (repeatMessageId ? repeatedFiles : attachments).flatMap(file => file.visual?.visualId ? [file.visual.visualId] : []);
+      const preview = await desktop.prepareRun({ sessionId, prompt,bootstrapPrompt,command,startInPlanMode,mode, model, modelProviderId, reasoning, permission, workspaceId: workspace.id,projectId:project?.id||null,customTerms,privacyMode,privacyPolicy,visualIds });
       if (token === viewToken.current) {
         if(preview.blocked)openModal({ type: 'privacy', original: `任务模式：${mode === 'government' ? '政务' : '办公'}\n\n${prompt}`, preview, blocked:true });
         else {
@@ -776,7 +776,7 @@ export function App() {
       if (old !== job && old.finalization?.processStatus !== 'cleanup_pending' && old !== active.current) { runJobs.current.delete(id); break; }
     }
     active.current = job; setRunning(job);
-    const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl }) => ({ id, name, size, path, sourceUrl })) };
+    const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl, visual }) => ({ id, name, size, path, sourceUrl, ...(visual ? { visual } : {}) })) };
     const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0 };
     setState(current => {
       const target = current.chats.find(item => item.id === draft.sessionId);

@@ -80,6 +80,18 @@ test('非推理模型、硅基流动与明确不覆盖推理的自定义路由�
  }
 });
 
+test('视觉模态只继承实际供应商声明或官方 DeepSeek 目录',async()=>{
+ const {decodeModels}=await load('model-catalog.mjs');
+ const [discovered]=decodeModels({data:[{id:'vision-fixture',architecture:{input_modalities:['text','image','audio']}}]});
+ assert.deepEqual(discovered.inputModalities,['text','image']);
+ const provider={id:'deepseek',protocol:'deepseek',baseUrl:'https://api.deepseek.com/anthropic',models:[{id:'deepseek-flash'},{id:'deepseek-v4-pro'}]};
+ const select=(row,modelId)=>resolveProvider([row],{providerId:row.id,modelId,reasoning:'high'}).inputModalities;
+ assert.deepEqual(select(provider,'deepseek-flash'),['text','image']);
+ assert.deepEqual(select(provider,'deepseek-v4-pro'),['text']);
+ assert.deepEqual(select({...provider,baseUrl:'https://example.invalid/anthropic'},'deepseek-flash'),['text']);
+ assert.deepEqual(select({...provider,models:[{id:'deepseek-flash',inputModalities:['text']}]},'deepseek-flash'),['text']);
+});
+
 test('真实 Harness 对接自定义 Chat Completions / Messages，收件端核对模型、档位、脱敏与恢复',{timeout:130000},async()=>{
   const parent=await realpath(os.tmpdir()),root=await mkdtemp(path.join(parent,'zhixing-provider-test-'));
   const requests=[],vaults=new Map(),events=[];

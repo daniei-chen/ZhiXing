@@ -17,6 +17,11 @@ let configuration={model:'deepseek-flash',reasoning:'high',baseUrl:'https://api.
 let normaliseKernel,validateKernel,projectCoreApi,containsCredential;
 const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
 const WORKSPACE_FILE=path.join(ROOT,'workspace.bin');
+const VISUAL_ROOT=path.join(ROOT,'visual');
+const VOLATILE_TERMS=Symbol('volatileTerms');
+const stagedVisuals=new Map();
+const pendingVisualDeletes=new Set();
+let visualApi,volatileTerms=[];
 async function writeEncrypted(target,text){
  if(!safeStorage.isEncryptionAvailable())throw new Error('Windows 用户加密不可用，数据没有写入磁盘。');
  const temp=`${target}.${randomUUID()}.tmp`;
@@ -24,6 +29,29 @@ async function writeEncrypted(target,text){
 }
 async function readEncrypted(target){
  try{return safeStorage.decryptString(await fs.readFile(target));}catch(e){if(e.code==='ENOENT')return null;throw new Error('本机加密文件无法读取。');}
+}
+function visualReferences(state){
+ const records=[...(state.documents||[]),...Object.values(state.drafts||{}).flatMap(draft=>draft?.files||[]),
+  ...(state.chats||[]).flatMap(chat=>(chat?.messages||[]).flatMap(message=>message?.files||[]))];
+ return new Set(records.map(record=>record?.visual?.visualId).filter(id=>typeof id==='string'&&visualApi.VISUAL_ID.test(id)));
+}
+const visualFile=id=>path.join(VISUAL_ROOT,id+'.bin');
+function currentVisionPrivacy(){
+ const settings=workspaceContext.settings;
+ return visualApi.visionPrivacy(settings.persist===false?{...settings,customTerms:volatileTerms}:settings,deliverySecrets());
+}
+function stageVisual(record){
+ if(stagedVisuals.has(record.id))return;
+ while(stagedVisuals.size>=32)stagedVisuals.delete(stagedVisuals.keys().next().value);
+ stagedVisuals.set(record.id,record);
+}
+async function parseAttachedMaterial(name,bytes){
+ if(!visualApi.supportsVisualImage(name))return (await import('./office-files.mjs')).parseLocalMaterial(name,bytes);
+ await workspaceSaveQueue.flush();
+ const {parsed,record}=await visualApi.prepareVisualAttachment({name,bytes,privacy:currentVisionPrivacy()});
+ // Drafts that are removed or superseded while reading never create a disk image.
+ stageVisual(record);
+ return parsed;
 }
 async function initialise(){
  await fs.mkdir(VAULTS,{recursive:true});
@@ -42,6 +70,7 @@ async function initialise(){
   if(legacy)await persistProviders([legacy]);
  }
  const {RuntimeManager}=await import('./runtime.mjs');
+ visualApi=await import('./visual-attachments.mjs');
  const {validateMcpServers}=await import('./mcp-config.mjs');
  mcpServers=validateMcpServers(JSON.parse(await readEncrypted(path.join(ROOT,'mcp.bin')))||[]);
  const {mergeState}=await import('../src/store.js');
@@ -56,8 +85,29 @@ async function initialise(){
    if(!state.settings?.persist&&manager.runs.size)throw Object.assign(new Error('请先停止正在运行的任务，再关闭本地保存。'),{code:'WORKSPACE_BUSY'});
    const body=JSON.stringify(state);
    if(Buffer.byteLength(body,'utf8')>12*1024*1024)throw Object.assign(new Error('本地工作空间超过 12 MiB，请先导出部分资料后再保存。'),{code:'WORKSPACE_LIMIT'});
+   const previousVisuals=visualReferences(workspaceContext);
+   const nextVisuals=state.settings?.persist?visualReferences(state):new Set();
+   if(workspaceContext.settings.persist!==false&&state.settings?.persist===false){
+    for(const id of [...previousVisuals].slice(-32)){
+     const record=JSON.parse(await readEncrypted(visualFile(id)));
+     if(record?.id===id)stageVisual(record);
+    }
+   }
+   for(const id of nextVisuals){
+    const record=stagedVisuals.get(id);
+    if(!record)continue;
+    await fs.mkdir(VISUAL_ROOT,{recursive:true});
+    await writeEncrypted(visualFile(id),JSON.stringify(record));
+   }
    await writeEncrypted(WORKSPACE_FILE,body);
    workspaceContext=JSON.parse(body);
+   volatileTerms=state.settings?.persist?[]:state[VOLATILE_TERMS]??volatileTerms;
+   for(const id of previousVisuals)if(!nextVisuals.has(id))pendingVisualDeletes.add(id);
+   for(const id of nextVisuals){stagedVisuals.delete(id);pendingVisualDeletes.delete(id);}
+   for(const id of pendingVisualDeletes){
+    await fs.unlink(visualFile(id)).catch(error=>{if(error.code!=='ENOENT')throw error;});
+    pendingVisualDeletes.delete(id);
+   }
    if(!workspaceContext.settings?.persist){
     await automations.clearSavedData();
     await manager.clearSavedHistory();
@@ -121,7 +171,7 @@ function currentCredential(config){
  if(!provider||provider.credentialRevision!==config.credentialRevision||provider.baseUrl!==config.baseUrl||provider.protocol!==config.protocol)throw new Error('供应商连接已更新，请重新选择模型或审阅。');
  providerApi.assertModelCredential(provider.key);
  const current=providerApi.resolveProvider(providers,{providerId:config.providerId,modelId:config.model,reasoning:config.requestedReasoning||config.reasoning});
- if(['model','reasoning','requestedReasoning','effectiveReasoning','wireReasoning','maxTokens','contextWindow','compat','reasoningMap'].some(field=>JSON.stringify(current[field])!==JSON.stringify(config[field])))throw new Error('模型目录或推理设置已更新，请重新交办。');
+ if(['model','reasoning','requestedReasoning','effectiveReasoning','wireReasoning','maxTokens','contextWindow','compat','reasoningMap','inputModalities'].some(field=>JSON.stringify(current[field])!==JSON.stringify(config[field])))throw new Error('模型目录或推理设置已更新，请重新交办。');
  if(config.extensions&&(pluginService.operation||JSON.stringify(config.extensions)!==JSON.stringify(pluginService.selection())))throw new Error('已启用的插件有变化，请重新交办。');
  return {config,key:provider.key};
 }
@@ -283,8 +333,9 @@ function registerHandlers(){
   if(workspaceContext.settings.persist&&Buffer.byteLength(JSON.stringify({...workspaceContext,chats:[...workspaceContext.chats,...chats]}),'utf8')>12*1024*1024)throw Object.assign(new Error('导入后本地工作空间会超过 12 MiB。请先导出部分资料后再导入。'),{code:'WORKSPACE_LIMIT'});
   return {...result,chats};
  });
- handle('data:save',async state=>{
+ handle('data:save',async (state,terms)=>{
   if(![1,2].includes(state?.version)||!Array.isArray(state.projects)||!Array.isArray(state.chats)||!Array.isArray(state.automations))throw new Error('本地工作空间格式不正确。');
+  if(state.settings?.persist===false&&Array.isArray(terms))state[VOLATILE_TERMS]=terms.filter(term=>typeof term==='string'&&term.length<=120).slice(0,100);
   const result=workspaceSaveQueue.save(workspaceSaveQueue.requestedRevision+1,state);
   await result;
   void automations.tick().catch(()=>{});
@@ -303,14 +354,26 @@ function registerHandlers(){
   const config=route(options);
   currentCredential(config);
   if([options?.prompt,options?.bootstrapPrompt,options?.command].some(prompt=>typeof prompt==='string'&&providers.some(({key})=>containsCredential(prompt,key))))throw new Error('检测到已配置的模型凭证，请从输入中移除。');
-  const visualAttachments=[];
-  for(const visual of Array.isArray(options?.visualAttachments)?options.visualAttachments:[]) {
-   const {readVisualAttachment}=await import('./visual-attachments.mjs');
-   visualAttachments.push(await readVisualAttachment(path.join(ROOT,'visual'),visual,options.privacyMode==='raw'?'raw':'redact'));
+  const visualIds=options.visualIds??[];
+  if(!Array.isArray(visualIds)||visualIds.length>visualApi.VISUAL_MAX_PER_REQUEST||visualIds.some(id=>typeof id!=='string'||!visualApi.VISUAL_ID.test(id)))throw new Error('每次可添加最多 4 张已准备的视觉图片。');
+  const vision=currentVisionPrivacy(),visualAttachments=[];
+  if(visualIds.length){
+   if(options.privacyMode!==vision.privacyMode)throw new Error('图片发送方式已变化，请重新添加图片。');
+   for(const id of new Set(visualIds)){
+    const record=stagedVisuals.get(id)??JSON.parse(await readEncrypted(visualFile(id)));
+    visualAttachments.push(visualApi.readVisualAttachment(record,id,vision.key));
+   }
   }
-  return manager.preview({...options,visualAttachments},{...config,manualControls:true});
+  const visualPolicyKey=options.privacyMode===vision.privacyMode?vision.key:null;
+  return manager.preview({...options,visualAttachments,...(visualAttachments.length?{customTerms:vision.terms}:{})},{...config,visualPolicyKey,manualControls:true});
  });
- handle('agent:run-prepared',options=>manager.runPrepared(options,currentCredential));
+ handle('agent:run-prepared',async options=>{
+  await workspaceSaveQueue.flush();
+  return manager.runPrepared(options,config=>{
+   if(config.visualPolicyKey&&config.visualPolicyKey!==currentVisionPrivacy().key)throw new Error('隐私规则或凭证已变化，请重新交办。');
+   return currentCredential(config);
+  });
+ });
  handle('agent:cancel',async({runId})=>manager.cancel(runId));
  handle('agent:cleanup-status',()=>manager.getCleanupStatus());
  handle('agent:retry-cleanup',({runId})=>manager.retryCleanup(runId));
@@ -338,15 +401,9 @@ function registerHandlers(){
   deliveryService.invalidateAll();
   return true;
  });
- handle('files:parse',async({name,bytes,privacyMode='redact',customTerms=[],privacyPolicy={}})=>{
+ handle('files:parse',async({name,bytes})=>{
   if(typeof name!=='string'||!ArrayBuffer.isView(bytes)||bytes.byteLength>10*1024*1024)throw new Error('文件超过 10 MB 或参数无效。');
-  const buffer=Buffer.from(bytes),{parseLocalMaterial}=await import('./office-files.mjs');
-  const parsed=await parseLocalMaterial(name,buffer);
-  if (/\.(?:png|jpe?g|bmp|tiff?)$/i.test(name)) {
-   const {prepareVisualAttachment}=await import('./visual-attachments.mjs');
-   parsed.visual=await prepareVisualAttachment({root:path.join(ROOT,'visual'),name,bytes:buffer,privacyMode,customTerms,privacyPolicy});
-  }
-  return parsed;
+  return parseAttachedMaterial(name,Buffer.from(bytes));
  });
  handle('space:choose-folder',async()=>{
   const chosen=await dialog.showOpenDialog(windowRef,{title:'选择工作空间目录',properties:['openDirectory']});
@@ -355,7 +412,6 @@ function registerHandlers(){
  });
  handle('files:pick',async(input)=>{
   const directory=typeof input==='string'?input:input?.directory;
-  const privacyMode=input?.privacyMode==='raw'?'raw':'redact',customTerms=Array.isArray(input?.customTerms)?input.customTerms:[],privacyPolicy=input?.privacyPolicy||{};
   let defaultPath;
   if(typeof directory==='string'&&path.isAbsolute(directory)){
    const stat=await fs.stat(directory).catch(()=>null);
@@ -363,16 +419,11 @@ function registerHandlers(){
   }
   const result=await dialog.showOpenDialog(windowRef,{title:'添加工作资料',defaultPath,properties:['openFile','multiSelections'],filters:[{name:'办公文档、文本和图片',extensions:['txt','md','csv','tsv','json','docx','xlsx','pptx','pdf','png','jpg','jpeg','bmp','tif','tiff']}]});
   if(result.canceled)return [];
-  const {parseLocalMaterial}=await import('./office-files.mjs');
   const files=[];
   for(const filePath of result.filePaths.slice(0,12)){
    const name=path.basename(filePath),id=randomUUID();let size=0;
    try{const stat=await fs.stat(filePath);size=stat.size;if(!stat.isFile()||size>10*1024*1024)throw new Error('请选用不超过 10 MB 的文件。');
-   const buffer=await fs.readFile(filePath),parsed=await parseLocalMaterial(name,buffer);
-   if (/\.(?:png|jpe?g|bmp|tiff?)$/i.test(name)) {
-    const {prepareVisualAttachment}=await import('./visual-attachments.mjs');
-    parsed.visual=await prepareVisualAttachment({root:path.join(ROOT,'visual'),name,bytes:buffer,privacyMode,customTerms,privacyPolicy});
-   }
+   const parsed=await parseAttachedMaterial(name,await fs.readFile(filePath));
    files.push({...parsed,id});}
    catch(error){files.push({id,name,size,status:'error',reason:error.message,text:''});}
   }
