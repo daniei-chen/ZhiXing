@@ -2,9 +2,10 @@ import {writeBridge} from './privacy-bridge.mjs';
 import {projectTeamBoard} from '../src/team-board.js';
 import {normaliseKernel} from '../src/kernel-config.js';
 import {createCapabilityManifest} from './capability-manifest.mjs';
+import {NATIVE_COMMAND_IDS} from '../src/session-commands.js';
 
 export const name = 'zhixing-context';
-export const inject = ['tools', 'systemPrompt', 'tokenMeter', 'agents', 'goals', 'planMode', 'sessionProjections', 'skills', 'agentTeams', 'attachments'];
+export const inject = ['tools', 'systemPrompt', 'tokenMeter', 'agents', 'goals', 'planMode', 'sessionProjections', 'skills', 'agentTeams', 'attachments', 'commands'];
 
 export function apply(ctx) {
  let tail = Promise.resolve();
@@ -16,7 +17,13 @@ export function apply(ctx) {
  const kernel=normaliseKernel(JSON.parse(process.env.ZHIXING_KERNEL||'{}'));
  const inputModalities=JSON.parse(process.env.ZHIXING_INPUT_MODALITIES||'[]');
  const visualBridge=process.env.ZHIXING_VISUAL_BRIDGE==='true';
+ const requiredCommand=process.env.ZHIXING_REQUIRED_COMMAND;
  ctx.on('agent/created',async({agent,source,signal})=>{
+  if(requiredCommand&&agent.session.header.origin!=='subagent'){
+   const expected=NATIVE_COMMAND_IDS[requiredCommand];
+   const effective=ctx.commands.list(agent).find(command=>command.name===requiredCommand);
+   if(!expected||effective?.definitionId!==expected)throw new Error('此会话缺少指定的原生内核命令。');
+  }
   if(source==='startup'&&agent.session.header.origin!=='subagent')await ctx.agentTeams.setEnabled(agent,kernel.teamEnabled&&kernel.subagentDepth>0,signal);
  });
  ctx.on('session/event', (session, event) => {

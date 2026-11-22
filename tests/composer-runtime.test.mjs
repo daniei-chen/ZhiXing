@@ -97,6 +97,39 @@ test('同一聊天切换模型和四档思考强度，规划草稿随附件自�
  finally { await manager.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));const resolved=await realpath(root);if(path.dirname(resolved)===parent&&path.basename(resolved).startsWith('zhixing-effort-test-'))await rm(resolved,{recursive:true,force:true,maxRetries:6,retryDelay:150}); }
 });
 
+test('中文原生命令保留动词，原生状态和拒绝原因跨会话重开，且不调用模型', {timeout:60000}, async () => {
+ const parent=await realpath(os.tmpdir()),root=await mkdtemp(path.join(parent,'zhixing-command-test-'));
+ const vaults=new Map();
+ let requests=0;
+ const server=http.createServer((request,response)=>{requests++;response.writeHead(400).end();});
+ server.listen(0,'127.0.0.1');await once(server,'listening');
+ const config={baseUrl:`http://127.0.0.1:${server.address().port}/anthropic`,model:'fixture-command',reasoning:'high'};
+ const manager=new RuntimeManager({root,readVault:async id=>vaults.get(id),writeVault:async(id,value)=>vaults.set(id,value)});
+ const envelope=command=>({sessionId:'command-session',prompt:command,command,privacyMode:'redact',customTerms:['goal','pause','plan','off','compact','edit','DATA_PRIVATE']});
+ async function execute(command,runId) {
+  const preview=await manager.preview(envelope(command),config);
+  return manager.runPrepared({runId,preparationId:preview.preparationId},config,'fixture-command-secret');
+ }
+ try {
+  const preview=await manager.preview(envelope('/目标 EDIT 第一行\nDATA_PRIVATE'),config);
+  assert.match(preview.text,/^\/goal edit 第一行\n⟦ZX-/u);
+  assert.doesNotMatch(preview.text,/DATA_PRIVATE/);
+  await assert.rejects(manager.preview(envelope('/压缩 参数'),config),/无需参数/);
+  assert.equal((await execute('/计划','enter')).context.planning,true);
+  assert.equal((await execute('/计划\u3000off','leave')).context.planning,false);
+  await assert.rejects(execute('/目标 PAUSE','refused'), error => error.code==='RUNTIME_COMMAND_FAILED' && /requires one/i.test(error.message));
+  assert.equal((await execute('/目标','view')).context.goal,null);
+  const compact=await execute('/压缩','compact');
+  assert.equal(compact.modelInput,'/compact');assert.equal(compact.finishReason,'completed');
+  assert.match(compact.text,/^No .*history yet\.$/i);assert.doesNotMatch(compact.text,/compact/i);
+  assert.equal(requests,0);
+ } finally {
+  await manager.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));
+  const resolved=await realpath(root);
+  if(path.dirname(resolved)===parent&&path.basename(resolved).startsWith('zhixing-command-test-'))await rm(resolved,{recursive:true,force:true,maxRetries:6,retryDelay:150});
+ }
+});
+
 test('Windows SenseVoice Provider can inspect local model state without recording or downloading',{skip:process.platform!=='win32'},async()=>{
  const parent=await realpath(os.tmpdir()),root=await mkdtemp(path.join(parent,'zhixing-sensevoice-test-'));
  const speech=new SpeechService(()=>{},{dataRoot:path.join(root,'models')});

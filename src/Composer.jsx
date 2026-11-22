@@ -5,6 +5,7 @@ import { PERMISSION_MODES, permissionMode } from './permissions.js';
 import {fileReadLabel} from './FileCoverage.jsx';
 import { VoiceInput } from './VoiceInput.jsx';
 import { ModelControls } from './ModelControls.jsx';
+import { matchesSessionCommandPrefix, parseSessionCommand } from './session-commands.js';
 
 const COMMANDS = [
   ['/plan', '计划模式', '先讨论方案，再批准执行', Lightbulb],
@@ -27,7 +28,9 @@ export function Composer({ settings, files, input, setInput, setFiles, setSettin
   const redacted = settings.privacyMode === 'redact';
   const PrivacyIcon = redacted ? ShieldCheck : ShieldWarning;
   const selectedPermission = permissionMode(settings.permission);
-  const commandOptions = /^\/[a-z]*$/.test(input) && dismissedInput !== input && !menu && !voiceActive ? COMMANDS.filter(row => row[0].startsWith(input)) : [];
+  const commandOptions = /^\/[a-z\p{Script=Han}]*$/u.test(input) && dismissedInput !== input && !menu && !voiceActive
+    ? COMMANDS.filter(([command]) => command.startsWith(input) || matchesSessionCommandPrefix(command.slice(1), input))
+    : [];
   function chooseCommand(command) {
     if (['/model', '/settings', '/skills'].includes(command)) {
       onLocalCommand(command);
@@ -61,7 +64,8 @@ export function Composer({ settings, files, input, setInput, setFiles, setSettin
   }
   function insertCommand(command) {
     setInput(previous => {
-      const body = previous.replace(/^\/(plan|goal)(?=\s|$)\s*/, '').trimStart();
+      const parsed = parseSessionCommand(previous);
+      const body = parsed && ['plan', 'goal'].includes(parsed.name) ? parsed.argument : previous.trimStart();
       if (!command) return body;
       if (command === '/plan') return body ? `/plan\n${body}` : '/plan ';
       return `${command} ${body}`;
@@ -85,8 +89,8 @@ export function Composer({ settings, files, input, setInput, setFiles, setSettin
           if (event.nativeEvent.isComposing || event.keyCode === 229) return;
           if (event.key === 'Escape' && commandOptions.length) { event.preventDefault();event.stopPropagation();setDismissedInput(input);return; }
           if (commandOptions.length && ['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault();setCommandIndex(previous=>(previous+(event.key==='ArrowDown'?1:-1)+commandOptions.length)%commandOptions.length);return; }
-          if (commandOptions.length && (event.key==='Tab'&&!event.shiftKey || event.key==='Enter'&&!event.shiftKey&&!commandOptions.some(row=>row[0]===input))) { event.preventDefault();chooseCommand(commandOptions[commandIndex%commandOptions.length][0]);return; }
-          if (event.key === 'Tab' && event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); insertCommand(/^\/plan(?:\s|$)/.test(input) ? '' : '/plan'); return; }
+          if (commandOptions.length && (event.key==='Tab'&&!event.shiftKey || event.key==='Enter'&&!event.shiftKey&&!parseSessionCommand(input)&&!commandOptions.some(row=>row[0]===input))) { event.preventDefault();chooseCommand(commandOptions[commandIndex%commandOptions.length][0]);return; }
+          if (event.key === 'Tab' && event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); insertCommand(parseSessionCommand(input)?.name === 'plan' ? '' : '/plan'); return; }
           if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) {
             event.preventDefault();
             if (ready) onSubmit();

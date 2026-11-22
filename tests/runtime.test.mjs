@@ -150,8 +150,31 @@ test('真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本�
   filePlan={name:'read_mcp_resource',input:{server:'fixture',uri:'fixture://notes'}};
   const resource=await manager.run({runId:'native-mcp-resource',sessionId:'native-mcp-resource',prompt:'读取合成会议资源。',privacyMode:'redact'},{...config,mcpServers},fixtureKey);
   assert(resource.text.includes('MCP_RESOURCE_OK'));assert(resource.text.includes('13611112222'));assert(!JSON.stringify(requests.slice(beforeMcp)).includes('13611112222'));
-  const nativeGoal=await manager.run({runId:'native-goal-create',sessionId:'goal-session',prompt:'/goal GOAL_FIXTURE',command:'/goal GOAL_FIXTURE',privacyMode:'redact'},config,fixtureKey);
+  const goalBefore = requests.length;
+  const goalText = '/目标 GOAL_FIXTURE CLIENT_PROJECT_NAME';
+  const goalOptions = {runId:'native-goal-create',sessionId:'goal-session',prompt:goalText,command:goalText,privacyMode:'redact',customTerms:['CLIENT_PROJECT_NAME']};
+  let goalConfig = config, goalImage, originalGoalImage;
+  if (process.platform === 'win32') {
+   const {prepareVisualAttachment, visionPrivacy} = await import(packagedRoot
+    ? pathToFileURL(path.join(packagedRoot,'electron','visual-attachments.mjs')).href
+    : '../electron/visual-attachments.mjs');
+   originalGoalImage = await fs.readFile(new URL('./fixtures/ocr-office-read.png', import.meta.url));
+   const privacy = visionPrivacy({customTerms: goalOptions.customTerms});
+   goalImage = (await prepareVisualAttachment({name:'fixture.png',bytes:originalGoalImage,privacy})).record;
+   goalConfig = {...config,inputModalities:['text','image'],visualPolicyKey:privacy.key};
+   goalOptions.visualAttachments = [goalImage];
+   await assert.rejects(manager.preview({...goalOptions,command:'/目标 pause'},goalConfig),/仅可在创建或编辑目标/);
+  }
+  const nativeGoal=await manager.run(goalOptions,goalConfig,fixtureKey);
   assert.equal(nativeGoal.context.goal.phase,'complete');assert(nativeGoal.text.includes('GOAL_FIXTURE_COMPLETED'));
+  assert(!JSON.stringify(requests.slice(goalBefore)).includes('CLIENT_PROJECT_NAME'));
+  if(goalImage){
+   const incoming = requests.slice(goalBefore);
+   const firstImages = incoming[0].messages.flatMap(row=>Array.isArray(row.content)?row.content:[]).filter(block=>block.type==='image');
+   assert.deepEqual(firstImages.map(image=>image.source),[{type:'base64',media_type:goalImage.mediaType,data:goalImage.data}]);
+   assert(!JSON.stringify(incoming).includes(originalGoalImage.toString('base64')));
+   assert(!JSON.stringify(incoming).includes(fixturePhone));
+  }
   filePlan={name:'workflow',input:{meta:{name:'office-review',description:'合成工作流验收'},script:'phase("核对"); log("WORKFLOW_FIXTURE_OK"); return {value:6};'}};
   const workflow=await manager.run({runId:'native-workflow',sessionId:'native-workflow',prompt:'执行合成工作流。',privacyMode:'redact'},config,fixtureKey);
   assert(workflow.text.includes('value'));assert(workflow.text.includes('6'));

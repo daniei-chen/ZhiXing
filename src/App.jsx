@@ -20,6 +20,7 @@ import { composePrompt, workflows } from './office-workflows.js';
 import { REASONING_LEVELS } from './model-options.js';
 import { selectedModel } from './provider-options.js';
 import { applyAutomationResults } from './automation-core.js';
+import { acceptsGoalImages, formatSessionCommand, parseSessionCommand } from './session-commands.js';
 
 const desktop = window.zhixing;
 const uuid = () => crypto.randomUUID();
@@ -228,6 +229,11 @@ export function App() {
   const project = projects.find(item => item.id === (chat?.projectId || projectId));
   const scopeReady=!desktop||!project||nativeProjects?.some(item=>item.id===project.id&&item.workspaceId===project.workspaceId&&(item.directory||null)===(project.directory||null));
   const messages = chat?.messages || [];
+  const currentContextMessage = messages.findLast(message => message.context && (message.privacyMode || 'redact') === state.settings.privacyMode);
+  const currentGoal = currentContextMessage?.context?.goal;
+  const goalAction = currentGoal?.phase === 'complete' ? ['/goal', '查看目标']
+    : currentGoal?.phase === 'active' && (!currentGoal.activation || currentGoal.activation === 'armed') ? ['/goal pause', '暂停目标']
+    : ['/goal resume', '继续目标'];
   const mode = workspace.type === 'government' ? 'government' : 'office';
   const isDark = state.settings.theme === 'dark' || (state.settings.theme === 'system' && systemDark);
   const runningHere = !!running && running.chatId === chatId;
@@ -699,7 +705,7 @@ export function App() {
     else if(command==='/skills'){setCustomTab('skills');navigate('skills');}
   }
 
-  async function submit(repeatMessageId = null, sideTarget = null) {
+  async function submit(repeatMessageId = null, sideTarget = null, actionCommand = null) {
     if (!loaded || storageFailed.current || active.current || busy) return;
     const targetChat = sideTarget ? state.chats.find(item => item.id === sideTarget.chatId && item.workspaceId === workspace.id && (item.projectId||null) === (project?.id||null) && !item.archived) : chat;
     if(sideTarget&&(!targetChat||targetChat.id===chatId||sideTarget.scope!==workScopeKey)) { setToast('侧边聊天已变更，请重新选择有效会话。'); return; }
@@ -707,25 +713,28 @@ export function App() {
     const repeatIndex = repeatMessageId ? targetMessages.findIndex(message => message.id === repeatMessageId) : -1;
     const previous = repeatIndex >= 0 ? targetMessages.slice(0, repeatIndex).findLast(message => message.role === 'user') : null;
     if (repeatMessageId && !previous) return;
-    const draftKey = repeatMessageId ? null : sideTarget ? `chat:${sideTarget.chatId}` : activeDraftKey.current;
+    const draftKey = repeatMessageId || actionCommand ? null : sideTarget ? `chat:${sideTarget.chatId}` : activeDraftKey.current;
     const sourceDraft = draftMap.current[draftKey] || { revision: 0, text: '' };
-    const text = repeatMessageId ? previous.text : (sideTarget ? sourceDraft.text : input).trim();
+    const text = actionCommand ?? (repeatMessageId ? previous.text : (sideTarget ? sourceDraft.text : input).trim());
     if(!repeatMessageId&&!sideTarget&&['/model','/settings','/skills'].includes(text)){localCommand(text);return;}
-    const attachments = repeatMessageId ? [] : sideTarget ? sourceDraft.files||[] : files;
+    const attachments = repeatMessageId || actionCommand ? [] : sideTarget ? sourceDraft.files||[] : files;
     if (!text && !attachments.length) return;
     if (attachments.some(file => file.status !== 'ready')) { setToast('请移除无法解析的附件后再发送。'); return; }
     const submittedRevision = sourceDraft.revision;
     const repeatedFiles = repeatMessageId ? previous.files || [] : [];
-    const planText = text?.match(/^\/plan(?:\s+([\s\S]*))?$/)?.[1]?.trim();
+    const nativeCommand = parseSessionCommand(text || '');
+    if (nativeCommand?.error) { setToast(nativeCommand.error, 'error'); return; }
+    const planText = nativeCommand?.name === 'plan' && !nativeCommand.verb ? nativeCommand.argument : '';
     const startInPlanMode = Boolean((repeatMessageId && previous?.startInPlanMode)
-      || (planText && planText !== 'off')
-      || (text === '/plan' && attachments.length));
-    const command = !startInPlanMode && /^\/(compact|plan|goal)(?:\s|$)/.test(text || '') ? text : undefined;
-    if (command && attachments.length) {
-      setToast('此命令不会读取附件。请移除附件或改为交办内容。');
+      || (nativeCommand?.name === 'plan' && !nativeCommand.verb && (planText || attachments.length)));
+    const command = nativeCommand && !startInPlanMode ? formatSessionCommand(nativeCommand) : undefined;
+    const submittedFiles = repeatMessageId ? repeatedFiles : attachments;
+    if (command && submittedFiles.length && (!acceptsGoalImages(nativeCommand) || submittedFiles.some(file => !file.visual?.visualId))) {
+      setToast('命令附件仅支持创建或编辑目标时添加的 PNG 或 JPEG 图片。', 'error');
       return;
     }
     const { privacyMode, reasoning, permission, customTerms,privacyPolicy,demo } = state.settings;
+    if (demo && nativeCommand) { setToast('请连接模型并关闭演示模式，再执行内核命令。', 'error'); return; }
     const selection = selectedModel(runtime, state.settings);
     if(!demo&&!selection){setToast('所选供应商或型号当前不可用。请选择目录中的有效模型后再发送。','error');return;}
     if(!demo&&selection.reasoningCapability==='unknown'){setToast('当前模型的思考能力尚未确认，暂不能发送。请刷新模型目录或选择已确认的型号。','error');return;}
@@ -735,6 +744,10 @@ export function App() {
     const providerChanged = !state.settings.demo && !!targetChat?.messages?.length && !!selectedProvider && !unboundImport
       && ((targetChat.providerId || 'deepseek') !== selectedProvider.id || (targetChat.providerUrl && targetChat.providerUrl !== selectedProvider.baseUrl));
     const forkScheduled = !state.settings.demo && !!targetChat?.automationTaskId;
+    if ((actionCommand || command && targetMessages.length) && (!targetChat || providerChanged || forkScheduled)) {
+      setToast('此操作需要在当前会话的原供应商和发送设置下执行。', 'error');
+      return;
+    }
     const sessionId = !providerChanged && !forkScheduled && targetChat?.id || uuid();
     const preferences = state.settings.personalizationEnabled ? state.settings.personalInstructions : '';
     const taskText = startInPlanMode ? planText || '' : text;
@@ -753,7 +766,7 @@ export function App() {
     const token = viewToken.current;
     setBusy(true);
     try {
-      const visualIds = (repeatMessageId ? repeatedFiles : attachments).flatMap(file => file.visual?.visualId ? [file.visual.visualId] : []);
+      const visualIds = submittedFiles.flatMap(file => file.visual?.visualId ? [file.visual.visualId] : []);
       const preview = await desktop.prepareRun({ sessionId, prompt,bootstrapPrompt,command,startInPlanMode,mode, model, modelProviderId, reasoning, permission, workspaceId: workspace.id,projectId:project?.id||null,customTerms,privacyMode,privacyPolicy,visualIds });
       if (token === viewToken.current) {
         if(preview.blocked)openModal({ type: 'privacy', original: `任务模式：${mode === 'government' ? '政务' : '办公'}\n\n${prompt}`, preview, blocked:true });
@@ -1182,12 +1195,12 @@ export function App() {
                   <AgentChildren items={message.pending?runEvents.findLast(event=>event.type==='subagents')?.children:message.children} onView={()=>showWorkPage('activity')}/>
                   <TaskPlan items={message.pending?events.findLast(event=>event.runId===running?.runId&&event.type==='plan')?.plan:message.plan}/>
                   {message.deliverables?.length>0&&<div className="deliverable-files">{message.deliverables.map((file,index)=><button key={index} onClick={()=>void openDeliverable(file)}><FileText size={18}/><span><strong>{file.path.split(/[\\/]/).at(-1)}</strong><small>{file.description||'成果文件'}</small></span></button>)}</div>}
-                  {message.context?.planning&&<p className="context-usage">规划模式 · 只读调查与方案设计 <button disabled={!!running} onClick={()=>setInput('/plan off')}>退出规划模式</button></p>}
-                  {message.context?.goal&&<p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[message.context.goal.phase]||message.context.goal.phase} · 第 {message.context.goal.roundsStarted} / {message.context.goal.maxGoalRounds} 轮 <button disabled={!!running} onClick={()=>setInput(message.context.goal.phase==='active'?'/goal pause':'/goal resume')}>{message.context.goal.phase==='active'?'暂停目标':'查看并继续'}</button></p>}
+                  {message === currentContextMessage && message.context.planning && <p className="context-usage">规划模式 · 只读调查与方案设计 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/plan off')}>退出规划模式</button></p>}
+                  {message === currentContextMessage && currentGoal && <p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[currentGoal.phase] || currentGoal.phase} · 第 {currentGoal.roundsStarted} / {currentGoal.maxGoalRounds} 轮 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, goalAction[0])}>{goalAction[1]}</button></p>}
                   {message.pending&&message.progressText&&<AnswerText text={message.progressText} onOpenUrl={openAnswerUrl}/>}
                   {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':events.findLast(event => event.runId===running?.runId&&event.label)?.label || '正在生成…'}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl}/>}
                   {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
-                  {message.context?.measurement&&<p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow||128000).toLocaleString()} tokens · <button type="button" onClick={()=>setInput('/compact')} disabled={!!running}>压缩上下文</button></p>}
+                  {message.context?.measurement && <p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow || 128000).toLocaleString()} tokens {message === currentContextMessage && <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/compact')}>压缩上下文</button>}</p>}
                   {message.finalization?.processStatus === 'cleanup_pending' && <p className="muted" role="status">执行已结束，内核退出仍待确认；请使用上方的重试清理。</p>}
                   {['pending', 'failed'].includes(message.finalization?.persistenceStatus) && <p className="muted" role="status">本次执行结果尚未保存。重试保存不会重新运行工具。</p>}
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}

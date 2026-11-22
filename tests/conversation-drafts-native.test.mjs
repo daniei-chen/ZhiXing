@@ -265,6 +265,30 @@ async function nativeJourney() {
     await record('空项目草稿解析附件期间删除项目，迟到附件不复活，重载后仍无孤儿/删除marker', {pageLoads, filePickCalls, survivingNewDrafts: 2});
 
     assert.equal(prepared.length, 1); assert.equal(runPreparedCalls, 1); assert.equal(filePickCalls, 4); assert.equal(draftOpens, 7); assert.equal(pageLoads, 3);
+    const fixtureChat = stored.chats.find(chat => chat.id === chatId);
+    fixtureChat.messages.push(
+      {id: 'old-context', role: 'assistant', text: '历史规划', context: {planning: true, goal: {phase: 'active', activation: 'armed', roundsStarted: 1, maxGoalRounds: 4}}},
+      {id: 'current-context', role: 'assistant', text: '当前目标', context: {planning: false, goal: {phase: 'paused', roundsStarted: 2, maxGoalRounds: 4}}},
+    );
+    const preservedDraft = structuredClone(stored.drafts[`chat:${chatId}`]);
+    await fs.writeFile(workspaceFile, JSON.stringify(stored));
+    await load();
+    await click(`.chat-row[data-chat-id="${chatId}"] .chat-link`);
+    await waitUI(`document.querySelector(${JSON.stringify(field)}).value === ${JSON.stringify(preservedDraft.text)}`);
+    assert.equal(await run('document.querySelectorAll(".context-usage button").length'), 1, 'historical state has no actionable controls');
+    await textClick('.context-usage button', '继续目标');
+    await wait(() => !!pendingRun, 'native command received by host interface');
+    assert.equal(prepared.at(-1).command, '/goal resume');
+    assert.equal(prepared.at(-1).sessionId, chatId);
+    assert.deepEqual(prepared.at(-1).visualIds, []);
+    pendingRun.resolve({text: '目标已完成', context: {planning: false, goal: null}}); pendingRun = null;
+    await waitUI('document.querySelector(".transcript").innerText.includes("目标已完成") && !document.querySelector(".context-usage button")');
+    await durable();
+    assert.equal(await inputValue(), preservedDraft.text);
+    assert.deepEqual(await attachmentNames(), ['native-one.txt']);
+    assert.deepEqual(stored.drafts[`chat:${chatId}`], preservedDraft);
+    await record('当前目标直接调用原生指令，历史按钮已收起，原草稿和附件保留', {chatId});
+
     assert.deepEqual(rendererErrors, []); assert.deepEqual(blockedNetwork, []); assert.equal(window.isVisible(), false);
     await fs.writeFile(path.join(__dirname, 'summary.json'), JSON.stringify({
       passed: true, layer, records: records.length, draftOpens, pageLoads, prepareRunCalls: prepared.length, runPreparedCalls, filePickCalls,
@@ -317,8 +341,8 @@ test('Windows Electron真实App/DOM：三份新草稿回切及文件重载、首
   await writeFile(path.join(directory, 'electron.log'), output);
   assert.equal(code, 0, `${output}\nEvidence: ${directory}`);
   const summary = JSON.parse(await readFile(path.join(directory, 'summary.json'), 'utf8'));
-  assert.equal(summary.passed, true); assert.equal(summary.records, 4); assert.equal(summary.show, false);
-  assert.equal(summary.draftOpens, 7); assert.equal(summary.pageLoads, 3); assert.equal(summary.prepareRunCalls, 1); assert.equal(summary.runPreparedCalls, 1); assert.equal(summary.filePickCalls, 4);
+  assert.equal(summary.passed, true); assert.equal(summary.records, 5); assert.equal(summary.show, false);
+  assert.equal(summary.draftOpens, 7); assert.equal(summary.pageLoads, 4); assert.equal(summary.prepareRunCalls, 2); assert.equal(summary.runPreparedCalls, 2); assert.equal(summary.filePickCalls, 4);
   assert.deepEqual(summary.rendererErrors, []); assert.deepEqual(summary.blockedNetwork, []);
   assert.deepEqual(await sourceHashes(), hashes, 'App/store/conversation-state remain frozen throughout this verification');
   console.log(`${output.trim()}\nEvidence: ${directory}\nLayer: ${summary.layer}\nCheckpoints: ${summary.records}; draft opens: ${summary.draftOpens}; page loads: ${summary.pageLoads}; model executions: 0; synthetic runPrepared: ${summary.runPreparedCalls}`);

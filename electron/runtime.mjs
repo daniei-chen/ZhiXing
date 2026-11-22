@@ -14,6 +14,7 @@ import { permissionMode } from '../src/permissions.js';
 import {startToolBridge} from './tool-bridge.mjs';
 import {startPrivacyGateway} from './privacy-gateway.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
+import {acceptsGoalImages, formatSessionCommand, parseSessionCommand} from '../src/session-commands.js';
 import {applyRuntimeExtensions} from './plugin-profile.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
 import {AssistantTextStream} from './assistant-stream.mjs';
@@ -161,6 +162,7 @@ export async function makeHarness(directory,configuration,apiKey){
  env.ZHIXING_INPUT_MODALITIES=JSON.stringify(Array.isArray(configuration.inputModalities)?configuration.inputModalities:['text']);
  env.ZHIXING_VISUAL_BRIDGE=configuration.visualAttachments?.length?'true':'false';
  env.ZHIXING_CAPABILITY_SCOPE=configuration.capabilityScope==='diagnostic'?'diagnostic':'run';
+ if(configuration.requiredCommand)env.ZHIXING_REQUIRED_COMMAND=configuration.requiredCommand;
  if(allowExtensions&&configuration.extensions?.bundles.length)env.ZHIXING_ALLOW_EXTENSIONS='1';
  if(configuration.controls)Object.assign(env,{ZHIXING_CONTROL_PATH:configuration.controls.file,ZHIXING_CONTROL_KEY:configuration.controls.key,ZHIXING_CONTROL_SESSION:configuration.controls.sessionId});
  if(configuration.cancellation)Object.assign(env,{ZHIXING_CANCEL_FILE:configuration.cancellation.file,ZHIXING_CANCEL_KEY:configuration.cancellation.key,ZHIXING_CANCEL_SESSION:configuration.cancellation.sessionId});
@@ -375,15 +377,24 @@ export class RuntimeManager{
   if(saved?.endpoint&&saved.endpoint!==config.baseUrl)throw new Error('这个会话使用了另一个模型服务地址。请新建会话，避免把历史发送给新的服务。');
   if(saved?.endpoint&&((saved.providerId||'deepseek')!==(config.providerId||'deepseek')||(saved.protocol||'deepseek')!==(config.protocol||'deepseek')))throw new Error('这个会话使用了另一个模型服务。请新建会话，避免把历史发送给新的服务。');
   const vault=new PrivacySession(sessionId,saved);
-  if(options.command&&!/^(?:\/compact|\/plan(?: off)?|\/goal(?:[ \t][^\r\n]{1,2000})?)$/.test(options.command))throw new Error('内核命令无效。');
-  if (options.startInPlanMode === true && options.command) throw new Error('规划草稿不能同时执行其他命令。');
+  let command;
+  if(options.command!=null){
+   command=typeof options.command==='string'&&parseSessionCommand(options.command);
+   if(!command)throw new Error('内核命令无效。');
+   if(command.error)throw new Error(command.error);
+   if(command.argument.length>2000||command.name==='plan'&&command.argument)throw new Error('命令正文过长或需要通过规划交办发送。');
+   if(options.startInPlanMode===true)throw new Error('规划草稿不能同时执行其他命令。');
+   if(options.visualAttachments?.length&&!acceptsGoalImages(command))throw new Error('仅可在创建或编辑目标时给此命令添加图片。');
+  }
   const historyFile=path.join(this.root,sessionId,`history-${privacyMode}`,`${sessionId}.bin`);
   const resume=!!saved?.historyKey&&await fs.stat(historyFile).then(()=>true,()=>false);
   const selectedPrompt=!resume&&typeof options.bootstrapPrompt==='string'&&options.bootstrapPrompt.length<=600000?options.bootstrapPrompt:prompt;
-  const original=options.command||`任务模式：${options.mode==='government'?'政务':'办公'}\n\n${selectedPrompt}`;
-  const checked=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(original,customTerms,privacyPolicyForMode(config.privacyPolicy,privacyMode));
-  const input=privacyMode==='raw'&&!checked.blocked?{text:original,entities:[],blocked:false}:checked;
-  return {input,vault,privacyMode,historyKey:saved?.historyKey||createBridgeKey(),resume,credentialSource:original,
+  const body=command?command.argument:`任务模式：${options.mode==='government'?'政务':'办公'}\n\n${selectedPrompt}`;
+  const checked=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(body,customTerms,privacyPolicyForMode(config.privacyPolicy,privacyMode));
+  const input=privacyMode==='raw'&&!checked.blocked?{text:body,entities:[],blocked:false}:checked;
+  if(command)input.text=formatSessionCommand(command,input.text);
+  return {input,vault,privacyMode,historyKey:saved?.historyKey||createBridgeKey(),resume,credentialSource:options.command??body,
+   commandName:command?.name,expectedPlanning:command?.name==='plan'?command.verb!=='off':undefined,
    ...prepareVisualRun(options.visualAttachments,saved,config,privacyMode,resume)};
  }
  async preview(options,config){
@@ -486,7 +497,7 @@ export class RuntimeManager{
    const transcripts=new Map();
    active.cancellation={file:path.join(directory,`cancel-${runId}.bin`),key:createBridgeKey(),sessionId};
    if(config.manualControls)active.controls={file:path.join(directory,`control-${runId}.bin`),key:createBridgeKey(),sessionId,targets:new Map(),transcripts,bridgeFile,bridgeKey,privacyMode,customTerms,privacyPolicy:effectivePolicy,providerKey:key};
-   h=await this.createHarness(directory,{...config,visualAttachments:approvedVisuals,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,providerKey:key,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
+   h=await this.createHarness(directory,{...config,requiredCommand:request.commandName||(options.startInPlanMode===true?'plan':undefined),visualAttachments:approvedVisuals,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,providerKey:key,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
    this.watchHarness(active,h);
    if(active.cancelled)throw new Error('任务已停止。');
    const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void (active.readyForCancel?interruptHarness(active,h):closeHarness(active,h)).catch(()=>{});},kernel.taskTimeoutSeconds*1000);
@@ -601,13 +612,17 @@ export class RuntimeManager{
    }catch(e){if(active.timedOut)throw new Error(`任务超过 ${kernel.taskTimeoutSeconds} 秒，内核已停止。`);if(active.cancelled)throw new Error('任务已停止。');throw e;}finally{clearTimeout(timeout);}
    if(active.cancelled)throw new Error('任务已停止。');
    if(['error','blocked','aborted','interrupted'].includes(result.finishReason)){
+    const failureEvent=request.commandName&&result.events?.find(event=>event.type==='command/done'&&event.data.kind==='error');
+    if(failureEvent){
+     const detail=this.executionDisplay(String(failureEvent.data.text||'').slice(0,1000),{providerKey:key,customTerms,privacyPolicy:effectivePolicy});
+     throw Object.assign(new Error(detail?`内核命令未执行。${detail}`:'内核命令未执行。'),{code:'RUNTIME_COMMAND_FAILED',stage:'query'});
+    }
     const reason=result.events?.findLast(event=>event.type==='turn/end')?.data?.reason;
     const diagnostic=this.executionDisplay(String(reason?JSON.stringify(reason):result.finalResponse||'').slice(0,2000),{providerKey:key,customTerms,privacyPolicy:effectivePolicy});
     throw Object.assign(new Error('模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。'),{code:'RUNTIME_TURN_FAILED',stage:'query',details:{finishReason:result.finishReason,diagnostic}});
    }
    active.finishReason=result.finishReason;
-   const expectedPlanning=options.command==='/plan'?true:options.command==='/plan off'?false:undefined;
-   await waitContext(directory,bridgeKey,sessionId,{planning:expectedPlanning});
+   await waitContext(directory,bridgeKey,sessionId,{planning:request.expectedPlanning});
    await active.draftTail;
    vault=new PrivacySession(sessionId,await readBridge(bridgeFile,bridgeKey));
    let context;try{const reports=await readBridge(path.join(directory,'context.bin'),bridgeKey);context=protectTeamContext(reports[sessionId],key);}catch{}
