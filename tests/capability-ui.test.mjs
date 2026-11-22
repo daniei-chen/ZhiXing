@@ -35,7 +35,7 @@ test('Windows 内核设置能力状态：真实层级文案、检查失败清空
     assert.equal(await run('document.querySelector("[data-capability=web-search]").dataset.effective'),'false');
     assert.match(await run('document.querySelector("[data-capability=web-search]").textContent'),/当前协议未接入/);
     assert.match(await run('document.querySelector("[data-capability=ptc]").textContent'),/需要关联项目/);
-    assert.match(await run('document.querySelector("[data-capability=vision]").textContent'),/尚未接入/);
+    assert.match(await run('document.querySelector("[data-capability=vision-input]").textContent'),/模型视觉输入与本机遮罩副本/);
     assert.match(await run('document.body.innerText'),/可调度不代表执行验收通过/);
     mode='failure';await check();await wait('document.body.innerText.includes("SYNTHETIC_CHECK_FAILED")');assert.equal(await run('!!document.querySelector("[aria-label=实际能力状态]")'),false);
     mode='pending';await check();await wait('document.querySelector("button.primary-button").disabled');
