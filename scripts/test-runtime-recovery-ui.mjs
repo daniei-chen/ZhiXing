@@ -13,8 +13,8 @@ const repository=path.resolve(import.meta.dirname,'..');
 const fixtureOnly=process.argv.includes('--check-fixtures');
 const rendererPort=Number(process.env.QA_PORT||process.env.ZHIXING_QA_PORT||9343);
 const mainPort=Number(process.env.QA_MAIN_PORT||process.env.MAIN_PORT||9344);
-const projectId=process.env.QA_PROJECT_ID||'qa-0121-project';
-const evidence=path.resolve(process.env.QA_EVIDENCE||path.join(repository,'.preview/qa-0.12.1-audit/agent-c/runtime-recovery'));
+const projectId=process.env.QA_PROJECT_ID||'qa-0122-project';
+const evidence=path.resolve(process.env.QA_EVIDENCE||path.join(repository,'.preview/qa-0.12.2-audit/agent-c/runtime-recovery'));
 const id=`recovery-${Date.now().toString(36)}-${crypto.randomUUID().slice(0,6)}`;
 const mainKey=`__zhixing_${id.replaceAll('-','_')}`;
 const sessionId=`${id}-manual`,taskName=`${id}-scheduled`;
@@ -294,11 +294,11 @@ try{
     ui=await connectUi(rendererPort);main=await connectUi(mainPort,true);
     host=await evaluate(()=>{const e=process.mainModule.require('electron');return {pid:process.pid,exe:e.app.getPath('exe'),profile:e.app.getPath('userData'),version:e.app.getVersion()};});
     assert(/win-unpacked[\\/]知行\.exe$/i.test(host.exe),'Only the final unpacked Windows candidate is allowed');
-    assert(host.profile.toLowerCase().includes(`${path.sep}.preview${path.sep}qa-0.12.1${path.sep}`.toLowerCase()),'Refusing a non-QA profile');
+    assert(host.profile.toLowerCase().includes(`${path.sep}.preview${path.sep}qa-0.12.2${path.sep}`.toLowerCase()),'Refusing a non-QA profile');
     if(process.env.QA_PROFILE)assert.equal(path.resolve(host.profile),path.resolve(process.env.QA_PROFILE));
-    assert.equal(host.version,'0.12.1');
+    assert.equal(host.version,'0.12.2');
     await ready();assert.equal(await ui.evaluate('!!document.querySelector("button[aria-label=停止生成]")'),false);
-    const originalWorkspace=await workspace(),project=originalWorkspace.projects.find(project=>project.id===projectId);assert(project?.directory,'Bind the synthetic qa-0121-project first');
+    const originalWorkspace=await workspace(),project=originalWorkspace.projects.find(project=>project.id===projectId);assert(project?.directory,'Bind the synthetic qa-0122-project first');
     captureInstalled=true;await evaluate(installCapture,mainKey,evidence,sessionId,manualMarker,originalWorkspace);
     // These REAL bridge calls trigger capture; prototypes are restored by the hooks immediately.
     assert.deepEqual(await ui.evaluate('window.zhixing.runtimeCleanupStatus()'),[]);

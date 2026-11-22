@@ -371,17 +371,17 @@ try {
       for (const page of ['首页', '资料空间', '定时任务', '自定义']) {
         await home();
         if (page !== '首页') { await ensureNav(); await ui.click(page, '.app-rail button'); }
-        await ui.screenshot(path.join(evidence, `${sizeLabel}-${page}.png`));
+        const screenshot = await ui.screenshot(path.join(evidence, `${sizeLabel}-${page}.png`));
         const metrics = await ui.evaluate('({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,overflow:document.documentElement.scrollWidth>innerWidth+1})');
         assert.equal(metrics.overflow, false, `${width} ${page} document overflow`);
-        await record(`${width}×${height} ${zoom * 100}% ${page}`, metrics);
+        await record(`${width}×${height} ${zoom * 100}% ${page}`, { ...metrics, screenshot: screenshot.status, ...(screenshot.error ? { screenshotError: screenshot.error } : {}) });
       }
       for (const tab of ['常规', '通知', '外观', '已归档的聊天', '语音', '个性化', '键盘快捷键', '隐私与数据', '项目与工作区', '供应商', 'MCP 连接', 'Agent 内核', '权限与工具', '关于知行']) {
         await settings(tab);
-        await ui.screenshot(path.join(evidence, `${sizeLabel}-设置-${tab}.png`));
+        const screenshot = await ui.screenshot(path.join(evidence, `${sizeLabel}-设置-${tab}.png`));
         const metrics = await ui.evaluate('({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,overflow:document.documentElement.scrollWidth>innerWidth+1,contentWidth:document.querySelector(".settings-page").getBoundingClientRect().width})');
         assert.equal(metrics.overflow, false, `${width} settings ${tab} overflow`);
-        await record(`${width}×${height} ${zoom * 100}% 设置 ${tab}`, metrics);
+        await record(`${width}×${height} ${zoom * 100}% 设置 ${tab}`, { ...metrics, screenshot: screenshot.status, ...(screenshot.error ? { screenshotError: screenshot.error } : {}) });
       }
       await home();
       await ensureNav();

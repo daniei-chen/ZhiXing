@@ -11,7 +11,7 @@ import {connectUi} from './qa-cdp.mjs';
 // snapshots, serialization, writeFile and the Windows clipboard remain real.
 const port = Number(process.env.ZHIXING_QA_PORT || 9343);
 const mainPort = Number(process.env.ZHIXING_QA_MAIN_PORT || 9344);
-const evidence = path.resolve(process.env.ZHIXING_QA_EVIDENCE || '.preview/qa-0.12.1-audit/windows-delivery');
+const evidence = path.resolve(process.env.ZHIXING_QA_EVIDENCE || '.preview/qa-0.12.2-audit/windows-delivery');
 await fs.mkdir(evidence, {recursive: true});
 const ui = await connectUi(port), main = await connectUi(mainPort, true);
 const checks = [];

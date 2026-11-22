@@ -24,13 +24,13 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前版本为 **0.12.2 Windows x64 未签名预发布候选**，内核依赖固定为 **DeepSeek Harness 0.2.2-rc.5**。本轮完成 R09 锁恢复、R10 目录分页、多份新草稿恢复和运行时能力状态清单。[0.12.2 Windows 验收记录](docs/windows-acceptance-0.12.2.md) 记录源码和隔离 Windows 门禁，安装器结果在构建完成后补入。
+当前版本为 **0.12.2 Windows x64 未签名预发布候选**，内核依赖固定为 **DeepSeek Harness 0.2.2-rc.5**。本轮完成 R09 锁恢复、R10 目录分页、多份新草稿恢复和运行时能力状态清单。最终安装器、哈希、源码 provenance、Windows 实包和 NSIS 生命周期结果均已写入 [0.12.2 Windows 验收记录](docs/windows-acceptance-0.12.2.md)。
 
 <div align="center">
 
 <img src="docs/assets/readme-workbench-0.11.0.png" alt="知行 0.11.0 Windows 工作台，展示项目侧栏、墨竹欢迎页和交办输入区" width="100%" />
 
-知行 Windows 工作台 · 0.11.0
+知行 Windows 工作台 · 0.12.2
 
 </div>
 
@@ -65,7 +65,7 @@
 
 ### 获取已发布的 Windows 预发布候选
 
-1. 打开 [0.12.2 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.12.2)，下载 `ZhiXing-0.12.2-x64.exe`，并核对发行页及 `SHA256SUMS.txt` 公布的 SHA-256。
+1. 打开 [0.12.2 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.12.2)，下载 `知行-0.12.2-x64.exe`，并核对发行页及 `SHA256SUMS.txt` 公布的 SHA-256。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
@@ -76,14 +76,14 @@
 
 | Windows x64 候选资产 | 值 |
 | --- | --- |
-| 文件 | `ZhiXing-0.12.2-x64.exe` |
-| 发行状态 | 0.12.2 未签名预发布候选，安装包待最终构建验收 |
-| 文件大小 | 待构建 |
-| SHA-256 | 待构建 |
+| 文件 | `知行-0.12.2-x64.exe` |
+| 发行状态 | 0.12.2 未签名预发布候选；目录包、安装器和 NSIS 生命周期已验收 |
+| 文件大小 | 562,803,697 bytes |
+| SHA-256 | `6CEEDFCA7083546D30F56ABCFCC3F373E39C994E2E4D344D81D8DE43E3811C29` |
 
 发行包携带独立 Node、Harness 和插件 npm CLI。验收分源码、包内模块、真实 Windows 页面和 NSIS 安装生命周期；测试使用本机合成服务，不代表真实云端账户矩阵通过。具体条件、数据保留和未覆盖分支见 [0.12.2 Windows 验收记录](docs/windows-acceptance-0.12.2.md)。
 
-0.12.2 源码回归 **335 项，334 通过，0 失败，0 取消，1 条件跳过**；组件与隔离 Windows Electron 旅程 **14/14**，Sites **4/4**。最终目录包、安装器和 NSIS 生命周期将在 [0.12.2 Windows 验收记录](docs/windows-acceptance-0.12.2.md) 完成实际构建后填写。页面检查点数量不是业务覆盖率或全部内核能力的覆盖率。
+0.12.2 源码回归 **335 项，334 通过，0 失败，0 取消，1 条件跳过**；组件与隔离 Windows Electron 旅程 **14/14**，Sites **4/4**。最终目录包回归 **303 项，302 通过，0 失败，0 取消，1 条件跳过**；真实 Windows 页面、入口和面板矩阵 **336/336**；NSIS 安装、升级、同版覆盖、卸载保留、重装保留和包外启动 **53 个步骤，0 失败**。页面检查点数量不是业务覆盖率或全部内核能力的覆盖率。
 
 安装生命周期使用同 Windows 账户、隔离 `--user-data-dir` 和合成资料；真实默认 AppData 只作字节保护/恢复，不作真实业务迁移。空配置 NSIS 新装、交互/所有用户安装、普通卸载快捷方式清理、跨账户及真实资料迁移不能由该范围推断。每一版的升级、覆盖、卸载和重装结论以其实际安装器哈希和专项记录为准。
 
@@ -206,7 +206,7 @@ npm run test:browser -- ".\release\win-unpacked\知行.exe"
 Get-FileHash ".\release\知行-0.12.2-x64.exe" -Algorithm SHA256
 ```
 
-目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`electron:dist` 可单独生成目录包，`electron:install` 会重新生成目录包并构建安装器。上方下载表对应 0.12.2 构建完成后记录的 SHA-256。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留，不能沿用旧包指纹和结论。打包携带与 Node.js 版本一致的许可证文件，变更 Node 版本时请同步真实许可证和构建清单。
+目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。0.12.2 的构建提交为 `719cad9a56ee3434f4cc215b174dcf9f54629de1`，包内 provenance 的 `sourceDirty=false`、79 个业务文件匹配，source fingerprint 为 `53fe751bc64f2fff683766a08989ca439861de302d1d249446571968566edba9`。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留，不能沿用旧包指纹和结论。打包携带与 Node.js 版本一致的许可证文件，变更 Node 版本时请同步真实许可证和构建清单。
 
 ## 参与完善
 

@@ -1,6 +1,6 @@
 # 知行 0.12.2 · 能力状态与恢复边界
 
-本轮从已发布的 `v0.12.1` 继续，内核仍固定 DeepSeek Harness `0.2.2-rc.5`。本轮先处理上一版明确保留的 R09、R10、连续新草稿恢复和能力状态误报，再把新增回归纳入源码与包内测试入口。Windows 安装包的最终文件、校验值和安装生命周期以 [0.12.2 Windows 验收记录](windows-acceptance-0.12.2.md) 为准。
+本轮从已发布的 `v0.12.1` 继续，内核仍固定 DeepSeek Harness `0.2.2-rc.5`。本轮先处理上一版明确保留的 R09、R10、连续新草稿恢复和能力状态误报，再把新增回归纳入源码与包内测试入口。最终包和 Windows 证据已经完成，具体文件、校验值和安装生命周期见 [0.12.2 Windows 验收记录](windows-acceptance-0.12.2.md)。
 
 ## 本轮修改
 
@@ -27,3 +27,25 @@
 常驻 Harness Host、跨启动 live jobs/MCP、MCP 和供应商 OAuth、独立搜索连接、Responses/Gemini、异构子模型路由、完整原生文件和 Agent Office 工具、模型视觉、原图打码、全面 NER、增量加密事件/Blob 存储、typed XLSX 和正式 DOCX 模板仍未全部接入。
 
 工作区全量加密写回和 12 MiB 上限保持不变。持续不可写时，强杀或断电前尚未落盘的自动化结果仍不能保证恢复。PTC 继续默认关闭，并且只有绑定项目、完全访问和相应内核开关同时满足时才可执行。
+
+## Windows 实包与安装生命周期
+
+最终生产包由提交 `719cad9a56ee3434f4cc215b174dcf9f54629de1` 构建。包内 `build-provenance.json` 记录 `sourceDirty=false`、Node `v24.19.0`、lock SHA-256 `f01488ac2be5367e3e2361f7a7001ec002958620a86010b73d5c9696fa48c912`；包内 79 个业务文件匹配，source fingerprint 为 `53fe751bc64f2fff683766a08989ca439861de302d1d249446571968566edba9`。
+
+最终资产如下：
+
+| 资产 | 大小 | SHA-256 |
+| --- | ---: | --- |
+| `release/知行-0.12.2-x64.exe` | 562,803,697 bytes | `6CEEDFCA7083546D30F56ABCFCC3F373E39C994E2E4D344D81D8DE43E3811C29` |
+| `release/知行-0.12.2-x64.exe.blockmap` | 489,622 bytes | `BCD4C764F717C4CE3F447112AEF3CF354B94BC99819FBED2AAE07EAE82D156F5` |
+| `release/win-unpacked/知行.exe` | 246,317,568 bytes | `CF670B47557E2733908A3B3609478B702B73001E0AA897A9F5C6D51A3DF48F43` |
+
+最终目录包回归为 **303 项，302 通过，0 失败，0 取消，1 条件跳过**；跳过原因与源码一致，是 Windows 文件符号链接权限条件。品牌校验通过：目录包应用和 NSIS 安装器均包含 9 个墨竹图标尺寸，原始墨竹 PNG 的 SHA-256 保持为 `c123f438263f01d27d61c0f354e4ff377b9ce985e292ecfac7ab00bf6d529daa`。
+
+真实 Windows 页面矩阵为 **336/336**：3 个客户区尺寸、4 个内容缩放档、4 个工作区页面、14 个设置页、三顶栏入口和 8 个工作面板；业务检查均通过，最终证据位于 `.preview/qa-0.12.2-audit/windows-pages-0.12.2-rerun2/pages.json`。页面矩阵原先的截图 CDP 超时通过 QA 采集层修复后重跑通过；该 QA 修改不在已构建生产包内。
+
+真实 NSIS 生命周期报告为 `.preview/qa-0.12.2/install-evidence-20261122-163945-7cbee9c2/report.json`，状态为 `passed_configured_nonvisual_lifecycle`，53 个步骤中 38 个通过、15 个阶段观测、0 失败。首次安装、0.12.0 同账户合成资料升级、同版覆盖、默认卸载保留、重装保留和包外 cwd 启动均通过。项目、聊天、草稿、MCP、供应商和加密配置在每次应用读回后保持；主机原有数据和原快捷方式字节哈希在清理后恢复。该生命周期是同账户合成资料和非视觉验收，不代表跨账户解密、交互式安装或真实用户资料迁移。
+
+## 发布前 QA 适配说明
+
+为完成最终页面矩阵，`scripts/qa-cdp.mjs` 与 `scripts/test-ui.mjs` 增加了截图证据的 best-effort 记录能力：DOM、尺寸、溢出、入口和面板断言仍会失败，Chromium 合成器截图超时单独记录为证据采集问题。该适配发生在 0.12.2 生产包构建之后，未进入安装包；因此包内 provenance 仍指向 `719cad9`，发布提交包含的是文档和 QA 适配的后续变更。

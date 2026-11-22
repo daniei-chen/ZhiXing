@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "version": "0.12.2",
+  "package": "Windows x64 unsigned prerelease",
+  "kernel": "DeepSeek Harness 0.2.2-rc.5",
+  "buildCommit": "719cad9a56ee3434f4cc215b174dcf9f54629de1",
+  "sourceDirty": false,
+  "node": "v24.19.0",
+  "lockSha256": "f01488ac2be5367e3e2361f7a7001ec002958620a86010b73d5c9696fa48c912",
+  "matchedFiles": 79,
+  "sourceFingerprint": "53fe751bc64f2fff683766a08989ca439861de302d1d249446571968566edba9",
+  "tests": {
+    "source": {
+      "total": 335,
+      "passed": 334,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 1
+    },
+    "components": {
+      "total": 14,
+      "passed": 14
+    },
+    "packed": {
+      "total": 303,
+      "passed": 302,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 1
+    },
+    "pages": {
+      "total": 336,
+      "passed": 336,
+      "failed": 0
+    },
+    "kernelPrivacy": {
+      "total": 15,
+      "passed": 15
+    },
+    "delivery": {
+      "total": 7,
+      "passed": 7
+    },
+    "runtimeRecovery": {
+      "total": 8,
+      "passed": 8
+    },
+    "auditConversation": {
+      "businessTotal": 7,
+      "businessPassed": 7,
+      "originalProcessExit": "observed_timeout",
+      "independentNormalExit": "passed"
+    },
+    "conversation": {
+      "total": 12,
+      "passed": 12
+    },
+    "sites": {
+      "total": 4,
+      "passed": 4
+    }
+  },
+  "assets": [
+    {
+      "file": "release/知行-0.12.2-x64.exe",
+      "bytes": 562803697,
+      "sha256": "6CEEDFCA7083546D30F56ABCFCC3F373E39C994E2E4D344D81D8DE43E3811C29"
+    },
+    {
+      "file": "release/知行-0.12.2-x64.exe.blockmap",
+      "bytes": 489622,
+      "sha256": "BCD4C764F717C4CE3F447112AEF3CF354B94BC99819FBED2AAE07EAE82D156F5"
+    },
+    {
+      "file": "release/win-unpacked/知行.exe",
+      "bytes": 246317568,
+      "sha256": "CF670B47557E2733908A3B3609478B702B73001E0AA897A9F5C6D51A3DF48F43"
+    }
+  ],
+  "lifecycleReport": ".preview/qa-0.12.2/install-evidence-20261122-163945-7cbee9c2/report.json",
+  "pagesEvidence": ".preview/qa-0.12.2-audit/windows-pages-0.12.2-rerun2/pages.json",
+  "brandVerification": "passed: 9 icon sizes in app and installer; original bamboo artwork unchanged",
+  "cloudValidation": "not performed",
+  "covered": [
+    "R09 privacy lock recovery",
+    "R10 bounded directory pagination",
+    "multiple new draft recovery",
+    "runtime capability manifest",
+    "dynamic JSON/schema privacy boundary",
+    "delivery review snapshots",
+    "exit isolation and save-only retry",
+    "delete cascade and terminal traces",
+    "failure recovery and material deduplication"
+  ],
+  "notCovered": [
+    "real cloud account matrix",
+    "real user credentials and business data",
+    "cross-account decryption",
+    "interactive/all-users installation",
+    "regular uninstall shortcut cleanup",
+    "model vision input and original-image masking",
+    "全面 NER and arbitrary encoding detection",
+    "MCP/provider OAuth",
+    "independent search connection",
+    "Responses/Gemini and heterogeneous submodels",
+    "resident Host and cross-start live jobs/MCP",
+    "incremental encrypted event/blob storage",
+    "typed XLSX and formal DOCX templates",
+    "physical DPI, human microphone, full screen-reader and large-scale stress"
+  ]
+}

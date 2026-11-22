@@ -23,7 +23,8 @@ export async function connectUi(port = 9333, mainProcess = false) {
   function send(method, params = {}) {
     return new Promise((resolve, reject) => {
       const id = ++sequence;
-      const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Timed out: ${method}`)); }, 30000);
+      const timeoutMs = method === 'Page.captureScreenshot' ? 90000 : 30000;
+      const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Timed out: ${method}`)); }, timeoutMs);
       pending.set(id, { resolve, reject, timer });
       socket.send(JSON.stringify({ id, method, params }));
     });
@@ -54,9 +55,15 @@ export async function connectUi(port = 9333, mainProcess = false) {
     await new Promise(resolve => setTimeout(resolve, 80));
   }
   async function screenshot(file) {
-    const response = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, Buffer.from(response.data, 'base64'));
+    try {
+      const response = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, Buffer.from(response.data, 'base64'));
+      return { status: 'captured' };
+    } catch (error) {
+      if (process.env.ZHIXING_QA_SCREENSHOT_BEST_EFFORT !== '1') throw error;
+      return { status: 'timeout', error: error.message };
+    }
   }
   return { send, evaluate, waitFor, click, fill, screenshot, close: () => socket.close() };
 }

@@ -18,7 +18,7 @@ try{
  await ui.waitFor('!!document.querySelector("textarea[aria-label=聊天输入框]")');
  const runtime=await ui.evaluate('window.zhixing.runtimeStatus()');assert.equal(runtime.appVersion,version);await record(`actual packaged runtime reports ${version}`);
  if(await ui.evaluate('!!document.querySelector("button[aria-label=展开侧栏]")'))await ui.click('展开侧栏');
- await ui.click('打开设置');await ui.click('隐私与数据','.settings-nav button');
+ if(!await ui.evaluate('!!document.querySelector(".settings-page")'))await ui.click('打开设置');await ui.click('隐私与数据','.settings-nav button');
  await ui.click('全角与零宽');await ui.click('测试脱敏');
  const result=await ui.evaluate('document.querySelector("[aria-label=脱敏测试结果]").textContent');
  assert(!result.includes('１３８'));assert(!result.includes('139'));assert(result.includes('ZX-'));assert(await ui.evaluate('document.querySelectorAll("[aria-label=脱敏识别依据] tbody tr").length>0'));
@@ -54,11 +54,11 @@ try{
  })()`);assert(ipcChecks.shortBlocked&&ipcChecks.restored);await record('actual IPC rejects short saved keys and known eight-character keys in prompt bootstrap and command');
  await ui.click('Agent 内核','.settings-nav button');await inspect();
  await ui.fill('input[aria-label="搜索内核工具"]','team_task_');
- assert.equal(await ui.evaluate('document.querySelectorAll(".kernel-catalog details").length'),4);await record('native kernel inspection exposes four actual Agent Teams tools');
+ assert.equal(await ui.evaluate('document.querySelectorAll(".kernel-catalog:not(.capability-catalog) details").length'),4);await record('native kernel inspection exposes four actual Agent Teams tools');
  await ui.evaluate('document.querySelector(".kernel-catalog").scrollIntoView({block:"center"})');await ui.screenshot(path.join(evidence,'native-team-catalog.png'));
- await ui.fill('input[aria-label="搜索内核工具"]','qa-no-such-native-tool');assert(await ui.evaluate('document.querySelector(".kernel-catalog").innerText.includes("没有匹配的工具")'));await record('tool search has an honest empty state');
+ await ui.fill('input[aria-label="搜索内核工具"]','qa-no-such-native-tool');assert(await ui.evaluate('document.querySelector(".kernel-catalog:not(.capability-catalog)").innerText.includes("没有匹配的工具")'));await record('tool search has an honest empty state');
  await ui.click('共享任务板','button[role=switch]');await ui.click('保存内核设置');await ui.waitFor('!document.querySelector(".kernel-tool-search")');await record('saving configuration invalidates the previous kernel catalogue');
- await inspect();await ui.fill('input[aria-label="搜索内核工具"]','team_task_');assert.equal(await ui.evaluate('document.querySelectorAll(".kernel-catalog details").length'),0);await record('disabling Teams removes native tools after real IPC and Harness restart');
+ await inspect();await ui.fill('input[aria-label="搜索内核工具"]','team_task_');assert.equal(await ui.evaluate('document.querySelectorAll(".kernel-catalog:not(.capability-catalog) details").length'),0);await record('disabling Teams removes native tools after real IPC and Harness restart');
  await ui.click('恢复默认');await ui.click('保存内核设置');await ui.waitFor('!document.querySelector(".kernel-tool-search")');
  const restored=await ui.evaluate('window.zhixing.runtimeStatus()');assert.equal(restored.kernel.teamEnabled,true);assert.equal(restored.kernel.ptcEnabled,false);await record('restored defaults enable Teams and keep PTC opt-in');
  await ui.click('返回工作台');await record('settings journey returns to working composer');
