@@ -354,6 +354,36 @@ test('官方 glob 和 grep 运行随包 ripgrep，排除私密文件与项目外
  }finally{await f.close();}
 });
 
+test('官方工作目录限定在项目内，相对文件操作与搜索随会话重开保留', {timeout:60000}, async()=>{
+ const actions=[['working_directory',{cd:'section'}],['read',{file_path:'record.txt'}],['write',{file_path:'result.txt',content:'RELATIVE_RESULT'}],
+  ['working_directory',{cd:'../..'}],'FIRST_DIRECTORY_TURN',['working_directory',{}],['grep',{pattern:'IN_SECTION'}],'SECOND_DIRECTORY_TURN'];
+ const f=await fixture((_body,index)=>{
+  const action=actions[index-1];
+  return Array.isArray(action)?call(...action,index):[{type:'text',text:action}];
+ });
+ try {
+  const project=path.join(f.root,'project'),section=path.join(project,'section');await fs.mkdir(section,{recursive:true});
+  await fs.writeFile(path.join(project,'record.txt'),'ROOT_RECORD');await fs.writeFile(path.join(section,'record.txt'),'IN_SECTION');
+  const config={...f.config,workspaceRoot:project,permission:'ask'},key='synthetic-directory-route-key',sessionId='project-directory';
+  const catalog=await f.manager.check(config,key);
+  assert(catalog.tools.some(tool=>tool.name==='working_directory'));assert.equal(f.requests.length,0);
+  const approvals=[];f.manager.onApproval=async request=>{approvals.push(JSON.parse(request.reason).path);return {outcome:'allowed-once'};};
+  await f.manager.run({sessionId,runId:'directory-first',prompt:'在合成项目的子目录工作。'},config,key);
+  const first=results(f.requests.at(-1));
+  assert.deepEqual(first.map(block=>block.is_error===true),[false,false,false,true]);
+  assert.match(JSON.stringify(first[1]),/IN_SECTION/);assert(!JSON.stringify(first[1]).includes('ROOT_RECORD'));
+  assert.match(await fs.readFile(path.join(section,'result.txt'),'utf8'),/^RELATIVE_RESULT\r?\n?$/);
+  await assert.rejects(fs.stat(path.join(project,'result.txt')),{code:'ENOENT'});
+  assert.deepEqual(approvals,[path.join(section,'result.txt')]);
+  await f.manager.run({sessionId,runId:'directory-reopen',prompt:'重开后在该目录搜索。'},config,key);
+  assert.equal(f.requests.length,8);
+  assert.match(JSON.stringify(results(f.requests.at(-1)).at(-1)),/IN_SECTION/);
+  const {historyKey}=await f.manager.readVault(sessionId);
+  const history=await readBridge(path.join(f.root,sessionId,'history-redact',`${sessionId}.bin`),historyKey);
+  assert.equal(history.events.findLast(event=>event.type==='working-directory/change').data.cwd,section);
+ }finally{await f.close();}
+});
+
 test('同一原生会话降回请求批准后，下一次命令使用同步的工作区沙箱', {timeout:60000}, async()=>{
  const approvals=[];
  const f=await fixture((_body,index)=>index%2?call('office_execute',{command:"Write-Output 'PERMISSION_FIXTURE'",description:'查看当前执行权限'},index):[{type:'text',text:'PERMISSION_FIXTURE_COMPLETE'}]);

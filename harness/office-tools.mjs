@@ -13,7 +13,7 @@ import {OFFICE_DOCUMENT_TOOLS, registerOfficeDocumentTools} from './office-docum
 import {NATIVE_PROJECT_FILE_TOOLS, installNativeProjectFilePolicy} from './native-project-fs.mjs';
 
 export const name='zhixing-office-tools';
-export const inject=['tools','llm','approval','shell','planMode','sandboxPolicy','agents'];
+export const inject=['tools','llm','approval','shell','planMode','sandboxPolicy','agents','workingDirectory'];
 export const TOOL_NAMES=['office_calculate','office_calendar','office_table_check','office_read_file','office_write_file','office_list_files',...OFFICE_DOCUMENT_TOOLS,...NATIVE_PROJECT_FILE_TOOLS,'office_execute','todo_write','ask_user_question','skill','web_search','web_fetch','subagent','subagent_fork','list_agents','send_message','interrupt_agent','wait_agent','get_goal','create_goal','update_goal','exit_plan_mode','office_browser','office_schedule','workflow','job_list','job_output','job_kill','present','team_task_create','team_task_get','team_task_list','team_task_update','run_code'];
 const output={schema:{type:'object',additionalProperties:true},render:(_args,value)=>[{type:'text',text:JSON.stringify(value)}]};
 

@@ -6,7 +6,7 @@ export function shellEnvironment(environment = process.env) {
 }
 
 export function planningAllows(name, args = {}) {
-  return ['office_calculate','office_calendar','office_table_check','office_read_file','office_list_files','office_render','read','read_image','glob','grep','skill','ask_user_question','exit_plan_mode','get_goal','team_task_list','team_task_get','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource'].includes(name)
+  return ['office_calculate','office_calendar','office_table_check','office_read_file','office_list_files','office_render','working_directory','read','read_image','glob','grep','skill','ask_user_question','exit_plan_mode','get_goal','team_task_list','team_task_get','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource'].includes(name)
     || name === 'office_browser' && ['list','snapshot'].includes(args.operation)
     || name === 'office_schedule' && ['list','view'].includes(args.operation);
 }

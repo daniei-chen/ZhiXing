@@ -1,6 +1,6 @@
 import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
-import {NATIVE_PROJECT_SEARCH_TOOLS,prepareNativeImage,prepareNativePatch,prepareNativeSearch,protectNativeSearch} from './native-project-fs.mjs';
+import {NATIVE_PROJECT_SEARCH_TOOLS,prepareNativeDirectory,prepareNativeImage,prepareNativePatch,prepareNativeSearch,protectNativeSearch} from './native-project-fs.mjs';
 import {privateSearchGlobs} from '../electron/workspace-files.mjs';
 import {shellEnvironment} from './shell-policy.mjs';
 
@@ -9,6 +9,7 @@ const harnessRequire=createRequire(require.resolve('@deepseek-ai/dsh/lib/bin.js'
 const native=await import(pathToFileURL(harnessRequire.resolve('@deepseek-ai/dsh-tool-fs')).href);
 const baseRequire=createRequire(harnessRequire.resolve('@deepseek-ai/dsh-base'));
 const search=await import(pathToFileURL(baseRequire.resolve('@deepseek-ai/dsh-tool-fs-search')).href);
+const directory=await import(pathToFileURL(baseRequire.resolve('@deepseek-ai/dsh-tool-working-directory')).href);
 export const name='zhixing-native-project-tools';
 export const Config=native.Config;
 export const inject=[...native.inject,'subprocess'];
@@ -29,6 +30,7 @@ export async function apply(ctx,config) {
   }});
  }
  native.apply(adapter(ctx),config);
+ directory.apply(adapter(ctx));
  const subprocess={spawn(spec){
   const separator=spec.argv.indexOf('--');
   const end=separator===-1?spec.argv.length:separator;
@@ -41,6 +43,10 @@ export async function apply(ctx,config) {
 }
 
 function adaptDefinition(definition){
+ if(definition.name==='working_directory')return {...definition,
+  description:'查看当前会话工作目录，或切换到项目内已存在的目录。原生文件工具使用该目录解析相对路径。',
+  async execute(args,exec){return definition.execute(await prepareNativeDirectory(args),exec);},
+ };
  if(definition.name==='apply_patch')return {...definition,async execute(args,exec){
   return definition.execute({...args,input:await prepareNativePatch(args.input)},exec);
  }};

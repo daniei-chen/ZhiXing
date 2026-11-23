@@ -6,6 +6,7 @@ import {planningAllows} from './shell-policy.mjs';
 const definitions = [
  {id:'office',label:'计算、日期与表格检查',tools:['office_calculate','office_calendar','office_table_check']},
  {id:'files',label:'项目文件读写与目录分页',tools:['office_read_file','office_write_file','office_list_files'],workspace:true},
+ {id:'native-working-directory',label:'Harness 会话工作目录',tools:['working_directory'],workspace:true,readOnly:true},
  {id:'native-text-read',label:'Harness 原生项目文本读取',tools:['read'],workspace:true,readOnly:true},
  {id:'native-project-image',label:'Harness 原生项目图片读取',tools:['read_image'],workspace:true,readOnly:true,imageRoute:true,bridge:'office-vision'},
  {id:'native-text-search',label:'Harness 原生项目文件搜索',tools:['glob','grep'],workspace:true,readOnly:true},

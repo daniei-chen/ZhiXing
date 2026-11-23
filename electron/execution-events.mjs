@@ -4,6 +4,7 @@ const toolLabels = new Map(Object.entries({
  office_convert:'转换办公文档', office_recalculate:'重算工作簿', office_render:'渲染办公页面',
  read:'读取项目文本', read_image:'读取项目图片', write:'写入项目文本', edit:'编辑项目文本', apply_patch:'应用项目文件补丁',
  glob:'查找项目文件', grep:'搜索项目文本',
+ working_directory:'会话工作目录',
  office_execute:'PowerShell 命令', todo_write:'更新工作计划', ask_user_question:'等待补充',
  skill:'加载办公技能', workflow:'多 Agent 工作流', job_list:'查看后台作业', job_output:'读取后台输出',
  job_kill:'停止后台作业', present:'交付成果文件', web_search:'网页搜索', web_fetch:'读取网页',

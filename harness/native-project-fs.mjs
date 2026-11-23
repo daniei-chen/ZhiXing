@@ -13,15 +13,18 @@ const {LocalFileSystem} = await import(pathToFileURL(fsPath).href);
 const {FsError}=await import(pathToFileURL(fsRequire.resolve('@deepseek-ai/dsh-fs')).href);
 const {parsePatch,applyHunks}=await import(pathToFileURL(fsRequire.resolve('@deepseek-ai/dsh-fs-patch')).href);
 const scope = new AsyncLocalStorage();
+const directoryScope = new AsyncLocalStorage();
 
 export const NATIVE_PROJECT_SEARCH_TOOLS = ['glob','grep'];
-export const NATIVE_PROJECT_FILE_TOOLS = ['read','read_image','write','edit','apply_patch',...NATIVE_PROJECT_SEARCH_TOOLS];
+export const NATIVE_PROJECT_FILE_TOOLS = ['working_directory','read','read_image','write','edit','apply_patch',...NATIVE_PROJECT_SEARCH_TOOLS];
 const MAX_WRITE_BYTES = 1024 * 1024;
 
 export function installNativeProjectFilePolicy(ctx, {root, restoreValue, permit, protectedValue}) {
+ const getDirectory=exec=>exec.agent?ctx.workingDirectory.ensure(exec.agent,exec.signal):root;
+ ctx.on('working-directory/access', (_request,next) => directoryScope.run(root,next));
  ctx.on('tools/execute', (exec, next) => {
   if (!NATIVE_PROJECT_FILE_TOOLS.includes(exec.name)) return next();
-  return scope.run({root, restoreValue, protectedValue, exec, permit, patchTargets:null}, next);
+  return scope.run({root, getDirectory, restoreValue, protectedValue, exec, permit, patchTargets:null}, next);
  });
  ctx.on('tools/post-execute', async (exec, result, next) => {
   const decision = await next();
@@ -35,6 +38,7 @@ export function installNativeProjectFilePolicy(ctx, {root, restoreValue, permit,
    }
    const value = decision.value ?? result.value;
    if (NATIVE_PROJECT_SEARCH_TOOLS.includes(exec.name)) return decision;
+   if (exec.name === 'working_directory') return {kind:'accept',value:{cwd:await protectedValue(value.cwd)}};
    if (exec.name === 'read_image') {
     const file=await protectedValue(value.path);
     const name=value.image.mediaType==='image/jpeg'?'project-image.jpg':'project-image.png';
@@ -53,6 +57,19 @@ export function installNativeProjectFilePolicy(ctx, {root, restoreValue, permit,
  });
 }
 
+export async function prepareNativeDirectory(args){
+ const current=scope.getStore();
+ if(!current)throw new Error('只能在当前项目中选择工作目录。');
+ if(args.cd===undefined)return args;
+ if(typeof args.cd!=='string'||!args.cd.trim())throw new Error('请选择项目内已存在的目录。');
+ const value=await current.restoreValue(args.cd);
+ const cwd=await current.getDirectory(current.exec);
+ const {target}=await workspaceTarget(current.root,path.resolve(cwd,value));
+ if(!(await fs.stat(target)).isDirectory())throw new Error('请选择项目内已存在的目录。');
+ await current.protectedValue(target);
+ return {...args,cd:target};
+}
+
 export async function prepareNativeImage(file){
  const current=scope.getStore();
  if(!current)throw new Error('只能在当前 Windows 项目交办中读取图片。');
@@ -68,7 +85,8 @@ export async function prepareNativeSearch(args,exec){
  if(args.pattern.length>2000||args.include?.length>1000||args.pattern.includes('\0')||args.include?.includes('\0'))throw new Error('搜索式超出支持范围。');
  if(/⟦ZX-/.test(args.pattern)||/⟦ZX-/.test(args.include||''))throw new Error('请使用普通文本或通配符搜索，敏感占位符可用于已知文件路径。');
  const selected=args.path===undefined?'.':await current.restoreValue(args.path);
- const {target}=await workspaceTarget(current.root,selected);
+ const cwd=await current.getDirectory(exec);
+ const {target}=await workspaceTarget(current.root,path.resolve(cwd,selected));
  const info=await fs.stat(target);
  if(!info.isDirectory()&&(exec.name==='glob'||!info.isFile()||info.nlink!==1))throw new Error('请选择项目中的搜索目录或普通文本文件。');
  await current.protectedValue([selected,args.pattern,args.include??null]);
@@ -173,9 +191,10 @@ export async function prepareNativePatch(input) {
  await protectedValue(restored);
  const targets=new Map();
  const labels=[];
+ const cwd=await current.getDirectory(exec);
  for(const operation of operations){
   for(const file of [operation.path,operation.moveTo].filter(Boolean)){
-   const location=await projectTarget(root,path.resolve(root,file));
+   const location=await projectTarget(root,path.resolve(cwd,file));
    const key=targetKey(location.target);
    if(targets.has(key))throw patchFailure('同一次补丁不能对同一文件执行两次操作。');
    targets.set(key,location);
@@ -200,15 +219,22 @@ function targetKey(value){return process.platform==='win32'?value.toLowerCase():
 
 export default class NativeProjectFileSystem extends LocalFileSystem {
  async resolve(value, options) {
+  const directoryRoot=directoryScope.getStore();
+  if(directoryRoot){
+   const verify=async file=>workspaceTarget(directoryRoot,file).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+   const candidate=path.resolve(options?.cwd??directoryRoot,value);
+   const before=await verify(candidate);
+   const resolved=await super.resolve(candidate,options);
+   const after=await verify(resolved.targetKey);
+   if((before?.target??null)!==(after?.target??null)||after&&targetKey(after.target)!==targetKey(resolved.targetKey)){
+    throw new Error('项目目录正在变化，请重试。');
+   }
+   return resolved;
+  }
   const current = scope.getStore();
   if (!current) return super.resolve(value, options);
   const file = await current.restoreValue(value);
-  const candidate = path.resolve(current.root, file);
-  // The upstream tool probes its working directory before resolving the file.
-  if (candidate === path.resolve(current.root)) {
-   const {root} = await workspaceTarget(current.root);
-   return super.resolve(root, options);
-  }
+  const candidate = path.resolve(options?.cwd??current.root, file);
   const {target} = await projectTarget(current.root, candidate);
   const resolved = await super.resolve(candidate, options);
   if (resolved.targetKey !== target) throw new Error('项目文件位置已变化，请重新操作。');
