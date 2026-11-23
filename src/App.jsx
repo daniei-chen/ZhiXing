@@ -730,7 +730,7 @@ export function App() {
     const command = nativeCommand && !startInPlanMode ? formatSessionCommand(nativeCommand) : undefined;
     const submittedFiles = repeatMessageId ? repeatedFiles : attachments;
     if (command && submittedFiles.length && (!acceptsGoalImages(nativeCommand) || submittedFiles.some(file => !file.visual?.visualId))) {
-      setToast('命令附件仅支持创建或编辑目标时添加的 PNG 或 JPEG 图片。', 'error');
+      setToast('命令附件仅支持创建或编辑目标时添加的 PNG、JPEG、WebP 或 GIF 图片。', 'error');
       return;
     }
     const { privacyMode, reasoning, permission, customTerms,privacyPolicy,demo } = state.settings;
@@ -1235,7 +1235,7 @@ export function App() {
       <AppRail section={section} settings navigate={navigate} openModal={openModal}/>
       <Settings key={settingsPage.tab || '常规'} modal={settingsPage} close={() => setSettingsPage(null)} setModal={openModal} state={state} scope={scopeProps} setSetting={setSetting} runtime={runtime} setRuntime={setRuntime} changeWorkspace={changeWorkspace} notify={setToast}/>
     </div>}
-    <input hidden ref={picker} type="file" accept=".txt,.md,.csv,.tsv,.json,.docx,.xlsx,.pptx,.pdf,.png,.jpg,.jpeg,.bmp,.tif,.tiff" multiple onChange={event => {
+    <input hidden ref={picker} type="file" accept=".txt,.md,.csv,.tsv,.json,.docx,.xlsx,.pptx,.pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tif,.tiff" multiple onChange={event => {
       const list = Array.from(event.target.files); event.target.value = '';
       const request = fileTarget.current; fileTarget.current = null;
       if (request) void addFiles(list, request.target, request.spaceId, request.token, request.draftKey, request.filesRevision);

@@ -134,6 +134,47 @@ function assertWire(request, record, original) {
   assert(!wireText.includes(phone));
 }
 
+test('Windows WebP 和单帧 GIF 复用同一遮罩链，动图与伪装扩展名被拒绝', windows, async () => {
+ const original = await fixture();
+ const privacy = visionPrivacy();
+ for (const [name, bytes] of [
+  ['source.webp', await sharp(original).webp({ lossless: true }).toBuffer()],
+  ['lossy.webp', await sharp(original).webp({ quality: 92 }).toBuffer()],
+  ['source.gif', await sharp(original).gif().toBuffer()],
+ ]) {
+  const { record, parsed } = await prepareVisualAttachment({ name, bytes, privacy });
+  assert.equal(record.mediaType, 'image/png');
+  assert(parsed.visual.maskCount > 0, name + ' 应命中同一处合成手机号');
+  assert.match(parsed.text, /13800000000/);
+  const wire = Buffer.from(readVisualAttachment(record, parsed.visual.visualId, privacy.key).data, 'base64');
+  assert(!wire.equals(bytes));
+  const reread = await recognizeImage('wire.png', wire, { allowEmpty: true });
+  assert(!reread.text.replace(/\D+/g, '').includes(phone), name + ' 的出站副本仍可读出手机号');
+ }
+ const meta = await sharp(original).metadata();
+ const second = await sharp({ create: { width: meta.width, height: meta.height, channels: 4, background: { r: 20, g: 120, b: 200, alpha: 1 } } }).png().toBuffer();
+ await assert.rejects(prepareVisualAttachment({ name: 'animated.gif', bytes: await sharp([original, second], { join: { animated: true } }).gif().toBuffer(), privacy }), /多个画面/);
+ await assert.rejects(prepareVisualAttachment({ name: 'animated.webp', bytes: await sharp([original, second], { join: { animated: true } }).webp().toBuffer(), privacy }), /多个画面/);
+ await assert.rejects(prepareVisualAttachment({ name: 'renamed.png', bytes: await sharp(original).webp({ lossless: true }).toBuffer(), privacy }), /格式与文件名不符/);
+ await assert.rejects(prepareVisualAttachment({ name: 'source.bmp', bytes: original, privacy }), /10 MB 以内/);
+});
+
+test('Windows 项目图片路径接受 WebP 与单帧 GIF，副本仍统一为 PNG', windows, async t => {
+ const root = await temporaryRoot(t);
+ const original = await fixture();
+ const privacy = visionPrivacy();
+ const { readProjectVision } = await import(url('electron/office-visual.mjs'));
+ await fs.writeFile(path.join(root, 'photo.webp'), await sharp(original).webp({ lossless: true }).toBuffer());
+ await fs.writeFile(path.join(root, 'photo.gif'), await sharp(original).gif().toBuffer());
+ for (const name of ['photo.webp', 'photo.gif']) {
+  const { records } = await readProjectVision(root, name, privacy);
+  assert.equal(records.length, 1);
+  assert.equal(records[0].mediaType, 'image/png');
+  assert(!Buffer.from(records[0].data, 'base64').equals(original));
+ }
+ await assert.rejects(readProjectVision(root, 'photo.bmp', privacy), /单帧 PNG、JPEG、WebP 或 GIF/);
+});
+
 test('Windows real Harness sends only approved pixels and retains approved visual history on reopen', windows, async t => {
   const root = await temporaryRoot(t);
   const original = await fixture();

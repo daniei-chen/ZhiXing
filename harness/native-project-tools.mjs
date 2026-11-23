@@ -45,7 +45,7 @@ function adaptDefinition(definition){
   return definition.execute({...args,input:await prepareNativePatch(args.input)},exec);
  }};
  if(definition.name==='read_image')return {...definition,
-  description:'读取项目中的单帧 PNG/JPEG。知行在本机依当前隐私规则处理像素，由当前视觉模型查看。',
+  description:'读取项目中的单帧 PNG、JPEG、WebP 或 GIF。知行在本机依当前隐私规则处理像素，由当前视觉模型查看。',
   async execute(args,exec){return definition.execute({...args,file_path:await prepareNativeImage(args.file_path)},exec);},
  };
  if(NATIVE_PROJECT_SEARCH_TOOLS.includes(definition.name))return {...definition,

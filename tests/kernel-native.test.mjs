@@ -382,12 +382,12 @@ test('同一原生会话降回请求批准后，下一次命令使用同步的�
  }finally{await f.close();}
 });
 
-test('官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本', {timeout:90000}, async()=>{
+test('官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式', {timeout:90000}, async()=>{
  const phone='13800000000',key='synthetic-native-picture-key';
  const f=await fixture((body,index)=>{
   if(index===1)return call('read_image',{file_path:'photo.png'},index);
   if(index===2)return call('read_image',{file_path:'photo.jpg'},index);
-  if(index===3)return call('read_image',{file_path:'photo.gif'},index);
+  if(index===3)return call('read_image',{file_path:'photo.bmp'},index);
   if(index===5)return call('read_image',{file_path:'photo.png'},index);
   return [{type:'text',text:'NATIVE_IMAGE_COMPLETE'}];
  });

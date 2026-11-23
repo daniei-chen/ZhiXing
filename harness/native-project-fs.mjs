@@ -57,7 +57,7 @@ export async function prepareNativeImage(file){
  const current=scope.getStore();
  if(!current)throw new Error('只能在当前 Windows 项目交办中读取图片。');
  const spelling=await current.restoreValue(file);
- if(!/\.(?:png|jpe?g)$/i.test(spelling))throw new Error('项目图片支持单帧 PNG 或 JPEG。');
+ if(!/\.(?:png|jpe?g|webp|gif)$/i.test(spelling))throw new Error('项目图片支持单帧 PNG、JPEG、WebP 或 GIF。');
  await current.protectedValue(spelling);
  return spelling;
 }

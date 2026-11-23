@@ -13,7 +13,7 @@ export const VISUAL_MAX_PIXELS = 2_000_000;
 export const VISUAL_MAX_PER_REQUEST = 4;
 export const VISUAL_ID = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/;
 const DIGEST = /^[a-f0-9]{64}$/;
-const inputFormats = new Map([['.png', 'png'], ['.jpg', 'jpeg'], ['.jpeg', 'jpeg']]);
+const inputFormats = new Map([['.png', 'png'], ['.jpg', 'jpeg'], ['.jpeg', 'jpeg'], ['.webp', 'webp'], ['.gif', 'gif']]);
 const outputTypes = new Set(['image/png', 'image/jpeg']);
 
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -119,12 +119,12 @@ export async function prepareVisualAttachment({ name, bytes, privacy, signal, ou
   signal?.throwIfAborted();
   if (outputMediaType !== undefined && !outputTypes.has(outputMediaType)) throw new Error('不支持选定的视觉副本格式。');
   if (!supportsVisualImage(name) || !Buffer.isBuffer(bytes) || !bytes.length || bytes.length > MAX_SOURCE_BYTES) {
-    throw new Error('请选择 10 MB 以内的 PNG 或 JPEG 图片。');
+    throw new Error('请选择 10 MB 以内的 PNG、JPEG、WebP 或 GIF 图片。');
   }
   const image = sharp(bytes, { limitInputPixels: MAX_SOURCE_PIXELS, failOn: 'warning' });
   const metadata = await image.metadata().catch(() => null);
   if (!metadata || metadata.format !== inputFormats.get(path.extname(name).toLowerCase()) || (metadata.pages || 1) !== 1) {
-    throw new Error('图片格式与文件名不符，或图片包含多个画面。');
+    throw new Error('图片格式与文件名不符，或图片包含多个画面（动图暂不支持，请提供单帧图片）。');
   }
   // Remove metadata and hidden transparent pixels before OCR. The OCR worker
   // and the pixel mask use the same raster and its orientation.

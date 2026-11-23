@@ -19,10 +19,12 @@ export async function renderOfficeVision(workspaceRoot, {input, pages, sheet, ra
 }
 
 export async function readProjectVision(workspaceRoot,input,privacy,signal){
- if(!supportsVisualImage(input))throw new Error('项目图片支持单帧 PNG 或 JPEG。');
+ if(!supportsVisualImage(input))throw new Error('项目图片支持单帧 PNG、JPEG、WebP 或 GIF。');
  if(privacy.secrets.some(secret=>containsCredentialValue(input,secret)))throw new Error('图片路径含已配置的凭证，已停止发送。');
  const {name,bytes}=await readWorkspaceBytes(workspaceRoot,input);
- const outputMediaType=/\.png$/i.test(name)?'image/png':'image/jpeg';
+ // WebP and GIF sources are re-encoded losslessly; only a JPEG source keeps the
+ // lossy wire format so the copy stays close to the reviewed original.
+ const outputMediaType=/\.jpe?g$/i.test(name)?'image/jpeg':'image/png';
  const {record}=await prepareVisualAttachment({name,bytes,privacy,signal,outputMediaType});
  return {records:[record]};
 }
