@@ -57,6 +57,11 @@ must preserve that complete latest profile byte-for-byte while it is closed.
 An optional BaselineInstaller tests an actual historical installation before
 upgrading to the candidate. Its version must match sourceAppVersion. Without
 that input, historical migration is explicitly untested.
+
+ResumeReport continues from a recorded same-version overlay that was stopped by
+the product process guard before uninstall. Supply the original installer,
+baseline, fixture, host backup, and packed source manifest. The preflight reads
+and verifies the original evidence before changing the owned installation.
 .EXAMPLE
 pwsh -File scripts/qa-install-lifecycle.ps1 -Mode Inspect
 .EXAMPLE
@@ -77,6 +82,7 @@ param(
     [string]$FixtureManifest,
     [string]$HostBackupManifest,
     [string]$PackedSourceManifest,
+    [string]$ResumeReport,
     [string]$InstallRoot,
     [string]$ExpectedTestUserSid,
     [ValidateRange(30, 1800)][int]$TimeoutSeconds = 1800
@@ -89,6 +95,16 @@ $packageVersion = [string](Get-Content -LiteralPath (Join-Path $repository 'pack
 if ($packageVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Lifecycle acceptance requires an explicit numeric package version.' }
 $evidenceParent = Join-Path $repository ('.preview\qa-' + $packageVersion)
 $evidenceDirectory = Join-Path $evidenceParent ('install-evidence-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+if ($ResumeReport) {
+    $ResumeReport = [IO.Path]::GetFullPath($ResumeReport)
+    $evidenceDirectory = [IO.Path]::GetDirectoryName($ResumeReport)
+    if ($Mode -ne 'Run' -or $InstallRoot -or -not $PackedSourceManifest -or
+        [IO.Path]::GetFileName($ResumeReport) -cne 'report.json' -or
+        [IO.Path]::GetDirectoryName($evidenceDirectory) -ine $evidenceParent -or
+        [IO.Path]::GetFileName($evidenceDirectory) -cnotmatch '^install-evidence-\d{8}-\d{6}-[a-f0-9]{8}$') {
+        throw 'Resume requires an original lifecycle report inside this version''s QA directory, with its original inputs and no new install root.'
+    }
+}
 $reportPath = Join-Path $evidenceDirectory 'report.json'
 $utf8 = New-Object Text.UTF8Encoding($false)
 $currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
@@ -155,6 +171,12 @@ function Get-Asset([string]$Path) {
         productVersion = $file.VersionInfo.ProductVersion
         fileVersion = $file.VersionInfo.FileVersion
         modifiedAt = $file.LastWriteTimeUtc.ToString('o')
+    }
+}
+
+function Assert-AssetIdentity($Expected, $Actual, [string]$Description) {
+    foreach ($field in @('path', 'bytes', 'sha256', 'productVersion', 'fileVersion')) {
+        Assert-Identical $Expected.$field $Actual.$field "$Description ($field)"
     }
 }
 
@@ -321,7 +343,7 @@ function Assert-ProtectedHostBytes([string]$Label) {
     Add-Step ($Label + '-original-default-data') 'passed' @{ byteHashesUnchanged = $true; plaintextDecrypted = $false }
 }
 
-function Read-ProtectedHostBackup {
+function Read-ProtectedHostBackup([switch]$OwnedInstallation) {
     if (-not $HostBackupManifest) { throw 'HostBackupManifest is required for reversible same-account installation testing.' }
     $backup = Get-Content -LiteralPath $HostBackupManifest -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($backup.schemaVersion -ne 1 -or $backup.plaintextDecryptionPerformed -ne $false) { throw 'Unexpected host byte-backup manifest.' }
@@ -337,13 +359,13 @@ function Read-ProtectedHostBackup {
         } elseif (Test-Path -LiteralPath $root) { throw 'A previously absent default-data destination now exists. Refresh the host snapshot before testing.' }
     }
     $currentLinks = @(Get-ProductShortcuts)
-    if ($currentLinks.Count -ne @($backup.shortcuts).Count) { throw 'Shortcut inventory differs from its byte backup.' }
+    if (-not $OwnedInstallation -and $currentLinks.Count -ne @($backup.shortcuts).Count) { throw 'Shortcut inventory differs from its byte backup.' }
     foreach ($item in @($backup.shortcuts)) {
         $current = @($currentLinks | Where-Object { $_.path -ieq $item.source })
-        if ($current.Count -ne 1 -or $current[0].sha256 -ne $item.sha256) { throw 'Original shortcut changed after backup.' }
+        if (-not $OwnedInstallation -and ($current.Count -ne 1 -or $current[0].sha256 -ne $item.sha256)) { throw 'Original shortcut changed after backup.' }
         if ((Get-FileHash -LiteralPath $item.backup -Algorithm SHA256).Hash -ne $item.sha256) { throw 'Original shortcut byte backup is invalid.' }
     }
-    Write-JsonFile (Join-Path $evidenceDirectory 'protected-host-manifest.json') $backup
+    if (-not $OwnedInstallation) { Write-JsonFile (Join-Path $evidenceDirectory 'protected-host-manifest.json') $backup }
     return $backup
 }
 
@@ -505,6 +527,43 @@ try {
     if ((Get-PropertyValue $configuration.nsis 'guid' $applicationGuid) -ne $applicationGuid) { throw 'Configured NSIS GUID changed. Reinspect installer identity.' }
     if ((Get-PropertyValue $configuration.nsis 'deleteAppDataOnUninstall' $false) -eq $true) { throw 'Configured uninstall now deletes app data. Reinspect before running.' }
     if ((Get-PropertyValue $configuration.nsis 'perMachine' $false) -eq $true) { throw 'Machine-wide installer is outside this test isolation contract.' }
+    $resumeValidated = $false
+    if ($ResumeReport) {
+        [void](Assert-InEvidence $ResumeReport)
+        Assert-NoExistingProductProcess
+        $previous = Get-Content -LiteralPath $ResumeReport -Raw -Encoding UTF8 | ConvertFrom-Json -AsHashtable
+        if ($previous.schemaVersion -ne 1 -or $previous.status -ne 'failed_or_incomplete' -or
+            $previous.repository -ine $repository -or $previous.currentUserSid -ne $currentSid -or
+            $previous.appGuid -ne $applicationGuid -or
+            $previous.error -notlike 'An existing product process is still running.*' -or
+            $previous.failureCleanup -notlike 'Needs investigation without killing any process: An existing product process is still running.*' -or
+            $previous.coverage.sameVersionOverlay -ne 'passed' -or $previous.coverage.firstInstall -ne 'passed' -or
+            $previous.coverage.historicalUpgrade -ne 'passed_same_account_fixture_only' -or $previous.coverage.uninstallRetention -ne 'not_run' -or
+            $previous.steps[-1].name -ne 'same-version-overlay-normal-save-byte-baseline') {
+            throw 'The prior report does not describe a protected stop immediately before uninstall.'
+        }
+        Assert-AssetIdentity $previous.candidate $report.candidate 'resumed candidate installer'
+        Assert-AssetIdentity $previous.baselineInstaller $report.baselineInstaller 'resumed baseline installer'
+        $originalBackup = Assert-InEvidence (Join-Path $evidenceDirectory 'protected-host-manifest.json')
+        $originalBackupData = Get-Content -LiteralPath $originalBackup -Raw -Encoding UTF8 | ConvertFrom-Json -AsHashtable
+        $providedBackupData = Get-Content -LiteralPath $HostBackupManifest -Raw -Encoding UTF8 | ConvertFrom-Json -AsHashtable
+        Assert-Identical $originalBackupData $providedBackupData 'resumed protected host backup'
+        $installDirectory = $previous.installDirectory
+        [void](Assert-InOwnedInstall $installDirectory)
+        $installedExe = Join-Path $installDirectory $executableName
+        Assert-Installed
+        $installedAsset = Get-Asset $installedExe
+        $recordedAsset = @($previous.steps | Where-Object name -EQ 'same-version-overlay-registration')[0].details.installedExecutable
+        Assert-AssetIdentity $recordedAsset $installedAsset 'resumed installed executable'
+        $appRoot = [IO.Path]::GetFullPath((Join-Path $installDirectory 'resources\app')).TrimEnd('\')
+        foreach ($file in @($packedIdentity.files)) {
+            $target = [IO.Path]::GetFullPath((Join-Path $appRoot $file.file))
+            if (-not $target.StartsWith($appRoot + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'A source manifest path escapes the application.' }
+            [void](Assert-InOwnedInstall $target)
+            if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ine $file.sha256) { throw 'Resumed installed sources differ from the candidate.' }
+        }
+        $protectedHost = Read-ProtectedHostBackup -OwnedInstallation
+    } else {
     $report.environmentBefore = Get-EnvironmentSnapshot
     $report.blockers = @(
         if (@($report.environmentBefore.registry | Where-Object { $_.exists }).Count) { 'Existing same-identity install/uninstall registration.' }
@@ -518,8 +577,9 @@ try {
         return
     }
     if ($report.blockers.Count) { throw ($report.blockers -join ' ') }
-    if ($ExpectedTestUserSid -and $ExpectedTestUserSid -ne $currentSid) { throw 'Expected fixture owner SID does not match the current Windows account.' }
     $protectedHost = Read-ProtectedHostBackup
+    }
+    if ($ExpectedTestUserSid -and $ExpectedTestUserSid -ne $currentSid) { throw 'Expected fixture owner SID does not match the current Windows account.' }
     if (-not $FixtureManifest) { throw 'A same-account synthetic fixture manifest is required.' }
     $fixture = Get-Content -LiteralPath $FixtureManifest -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($fixture.schemaVersion -ne 1 -or $fixture.synthetic -ne $true -or $fixture.noRealCredentials -ne $true -or $fixture.noEnabledAutomations -ne $true) {
@@ -548,26 +608,48 @@ try {
         if (-not $file.StartsWith($sourceProfile.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixture encrypted file escapes the source profile.' }
         if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Fixture encrypted file is missing: $relativePath" }
     }
+    $profileDirectory = Assert-InEvidence (Join-Path $evidenceDirectory 'retained-profile')
+    $outsideDirectory = Assert-InEvidence (Join-Path $evidenceDirectory 'outside cwd')
+    $sourceHashes = @(Get-TreeHashes $sourceProfile)
+    $projectHashes = @($fixture.projectPaths | ForEach-Object { [ordered]@{ root = $_; files = @(Get-TreeHashes $_) } })
+    $probeFile = Assert-InEvidence (Join-Path $evidenceDirectory 'read-profile.cjs')
+    if ($ResumeReport) {
+        $savedFixture = Get-Content -LiteralPath (Assert-InEvidence (Join-Path $evidenceDirectory 'fixture-manifest.json')) -Raw -Encoding UTF8 | ConvertFrom-Json
+        Assert-Identical $savedFixture $fixture 'resumed synthetic fixture manifest'
+        $priorSource = @(Get-Content -LiteralPath (Assert-InEvidence (Join-Path $evidenceDirectory 'retained-profile-before.json')) -Raw -Encoding UTF8 | ConvertFrom-Json)
+        $priorProject = @(Get-Content -LiteralPath (Assert-InEvidence (Join-Path $evidenceDirectory 'synthetic-projects-before.json')) -Raw -Encoding UTF8 | ConvertFrom-Json)
+        $profileHashes = @(Get-Content -LiteralPath (Assert-InEvidence (Join-Path $evidenceDirectory 'same-version-overlay-after-normal-close-profile.json')) -Raw -Encoding UTF8 | ConvertFrom-Json)
+        Assert-Identical $priorSource $sourceHashes 'resumed original synthetic profile'
+        Assert-Identical $priorProject $projectHashes 'resumed synthetic project bytes'
+        Assert-Identical $profileHashes @(Get-TreeHashes $profileDirectory) 'resumed settled profile bytes'
+        $baselineRead = Get-Content -LiteralPath (Assert-InEvidence (Join-Path $evidenceDirectory 'same-version-overlay-logical.json')) -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($baselineRead.appVersion -ne $packageVersion) { throw 'Resumed probe version is incorrect.' }
+        $priorReportPath = Assert-InEvidence (Join-Path $evidenceDirectory 'report-before-resume.json')
+        if (Test-Path -LiteralPath $priorReportPath) { throw 'An earlier resume is already recorded.' }
+        Copy-Item -LiteralPath $ResumeReport -Destination $priorReportPath
+        $report = $previous
+        $report.status = 'running'
+        [void]$report.Remove('error')
+        [void]$report.Remove('failureCleanup')
+        $resumeValidated = $true
+        Add-Step 'lifecycle-resumed-before-uninstall' 'observed' @{ priorReport = 'report-before-resume.json'; reason = 'A separate QA product process completed normally.'; sourceAndFixtureRechecked = $true }
+    } else {
     $installDirectory = if ($InstallRoot) { [IO.Path]::GetFullPath($InstallRoot) }
         else { Join-Path $repository ('.preview\i QA\' + $productName + '-' + [guid]::NewGuid().ToString('N').Substring(0, 4)) }
     [void](Assert-InOwnedInstall $installDirectory)
     if (Test-Path -LiteralPath $installDirectory) { throw 'The new owned install destination already exists. Do not overwrite a previous run or unrelated directory.' }
     $report.installDirectory = $installDirectory
     $installedExe = Join-Path $installDirectory $executableName
-    $profileDirectory = Assert-InEvidence (Join-Path $evidenceDirectory 'retained-profile')
-    $outsideDirectory = Assert-InEvidence (Join-Path $evidenceDirectory 'outside cwd')
     [void](New-Item -ItemType Directory -Path $outsideDirectory)
-    $sourceHashes = @(Get-TreeHashes $sourceProfile)
     Copy-FixtureTree $sourceProfile $profileDirectory
     Assert-Identical $sourceHashes @(Get-TreeHashes $sourceProfile) 'source profile stable while copying'
     Assert-Identical $sourceHashes @(Get-TreeHashes $profileDirectory) 'copied profile bytes'
-    $projectHashes = @($fixture.projectPaths | ForEach-Object { [ordered]@{ root = $_; files = @(Get-TreeHashes $_) } })
     $profileHashes = @(Get-TreeHashes $profileDirectory)
     Write-JsonFile (Join-Path $evidenceDirectory 'retained-profile-before.json') $profileHashes
     Write-JsonFile (Join-Path $evidenceDirectory 'synthetic-projects-before.json') $projectHashes
     Write-JsonFile (Join-Path $evidenceDirectory 'fixture-manifest.json') $fixture
 
-    $probeFile = Join-Path $evidenceDirectory 'read-profile.cjs'
+    }
     $probeCode = @'
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -766,6 +848,7 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
         Add-Step ($Label + '-bytes-preserved') 'passed' @{ profileFileCount = $currentProfileHashes.Count; projectCount = $currentProjectHashes.Count }
     }
 
+    if (-not $ResumeReport) {
     $report.status = 'running'
     Save-Report
     Invoke-TestInstall $initialAsset 'first-install'
@@ -803,6 +886,7 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
     $read = Read-InstalledProfile 'same-version-overlay'
     Assert-Identical $baselineRead.hashes $read.hashes 'same-version profile logical hashes'
     $report.coverage.sameVersionOverlay = 'passed'
+    }
     Invoke-TestUninstall 'uninstall-default-retention'
     Assert-Retained 'after-uninstall'
     $report.coverage.uninstallRetention = 'passed'
@@ -829,6 +913,10 @@ function hash(value) { return createHash('sha256').update(JSON.stringify(canonic
     Write-Output "Lifecycle evidence saved to $reportPath"
 } catch {
     $failureMessage = $_.Exception.Message
+    if ($ResumeReport -and -not (Get-Variable -Name resumeValidated -ValueOnly -ErrorAction SilentlyContinue)) {
+        [Console]::Error.WriteLine("Resume preflight rejected: $failureMessage")
+        exit 2
+    }
     $startedSteps = @($report.steps | ForEach-Object { $_.name })
     $report.status = if ($startedSteps -contains 'first-install-started') { 'failed_or_incomplete' } else { 'blocked_before_install' }
     $report.error = $failureMessage
