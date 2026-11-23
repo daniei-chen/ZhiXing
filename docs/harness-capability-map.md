@@ -2,6 +2,12 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
+## 0.12.10 · 启动诊断
+
+启动阶段追踪（`ZHIXING_STARTUP_TRACE=1`）与测量工具（`scripts/probe-startup.mjs`）接入仓库。Windows x64 目录包空档案冷启动 5 次中位数 1,281 ms：`initialise` 占约八成，导入 173 ms、状态增至 632 ms、自动化增至 934 ms、服务增至 1,017 ms，窗口显示 1,131 ms，可交互 1,281 ms。
+
+并行导入的尝试被实测否决（导入阶段 173 → 1,072 ms，整体慢约 240 ms）并回退，因此本轮不宣称启动提速。`0.12.9` 同机中位数 1,263 ms，差异在噪声内；Windows 单次启动波动可达数百毫秒，比较须取多次中位数。
+
 ## 0.12.9 · 安装包体积
 
 打包树在复制锁定的生产依赖之后裁剪运行时不会加载的内容：TypeScript 源码（`.ts`、`.tsx`、`.mts`、`.cts`）、source map、`@types`、WebAssembly 版 OfficeKit 兜底与其它平台的 `node-pty` 预编译。win32-x64 的 OfficeKit 侧车、sharp、ripgrep、conpty、随包 Node 与许可证保留，实际移除 67,865 个文件、共 636 MB。

@@ -34,7 +34,12 @@
 
 </div>
 
-## 0.12.9 本轮更新
+## 0.12.10 本轮更新
+
+- **启动诊断。** 设置 `ZHIXING_STARTUP_TRACE=1` 后，主进程按阶段把启动耗时写到 stderr；`node scripts/probe-startup.mjs <应用路径> <次数>` 可在本机测量打包应用的启动中位数。实测 `initialise` 占启动约八成，其中模块导入与状态加载最多。
+- **本轮没有可证实的提速。** 把 `initialise` 的十八个模块导入改成并行批次后，导入阶段从 173 ms 变成 1,072 ms，整体慢了约 240 ms，已回退并记录。同时修复 `config.json` 被解析两次，窗口改为在首帧显示、文档加载完成作为兜底。
+
+## 0.12.9 历史更新
 
 - **安装包体积。** 打包时移除运行时不会加载的内容：TypeScript 源码、source map、`@types` 类型声明、WebAssembly 版 OfficeKit 兜底，以及 `node-pty` 为 macOS、Linux 和 win32-arm64 提供的预编译二进制。Windows x64 的 OfficeKit 转换器、sharp、ripgrep、conpty、随包 Node 与许可证完整保留。应用目录从 1,454 MB 降到 818 MB，安装器从 562.8 MB 降到 322.8 MB；审批、脱敏、沙箱、图片与存储链路不变，完整回归与桌面旅程在裁剪后的真实包上通过。
 
