@@ -1,6 +1,6 @@
 # 知行 0.12.8 外部审计说明
 
-以 `v0.12.7` 为比较基线，包内生产源码为待填构建提交，随包 Harness 固定为 `0.2.2-rc.5`。发布标签包含其后的文档及 Windows 复跑脚本。 [Windows 验收](windows-acceptance-0.12.8.md)
+以 `v0.12.7` 为比较基线，包内生产源码为 `4e3dbe9b8c7ba6208a16426fa9ec7562b386fe56`，随包 Harness 固定为 `0.2.2-rc.5`。发布标签包含其后的文档及 Windows 复跑脚本。 [Windows 验收](windows-acceptance-0.12.8.md)
 
 1. 校验完整安装器、`SHA256SUMS-release.txt`、包内 `build-provenance.json` 和 `packed-source-manifest.json`。使用发行页提供的 `ZhiXing-v0.12.7-to-v0.12.8.patch` 核对完整差异。
 2. 用 `npm test` 核对会话工作目录。原生用例在真实 Harness 中比较子目录读取、写入审批、搜索命中、`../..` 拒绝和重开后的目录事件，只用合成项目文件。
