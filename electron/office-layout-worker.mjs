@@ -18,7 +18,7 @@ const sourceOf = (key, bytes) => ({
 
 try {
  const [directory, options] = process.argv.slice(2);
- const {action, extension, page, format, sheet} = JSON.parse(options);
+ const {action, extension, page, format, sheet, pages, range, dpi, maxRenderImages} = JSON.parse(options);
  const chunks = [];
  let size = 0;
  for await (const chunk of process.stdin) {
@@ -50,10 +50,16 @@ try {
   });
   if (result.images.length !== 1) throw new Error('找不到这一页。');
   value = {page, pageCount: result.pageCount, missingFonts: [...new Set([...missingFonts, ...result.missingFonts])], png: base64(result.images[0].png)};
+ } else if (action === 'render') {
+  const {images, pageCount, dpi: resolution, missingFonts} = await kit.renderImages({
+   extension, source, pages, sheet, range, dpi, maxImages: maxRenderImages,
+   maxPixels: 5_000_000, maxDimension: 3200, maxBytes: 4 * 1024 * 1024,
+  });
+  value = {pageCount, dpi:resolution, missingFonts, images:images.map(({png, page, sheet, range}) => ({png:base64(png), page, sheet, range}))};
  } else {
   const request = {extension, source, format, output: {owner: 'export', name: `result.${format}`}};
   const result = action === 'recalculate' ? await kit.recalculate(request) : await kit.convertTo({...request, sheet});
-  value = {missingFonts: result.missingFonts, bytes: base64(await fs.readFile(result.path))};
+  value = {missingFonts: result.missingFonts, pageCount: result.pageCount, bytes: base64(await fs.readFile(result.path))};
  }
  process.stdout.write(JSON.stringify({value}));
 } catch (error) {

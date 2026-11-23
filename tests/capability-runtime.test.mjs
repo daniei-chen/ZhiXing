@@ -23,11 +23,12 @@ test('真实 Harness 能力清单按项目、协议、权限与开关变化，�
   assert.equal(entry(unscoped,'web-search').registered,true);assert.equal(entry(unscoped,'web-search').effective,false);assert.equal(entry(unscoped,'web-search').blockedReason,'provider_unsupported');
   assert.equal(entry(unscoped,'ptc').enabled,true);assert.equal(entry(unscoped,'ptc').registered,false);assert.equal(entry(unscoped,'ptc').blockedReason,'workspace_required');
   assert.equal(entry(unscoped,'files').registered,false);
+  assert.equal(entry(unscoped,'agent-office').registered,false);
   for(const id of ['browser','schedule','mcp-tools'])assert.equal(entry(unscoped,id).effective,false,id);
   const project=path.join(root,'synthetic-project');await fs.mkdir(project);
   const scoped=await manager.check({...config,workspaceRoot:project,permission:'full'},'synthetic-capability-key');
   assert.equal(scoped.capabilityManifest.conditions.protocol,'openai');assert.equal(scoped.capabilityManifest.conditions.permission,'full');
-  for(const id of ['files','terminal','ptc','team']){assert.equal(entry(scoped,id).registered,true,id);assert.equal(entry(scoped,id).effective,true,id);}
+  for(const id of ['files','agent-office','terminal','ptc','team']){assert.equal(entry(scoped,id).registered,true,id);assert.equal(entry(scoped,id).effective,true,id);}
   assert.equal(entry(scoped,'web-search').effective,false);
   const closed=await manager.check({...config,protocol:'deepseek',kernel:{webEnabled:false,workflowEnabled:false,teamEnabled:false,subagentDepth:0,ptcEnabled:false}},'synthetic-capability-key');
   for(const id of ['web-search','web-fetch','workflow','team','subagents','ptc']){assert.equal(entry(closed,id).enabled,false,id);assert.equal(entry(closed,id).effective,false,id);assert.equal(entry(closed,id).blockedReason,'disabled',id);}

@@ -6,6 +6,8 @@ import {planningAllows} from './shell-policy.mjs';
 const definitions = [
  {id:'office',label:'计算、日期与表格检查',tools:['office_calculate','office_calendar','office_table_check']},
  {id:'files',label:'项目文件读写与目录分页',tools:['office_read_file','office_write_file','office_list_files'],workspace:true},
+ {id:'agent-office',label:'办公文档转换与工作簿重算',tools:['office_convert','office_recalculate'],workspace:true,write:true,inWorkspace:true},
+ {id:'agent-office-render',label:'办公页面渲染与图片输入',tools:['office_render'],workspace:true,readOnly:true,imageRoute:true,bridge:'office-vision'},
  {id:'terminal',label:'Agent PowerShell 命令',tools:['office_execute'],workspace:true,write:true},
  {id:'plan',label:'规划审批',tools:['exit_plan_mode']},
  {id:'goal',label:'持续目标',tools:['get_goal','create_goal','update_goal']},
@@ -31,7 +33,6 @@ const unsupported = [
  ['responses-gemini','Responses / Gemini 协议'],
  ['heterogeneous-submodels','异构子模型路由'],
  ['native-files','完整原生文件编辑工具'],
- ['agent-office','模型端 Office 转换、重算与渲染'],
  // Vision is represented by an explicit runtime entry below. Keep the
  // unsupported list for capabilities that still have no implementation.
  ['ner','全面 NER 脱敏引擎'],
@@ -52,6 +53,8 @@ export function createCapabilityManifest(options={}) {
   let blockedReason=null;
   if(!enabled)blockedReason='disabled';
   else if(definition.workspace&&!options.hasWorkspace)blockedReason='workspace_required';
+  else if(definition.imageRoute&&!options.inputModalities?.includes('image'))blockedReason='model_image_input_unavailable';
+  else if(definition.bridge==='office-vision'&&!options.officeVisionBridge)blockedReason='office_vision_bridge_unavailable';
   else if(definition.full&&options.permission!=='full')blockedReason='full_access_required';
   else if(definition.network&&options.allowNetwork===false)blockedReason='network_disallowed';
   else if(definition.deepseek&&options.protocol!=='deepseek')blockedReason=options.protocol?'provider_unsupported':'provider_not_selected';
@@ -74,7 +77,7 @@ export function createCapabilityManifest(options={}) {
   return {id:definition.id,label:definition.label,integrated:true,enabled,registered,effective,blockedReason,
    restrictions:readOnly?['planning_read_only']:[],
    invocation:registered===true?(definition.imageModel?'image_input':definition.modelTool||!programmatic?'direct':'programmatic'):null,
-   approvalRequired:effective&&options.permission!=='full'&&Boolean(definition.write||definition.network||definition.workspace),
+   approvalRequired:effective&&!definition.readOnly&&options.permission!=='full'&&!(definition.inWorkspace&&options.permission==='auto')&&Boolean(definition.write||definition.network||definition.workspace),
    evidence:inspected?(definition.modelTool?'model_catalog':'runtime_catalog'):'configuration_only'};
  });
  for(const [id,label] of unsupported)entries.push({id,label,integrated:false,enabled:false,registered:false,effective:false,blockedReason:'not_integrated',restrictions:[],invocation:null,approvalRequired:false,evidence:'source_scope'});
@@ -86,6 +89,7 @@ export const CAPABILITY_REASONS = Object.freeze({
  disabled:'已在内核设置中关闭',workspace_required:'需要关联项目目录',full_access_required:'需要选择完全访问',
  network_disallowed:'本次任务未授权联网',provider_unsupported:'当前协议未接入此搜索服务',provider_not_selected:'尚未选择供应商',
  browser_bridge_unavailable:'本次诊断未连接浏览器面板',automation_bridge_unavailable:'本次诊断未连接定时任务主机',model_image_input_unavailable:'当前模型未声明图片输入能力',visual_bridge_unavailable:'本次任务未准备本机遮罩图片',
+ office_vision_bridge_unavailable:'需从 Windows 项目内用支持图片的模型发起手动交办',
  team_inactive:'当前会话未启用共享任务板',planning_read_only:'规划模式仅允许只读调查',not_registered:'真实目录未注册此能力所需工具',
  not_inspected:'尚未读取真实内核与模型工具声明',not_model_exposed:'当前执行器未向模型开放此工具',not_integrated:'尚未接入知行',
 });

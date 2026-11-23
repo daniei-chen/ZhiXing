@@ -6,11 +6,18 @@ import os from 'node:os';
 import path from 'node:path';
 import {once} from 'node:events';
 import {pathToFileURL} from 'node:url';
+import ExcelJS from 'exceljs';
 const url=name=>process.env.ZHIXING_TEST_PACKED_APP?pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP,name)).href:new URL(`../${name}`,import.meta.url).href;
 const {RuntimeManager,prepareRuntime}=await import(url('electron/runtime.mjs'));
 const {KERNEL_DEFAULTS}=await import(url('src/kernel-config.js'));
 const {projectTeamBoard,protectTeamContext}=await import(url('src/team-board.js'));
 const {shellEnvironment,planningAllows}=await import(url('harness/shell-policy.mjs'));
+const {exportOfficeFile}=await import(url('electron/office-files.mjs'));
+const {readBridge}=await import(url('harness/privacy-bridge.mjs'));
+const {PrivacySession}=await import(url('src/privacy-core.js'));
+const {runOfficeLayout}=await import(url('electron/office-layout.mjs'));
+const {recognizeImage}=await import(url('electron/ocr-service.mjs'));
+const {visionPrivacy}=await import(url('electron/visual-attachments.mjs'));
 
 function respond(res,content){
  if(!Array.isArray(content)){res.writeHead(content.status,{'content-type':'application/json','retry-after':'0'}).end(JSON.stringify({type:'error',error:{type:content.status===429?'rate_limit_error':'overloaded_error',message:'Synthetic transient upstream failure'}}));return;}
@@ -60,6 +67,128 @@ test('真实 Harness 的工作计划事件不能显示当前模型凭证',{timeo
   await assert.rejects(f.manager.run({runId:'plan-key',sessionId:'plan-key',prompt:'更新合成工作计划。',privacyMode:'raw'},f.config,key),/模型未完成/);
   assert(f.events.some(event=>event.type==='plan'&&event.plan.some(item=>item.content.includes('检测到凭证'))));
   assert(!JSON.stringify(f.events).includes(key));assert.equal(f.requests.length,1);
+ } finally {await f.close();}
+});
+
+test('真实 Harness 转换并重算 Office 文档，受审批的成果字节留在项目', {timeout:90000}, async () => {
+ const actions = [
+  ['office_convert', {input:'memo.docx', format:'pdf'}],
+  ['office_recalculate', {input:'calc.xlsx', format:'xlsx'}],
+  ['office_convert', {input:'memo.docx', format:'pdf', destination:'denied.pdf'}],
+  ['office_convert', {input:'memo.docx', format:'pdf', destination:'../outside.pdf'}],
+ ];
+ let planning = false;
+ const f = await fixture((body, index) => {
+  const completed = results(body).length;
+  const action = planning ? (completed === 0 ? ['office_convert', {input:'memo.docx',format:'pdf',destination:'plan.pdf'}] : null) : actions[completed];
+  return action ? call(action[0], action[1], index) : [{type:'text', text:'OFFICE_FIXTURE_COMPLETE'}];
+ });
+ try {
+  const project = path.join(f.root, 'project');
+  await fs.mkdir(project);
+  const docx = await exportOfficeFile('# 合成会议纪要\nPRIVATE_FIXTURE_CONTENT 电话 13800000000', 'docx');
+  await fs.writeFile(path.join(project, 'memo.docx'), docx);
+  await fs.writeFile(path.join(project, 'memo.pdf'), 'EXISTING_FILE');
+  const workbook = new ExcelJS.Workbook();
+  workbook.addWorksheet('数据').getCell('A1').value = {formula:'2+5',result:99};
+  const originalSheet = Buffer.from(await workbook.xlsx.writeBuffer());
+  await fs.writeFile(path.join(project, 'calc.xlsx'), originalSheet);
+  const approvals = [];
+  f.manager.onApproval = async request => {
+   const {path: destination} = JSON.parse(request.reason);
+   approvals.push(path.basename(destination));
+   return {outcome:path.basename(destination)==='denied.pdf'?'rejected':'allowed-once'};
+  };
+  const config = {...f.config, workspaceRoot:project, permission:'ask'};
+  const result = await f.manager.run({sessionId:'office-files',runId:'office-files',prompt:'请转换文档并重算工作簿。'},config,'fixture-conversion-key');
+  assert.equal(result.text, 'OFFICE_FIXTURE_COMPLETE');
+  assert.equal(f.requests.length, 5);
+  const finalBlocks = results(f.requests.at(-1));
+  assert.deepEqual(finalBlocks.map(block=>block.is_error===true),[false,false,true,true]);
+  const values = finalBlocks.slice(0,2).map(valueOf);
+  const paths = [path.join(project,'memo (2).pdf'), path.join(project,'calc-重算.xlsx')];
+  assert.deepEqual(values.map(value=>[value.operation,value.format]),[['convert','pdf'],['recalculate','xlsx']]);
+  const saved = await f.manager.readVault('office-files');
+  const vault = new PrivacySession('office-files',saved);
+  assert(values.every(value=>value.file.includes('⟦ZX-')));
+  assert.deepEqual(values.map(value=>vault.restore(value.file).text), paths);
+  assert.deepEqual(result.deliverables.map(file=>file.path), paths);
+  assert.deepEqual(approvals, ['memo (2).pdf', 'calc-重算.xlsx', 'denied.pdf']);
+  const [pdf,sheet] = await Promise.all(paths.map(file=>fs.readFile(file)));
+  assert.equal(pdf.subarray(0,5).toString(), '%PDF-');
+  assert.deepEqual(values.map(value=>value.bytes), [pdf.length,sheet.length]);
+  const recalculated = new ExcelJS.Workbook();
+  await recalculated.xlsx.load(sheet);
+  assert.deepEqual(recalculated.getWorksheet(1).getCell('A1').value,{formula:'2+5',result:7});
+  assert.deepEqual(await fs.readFile(path.join(project,'calc.xlsx')),originalSheet);
+  assert.deepEqual(await fs.readFile(path.join(project,'memo.docx')),docx);
+  assert.equal(await fs.readFile(path.join(project,'memo.pdf'),'utf8'),'EXISTING_FILE');
+  for (const file of [path.join(project,'denied.pdf'),path.join(f.root,'outside.pdf')]) await assert.rejects(fs.stat(file), {code:'ENOENT'});
+  const wire = JSON.stringify(f.requests);
+  for (const privateData of [project,'PRIVATE_FIXTURE_CONTENT','13800000000',docx.toString('base64'),originalSheet.toString('base64'),sheet.toString('base64'),pdf.toString('base64')]) assert(!wire.includes(privateData));
+  const continued = await f.manager.run({sessionId:'office-files',runId:'office-continued',prompt:'查看先前交办，不再转换。'},config,'fixture-conversion-key');
+  assert.equal(continued.text,'OFFICE_FIXTURE_COMPLETE');
+  assert.equal(f.requests.length,6);
+  assert.equal(approvals.length,3);
+  const history = await readBridge(path.join(f.root,'office-files','history-redact','office-files.bin'),saved.historyKey);
+  assert.deepEqual(history.events.filter(event=>event.type==='deliverables/presented').flatMap(event=>event.data.files.map(file=>file.path)),paths);
+  planning = true;
+  const planned = await f.manager.run({sessionId:'office-plan',runId:'office-plan',prompt:'只分析合成资料。',startInPlanMode:true},config,'fixture-conversion-key');
+  assert.equal(planned.context.planning, true);
+  assert.equal(results(f.requests.at(-1)).at(-1).is_error, true);
+  assert.equal(approvals.length,3);
+  await assert.rejects(fs.stat(path.join(project,'plan.pdf')), {code:'ENOENT'});
+ } finally {await f.close();}
+});
+
+test('真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话', {timeout:90000}, async () => {
+ const phone='13800000000';
+ const f=await fixture((_body,index)=>{
+  if(index===1)return call('office_render',{input:'visual.docx',pages:[1],dpi:144},index);
+  if(index===4)return call('office_render',{input:'visual.docx',pages:[1]},index);
+  return [{type:'text',text:'OFFICE_VISUAL_COMPLETE'}];
+ });
+ try {
+  const project=path.join(f.root,'project');await fs.mkdir(project);
+  const source=await exportOfficeFile('# Office Visual Test\nPhone: '+phone,'docx');
+  await fs.writeFile(path.join(project,'visual.docx'),source);
+  const reference=await runOfficeLayout(project,{action:'render',path:'visual.docx',pages:[1],dpi:144});
+  assert.equal(reference.images.length,1);assert.equal(reference.images[0].page,1);
+  const original=reference.images[0].png;
+  assert((await recognizeImage('office-page.png',Buffer.from(original,'base64'))).text.replace(/\D/g,'').includes(phone));
+  const key='synthetic-office-model-key';
+  const visualPrivacy=visionPrivacy({},[key]);
+  const config={...f.config,workspaceRoot:project,permission:'ask',inputModalities:['text','image'],visualPolicyKey:visualPrivacy.key,visualPrivacy};
+  f.manager.onApproval=async()=>{throw new Error('项目内只读渲染无需文件写入审批');};
+  const sessionId='visual-office';
+  const first=await f.manager.run({sessionId,runId:'office-vision-first',prompt:'查看第一页版式。'},config,key);
+  assert.equal(first.text,'OFFICE_VISUAL_COMPLETE');assert.equal(first.deliverables.length,0);
+  assert.equal(f.requests.length,2);
+  const capability=first.context.capabilityManifest.entries.find(item=>item.id==='agent-office-render');
+  assert.equal(capability.effective,true);assert.equal(capability.approvalRequired,false);
+  const result=results(f.requests[1])[0];
+  assert.equal(result.is_error===true,false,JSON.stringify(result));
+  const receipt=valueOf(result), image=result.content.find(block=>block.type==='image');
+  assert.equal(receipt.operation,'render');assert.equal(receipt.images[0].page,1);assert(receipt.images[0].maskCount>0);
+  assert(image);assert.notEqual(image.source.data,original);
+  const protectedText=(await recognizeImage('office-safe.'+(image.source.media_type==='image/jpeg'?'jpg':'png'),Buffer.from(image.source.data,'base64'),{allowEmpty:true})).text;
+  assert.match(protectedText,/Office\b[^\r\n]+\bTest/i);assert.match(protectedText,/Phone:/i);
+  assert(!protectedText.replace(/\D/g,'').includes(phone));
+  const saved=await f.manager.readVault(sessionId);
+  assert.equal(saved.visualHistory.redact.imageCount,1);
+  assert(!JSON.stringify(saved).includes(image.source.data));
+  const replay=await f.manager.run({sessionId,runId:'office-vision-reopen',prompt:'沿用前面的版面。'},config,key);
+  assert.equal(replay.text,'OFFICE_VISUAL_COMPLETE');assert.equal(f.requests.length,3);
+  assert.deepEqual(results(f.requests[2])[0].content.find(block=>block.type==='image').source,image.source);
+  const changed=visionPrivacy({customTerms:['Office']},[key]);
+  await assert.rejects(f.manager.run({sessionId,runId:'office-vision-stale',prompt:'继续。'}, {...config,visualPolicyKey:changed.key,visualPrivacy:changed},key),{code:'VISION_HISTORY_STALE'});
+  assert.equal(f.requests.length,3);
+  const textOnly=await f.manager.run({sessionId:'office-text',runId:'office-text-only',prompt:'查看版式。'}, {...config,inputModalities:['text']},key);
+  assert.equal(textOnly.text,'OFFICE_VISUAL_COMPLETE');assert.equal(f.requests.length,5);
+  assert(!f.requests[3].tools.some(tool=>tool.name==='office_render'));
+  assert.equal(results(f.requests[4]).at(-1).is_error,true);
+  const wire=JSON.stringify(f.requests);
+  for(const marker of [original,source.toString('base64'),phone,JSON.stringify(project).slice(1,-1)])assert(!wire.includes(marker));
  } finally {await f.close();}
 });
 

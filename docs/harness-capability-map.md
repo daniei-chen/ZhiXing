@@ -2,21 +2,25 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
-## 开发中 · 原生会话交互
+## 0.12.5 · 原生会话与 Office 操作
 
-当前开发分支以固定版本 `0.2.2-rc.5` 随包的 SDK 协议、命令注册表、工具目录及能力图为基准。公开 Windows 安装包的结果仍以该包的验收记录为准。 [官方 SDK 架构](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/sdk/README.md)
+当前源码以固定版本 `0.2.2-rc.5` 随包的 SDK 协议、命令注册表、工具目录及能力图为基准。Windows 安装包证据单独记录。 [0.12.5 Windows 验收](windows-acceptance-0.12.5.md) · [官方 SDK 架构](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/sdk/README.md)
 
 | 操作 | 开发分支行为 | 验证方式 |
 | --- | --- | --- |
 | 计划、目标、上下文压缩 | 主聊天和侧边聊天共用命令规则，兼容 `/计划`、`/目标`、`/压缩`。提交时核对官方命令定义，脱敏处理用户填写的正文，保留命令和控制词 | 真实 SDK 核对规划进入与退出、会话重开、空会话压缩、查看无目标及暂停拒绝，合成服务在这些检查中收件数为零 |
 | 目标引用图片 | 创建和编辑目标可携带已批准的 PNG/JPEG，继续经原有图片隐私网关 | 在真实 SDK 的目标创建回环中比较实际图片字节与批准副本。拒绝给纯状态命令附带图片 |
 | 会话操作入口 | 当前会话的退出规划、暂停或继续目标、查看完成目标和压缩按钮直接执行。原草稿正文和附件能继续编辑 | Windows Electron 实际 DOM 加合成 IPC 核对当前目标按钮调用、会话标识、历史按钮收起以及原草稿保留 |
+| Office 转换、重算 | `office_convert` 和 `office_recalculate` 通过官方 OfficeKit 转换、按写入策略审批、在项目内另存并登记成果 | 真实 SDK 与本机收件核对 PDF 字节、XLSX 公式缓存 `99 → 7`、源文件、同名编号、失败分支和重开后的原生 `deliverables/presented` 事件 |
+| Office 版面视觉 | `office_render` 按页码或工作表和区域调用 OfficeKit。支持图片的模型通过 Harness 原生附件块取得本机处理后的像素。最多四张，和本会话的手动图片共用名额 | DeepSeek Messages 本机合成收件比较实际字节，复 OCR 核对电话被遮罩。再次打开会话可重放已批准副本。规则变化和文字模型限制均已核对 |
 
-后续兼容范围仍包含 Host 的会话与后台作业、权限预设与交互审批、反馈与会话导出的原生接口、文件与 Office 工具、扩展和 MCP OAuth、模型路由及持久状态。按官方能力对应实际入口和操作产生的结果验收。 [官方能力地图](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/README.md)
+三项 Office 操作用官方 OfficeKit 和知行的工具适配。随包 `dsh-tool-office` 上游插件由 Office 技能激活，转换与重算返回临时成果。知行在绑定项目后提供转换与重算，直接将新成果写入项目并发布原生交付事件。模型端渲染仅对具备本机视觉处理的 Windows 项目手动交办开放。 [官方 Office 插件](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/document/README.md)
 
-## 0.12.4 当前状态与证据分层
+待完成的兼容范围包括 Host 会话与跨启动作业、权限预设与交互审批、反馈与会话导出、原生文件工具、Office 插件激活与临时成果语义、扩展和 MCP OAuth、模型路由及持久状态。 [官方能力地图](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/README.md)
 
-当前源码版本为 `0.12.4`，固定 Harness `0.2.2-rc.5`。生产包的实际提交、安装器哈希、provenance 及 Windows 实包边界见 [0.12.4 Windows 验收页](windows-acceptance-0.12.4.md)。不把 0.12.3 或更早安装包证据沿用为当前包证据。
+## 0.12.4 已发布基线与证据分层
+
+以下表格保留 `0.12.4` 公开版本的范围。该版本的源码提交、安装器哈希与 Windows 实包证据见 [0.12.4 Windows 验收页](windows-acceptance-0.12.4.md)。
 
 | 能力 | 真实接入状态 | 可确认与未覆盖 |
 | --- | --- | --- |

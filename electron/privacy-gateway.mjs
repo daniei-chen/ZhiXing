@@ -140,5 +140,7 @@ export async function startPrivacyGateway({baseUrl,protocol='deepseek',apiKey,br
   });
   server.listen(0,'127.0.0.1');await once(server,'listening');
   const basePath=openAI?'/v1':protocol==='deepseek'?'/anthropic':'';
-  return {baseUrl:`http://127.0.0.1:${server.address().port}${basePath}`,apiKey:token,async close(){for(const controller of controllers)controller.abort();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await tail;}};
+  return {baseUrl:`http://127.0.0.1:${server.address().port}${basePath}`,apiKey:token,
+    approveVisualAttachments(images){for(const image of images)approvedImages.set(image.sha256,image);},
+    async close(){for(const controller of controllers)controller.abort();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await tail;}};
 }

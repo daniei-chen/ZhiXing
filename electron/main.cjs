@@ -261,6 +261,7 @@ function registerHandlers(){
   const {runOfficeLayout,recognizeOfficePage}=await import('./office-layout.mjs');
   const {workspaceRoot}=workScope(options);
   if(options.action==='ocr')return recognizeOfficePage(workspaceRoot,options);
+  if(!['preview','convert','recalculate'].includes(options.action))throw new Error('未知的 Office 操作。');
   const result=await runOfficeLayout(workspaceRoot,options);
   if(options.action==='preview')return result;
   const format=options.format;
@@ -365,7 +366,8 @@ function registerHandlers(){
    }
   }
   const visualPolicyKey=options.privacyMode===vision.privacyMode?vision.key:null;
-  return manager.preview({...options,visualAttachments,...(visualAttachments.length?{customTerms:vision.terms}:{})},{...config,visualPolicyKey,manualControls:true});
+  const visualPrivacy=visualPolicyKey&&config.workspaceRoot&&config.inputModalities?.includes('image')?vision:undefined;
+  return manager.preview({...options,visualAttachments,...(visualAttachments.length||visualPrivacy?{customTerms:vision.terms}:{})},{...config,visualPolicyKey,visualPrivacy,manualControls:true});
  });
  handle('agent:run-prepared',async options=>{
   await workspaceSaveQueue.flush();

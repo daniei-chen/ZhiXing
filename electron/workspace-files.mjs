@@ -3,15 +3,31 @@ import path from 'node:path';
 import {within} from '../harness/file-policy.mjs';
 import {parseLocalMaterial} from './office-files.mjs';
 const PRIVATE=/(?:^|[\\/])(?:\.ssh|\.aws|\.azure|node_modules|vaults|\.git)(?:[\\/]|$)|(?:^|[\\/])(?:\.env(?:\..*)?|.*\.(?:pem|key|pfx)|deepseek\.credential|workspace\.bin|automations\.bin|privacy-bridge\.bin)$/i;
+const allowedWorkspacePath = (root, target) => {
+ const relative = path.relative(root, target);
+ return within(root, target) && !PRIVATE.test(relative) && !relative.includes(':');
+};
 export async function workspaceTarget(root,input=''){
  if(typeof root!=='string'||!path.isAbsolute(root))throw new Error('请先在项目设置中选择工作区。');
  if(typeof input!=='string'||input.length>1500||input.includes('\0'))throw new Error('路径无效。');
  const canonical=await fs.realpath(root),requested=path.resolve(canonical,input);
- const allowed=target=>within(canonical,target)&&!PRIVATE.test(path.relative(canonical,target))&&!path.relative(canonical,target).includes(':');
- if(!allowed(requested))throw new Error('此路径不在可浏览的项目范围内。');
+ if(!allowedWorkspacePath(canonical,requested))throw new Error('此路径不在可浏览的项目范围内。');
  const target=await fs.realpath(requested);
- if(!allowed(target))throw new Error('此路径不在可浏览的项目范围内。');
+ if(!allowedWorkspacePath(canonical,target))throw new Error('此路径不在可浏览的项目范围内。');
  return {root:canonical,target,relative:path.relative(canonical,target)};
+}
+
+export async function workspaceWriteTarget(root, input) {
+ if (typeof input !== 'string' || !input.trim() || input.length > 1024 || input.includes('\0')) throw new Error('保存路径无效。');
+ const name = path.basename(input);
+ if (process.platform === 'win32' && (/[<>:"|?*\x00-\x1f]|[. ]$/.test(name)
+  || /^(?:con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(?:[ .]|$)/i.test(name))) throw new Error('保存文件名无效。');
+ const {root: canonical, target: parent} = await workspaceTarget(root, path.dirname(input));
+ const target = path.join(parent, name);
+ if (target === parent || !allowedWorkspacePath(canonical, target)) throw new Error('保存路径不在可写入的项目范围内。');
+ const identity = await fs.stat(parent);
+ if (!identity.isDirectory()) throw new Error('请选择项目中已存在的保存目录。');
+ return {target, inside: true, write: true, exists: false, device: identity.dev, inode: identity.ino};
 }
 export async function listWorkspaceFiles(root,input=''){
  const resolved=await workspaceTarget(root,input);const entries=await fs.readdir(resolved.target,{withFileTypes:true});

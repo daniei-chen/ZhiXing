@@ -19,12 +19,29 @@ import {applyRuntimeExtensions} from './plugin-profile.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
 import {AssistantTextStream} from './assistant-stream.mjs';
 import { VISUAL_MAX_BYTES, VISUAL_MAX_PER_REQUEST, VISUAL_MAX_PIXELS, readVisualAttachment } from './visual-attachments.mjs';
+import {renderOfficeVision} from './office-visual.mjs';
 const require=createRequire(import.meta.url);
 const harnessRequire=createRequire(require.resolve('@deepseek-ai/dsh/lib/bin.js'));
 const baseRequire=createRequire(harnessRequire.resolve('@deepseek-ai/dsh-base'));
 const sourceRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
 const disabled=['tool-fs','tool-working-directory','terminal-bash','terminal-pwsh','persistent-bash','persistent-pwsh','pty','subprocess','image-offload','jobs','mcp-resources','sessions','session-checkpoint-policy'];
+
+function visionError(code, message) {
+ return Object.assign(new Error(message), {code, stage:'prepare'});
+}
+
+function extendVisualHistory(previous, attachments, policyKey) {
+ const images = new Map((previous?.images || []).map(image => [image.sha256, image]));
+ for (const {sha256, mediaType, bytes} of attachments) images.set(sha256, {sha256, mediaType, bytes});
+ const approved = [...images.values()];
+ const imageCount = (previous?.imageCount ?? 0) + attachments.length;
+ // The gateway also counts base64, text and tool schemas in the full JSON limit.
+ if (imageCount > VISUAL_MAX_PER_REQUEST || approved.reduce((total, image) => total + image.bytes, 0) > VISUAL_MAX_BYTES * VISUAL_MAX_PER_REQUEST) {
+  throw visionError('VISION_HISTORY_LIMIT', '当前会话的视觉资料已达到上限。请新建聊天并选择所需图片。');
+ }
+ return {policyKey, imageCount, images:approved};
+}
 
 function prepareVisualRun(attachments, saved, config, privacyMode, resume) {
  const visualHistory = { ...saved?.visualHistory };
@@ -33,24 +50,15 @@ function prepareVisualRun(attachments, saved, config, privacyMode, resume) {
  const incoming = attachments ?? [];
  if (!Array.isArray(incoming) || incoming.length > VISUAL_MAX_PER_REQUEST) throw new Error('一次交办最多可带 4 张视觉图片。');
  if (!incoming.length && !previous) return { visualAttachments: [], approvedVisuals: [], visualHistory };
- const reject = (code, message) => { throw Object.assign(new Error(message), { code, stage: 'prepare' }); };
  if (!config.inputModalities?.includes('image')) {
-  reject('VISION_MODEL_UNSUPPORTED', '当前模型未声明图片输入能力。请选择支持图片的模型，或在新聊天中只发送文字。');
+  throw visionError('VISION_MODEL_UNSUPPORTED', '当前模型未声明图片输入能力。请选择支持图片的模型，或在新聊天中只发送文字。');
  }
  if (!config.visualPolicyKey || previous && previous.policyKey !== config.visualPolicyKey) {
-  reject('VISION_HISTORY_STALE', '当前隐私规则或凭证与图片准备时不同。请新建聊天并重新添加图片。');
+  throw visionError('VISION_HISTORY_STALE', '当前隐私规则或凭证与图片准备时不同。请新建聊天并重新添加图片。');
  }
  const visualAttachments = incoming.map(record => readVisualAttachment(record, record?.id, config.visualPolicyKey));
- const images = new Map((previous?.images || []).map(image => [image.sha256, image]));
- for (const { sha256, mediaType, bytes } of visualAttachments) images.set(sha256, { sha256, mediaType, bytes });
- // The gateway's full 8 MiB JSON limit includes base64, text, and tool schemas.
- const approvedVisuals = [...images.values()];
- const imageCount = (previous?.imageCount ?? 0) + visualAttachments.length;
- if (imageCount > VISUAL_MAX_PER_REQUEST || approvedVisuals.reduce((total, image) => total + image.bytes, 0) > VISUAL_MAX_BYTES * VISUAL_MAX_PER_REQUEST) {
-  reject('VISION_HISTORY_LIMIT', '当前会话的视觉资料已达到上限。请新建聊天并选择所需图片。');
- }
- visualHistory[privacyMode] = { policyKey: config.visualPolicyKey, imageCount, images: approvedVisuals };
- return { visualAttachments, approvedVisuals, visualHistory };
+ visualHistory[privacyMode] = extendVisualHistory(previous, visualAttachments, config.visualPolicyKey);
+ return {visualAttachments, approvedVisuals:visualHistory[privacyMode].images, visualHistory};
 }
 async function checkMcpReady(file,key,servers=[]){
  const enabled=servers.filter(server=>server.enabled);if(!enabled.length)return;
@@ -161,6 +169,7 @@ export async function makeHarness(directory,configuration,apiKey){
  env.ZHIXING_MODEL_PROTOCOL=configuration.protocol||'deepseek';
  env.ZHIXING_INPUT_MODALITIES=JSON.stringify(Array.isArray(configuration.inputModalities)?configuration.inputModalities:['text']);
  env.ZHIXING_VISUAL_BRIDGE=configuration.visualAttachments?.length?'true':'false';
+ if(configuration.officeVision)Object.assign(env,{ZHIXING_OFFICE_VISION_URL:configuration.officeVision.url,ZHIXING_OFFICE_VISION_TOKEN:configuration.officeVision.token});
  env.ZHIXING_CAPABILITY_SCOPE=configuration.capabilityScope==='diagnostic'?'diagnostic':'run';
  if(configuration.requiredCommand)env.ZHIXING_REQUIRED_COMMAND=configuration.requiredCommand;
  if(allowExtensions&&configuration.extensions?.bundles.length)env.ZHIXING_ALLOW_EXTENSIONS='1';
@@ -438,19 +447,20 @@ export class RuntimeManager{
   if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
   if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error('该会话正在执行，请先停止当前任务。');
   for(const [id,p] of this.prepared)if(p.options.sessionId===sessionId)this.prepared.delete(id);
-  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,persistKey,persistBridgeKey,failure,visualHistory;const active={runId,sessionId,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128){const oldest=this.runSettlements.keys().next().value;this.runSettlements.delete(oldest);this.runSettlementSessions.delete(oldest);}this.runSettlements.set(runId,active.settled);this.runSettlementSessions.set(runId,sessionId);this.runs.set(runId,active);
+  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,officeVision,persistKey,persistBridgeKey,failure;const visualHistory={};const active={runId,sessionId,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128){const oldest=this.runSettlements.keys().next().value;this.runSettlements.delete(oldest);this.runSettlementSessions.delete(oldest);}this.runSettlements.set(runId,active.settled);this.runSettlementSessions.set(runId,sessionId);this.runs.set(runId,active);
   const connection={endpoint:config.baseUrl,providerId:config.providerId,protocol:config.protocol};
+  const visualState=()=>Object.keys(visualHistory).length?{visualHistory}:{};
   try{
    const request=prepared||await this.prepare(options,config);
    let {vault,input,privacyMode,historyKey,resume,credentialSource,visualAttachments,approvedVisuals}=request;
-   if(Object.keys(request.visualHistory).length)visualHistory=request.visualHistory;
+   Object.assign(visualHistory,request.visualHistory);
    const effectivePolicy=privacyPolicyForMode(config.privacyPolicy,privacyMode);
    active.safeContext={providerKey:key,customTerms,privacyPolicy:effectivePolicy};
    persistKey=historyKey;
    if(input.blocked||containsCredential(credentialSource,key)||containsCredential(input.text,key))throw new Error('检测到疑似凭证，请移除后再发送。');
    if(privacyMode==='redact'&&vault.restore(input.text,{allowedTypes:[]}).unknown.length)throw new Error('输入含有其他任务的占位符，请提供原文或删除占位符。');
    // Save before invoking the provider: a crash must not orphan the mapping.
-   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey,...(visualHistory?{visualHistory}:{})},config);active.vaultSaved=true;
+   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey,...visualState()},config);active.vaultSaved=true;
    const directory=path.join(this.root,sessionId),bridgeKey=historyKey;persistBridgeKey=bridgeKey;bridgeFile=path.join(directory,'privacy-bridge.bin');
    mcpFile=path.join(directory,'mcp-config.bin');
    await fs.mkdir(directory,{recursive:true});await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);await writeBridge(bridgeFile,bridgeKey,vault.exportState());
@@ -494,10 +504,37 @@ export class RuntimeManager{
      publishAssistantPreview(active.assistantPreview.finishAttempt(true));
     }
    }});
+   const privacy=config.visualPrivacy;
+   if(process.platform==='win32'&&config.workspaceRoot&&config.inputModalities?.includes('image')&&privacy?.key
+    &&privacy.key===config.visualPolicyKey&&privacy.privacyMode===privacyMode&&typeof gateway.approveVisualAttachments==='function'){
+    let rendering=false;
+    officeVision=await startToolBridge({route:'/office-vision',signal:active.controller.signal,drain:true,invoke:async (args,signal)=>{
+     if(rendering)throw new Error('正在渲染办公页面，请稍后重试。');
+     rendering=true;
+     try{
+      const previous=visualHistory[privacyMode];
+      const maxRenderImages=VISUAL_MAX_PER_REQUEST-(previous?.imageCount??0);
+      if(!maxRenderImages)throw new Error('当前会话的视觉资料已达到上限，请新建聊天。');
+      const value=await renderOfficeVision(config.workspaceRoot,args,privacy,{signal,maxRenderImages});
+      const next=extendVisualHistory(previous,value.records,privacy.key);
+      const state=await readBridge(bridgeFile,bridgeKey);
+      signal.throwIfAborted();
+      // Commit the hash allowlist before Harness can journal any attachment reference.
+      await this.saveVault(sessionId,{...state,...connection,historyKey,visualHistory:{...visualHistory,[privacyMode]:next}},config);
+      visualHistory[privacyMode]=next;
+      signal.throwIfAborted();
+      gateway.approveVisualAttachments(next.images);
+      return value;
+     }catch(error){
+      if(/^E[A-Z0-9]+$/.test(error?.code))throw new Error('无法读取办公页面或记录视觉副本，请检查文件和本机存储。');
+      throw error;
+     }finally{rendering=false;}
+    }});
+   }
    const transcripts=new Map();
    active.cancellation={file:path.join(directory,`cancel-${runId}.bin`),key:createBridgeKey(),sessionId};
    if(config.manualControls)active.controls={file:path.join(directory,`control-${runId}.bin`),key:createBridgeKey(),sessionId,targets:new Map(),transcripts,bridgeFile,bridgeKey,privacyMode,customTerms,privacyPolicy:effectivePolicy,providerKey:key};
-   h=await this.createHarness(directory,{...config,requiredCommand:request.commandName||(options.startInPlanMode===true?'plan':undefined),visualAttachments:approvedVisuals,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,providerKey:key,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
+   h=await this.createHarness(directory,{...config,requiredCommand:request.commandName||(options.startInPlanMode===true?'plan':undefined),visualAttachments:approvedVisuals,officeVision,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,providerKey:key,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
    this.watchHarness(active,h);
    if(active.cancelled)throw new Error('任务已停止。');
    const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void (active.readyForCancel?interruptHarness(active,h):closeHarness(active,h)).catch(()=>{});},kernel.taskTimeoutSeconds*1000);
@@ -642,18 +679,18 @@ export class RuntimeManager{
    active.resultReady=true;
    this.emitEvent({runId,sessionId,type:'draft',source:'validated-result',final:true,text});
    await closeHarness(active,h);await active.draftTail;
-   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey,...(visualHistory?{visualHistory}:{})},config);
+   await this.saveVault(sessionId,{...vault.exportState(),...connection,historyKey,...visualState()},config);
    return active.output;
   }catch(error){failure=error;active.terminalStatus=active.cancelError?'interrupted':active.cancelled?'cancelled':'failed';throw error;}
   finally{
    active.controller.abort();
    const harnessClosing=await Promise.allSettled([closeHarness(active,h)]);
-   const closing=await Promise.allSettled([toolBridge,automationBridge,gateway].filter(Boolean).map(bridge=>bounded(()=>bridge.close(),this.cleanupTimeoutMs)));if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}active.assistantTextBuffer='';await active.draftTail;
+   const closing=await Promise.allSettled([toolBridge,automationBridge,officeVision,gateway].filter(Boolean).map(bridge=>bounded(()=>bridge.close(),this.cleanupTimeoutMs)));if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}active.assistantTextBuffer='';await active.draftTail;
    let cleanupError=harnessClosing[0].status==='rejected'?harnessClosing[0].reason:closing.find(result=>result.status==='rejected')?.reason;
    const harnessClosed=harnessClosing[0].status==='fulfilled'||active.processExited===true;
    active.finishCleanup=async exited=>{
     let savedBridge=false,error;
-    if(bridgeFile&&persistKey){try{const state=await readBridge(bridgeFile,persistBridgeKey);await this.saveVault(sessionId,{...state,...connection,historyKey:persistKey,...(visualHistory?{visualHistory}:{})},config);savedBridge=true;}catch(cause){error=cause;error.stage||='persist';error.code||='RUNTIME_PERSIST_FAILED';}}
+    if(bridgeFile&&persistKey){try{const state=await readBridge(bridgeFile,persistBridgeKey);await this.saveVault(sessionId,{...state,...connection,historyKey:persistKey,...visualState()},config);savedBridge=true;}catch(cause){error=cause;error.stage||='persist';error.code||='RUNTIME_PERSIST_FAILED';}}
     if(savedBridge&&exited){if(bridgeFile)await fs.unlink(bridgeFile).catch(()=>{});if(mcpFile){await fs.unlink(mcpFile).catch(()=>{});await fs.unlink(`${mcpFile}.status`).catch(()=>{});}await fs.unlink(path.join(this.root,sessionId,'context.bin')).catch(()=>{});}
     if(exited&&active.controls)await fs.unlink(active.controls.file).catch(()=>{});
     if(exited&&active.cancellation)await fs.unlink(active.cancellation.file).catch(()=>{});
