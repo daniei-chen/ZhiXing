@@ -34,7 +34,11 @@
 
 </div>
 
-## 0.12.7 本轮更新
+## 0.12.8 本轮更新
+
+- **会话工作目录。** 绑定项目后，模型可以查看当前工作目录并切换到项目内已有子目录。相对路径的读取、写入、补丁和搜索都按该目录解析，尝试切到项目外会被拒绝；目录变更随会话保存，重开后继续生效。计划模式可以查看当前目录，但不能移动。执行轨迹显示「会话工作目录」，切换仍在项目和审批边界内。
+
+## 0.12.7 历史更新
 
 - **执行权限与内核预设同步。** 输入区的「请求批准／帮我批准／完全访问」现在固定为 Harness 原生执行权限预设，未绑定项目时使用只读。同一会话降档后，下一次命令立即使用新的工作区沙箱；会话历史里的预设事件与实际执行一致，内核设置显示本次诊断实际使用的预设。
 - **图片资料支持 WebP 与 GIF。** 手动交办和项目内 `read_image` 接受单帧 WebP、GIF，与 PNG/JPEG 走同一条本机遮罩链：先转换并去除元数据的 PNG 副本，按当前规则遮罩本机 OCR 命中的文字，只有当前视觉模型收到副本。动图和多画面文件明确拒绝，不截取首帧。
@@ -183,7 +187,7 @@
 | 能力 | 当前范围 |
 | --- | --- |
 | 文档理解 | Office/PDF 文字提取、本机版面和 Windows OCR 已接入 Agent `office_read_file`；图片资料（PNG、JPEG、WebP、GIF 单帧）在支持 `image` 的模型上可进入真实视觉上下文，先经过主进程本机遮罩副本；截图和图表语义、未识别文字仍待专项验证 |
-| 原生项目工具 | `read`、`write`、`edit`、`apply_patch`、`glob`、`grep` 与 `read_image`（PNG、JPEG、WebP、GIF 单帧）已接入，执行权限使用内核原生预设。完整上游沙箱、工作目录切换与跨启动文件观察未覆盖 |
+| 原生项目工具 | `read`、`write`、`edit`、`apply_patch`、`glob`、`grep`、`read_image`（PNG、JPEG、WebP、GIF 单帧）与 `working_directory` 会话工作目录已接入，执行权限使用内核原生预设。完整上游沙箱与跨启动文件观察未覆盖 |
 | 供应商认证 | 当前使用 API Key。完整 OAuth、刷新与账号切换隔离待实现 |
 | 会话导入 | 支持 DeepSeek 导出 ZIP 的当前分支、随包图片和部分活动记录。全分支与完整工具轨迹迁移待实现 |
 | 会话导出 | 支持主会话 Markdown 与既有 TXT/DOCX/XLSX。原生 ZIP、子会话及附件字节完整归档待实现 |
@@ -235,16 +239,16 @@ npm run test:browser
 npm run electron:install
 npm run test:packed -- ".\release\win-unpacked\知行.exe"
 npm run test:browser -- ".\release\win-unpacked\知行.exe"
-Get-FileHash ".\release\知行-0.12.7-x64.exe" -Algorithm SHA256
+Get-FileHash ".\release\知行-0.12.8-x64.exe" -Algorithm SHA256
 ```
 
-目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。构建提交、源码指纹与锁文件校验值见 [0.12.7 Windows 验收记录](docs/windows-acceptance-0.12.7.md)。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留。打包携带与 Node.js 版本一致的许可证文件。
+目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。构建提交、源码指纹与锁文件校验值见 [0.12.7 Windows 验收记录](docs/windows-acceptance-0.12.8.md)。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留。打包携带与 Node.js 版本一致的许可证文件。
 
 ## 参与完善
 
 欢迎通过 Issue 提交可复现的问题与办公场景。请附版本、Windows 环境、复现步骤和预期结果，使用合成资料和已去除敏感信息的日志。模型 Key、MCP 凭据和真实业务原件应妥善保管。
 
-[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [0.12.7 迭代记录](docs/iteration-0.12.7.md) · [0.12.6 审计说明](docs/audit-request-0.12.6.md)
+[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [0.12.8 迭代记录](docs/iteration-0.12.8.md) · [0.12.8 审计说明](docs/audit-request-0.12.8.md)
 
 ## 致谢
 
