@@ -16,6 +16,11 @@ let worktreeOperation;
 let configuration={model:'deepseek-flash',reasoning:'high',baseUrl:'https://api.deepseek.com/anthropic',credentialRevision:0,contextWindow:128000,maxTokens:8192};
 let normaliseKernel,validateKernel,projectCoreApi,containsCredential;
 const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
+// Launch timing stays available for diagnosis: set ZHIXING_STARTUP_TRACE=1 to
+// print each stage on stderr. Unset, the helper does nothing.
+const STARTUP_TRACE=process.env.ZHIXING_STARTUP_TRACE==='1';
+const startupMark=label=>{if(STARTUP_TRACE)process.stderr.write(`[startup] ${label} +${Math.round(process.uptime()*1000)}ms\n`);};
+startupMark('main:module');
 const WORKSPACE_FILE=path.join(ROOT,'workspace.bin');
 const VISUAL_ROOT=path.join(ROOT,'visual');
 const VOLATILE_TERMS=Symbol('volatileTerms');
@@ -58,8 +63,7 @@ async function initialise(){
  ({normaliseKernel,validateKernel}=await import('../src/kernel-config.js'));
  ({containsCredential}=await import('../src/privacy-recognizers.js'));
  configuration.kernel=normaliseKernel();
- try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));for(const key of ['model','reasoning'])if(typeof saved[key]==='string')configuration[key]=saved[key];for(const key of ['contextWindow','maxTokens'])if(Number.isSafeInteger(saved[key])&&saved[key]>=1024&&saved[key]<=2000000)configuration[key]=saved[key];if(saved.baseUrl)configuration.baseUrl=validEndpoint(saved.baseUrl);if(Number.isSafeInteger(saved.credentialRevision))configuration.credentialRevision=saved.credentialRevision;}catch{}
- try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));configuration.kernel=normaliseKernel(saved.kernel);}catch{}
+ try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));for(const key of ['model','reasoning'])if(typeof saved[key]==='string')configuration[key]=saved[key];for(const key of ['contextWindow','maxTokens'])if(Number.isSafeInteger(saved[key])&&saved[key]>=1024&&saved[key]<=2000000)configuration[key]=saved[key];if(saved.baseUrl)configuration.baseUrl=validEndpoint(saved.baseUrl);if(Number.isSafeInteger(saved.credentialRevision))configuration.credentialRevision=saved.credentialRevision;configuration.kernel=normaliseKernel(saved.kernel);}catch{}
  providerApi=await import('./providers.mjs');
  const {PluginService}=await import('./plugin-service.mjs');
  pluginService=new PluginService({directory:path.join(ROOT,'extensions')});
@@ -499,7 +503,7 @@ else app.whenReady().then(async()=>{
  session.defaultSession.setPermissionRequestHandler((webContents,permission,callback,details)=>callback(speechPermission(webContents,permission,details)));
  session.defaultSession.setPermissionCheckHandler((webContents,permission,_origin,details)=>speechPermission(webContents,permission,details));
  session.defaultSession.webRequest.onHeadersReceived((details,callback)=>callback({responseHeaders:{...details.responseHeaders,'Content-Security-Policy':["default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"]}}));
- await initialise();registerHandlers();await createWindow();automations.start();
+ await initialise();startupMark('initialise:done');registerHandlers();await createWindow();startupMark('window:shown');automations.start();
  app.on('activate',()=>{if(BrowserWindow.getAllWindows().length===0)createWindow();});
 }).catch(e=>{dialog.showErrorBox('知行启动失败',e.message);app.quit();});
 app.on('before-quit',event=>{
