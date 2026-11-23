@@ -221,12 +221,16 @@ export default class NativeProjectFileSystem extends LocalFileSystem {
  async resolve(value, options) {
   const directoryRoot=directoryScope.getStore();
   if(directoryRoot){
-   const verify=async file=>workspaceTarget(directoryRoot,file).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
    const candidate=path.resolve(options?.cwd??directoryRoot,value);
-   const before=await verify(candidate);
+   const before=await workspaceTarget(directoryRoot,candidate).catch(()=>null);
    const resolved=await super.resolve(candidate,options);
-   const after=await verify(resolved.targetKey);
-   if((before?.target??null)!==(after?.target??null)||after&&targetKey(after.target)!==targetKey(resolved.targetKey)){
+   // The kernel also resolves its own instruction and skill files while it
+   // validates the session directory. Only accesses that already start inside
+   // the project must stay inside it; everything else keeps the normal
+   // resolution so directory validation cannot fail on host files.
+   if(!before)return resolved;
+   const after=await workspaceTarget(directoryRoot,resolved.targetKey).catch(()=>null);
+   if(!after||before.target!==after.target||targetKey(after.target)!==targetKey(resolved.targetKey)){
     throw new Error('项目目录正在变化，请重试。');
    }
    return resolved;
