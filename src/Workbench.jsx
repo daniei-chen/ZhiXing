@@ -110,9 +110,20 @@ function SideChatPanel({sideChat,sideChatId,sideChats,sideDraft,sideFiles,onOpen
  </div>;
 }
 function WorkspaceFiles({context,project,attach,openProject,fileRequest}){
- const api=window.zhixing,[tree,setTree]=useState(null),[path,setPath]=useState(''),[preview,setPreview]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);const generation=useRef(0);
+ const api=window.zhixing,[tree,setTree]=useState(null),[path,setPath]=useState(''),[preview,setPreview]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);const generation=useRef(0),scopeRef=useRef(''),watchTimer=useRef(null),loadRef=useRef(null),pathRef=useRef('');
  async function load(next=''){if(!api||!project?.directory)return;const token=++generation.current;setBusy(true);setError('');try{const result=await api.listWorkspaceFiles({...context,path:next});if(token===generation.current){setTree(result);setPath(next);setPreview(null);}}catch(cause){if(token===generation.current)setError(cause.message);}finally{if(token===generation.current)setBusy(false);}}
+ loadRef.current=load;pathRef.current=path;
  useEffect(()=>{void load();return()=>{generation.current++;};},[project?.id,project?.directory]);
+ useEffect(()=>{
+  if(!api||!project?.directory)return;
+  let live=true;const off=api.onWorkspaceFsChange(value=>{
+   if(!live||value?.scope!==scopeRef.current)return;
+   clearTimeout(watchTimer.current);
+   watchTimer.current=setTimeout(()=>{if(live)void loadRef.current(pathRef.current);},300);
+  });
+  api.watchWorkspace({...context}).then(value=>{if(live)scopeRef.current=value?.scope||'';}).catch(()=>{});
+  return()=>{live=false;off();clearTimeout(watchTimer.current);scopeRef.current='';void api.unwatchWorkspace({...context}).catch(()=>{});};
+ },[api,project?.id,project?.directory]);
  useEffect(()=>{if(fileRequest&&api&&project?.directory)void open({path:fileRequest.path});},[fileRequest?.revision]);
  async function open(item){
   if(item.kind==='directory'){await load(item.path);return;}

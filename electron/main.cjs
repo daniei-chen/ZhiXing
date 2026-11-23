@@ -8,7 +8,7 @@ const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
 if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
 const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
 const firstInstance=app.requestSingleInstanceLock();
-let windowRef,manager,automations,automationsReady,browserService,terminalService,speechService,servicesReady,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
+let windowRef,manager,automations,automationsReady,browserService,terminalService,speechService,servicesReady,fileWatcher,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
@@ -158,6 +158,8 @@ function ensureServices(){
   terminalService=new TerminalService({onEvent:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('terminal:event',value);}});
   const {SpeechService}=await import('./speech-service.mjs');
   speechService=new SpeechService(value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',value);},{dataRoot:path.join(ROOT,'speech','sensevoice-int8')});
+  const {FileWatcher}=await import('./file-watcher.mjs');
+  fileWatcher=new FileWatcher({onChange:(key,change)=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('workspace:fs-change',{scope:key,...change});}});
   startupMark('init:services');
  })();
  return servicesReady;
@@ -259,6 +261,10 @@ function registerHandlers(){
  });
  handle('terminal:action',async options=>{await workspaceSaveQueue.flush();const scope=workScope(options);if(!scope.workspaceRoot)throw new Error('请先在项目设置中选择工作区，再打开终端。');return terminalService.request({...options,scope:scope.key,cwd:await fs.realpath(scope.workspaceRoot)});});
  handle('workspace:list-files',async options=>{await workspaceSaveQueue.flush();const {listWorkspaceFiles}=await import('./workspace-files.mjs');return listWorkspaceFiles(workScope(options).workspaceRoot,options.path||'');});
+ handle('workspace:watch',async options=>{await ensureServices();const scope=workScope(options);
+  if(!scope.workspaceRoot)return {watching:false,scope:scope.key};
+  return {watching:fileWatcher.watch(scope.key,scope.workspaceRoot),scope:scope.key};});
+ handle('workspace:unwatch',options=>{const scope=workScope(options);return {watching:!(fileWatcher?.unwatch(scope.key)??true),scope:scope.key};});
  handle('workspace:worktree',async({action,name,workspaceId,projectId}={})=>{
   await workspaceSaveQueue.flush();
   if(worktreeOperation)throw new Error('正在处理另一项工作树操作。');
@@ -562,6 +568,7 @@ app.on('before-quit',event=>{
    }
   }
   await Promise.allSettled([browserService?.close(),terminalService?.close(),speechService?.close(),pluginService?.close(),pendingWorktree?.job]);
+  fileWatcher?.closeAll();
   app.quit();
  })().catch(error=>{
   if(windowRef&&!windowRef.isDestroyed())dialog.showErrorBox('知行仍在运行',`退出准备未完成，工作空间仍在窗口中。\n${error.message}`);
