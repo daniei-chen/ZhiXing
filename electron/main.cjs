@@ -67,6 +67,7 @@ async function initialise(){
  providerApi=await import('./providers.mjs');
  const {PluginService}=await import('./plugin-service.mjs');
  pluginService=new PluginService({directory:path.join(ROOT,'extensions')});
+ startupMark('init:imports');
  const registry=await readEncrypted(path.join(ROOT,'providers.bin'));
  if(registry!==null)providers=JSON.parse(registry);
  else {
@@ -81,6 +82,7 @@ async function initialise(){
  projectCoreApi=await import('../src/project-core.js');
  resolveProjectContext=projectCoreApi.projectContext;
  workspaceContext=mergeState(JSON.parse(await readEncrypted(WORKSPACE_FILE)));
+ startupMark('init:state');
  const {DeliveryService}=await import('./delivery-service.mjs');
  deliveryService=new DeliveryService({getSettings:()=>workspaceContext.settings,getSecrets:deliverySecrets});
  const {WorkspaceSaveQueue}=await import('./workspace-save-queue.mjs');
@@ -135,20 +137,22 @@ async function initialise(){
   void automations?.recordEvent(event).catch(()=>{});
  }});
  const {DeliverableAccess}=await import('./deliverable-access.mjs');
+ startupMark('init:kernel');
  deliverableAccess=new DeliverableAccess({root:ROOT,getWorkspace:()=>workspaceContext,readVault:async id=>manager.volatileVaults.get(id)??JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`)))});
  const {NativeSessionExport}=await import('./native-session-export.mjs');
  nativeSessionExport=new NativeSessionExport({root:ROOT,getWorkspace:()=>workspaceContext,readVault:id=>manager.readVault(id),isBusy:id=>manager.busy.has(id),delivery:deliveryService});
  const {AutomationService}=await import('./automation-service.mjs');
  automations=new AutomationService({read:async()=>JSON.parse(await readEncrypted(path.join(ROOT,'automations.bin'))),write:value=>writeEncrypted(path.join(ROOT,'automations.bin'),JSON.stringify(value)),getContext:()=>workspaceContext,getConfiguration:settings=>({kernel:configuration.kernel,...providerApi.resolveProvider(providers,settings)}),getKey:config=>currentCredential(config).key,runtime:manager,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('automation:change',value);},notify:notifyTask});
  await automations.initialise(workspaceContext.automations);
- const {automationTool}=await import('./automation-tools.mjs');
- manager.automationAction=(scope,input,signal)=>{signal.throwIfAborted();return automationTool(automations,scope,input);};
+ startupMark('init:automations');
+ const {automationTool}=await import('./automation-tools.mjs'); manager.automationAction=(scope,input,signal)=>{signal.throwIfAborted();return automationTool(automations,scope,input);};
  const {BrowserService}=await import('./browser-service.mjs'),{TerminalService}=await import('./terminal-service.mjs');
  browserService=new BrowserService({electron:require('electron'),getWindow:()=>windowRef,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('browser:change',value);}});
  manager.browserAction=(scope,input,signal)=>{signal.throwIfAborted();return browserService.agentAction(scope,input);};
  terminalService=new TerminalService({onEvent:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('terminal:event',value);}});
  const {SpeechService}=await import('./speech-service.mjs');
  speechService=new SpeechService(value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',value);},{dataRoot:path.join(ROOT,'speech','sensevoice-int8')});
+ startupMark('init:services');
 
 }
 function workScope(options={}){const {workspace,project,workspaceRoot}=resolveProjectContext(workspaceContext,options);return {key:`${workspace.id}:${project?.id||options.sessionId||'home'}`,workspaceRoot};}
