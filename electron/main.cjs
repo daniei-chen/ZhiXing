@@ -492,8 +492,13 @@ async function createWindow(){
  windowRef.webContents.on('render-process-gone',()=>{if(speechService?.active)void speechService.cancel(speechService.active.id);});
  windowRef.webContents.on('did-start-navigation',(_event,_url,_inPlace,isMainFrame)=>{if(isMainFrame&&speechService?.active)void speechService.cancel(speechService.active.id);});
  windowRef.webContents.on('will-navigate',(event,url)=>{if(url!=='zhixing://app/index.html')event.preventDefault();});
+ // Reveal on the first paint instead of waiting for the whole document to
+ // finish loading; the window background covers the remaining frames.
+ let revealed=false;
+ const reveal=()=>{if(revealed||!windowRef||windowRef.isDestroyed())return;revealed=true;windowRef.show();};
+ windowRef.once('ready-to-show',reveal);
  await windowRef.loadURL('zhixing://app/index.html');
- windowRef.show();
+ reveal();
 }
 if(!firstInstance)app.quit();
 else app.whenReady().then(async()=>{
