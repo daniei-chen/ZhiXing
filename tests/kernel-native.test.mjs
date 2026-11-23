@@ -354,6 +354,34 @@ test('官方 glob 和 grep 运行随包 ripgrep，排除私密文件与项目外
  }finally{await f.close();}
 });
 
+test('同一原生会话降回请求批准后，下一次命令使用同步的工作区沙箱', {timeout:60000}, async()=>{
+ const approvals=[];
+ const f=await fixture((_body,index)=>index%2?call('office_execute',{command:"Write-Output 'PERMISSION_FIXTURE'",description:'查看当前执行权限'},index):[{type:'text',text:'PERMISSION_FIXTURE_COMPLETE'}]);
+ try {
+  const project=path.join(f.root,'project');await fs.mkdir(project);
+  f.manager.onApproval=async request=>{approvals.push(request.toolName);return {outcome:'allowed-once'};};
+  const sessionId='permission-resume',key='synthetic-permission-route-key';
+  const observed=[];
+  for(const [index,permission] of [[1,'full'],[2,'ask'],[3,'auto'],[4,'auto']]){
+   const outcome=await f.manager.run({sessionId,runId:`permission-run-${index}`,prompt:'读取当前执行权限。'},
+    {...f.config,workspaceRoot:project,permission},key);
+   const result=valueOf(results(f.requests.at(-1)).at(-1));
+   assert.match(result.stdout,/PERMISSION_FIXTURE/);
+   const {historyKey}=await f.manager.readVault(sessionId);
+   const history=await readBridge(path.join(f.root,sessionId,'history-redact',`${sessionId}.bin`),historyKey);
+   observed.push({runtime:result.sandbox.mode,history:history.events.findLast(event=>event.type==='sandbox/mode')?.data.mode,
+    presets:history.events.filter(event=>event.type==='permission/preset').map(event=>event.data.preset),
+    policy:history.events.findLast(event=>event.type==='approval/policy')?.data.policy,projected:outcome.context?.permissionPreset});
+  }
+  assert.deepEqual(approvals,['office_execute','office_execute','office_execute']);assert.equal(f.requests.length,8);
+  const presets=['workspace-full-with-confirmations','workspace-write','workspace-auto-new'];
+  assert.deepEqual(observed,[0,1,2,2].map(index=>({runtime:index===0?'danger-full-access':'workspace-write',history:index===0?'danger-full-access':'workspace-write',
+   presets:presets.slice(0,index+1),policy:'ask',projected:presets[index]})));
+  const diagnostic=await f.manager.check({...f.config,permission:'full'},'qa-no-project-permission');
+  assert.equal(diagnostic.permissionPreset,'read-only');assert.equal(f.requests.length,8);
+ }finally{await f.close();}
+});
+
 test('官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本', {timeout:90000}, async()=>{
  const phone='13800000000',key='synthetic-native-picture-key';
  const f=await fixture((body,index)=>{

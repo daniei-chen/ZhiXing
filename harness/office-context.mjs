@@ -32,6 +32,7 @@ export function apply(ctx) {
   const projection=ctx.sessionProjections.snapshot(session,['sessionStats','agentTeam']).values;
   const tools=ctx.tools.definitions(agent).map(tool=>({name:tool.name,description:tool.description?.slice(0,300)||''}));
   const planning=agent?(ctx.planMode.get(agent).pending??ctx.planMode.get(agent).active):false;
+  const permissionPreset=agent&&ctx.get?.('permissionPresets')?.current(session);
   reports[session.id] = {
    measurement: ctx.tokenMeter.measure(session),
    pressure: ctx.tokenMeter.contextPressure(session),
@@ -39,6 +40,7 @@ export function apply(ctx) {
    team: projectTeamBoard(projection.agentTeam,JSON.parse(process.env.ZHIXING_CUSTOM_TERMS||'[]'),JSON.parse(process.env.ZHIXING_PRIVACY_POLICY||'{}')),
    capabilities:[{id:'team',configured:kernel.teamEnabled,active:projection.agentTeam?.enabled===true&&kernel.teamEnabled&&kernel.subagentDepth>0},{id:'ptc',configured:kernel.ptcEnabled,active:kernel.ptcEnabled&&process.env.ZHIXING_PERMISSION_MODE==='full'&&Boolean(process.env.ZHIXING_WORKSPACE_ROOT)}],
    planning,
+   ...(permissionPreset?{permissionPreset}:{}),
    goal: agent ? ctx.goals.get(agent) || null : null,
    tools,
   };
