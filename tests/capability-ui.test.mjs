@@ -16,7 +16,7 @@ test('Windows 内核设置能力状态：真实层级文案、检查失败清空
  let child,exited;
  try{
   const manifest=createCapabilityManifest({tools:['web_search','web_fetch'],protocol:'openai',permission:'ask',kernel:{ptcEnabled:true}});
-  const report={tools:[{name:'web_search',description:'Synthetic search'}],skills:[],capabilities:[],capabilityManifest:manifest,inspection:{selectedRoute:true,projectBound:false,externalConnections:false}};
+  const report={tools:[{name:'web_search',description:'Synthetic search'}],skills:[],capabilities:[],capabilityManifest:manifest,permissionPreset:'read-only',inspection:{selectedRoute:true,projectBound:false,externalConnections:false}};
   const renderer=await build({stdin:{resolveDir:repository,loader:'jsx',contents:`import{createElement,useState}from'react';import{createRoot}from'react-dom/client';import KernelSettings from'./src/KernelSettings.jsx';function Fixture(){const[runtime,setRuntime]=useState({kernel:{},version:'Synthetic Harness'});const[scope,setScope]=useState({providerId:'synthetic-A',modelId:'same-model',reasoning:'high',workspaceId:'office-home',projectId:null,permission:'ask'});window.capabilityQA.setScope=setScope;window.capabilityQA.setRuntime=setRuntime;return createElement(KernelSettings,{runtime,setRuntime,inspectionScope:scope});}window.capabilityQA={};createRoot(document.getElementById('root')).render(createElement(Fixture));`},bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'},logLevel:'silent'});
   await writeFile(path.join(directory,'renderer.js'),renderer.outputFiles[0].text);
   await writeFile(path.join(directory,'index.html'),'<!doctype html><html><body><div id="root"></div></body></html>');
@@ -41,8 +41,8 @@ test('Windows 内核设置能力状态：真实层级文案、检查失败清空
     mode='pending';await check();await wait('document.querySelector("button.primary-button").disabled');
     await run('window.capabilityQA.setScope({providerId:"synthetic-B",modelId:"same-model",reasoning:"max",workspaceId:"office-home",projectId:null,permission:"ask"})');
     await new Promise(resolve=>setImmediate(resolve));await run('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');pending(report);await wait('!document.querySelector("button.primary-button").disabled');assert.equal(await run('!!document.querySelector("[aria-label=实际能力状态]")'),false);
-    mode='success';await check();await wait('!!document.querySelector("[aria-label=实际能力状态]")');assert.equal(calls.at(-1).providerId,'synthetic-B');assert.equal(calls.at(-1).reasoning,'max');
-    await run('window.capabilityQA.setRuntime({kernel:{webEnabled:false}})');await wait('!document.querySelector("[aria-label=实际能力状态]")');
+    mode='success';await check();await wait('!!document.querySelector("[aria-label=实际能力状态]")');assert.equal(calls.at(-1).providerId,'synthetic-B');assert.equal(calls.at(-1).reasoning,'max');assert(await run('document.body.textContent.includes("本次诊断使用：只读（未绑定项目）")'));
+    await run('window.capabilityQA.setRuntime({kernel:{webEnabled:false}})');await wait('!document.querySelector("[aria-label=实际能力状态]")');assert(!(await run('document.body.textContent.includes("本次诊断使用：只读（未绑定项目）")')));
     console.log(JSON.stringify({result:'PASS capability renderer',checks:7,inspectionCalls:calls.length,layer:'Windows Electron renderer with synthetic IPC; not final installer/cloud'}));
    }finally{window.destroy();}app.quit();}).catch(error=>{console.error(error.stack);app.exit(1);});
   `);

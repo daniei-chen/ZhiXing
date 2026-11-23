@@ -10,7 +10,7 @@ import {privacyPolicyForMode} from '../src/privacy-policy.js';
 import {assertModelCredential} from '../src/provider-options.js';
 import {protectTeamContext} from '../src/team-board.js';
 import { createBridgeKey, readBridge, writeBridge, updateBridge } from '../harness/privacy-bridge.mjs';
-import { permissionMode } from '../src/permissions.js';
+import { HARNESS_PERMISSION_PRESETS, harnessPermissionPreset, permissionMode } from '../src/permissions.js';
 import {startToolBridge} from './tool-bridge.mjs';
 import {startPrivacyGateway} from './privacy-gateway.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
@@ -100,6 +100,9 @@ export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',p
  const officeEntry=harnessRequire.resolve('@deepseek-ai/dsh-skill-office');
  rows.at(-1).insert.unshift({id:'native-office-skills',name:officeEntry,config:{assetRoot:path.resolve(path.dirname(officeEntry),'..','assets'),node:nodeExecutable||(fsSyncExists(path.join(pluginRoot,'runtime','node.exe'))?path.join(pluginRoot,'runtime','node.exe'):process.execPath),cli:baseRequire.resolve('@deepseek-ai/libreoffice-kit/cli')}});
  rows.at(-1).insert.unshift({id:'session-projection',name:require.resolve('@deepseek-ai/dsh-session-projection')},{id:'session-stats',name:harnessRequire.resolve('@deepseek-ai/dsh-session-stats')});
+ const selectedPermission=harnessPermissionPreset(permission,Boolean(workspaceRoot));
+ rows.find(row=>row.insert).insert.unshift({id:'zhixing-permission-presets',name:baseRequire.resolve('@deepseek-ai/dsh-permission-presets'),config:{presets:HARNESS_PERMISSION_PRESETS,defaultPreset:selectedPermission}},
+  {id:'zhixing-permission-sync',name:path.join(pluginRoot,'harness','permission-sync.mjs').replaceAll('\\','/'),config:{preset:selectedPermission}});
  rows.at(-1).insert.unshift(
   {id:'ptc-runtime',name:baseRequire.resolve('@deepseek-ai/dsh-ptc-runtime-node'),config:{executionMode:'per-call',timeoutMs:120000,maxTimeoutMs:180000,maxOutputBytes:2000000,maxMessageBytes:4000000,maxOldGenerationSizeMb:256,launch:{kind:'node-script',executable:nodeExecutable|| (fsSyncExists(path.join(pluginRoot,'runtime','node.exe'))?path.join(pluginRoot,'runtime','node.exe'):process.execPath)}}},
   {id:'workflow-engine',name:harnessRequire.resolve('@deepseek-ai/dsh-workflow-ptc'),config:{provider:'spawn',maxConcurrentAgents:kernel.subagentCapacity,maxTotalAgents:Math.max(12,kernel.subagentCapacity)}},
@@ -367,7 +370,7 @@ export class RuntimeManager{
   const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h,failure,resolveSettled;
   const active={runId:path.basename(directory),sessionId:path.basename(directory),status:'checking',isCheck:true,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,controller:new AbortController(),settled:new Promise(resolve=>{resolveSettled=resolve;}),safeContext:{providerKey:key,customTerms:[],privacyPolicy:privacyPolicyForMode(config.privacyPolicy,'redact')}};
   this.runs.set(active.runId,active);this.busy.add(active.sessionId);this.runSettlements.set(active.runId,active.settled);this.runSettlementSessions.set(active.runId,active.sessionId);
-  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);active.controller.signal.throwIfAborted();h=await this.createHarness(directory,{...config,bridgeKey,mcpFile,capabilityScope:'diagnostic'},key);active.h=h;this.watchHarness(active,h);active.controller.signal.throwIfAborted();await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await closeHarness(active,h);return {tools:report.tools||[],skills:report.skills||[],...(report.capabilities?{capabilities:report.capabilities}:{}),...(report.capabilityManifest?{capabilityManifest:report.capabilityManifest}:{})};}
+  try{await writeBridge(mcpFile,bridgeKey,config.mcpServers||[]);active.controller.signal.throwIfAborted();h=await this.createHarness(directory,{...config,bridgeKey,mcpFile,capabilityScope:'diagnostic'},key);active.h=h;this.watchHarness(active,h);active.controller.signal.throwIfAborted();await h.start();await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);const result=await h.session('kernel-check').run('/compact');if(result.finishReason==='error')throw new Error(result.finalResponse);const report=await waitContext(directory,bridgeKey,'kernel-check');await closeHarness(active,h);return {tools:report.tools||[],skills:report.skills||[],...(report.capabilities?{capabilities:report.capabilities}:{}),...(report.capabilityManifest?{capabilityManifest:report.capabilityManifest}:{}),...(Object.hasOwn(HARNESS_PERMISSION_PRESETS,report.permissionPreset)?{permissionPreset:report.permissionPreset}:{})};}
   catch(error){failure=error;throw error;}
   finally{
    try{await closeHarness(active,h);}
