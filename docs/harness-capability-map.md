@@ -2,9 +2,9 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
-## 0.12.6 候选 · 原生项目文件工具与会话导出
+## 0.12.6 · 原生项目文件工具与会话导出
 
-源码分支接入固定 Harness 的 `read`、`write`、`edit`、`apply_patch`、`glob`、`grep` 与 `read_image`。官方工具注册、版本观察策略、文本执行和 ripgrep 由上游提供。知行在执行层限定项目范围，写入走原有审批，工具结果与持久呈现数据使用本机脱敏。工作区外、私密配置、非普通文件和项目外链接均受限。
+Windows 包随附固定版本 `0.2.2-rc.5`，接入 `read`、`write`、`edit`、`apply_patch`、`glob`、`grep` 与 `read_image`。官方工具注册、版本观察策略、文本执行和 ripgrep 由上游提供。知行在执行层限定项目范围，写入走原有审批，工具结果与持久呈现数据使用本机脱敏。工作区外、私密配置、非普通文件和项目外链接均受限。
 
 | 能力 | 本机合成回环 |
 | --- | --- |
@@ -14,13 +14,15 @@
 | 原生 `read_image` | PNG 和 JPEG 经 Windows 本机 OCR 生成遮罩副本，独立网关核验实际 MIME 和字节。仅支持当前视觉模型的 Windows 项目手动交办，和 Office 渲染及手动图片共用四张限额 |
 | 原生会话 Markdown | 「会话操作 → 导出聊天文件」中选择 Markdown 和单一发送模式。官方 formatter 读取加密会话已提交事件，保留用户消息、助手正文和工具活动；由当前规则和绑定接收范围的主机快照保存，不还原占位符，不请求模型 |
 
-本节描述独立源码分支，Windows 新包、真实云端和更广泛的文件格式仍待验。Markdown 只导出所选主会话的已提交记录，不包含子会话、附件字节和原生 ZIP。WebP/GIF、工作目录切换、完整上游沙箱和跨启动文件观察记录仍有缺口。
+Windows x64 目录包通过 5 项桌面专项：拒绝原生 `write`、批准后部分完成的补丁、批准 Office 转换、重启后导出 Markdown 以及会话移动后旧审阅失效。核对了实际文件和本机模型收件，导出增加 0 次模型请求。其余表项按源码与包内合成回环记录。 [0.12.6 Windows 验收](windows-acceptance-0.12.6.md)
+
+真实云端未验证。Windows OCR 遮罩范围限于本机识别到并命中规则的文字，全面 NER、手写、二维码、人脸和图表语义未覆盖。Markdown 只导出所选主会话的已提交记录，原生 ZIP、完整子会话和附件字节归档仍未接入。WebP/GIF、工作目录切换、跨启动文件观察、完整权限预设、原生 Auto reviewer、常驻 Host 和 OAuth 仍有缺口。
 
 ## 0.12.5 · 原生会话与 Office 操作
 
-当前源码以固定版本 `0.2.2-rc.5` 随包的 SDK 协议、命令注册表、工具目录及能力图为基准。Windows 安装包证据单独记录。 [0.12.5 Windows 验收](windows-acceptance-0.12.5.md) · [官方 SDK 架构](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/sdk/README.md)
+该版本以 `0.2.2-rc.5` 随包的 SDK 协议、命令注册表、工具目录及能力图为基准。Windows 安装包证据单独记录。 [0.12.5 Windows 验收](windows-acceptance-0.12.5.md) · [官方 SDK 架构](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/sdk/README.md)
 
-| 操作 | 开发分支行为 | 验证方式 |
+| 操作 | 0.12.5 行为 | 验证方式 |
 | --- | --- | --- |
 | 计划、目标、上下文压缩 | 主聊天和侧边聊天共用命令规则，兼容 `/计划`、`/目标`、`/压缩`。提交时核对官方命令定义，脱敏处理用户填写的正文，保留命令和控制词 | 真实 SDK 核对规划进入与退出、会话重开、空会话压缩、查看无目标及暂停拒绝，合成服务在这些检查中收件数为零 |
 | 目标引用图片 | 创建和编辑目标可携带已批准的 PNG/JPEG，继续经原有图片隐私网关 | 在真实 SDK 的目标创建回环中比较实际图片字节与批准副本。拒绝给纯状态命令附带图片 |
@@ -30,7 +32,7 @@
 
 三项 Office 操作用官方 OfficeKit 和知行的工具适配。随包 `dsh-tool-office` 上游插件由 Office 技能激活，转换与重算返回临时成果。知行在绑定项目后提供转换与重算，直接将新成果写入项目并发布原生交付事件。模型端渲染仅对具备本机视觉处理的 Windows 项目手动交办开放。 [官方 Office 插件](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/document/README.md)
 
-待完成的兼容范围包括 Host 会话与跨启动作业、权限预设与交互审批、反馈与会话导出、原生文件工具、Office 插件激活与临时成果语义、扩展和 MCP OAuth、模型路由及持久状态。 [官方能力地图](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/README.md)
+原生项目工具、主会话 Markdown 和相应桌面审批由 0.12.6 补齐。其余兼容范围包括 Host 会话与跨启动作业、完整权限预设、反馈、Office 插件激活与临时成果语义、扩展和 MCP OAuth、更多模型路由及持久状态。 [官方能力地图](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/README.md)
 
 ## 0.12.4 已发布基线与证据分层
 

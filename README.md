@@ -24,7 +24,7 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前版本为 **0.12.5 Windows x64 未签名预发布版**，使用 **DeepSeek Harness 0.2.2-rc.5**。会话命令直接操作 Harness，项目中的 Agent 可转换办公文档、重算工作簿，并将经过本机 OCR 和隐私规则处理的版面交给视觉模型。 [0.12.5 Windows 验收记录](docs/windows-acceptance-0.12.5.md)
+当前版本为 **0.12.6 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown。 [下载完整安装包](https://github.com/daniei-chen/ZhiXing/releases/download/v0.12.6/ZhiXing-0.12.6-x64.exe) · [Windows 验收记录](docs/windows-acceptance-0.12.6.md)
 
 <div align="center">
 
@@ -34,10 +34,16 @@
 
 </div>
 
-## 0.12.5 本轮更新
+## 0.12.6 本轮更新
+
+- **Agent 可使用 Harness 原生项目工具。** 在已绑定目录的项目中读取、搜索、编辑文件和应用补丁。文本写入和 Office 操作按当前执行权限审批。批量补丁中途失败时，保留已完成的文件修改，执行轨迹显示「未完成」。
+- **项目图片沿用本机脱敏链。** `read_image` 读取 PNG/JPEG，默认用 Windows OCR 遮罩已识别且命中规则的文字。只有当前模型声明 `image` 输入时才发送经过主机核验的副本，保留已选供应商、模型与思考档位。手写、图表语义和 OCR 漏检仍需人工核对。
+- **聊天可导出 Markdown。** 在会话菜单选择脱敏或非脱敏历史，审阅后保存 Harness 已提交的消息和工具记录。导出不调用模型，不还原旧占位符。主会话 Markdown 暂不包含子会话或附件字节。 [能力地图](docs/harness-capability-map.md)
+
+## 0.12.5 历史更新
 
 - **规划、目标和压缩直接作用于当前会话。** 主聊天和侧边聊天共用中英文命令。对话里的会话操作保留正在编辑的草稿。
-- **Office 成果可从聊天打开。** 在关联工作目录的项目中可交办文档转换和工作簿重算。结果另存并在对话中登记。同名文件自动编号，源文件保留。需要逐次批准时的桌面分发缺口见本版验收页。
+- **Office 成果可从聊天打开。** 在关联工作目录的项目中可交办文档转换和工作簿重算。结果另存并在对话中登记。同名文件自动编号，源文件保留。逐次批准的桌面分发在 0.12.6 补齐。
 - **模型可读取 Office 页面版式。** Windows 项目手动交办可按页码或工作表区域渲染。主进程处理页面上的已识别敏感文字，只有当前视觉模型可以接收批准的图片副本。 [能力地图](docs/harness-capability-map.md)
 
 ## 0.12.4 历史更新
@@ -80,33 +86,33 @@
 
 <img src="docs/assets/readme-privacy-0.12.0.png" alt="知行 0.12.0 实包的本机脱敏测试，展示全角及隐藏字符电话号码的替换、识别依据和未覆盖说明" width="100%" />
 
-以上工作台和隐私截图分别来自 0.11.0 和 0.12.0。各版本使用独立验收记录。 [0.12.0](docs/windows-acceptance-0.12.0.md) · [0.12.1](docs/windows-acceptance-0.12.1.md) · [0.12.2](docs/windows-acceptance-0.12.2.md) · [0.12.4](docs/windows-acceptance-0.12.4.md) · [0.12.5](docs/windows-acceptance-0.12.5.md)
+以上工作台和隐私截图分别来自 0.11.0 和 0.12.0。各版本使用独立验收记录。 [0.12.0](docs/windows-acceptance-0.12.0.md) · [0.12.1](docs/windows-acceptance-0.12.1.md) · [0.12.2](docs/windows-acceptance-0.12.2.md) · [0.12.4](docs/windows-acceptance-0.12.4.md) · [0.12.5](docs/windows-acceptance-0.12.5.md) · [0.12.6](docs/windows-acceptance-0.12.6.md)
 
 ## 开始使用
 
-### 获取已发布的 Windows 预发布候选
+### 安装 Windows 版
 
-1. 下载 `ZhiXing-0.12.5-x64.exe`，核对 `SHA256SUMS-release.txt` 公布的 SHA-256。 [0.12.5 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.12.5)
+1. [下载 `ZhiXing-0.12.6-x64.exe`](https://github.com/daniei-chen/ZhiXing/releases/download/v0.12.6/ZhiXing-0.12.6-x64.exe)，核对 [SHA-256 清单](https://github.com/daniei-chen/ZhiXing/releases/download/v0.12.6/SHA256SUMS-release.txt)。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
 
-安装包包含所需的 Node.js 与 Harness 运行时。Git 工作树需要本机 Git，部分 Office 技能需要额外的本机工具。SenseVoice 语音模型在用户主动准备时另行下载。当前 Windows 安装包未做代码签名，安装时请核对来源与文件校验值。该版本仍为预发布候选，安装生命周期结论限于下述测试条件。
+安装包包含 Node.js、Harness 和插件 npm CLI。Git 工作树需要本机 Git，部分 Office 技能需要额外的本机工具。SenseVoice 语音模型在用户主动准备时另行下载。当前安装包未签名，请核对来源与文件校验值。安装生命周期的结论限于验收记录所列条件。
 
-[前往 GitHub Releases](https://github.com/daniei-chen/ZhiXing/releases)
+[0.12.6 GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.12.6)
 
-| Windows x64 候选资产 | 值 |
+| Windows x64 安装资产 | 值 |
 | --- | --- |
-| 文件 | `ZhiXing-0.12.5-x64.exe` |
+| 文件 | `ZhiXing-0.12.6-x64.exe` |
 | 发行状态 | Windows x64 未签名预发布版 |
-| 文件大小 | `562,821,889` bytes |
-| SHA-256 | `334454a3e6b4f84c82775d6aae37f9f4f1cdefa59f33c43bf0edc1fa387c3891` |
+| 文件大小 | `562,830,500` bytes |
+| SHA-256 | `7965b03f6b1e09609a653adc6664b2aa51c10c1e97291f42805bd76ced2a71c3` |
 
-发行包携带独立 Node、Harness 和插件 npm CLI。源码回归 **343/344**，目录包回归 **311/312**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **4/4**。本机合成服务核对了实际出站图像、模型、思考档位和调用次数，并验证了完整重启后打开成果。 [0.12.5 Windows 验收记录](docs/windows-acceptance-0.12.5.md)
+源码回归 **350/351**，目录包回归 **318/319**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **5/5**。桌面专项使用本机合成模型服务，核对了批准与拒绝后的实际文件字节、部分补丁的重启后轨迹、7 次模型出站，以及 Markdown 导出增加 0 次模型请求。 [0.12.6 Windows 验收记录](docs/windows-acceptance-0.12.6.md)
 
-同一 Windows 账户的静默安装生命周期 **38 项通过、16 项过程观察、0 项失败**，涵盖 0.12.0 升级、同版覆盖及默认卸载后重装。档案为隔离合成资料；交互式安装、所有用户安装、跨账户和真实用户档案迁移待验。真实云端、OCR 漏检、全面 NER 及剩余上游功能另见能力地图。
+同一 Windows 账户的 NSIS 静默安装生命周期 **38 项通过、15 项过程观察、0 项失败**，涵盖 0.12.5 升级到 0.12.6、同版覆盖、默认卸载保留及重装读回。档案为隔离合成资料，包含 4 份不带附件的历史草稿。交互式安装、所有用户安装、跨账户解密和真实用户档案迁移待验。真实云端输出、OCR 漏检、全面 NER 及剩余上游功能另见能力地图。
 
-发行页提供完整安装包、机器可读验收摘要、生产依赖路径清单、组件 SBOM、完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交。 [v0.12.5 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.12.5) · [外部审计说明](docs/audit-request-0.12.5.md)
+发行页提供完整安装包、机器可读验收摘要、生产依赖路径清单、组件 SBOM、与 0.12.5 的完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交 `01ac4fb5abc6f49afa5182c5ceccb0c905f298fd`。 [v0.12.6 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.12.6) · [外部审计说明](docs/audit-request-0.12.6.md)
 
 ### 连接模型
 
@@ -172,15 +178,17 @@
 | 能力 | 当前范围 |
 | --- | --- |
 | 文档理解 | Office/PDF 文字提取、本机版面和 Windows OCR 已接入 Agent `office_read_file`；图片资料在支持 `image` 的模型上可进入真实视觉上下文，先经过主进程本机遮罩副本；截图和图表语义、未识别文字仍待专项验证 |
+| 原生项目工具 | `read`、`write`、`edit`、`apply_patch`、`glob`、`grep` 与 `read_image` 已接入。完整上游沙箱、工作目录切换与跨启动文件观察未覆盖 |
 | 供应商认证 | 当前使用 API Key。完整 OAuth、刷新与账号切换隔离待实现 |
 | 会话导入 | 支持 DeepSeek 导出 ZIP 的当前分支、随包图片和部分活动记录。全分支与完整工具轨迹迁移待实现 |
+| 会话导出 | 支持主会话 Markdown 与既有 TXT/DOCX/XLSX。原生 ZIP、子会话及附件字节完整归档待实现 |
 | 协作执行 | 子 Agent、工作流、作业及 Agent Teams 已接入；真实 PTC 默认关闭，需项目和完全访问。跨启动 live jobs、复杂多 Agent 负载及长期稳定性仍待验证 |
 | 搜索 | DeepSeek 路由使用官方搜索。OpenAI/Anthropic 兼容路由不借用模型 Key，未配置独立搜索服务时会在执行轨迹中明确显示暂不可用 |
 | 定时任务 | 由桌面主进程调度，创建默认暂停，内容、模型或资料变化后重新审阅。应用退出后停止调度，重开按已定义规则处理到期任务 |
-| Office 交付 | 支持现有 DOCX/XLSX/TXT 导出及本机转换。复杂排版、类型正确的结构化报表和模型原生 Office 三工具仍需完善 |
+| Office 交付 | 已接入 OfficeKit 转换、工作簿重算和按页渲染。复杂排版、结构化报表类型及上游插件的完整生命周期仍待验证 |
 | 平台 | 当前面向 Windows x64。macOS、Linux 分发以及系统桌面 Computer Use 等扩展待独立验证 |
 
-[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.12.4.md) · [界面对照记录](design-qa.md)
+[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.12.6.md) · [界面对照记录](design-qa.md)
 
 ## 0.11.0 的工作重点
 
@@ -222,16 +230,16 @@ npm run test:browser
 npm run electron:install
 npm run test:packed -- ".\release\win-unpacked\知行.exe"
 npm run test:browser -- ".\release\win-unpacked\知行.exe"
-Get-FileHash ".\release\知行-0.12.4-x64.exe" -Algorithm SHA256
+Get-FileHash ".\release\知行-0.12.6-x64.exe" -Algorithm SHA256
 ```
 
-目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。0.12.4 的构建提交、包内 provenance、source fingerprint 和 lock SHA 以 [0.12.4 Windows 验收记录](docs/windows-acceptance-0.12.4.md) 中的同包结果为准；0.12.2 的旧指纹仍只用于历史包核对。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留，不能沿用旧包指纹和结论。打包携带与 Node.js 版本一致的许可证文件，变更 Node 版本时请同步真实许可证和构建清单。
+目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。构建提交、源码指纹与锁文件校验值见 [0.12.6 Windows 验收记录](docs/windows-acceptance-0.12.6.md)。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留。打包携带与 Node.js 版本一致的许可证文件。
 
 ## 参与完善
 
 欢迎通过 Issue 提交可复现的问题与办公场景。请附版本、Windows 环境、复现步骤和预期结果，使用合成资料和已去除敏感信息的日志。模型 Key、MCP 凭据和真实业务原件应妥善保管。
 
-[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [0.12.4 迭代记录](docs/iteration-0.12.4.md) · [0.12.4 审计说明](docs/audit-request-0.12.4.md)
+[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [0.12.6 迭代记录](docs/iteration-0.12.6.md) · [0.12.6 审计说明](docs/audit-request-0.12.6.md)
 
 ## 致谢
 
