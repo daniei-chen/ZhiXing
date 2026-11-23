@@ -34,7 +34,12 @@
 
 </div>
 
-## 0.12.6 本轮更新
+## 0.12.7 本轮更新
+
+- **执行权限与内核预设同步。** 输入区的「请求批准／帮我批准／完全访问」现在固定为 Harness 原生执行权限预设，未绑定项目时使用只读。同一会话降档后，下一次命令立即使用新的工作区沙箱；会话历史里的预设事件与实际执行一致，内核设置显示本次诊断实际使用的预设。
+- **图片资料支持 WebP 与 GIF。** 手动交办和项目内 `read_image` 接受单帧 WebP、GIF，与 PNG/JPEG 走同一条本机遮罩链：先转换并去除元数据的 PNG 副本，按当前规则遮罩本机 OCR 命中的文字，只有当前视觉模型收到副本。动图和多画面文件明确拒绝，不截取首帧。
+
+## 0.12.6 历史更新
 
 - **Agent 可使用 Harness 原生项目工具。** 在已绑定目录的项目中读取、搜索、编辑文件和应用补丁。文本写入和 Office 操作按当前执行权限审批。批量补丁中途失败时，保留已完成的文件修改，执行轨迹显示「未完成」。
 - **项目图片沿用本机脱敏链。** `read_image` 读取 PNG/JPEG，默认用 Windows OCR 遮罩已识别且命中规则的文字。只有当前模型声明 `image` 输入时才发送经过主机核验的副本，保留已选供应商、模型与思考档位。手写、图表语义和 OCR 漏检仍需人工核对。
@@ -177,8 +182,8 @@
 
 | 能力 | 当前范围 |
 | --- | --- |
-| 文档理解 | Office/PDF 文字提取、本机版面和 Windows OCR 已接入 Agent `office_read_file`；图片资料在支持 `image` 的模型上可进入真实视觉上下文，先经过主进程本机遮罩副本；截图和图表语义、未识别文字仍待专项验证 |
-| 原生项目工具 | `read`、`write`、`edit`、`apply_patch`、`glob`、`grep` 与 `read_image` 已接入。完整上游沙箱、工作目录切换与跨启动文件观察未覆盖 |
+| 文档理解 | Office/PDF 文字提取、本机版面和 Windows OCR 已接入 Agent `office_read_file`；图片资料（PNG、JPEG、WebP、GIF 单帧）在支持 `image` 的模型上可进入真实视觉上下文，先经过主进程本机遮罩副本；截图和图表语义、未识别文字仍待专项验证 |
+| 原生项目工具 | `read`、`write`、`edit`、`apply_patch`、`glob`、`grep` 与 `read_image`（PNG、JPEG、WebP、GIF 单帧）已接入，执行权限使用内核原生预设。完整上游沙箱、工作目录切换与跨启动文件观察未覆盖 |
 | 供应商认证 | 当前使用 API Key。完整 OAuth、刷新与账号切换隔离待实现 |
 | 会话导入 | 支持 DeepSeek 导出 ZIP 的当前分支、随包图片和部分活动记录。全分支与完整工具轨迹迁移待实现 |
 | 会话导出 | 支持主会话 Markdown 与既有 TXT/DOCX/XLSX。原生 ZIP、子会话及附件字节完整归档待实现 |
@@ -230,16 +235,16 @@ npm run test:browser
 npm run electron:install
 npm run test:packed -- ".\release\win-unpacked\知行.exe"
 npm run test:browser -- ".\release\win-unpacked\知行.exe"
-Get-FileHash ".\release\知行-0.12.6-x64.exe" -Algorithm SHA256
+Get-FileHash ".\release\知行-0.12.7-x64.exe" -Algorithm SHA256
 ```
 
-目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。构建提交、源码指纹与锁文件校验值见 [0.12.6 Windows 验收记录](docs/windows-acceptance-0.12.6.md)。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留。打包携带与 Node.js 版本一致的许可证文件。
+目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。构建提交、源码指纹与锁文件校验值见 [0.12.7 Windows 验收记录](docs/windows-acceptance-0.12.7.md)。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留。打包携带与 Node.js 版本一致的许可证文件。
 
 ## 参与完善
 
 欢迎通过 Issue 提交可复现的问题与办公场景。请附版本、Windows 环境、复现步骤和预期结果，使用合成资料和已去除敏感信息的日志。模型 Key、MCP 凭据和真实业务原件应妥善保管。
 
-[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [0.12.6 迭代记录](docs/iteration-0.12.6.md) · [0.12.6 审计说明](docs/audit-request-0.12.6.md)
+[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [0.12.7 迭代记录](docs/iteration-0.12.7.md) · [0.12.6 审计说明](docs/audit-request-0.12.6.md)
 
 ## 致谢
 
