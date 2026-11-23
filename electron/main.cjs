@@ -8,7 +8,7 @@ const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
 if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
 const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
 const firstInstance=app.requestSingleInstanceLock();
-let windowRef,manager,automations,browserService,terminalService,speechService,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
+let windowRef,manager,automations,automationsReady,browserService,terminalService,speechService,servicesReady,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
@@ -143,17 +143,24 @@ async function initialise(){
  nativeSessionExport=new NativeSessionExport({root:ROOT,getWorkspace:()=>workspaceContext,readVault:id=>manager.readVault(id),isBusy:id=>manager.busy.has(id),delivery:deliveryService});
  const {AutomationService}=await import('./automation-service.mjs');
  automations=new AutomationService({read:async()=>JSON.parse(await readEncrypted(path.join(ROOT,'automations.bin'))),write:value=>writeEncrypted(path.join(ROOT,'automations.bin'),JSON.stringify(value)),getContext:()=>workspaceContext,getConfiguration:settings=>({kernel:configuration.kernel,...providerApi.resolveProvider(providers,settings)}),getKey:config=>currentCredential(config).key,runtime:manager,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('automation:change',value);},notify:notifyTask});
- await automations.initialise(workspaceContext.automations);
+ // Automation state and the panel services do not gate the first window: they
+ // start here or on first use, and every handler that needs them waits.
+ automationsReady=automations.initialise(workspaceContext.automations);
  startupMark('init:automations');
  const {automationTool}=await import('./automation-tools.mjs'); manager.automationAction=(scope,input,signal)=>{signal.throwIfAborted();return automationTool(automations,scope,input);};
- const {BrowserService}=await import('./browser-service.mjs'),{TerminalService}=await import('./terminal-service.mjs');
- browserService=new BrowserService({electron:require('electron'),getWindow:()=>windowRef,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('browser:change',value);}});
- manager.browserAction=(scope,input,signal)=>{signal.throwIfAborted();return browserService.agentAction(scope,input);};
- terminalService=new TerminalService({onEvent:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('terminal:event',value);}});
- const {SpeechService}=await import('./speech-service.mjs');
- speechService=new SpeechService(value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',value);},{dataRoot:path.join(ROOT,'speech','sensevoice-int8')});
- startupMark('init:services');
 
+}
+function ensureServices(){
+ servicesReady??=(async()=>{
+  const {BrowserService}=await import('./browser-service.mjs'),{TerminalService}=await import('./terminal-service.mjs');
+  browserService=new BrowserService({electron:require('electron'),getWindow:()=>windowRef,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('browser:change',value);}});
+  manager.browserAction=(scope,input,signal)=>{signal.throwIfAborted();return browserService.agentAction(scope,input);};
+  terminalService=new TerminalService({onEvent:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('terminal:event',value);}});
+  const {SpeechService}=await import('./speech-service.mjs');
+  speechService=new SpeechService(value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('speech:event',value);},{dataRoot:path.join(ROOT,'speech','sensevoice-int8')});
+  startupMark('init:services');
+ })();
+ return servicesReady;
 }
 function workScope(options={}){const {workspace,project,workspaceRoot}=resolveProjectContext(workspaceContext,options);return {key:`${workspace.id}:${project?.id||options.sessionId||'home'}`,workspaceRoot};}
 function deliverySecrets(){return [
@@ -187,7 +194,11 @@ function currentCredential(config){
 }
 async function runtimeStatus(){return {configured:providers.length>0,providers:providerApi.publicProviders(providers),models:providerApi.providerModels(providers),version:`DeepSeek Harness ${require('@deepseek-ai/dsh/package.json').version}`,tools:['数字计算','日期计算','表格检查','读取办公文件','生成办公文件','列出目录','PowerShell 终端','原生计划','原生技能','交互提问',...(configuration.kernel.webEnabled?['网页读取','内置浏览器']:[]),...(configuration.kernel.subagentDepth?['原生子任务']:[]),...(configuration.kernel.workflowEnabled?['多 Agent 工作流','后台作业']:[]),'加密上下文恢复','上下文压缩'],capability:'harness-office',kernel:configuration.kernel,appVersion:require('../package.json').version};}
 function trusted(event){if(!windowRef||event.sender!==windowRef.webContents||event.senderFrame!==windowRef.webContents.mainFrame||event.senderFrame.url!=='zhixing://app/index.html')throw new Error('请求来源无效。');}
-function handle(channel,fn){ipcMain.handle(channel,async(event,...args)=>{trusted(event);try{return await fn(...args);}catch(e){
+function handle(channel,fn,ready){
+ // Panel services and automation state finish after the window is shown, so any
+ // channel that touches them waits for the matching readiness promise first.
+ const gate=ready||(/^(?:browser|terminal|speech):/.test(channel)?ensureServices:/^automation:/.test(channel)?()=>automationsReady:null);
+ ipcMain.handle(channel,async(event,...args)=>{trusted(event);try{if(gate)await gate();return await fn(...args);}catch(e){
  const message=String(e.message||'操作未完成');
  if(/dsh profile|ERR_MODULE_NOT_FOUND|stderr tail/i.test(message))throw new Error('DeepSeek 内核启动失败。请打开设置检查内核，或使用最新安装包重新安装。');
  throw new Error(message.replace(/sk-[A-Za-z0-9_-]{12,}/g,'[已隐藏凭据]').slice(0,600));
@@ -349,7 +360,7 @@ function registerHandlers(){
   if(state.settings?.persist===false&&Array.isArray(terms))state[VOLATILE_TERMS]=terms.filter(term=>typeof term==='string'&&term.length<=120).slice(0,100);
   const result=workspaceSaveQueue.save(workspaceSaveQueue.requestedRevision+1,state);
   await result;
-  void automations.tick().catch(()=>{});
+  void automationsReady.then(()=>automations.tick()).catch(()=>{});
   return true;
  });
  handle('data:save-status',()=>workspaceSaveQueue.state());
@@ -512,7 +523,10 @@ else app.whenReady().then(async()=>{
  session.defaultSession.setPermissionRequestHandler((webContents,permission,callback,details)=>callback(speechPermission(webContents,permission,details)));
  session.defaultSession.setPermissionCheckHandler((webContents,permission,_origin,details)=>speechPermission(webContents,permission,details));
  session.defaultSession.webRequest.onHeadersReceived((details,callback)=>callback({responseHeaders:{...details.responseHeaders,'Content-Security-Policy':["default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"]}}));
- await initialise();startupMark('initialise:done');registerHandlers();await createWindow();startupMark('window:shown');automations.start();
+ await initialise();startupMark('initialise:done');registerHandlers();await createWindow();startupMark('window:shown');
+  void ensureServices();
+  try{await automationsReady;}catch(error){dialog.showErrorBox('知行启动失败',error.message);app.quit();return;}
+  automations.start();
  app.on('activate',()=>{if(BrowserWindow.getAllWindows().length===0)createWindow();});
 }).catch(e=>{dialog.showErrorBox('知行启动失败',e.message);app.quit();});
 app.on('before-quit',event=>{
@@ -530,6 +544,7 @@ app.on('before-quit',event=>{
    await speechService.cancel(id);
   }
   if(speechService?.speech)await speechService.cancelPreparation();
+  if(automationsReady)await automationsReady.catch(()=>{});
   await automations?.close();
   const shutdown=await manager?.close();
   if(shutdown?.cleanupPending?.length)throw new Error('任务已结束，但仍有内核退出未确认。请返回执行详情重试停止，确认退出前知行会保留会话隔离和恢复资料。');
