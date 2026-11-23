@@ -8,7 +8,7 @@ const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
 if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
 const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
 const firstInstance=app.requestSingleInstanceLock();
-let windowRef,manager,automations,browserService,terminalService,speechService,deliverableAccess,deliveryService,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
+let windowRef,manager,automations,browserService,terminalService,speechService,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
@@ -118,7 +118,7 @@ async function initialise(){
  });
  manager=new RuntimeManager({root:path.join(ROOT,'harness'),readVault:async id=>JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`))),writeVault:(id,value)=>writeEncrypted(path.join(VAULTS,`${id}.bin`),JSON.stringify(value)),onApproval:async request=>{
   let detail;try{detail=JSON.parse(request.reason);}catch{return {outcome:'rejected'};}
-  if(!request.toolName.startsWith('mcp__')&&!['office_read_file','office_write_file','office_list_files','office_execute','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource','office_browser','workflow','office_schedule','present'].includes(request.toolName)||typeof detail.path!=='string')return {outcome:'rejected'};
+  if(!request.toolName.startsWith('mcp__')&&!['office_read_file','office_write_file','office_list_files','office_convert','office_recalculate','write','edit','apply_patch','office_execute','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource','office_browser','workflow','office_schedule','present'].includes(request.toolName)||typeof detail?.path!=='string')return {outcome:'rejected'};
   if(request.signal?.aborted)return {outcome:'rejected'};
   const answer=await dialog.showMessageBox(windowRef,{type:'question',title:detail.command?'批准本次命令':detail.network?'批准本次联网':'批准本次文件操作',message:detail.operation||'操作需要批准',detail:`${detail.path}\n\n${detail.command?`${detail.command}\n\n命令可访问项目外文件和网络，请核对后批准。`:detail.network?`${JSON.stringify(detail.network)}\n\n仅批准本次联网操作。`:detail.overwrite?'此操作会覆盖已有文件。':'只批准本次操作，不改变权限模式。'}`,buttons:['拒绝','仅允许本次'],defaultId:0,cancelId:0,noLink:true,signal:request.signal});
   return {outcome:answer.response===1?'allowed-once':'rejected'};
@@ -132,6 +132,8 @@ async function initialise(){
  }});
  const {DeliverableAccess}=await import('./deliverable-access.mjs');
  deliverableAccess=new DeliverableAccess({root:ROOT,getWorkspace:()=>workspaceContext,readVault:async id=>manager.volatileVaults.get(id)??JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`)))});
+ const {NativeSessionExport}=await import('./native-session-export.mjs');
+ nativeSessionExport=new NativeSessionExport({root:ROOT,getWorkspace:()=>workspaceContext,readVault:id=>manager.readVault(id),isBusy:id=>manager.busy.has(id),delivery:deliveryService});
  const {AutomationService}=await import('./automation-service.mjs');
  automations=new AutomationService({read:async()=>JSON.parse(await readEncrypted(path.join(ROOT,'automations.bin'))),write:value=>writeEncrypted(path.join(ROOT,'automations.bin'),JSON.stringify(value)),getContext:()=>workspaceContext,getConfiguration:settings=>({kernel:configuration.kernel,...providerApi.resolveProvider(providers,settings)}),getKey:config=>currentCredential(config).key,runtime:manager,onChange:value=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('automation:change',value);},notify:notifyTask});
  await automations.initialise(workspaceContext.automations);
@@ -431,19 +433,27 @@ function registerHandlers(){
   }
   return files;
  });
- handle('delivery:prepare',async options=>{await workspaceSaveQueue.flush();return deliveryService.prepare(options);});
+ handle('delivery:prepare',async options=>{await workspaceSaveQueue.flush();return options?.format==='md'?nativeSessionExport.prepare(options):deliveryService.prepare(options);});
  handle('file:export',async(options={})=>{
   await workspaceSaveQueue.flush();
   return deliveryService.execute(options,'export',async(snapshot,validate)=>{
-  const {name,format}=snapshot,{directory}=options;
+  const {name,format,history}=snapshot,{directory}=options;
+  if(history)nativeSessionExport.assertScope(history);
   const filename=`${name}.${format}`;
   const folder=typeof directory==='string'&&path.isAbsolute(directory)&&(await fs.stat(directory).catch(()=>null))?.isDirectory()?directory:undefined;
   const result=await dialog.showSaveDialog(windowRef,{defaultPath:folder?path.join(folder,filename):filename,filters:[{name:format.toUpperCase(),extensions:[format]}]});
-  if(result.canceled)return {cancelled:true};
+  if(result.canceled||!result.filePath)return {cancelled:true};
   await workspaceSaveQueue.flush();
-  const {exportOfficeFile}=await import('./office-files.mjs');
-  const bytes=await exportOfficeFile(validate().text,format);
+  let bytes;
+  if(history){
+   if(path.extname(result.filePath).toLowerCase()!=='.md')throw new Error('请选择 .md 文件名。');
+   bytes=Buffer.from(validate().text,'utf8');
+  }else{
+   const {exportOfficeFile}=await import('./office-files.mjs');
+   bytes=await exportOfficeFile(validate().text,format);
+  }
   await workspaceSaveQueue.flush();validate();
+  if(history)nativeSessionExport.assertScope(history);
   await fs.writeFile(result.filePath,bytes);return {cancelled:false,path:result.filePath,reviewId:snapshot.reviewId,contentHash:snapshot.contentHash};
   });
  });

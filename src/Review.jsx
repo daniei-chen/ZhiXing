@@ -37,15 +37,17 @@ export function PrivacyReview({ modal, original, terms,policy,currentMode, onClo
   </Modal>;
 }
 
-export function ExportReview({ title, original, masked, terms, policy, privacyMode, desktop, action='export', defaultFormat='txt', onClose, onExport }) {
+export function ExportReview({ title, original, masked, history, terms, policy, privacyMode, desktop, action='export', defaultFormat='txt', onClose, onExport }) {
   const [scope, setScope] = useState('recipient'), [confirmation, setConfirmation] = useState(null), [format, setFormat] = useState(defaultFormat), [busy, setBusy] = useState(false);
   const [review, setReview] = useState(null), [failure, setFailure] = useState(null), [refresh, setRefresh] = useState(0);
-  const sharing = action === 'share', selectedFormat = sharing ? 'txt' : desktop ? format : 'txt';
+  const [historyMode, setHistoryMode] = useState(privacyMode === 'raw' ? 'raw' : 'redact');
+  const sharing = action === 'share', selectedFormat = sharing || !desktop || format === 'md' && !history ? 'txt' : format;
+  const isNative = selectedFormat === 'md';
   const policyKey = JSON.stringify({policy,terms,privacyMode});
   // An old host reply or confirmation becomes unusable during this render,
   // before the next effect runs. Changing renderer settings only requests a new
   // host review; the host independently reads flushed authoritative settings.
-  const request = useMemo(() => ({}), [title,original,masked,scope,action,selectedFormat,policyKey,desktop,refresh]);
+  const request = useMemo(() => ({}), [title,original,masked,history,historyMode,scope,action,selectedFormat,policyKey,desktop,refresh]);
   const demo = useMemo(() => {
     if(desktop)return null;
     const checked = new PrivacySession('delivery-demo').protect(original, terms, privacyPolicyForMode(policy,'raw'));
@@ -62,8 +64,9 @@ export function ExportReview({ title, original, masked, terms, policy, privacyMo
     async function prepare() {
       try {
         if(typeof desktop.prepareDelivery!=='function')throw new Error('桌面交付审阅接口不可用，请更新应用后重试。');
-        const value = await desktop.prepareDelivery({original,masked,title,action,recipientScope:scope,format:selectedFormat});
-        if(!value || !['reviewId','contentHash','policyRevision','text'].every(key=>typeof value[key]==='string') || value.recipientScope!==scope || value.format!==selectedFormat || value.action!==action || typeof value.blocked!=='boolean' || !Array.isArray(value.allowedActions) || !Number.isFinite(value.expiresAt))throw new Error('桌面审阅快照无效，请重新审阅。');
+        const source = isNative ? {history:{...history,mode:historyMode}} : {original,masked,title};
+        const value = await desktop.prepareDelivery({...source,action,recipientScope:scope,format:selectedFormat});
+        if(!value || !['reviewId','contentHash','policyRevision','text'].every(key=>typeof value[key]==='string') || value.recipientScope!==scope || value.format!==selectedFormat || value.action!==action || typeof value.blocked!=='boolean' || !Array.isArray(value.allowedActions) || !Number.isFinite(value.expiresAt) || isNative && !Object.entries(source.history).every(([key,item])=>value.history?.[key]===item))throw new Error('桌面审阅快照无效，请重新审阅。');
         if(current)setReview({request,snapshot:value});
       } catch(cause) { if(current)setFailure({request,message:cause.message || '交付审阅失败，请重新审阅。'}); }
     }
@@ -89,14 +92,15 @@ export function ExportReview({ title, original, masked, terms, policy, privacyMo
   return <Modal title={sharing?'分享审阅':'交付审阅'} onClose={onClose} canDismiss={!busy} className="privacy-modal review-modal">
     <div className="review-meta"><span className="review-icon"><FileText size={21}/></span><span><strong>{title}</strong><small>{sharing?'选择要分享的版本并核对接收范围':'选择要保存的版本和格式'}</small></span></div>
     {!desktop && <p className="settings-note">浏览器本机预览，未经桌面主机审阅；不读取已保存的配置凭据。</p>}
+    {isNative && <div className="review-export-actions"><label>历史来源 <select aria-label="历史来源" value={historyMode} disabled={busy} onChange={event=>{setHistoryMode(event.target.value);setConfirmation(null);}}><option value="redact">脱敏会话</option><option value="raw">非脱敏会话</option></select></label></div>}
     <div className="privacy-tabs" role="tablist" aria-label="交付版本">{[['recipient', '接收方版', ShieldCheck], ['self', '本人版', Eye]].map(([id, label, Icon]) => <button key={id} role="tab" disabled={busy} aria-selected={scope === id} className={scope === id ? 'active' : ''} onClick={() => { setScope(id); setConfirmation(null); }}><Icon size={15}/>{label}</button>)}</div>
     <div className="privacy-text" role="tabpanel" aria-busy={desktop&&!snapshot&&!error}><pre>{snapshot ? snapshot.text || '暂无内容' : error?'审阅未完成。':'正在准备主机审阅…'}</pre></div>
     {snapshot && <p className="settings-note">{desktop?'主机审阅':'本机演示'}检测到 {snapshot.findings?.length || 0} 处规则匹配{snapshot.findings?.length?`（${[...new Set(snapshot.findings.map(item=>item.label || TYPE_LABELS[item.type] || '敏感信息'))].join('、')}）`:''}。</p>}
-    {scope === 'self' && <p className="callout raw"><LockKey size={14}/>本人版保留普通信息原值；凭据和当前禁止规则仍会拦截。</p>}
+    {scope === 'self' && <p className="callout raw"><LockKey size={14}/>{isNative?'本人版保留日志中已有的值，不还原占位符；凭据和当前禁止规则仍会拦截。':'本人版保留普通信息原值；凭据和当前禁止规则仍会拦截。'}</p>}
     {snapshot?.blocked && <p className="callout bad" role="alert">当前隐私规则阻止交付。请修改内容或隐私设置后重新审阅。</p>}
     {error && <p className="callout bad" role="alert">{error}</p>}
     {(error||snapshot?.blocked) && <button type="button" className="secondary-button" disabled={busy} onClick={()=>{setConfirmation(null);setRefresh(value=>value+1);}}>重新审阅</button>}
     <label className="checkbox-row"><input type="checkbox" disabled={busy||!allowed} checked={confirmed} onChange={e => setConfirmation(e.target.checked?snapshot.reviewId:null)}/>我已核对要{sharing?'分享':'保存'}的内容与接收范围</label>
-    <div className="review-export-actions">{!sharing&&<label>文件格式 <select aria-label="文件格式" disabled={busy} value={selectedFormat} onChange={e => {setFormat(e.target.value);setConfirmation(null);}}><option value="txt">TXT 文本</option>{desktop && <><option value="docx">DOCX 文档</option><option value="xlsx">XLSX 表格</option></>}</select></label>}<button className="primary-button" disabled={!confirmed || busy || !allowed} onClick={exportSelected}>{busy ? sharing?'等待分享…':'等待保存…' : sharing?'分享或复制':'保存文件'}</button></div>
+    <div className="review-export-actions">{!sharing&&<label>文件格式 <select aria-label="文件格式" disabled={busy} value={selectedFormat} onChange={e => {setFormat(e.target.value);setConfirmation(null);}}><option value="txt">TXT 文本</option>{desktop && <><option value="docx">DOCX 文档</option><option value="xlsx">XLSX 表格</option>{history&&<option value="md">Markdown（Harness 会话）</option>}</>}</select></label>}<button className="primary-button" disabled={!confirmed || busy || !allowed} onClick={exportSelected}>{busy ? sharing?'等待分享…':'等待保存…' : sharing?'分享或复制':'保存文件'}</button></div>
   </Modal>;
 }

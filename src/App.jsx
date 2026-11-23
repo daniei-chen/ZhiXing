@@ -1011,10 +1011,11 @@ export function App() {
     finally { setRecoveryAction(''); }
   }
 
-  function openExport(message, { format, titleSuffix = '' } = {}) {
+  function openExport(message, { format, titleSuffix = '', includeHistory = false } = {}) {
     const original = message?.text || chatText(chat);
     if (!original) return;
-    openModal({ type: 'export-review', original, masked: message?.masked ?? (message ? undefined : chatText(chat, { protectedView: true })), title: `${chat?.title || '知行成果'}${titleSuffix}`, ...(format?{format}:{}) });
+    const history = includeHistory && desktop && chat ? {sessionId:chat.id,workspaceId:chat.workspaceId,projectId:chat.projectId||null} : undefined;
+    openModal({ type: 'export-review', original, masked: message?.masked ?? (message ? undefined : chatText(chat, { protectedView: true })), title: `${chat?.title || '知行成果'}${titleSuffix}`, history, ...(format?{format}:{}) });
   }
 
   async function saveExport(delivery) {
@@ -1168,7 +1169,7 @@ export function App() {
                   <MenuItem icon={ShareNetwork} disabled={!chatText(chat)} onClick={shareCurrentChat}>分享或转发…</MenuItem>
                   <MenuItem icon={FileText} disabled={!chatText(chat)} onClick={()=>openExport(undefined,{format:'txt',titleSuffix:'（会话副本）'})}>复制为文件…</MenuItem>
                   <div className="menu-separator"/>
-                  <MenuItem icon={DownloadSimple} disabled={!chatText(chat)} onClick={()=>openExport()}>导出聊天文件…</MenuItem>
+                  <MenuItem icon={DownloadSimple} disabled={!chatText(chat)} onClick={()=>openExport(undefined,{includeHistory:true})}>导出聊天文件…</MenuItem>
                 </div>}
               </div>
               <div className="menu-anchor resources-anchor">
@@ -1247,7 +1248,7 @@ export function App() {
     {toast && <div className={`toast ${toast.type}`} role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'}>{toast.type === 'error' ? <WarningCircle size={15}/> : toast.type === 'success' ? <Check size={15}/> : <Info size={15}/>}<span>{toast.message}</span>{toast.type === 'error'&&<button type="button" className="toast-dismiss" aria-label="关闭错误提示" onClick={()=>setToast(null)}>×</button>}</div>}
     {question&&<AgentQuestion key={question.requestId} request={question} onAnswer={value=>desktop.answerQuestion(value)}/>}
     {privacyView && <PrivacyReview key={modal.type} modal={modal} original={reviewOriginal} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} currentMode={state.settings.privacyMode} onClose={() => setModal(null)} onSettings={() => openModal({ type: 'settings', tab: '隐私与数据' })} onSend={() => startReply(modal.draft, modal.preview)}/>}
-    {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} privacyMode={state.settings.privacyMode} desktop={desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
+    {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} history={state.settings.persist?modal.history:undefined} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} privacyMode={state.settings.privacyMode} desktop={desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
     {modal?.type === 'new-drafts' && <Modal title="未发送的新草稿" onClose={() => setModal(null)}><p className="modal-copy">选择一份继续编辑。草稿保留在各自的空间和项目中。</p><div className="record-list">{unsentDrafts.map(draft => <article key={draft.key} data-draft-key={draft.key}><NotePencil size={16}/><span><strong>{draft.text.trim().replace(/\s+/g, ' ').slice(0, 80) || '仅附件草稿'}</strong><small>{state.workspaces.find(space => space.id === draft.workspaceId)?.name} · {state.projects.find(project => project.id === draft.projectId)?.name || '未归入项目'}</small><small>{draft.text.length} 字 · {draft.files.length} 个附件 · {new Date(draft.updatedAt).toLocaleString('zh-CN')}</small></span><button type="button" className="secondary-button" onClick={() => openNewDraft(draft.key)}>继续编辑</button></article>)}{!unsentDrafts.length && <p className="empty-note">没有未发送的新草稿。</p>}</div></Modal>}
     {modal && !privacyView && !['export-review', 'new-drafts'].includes(modal.type) && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={state} setState={setState} scope={scopeProps} recoverDraft={recoverOrphanDraft} discardDraft={discardOrphanDraft} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={useTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
   </div>;

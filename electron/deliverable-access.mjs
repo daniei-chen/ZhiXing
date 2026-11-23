@@ -1,17 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHmac, timingSafeEqual} from 'node:crypto';
-import {createRequire} from 'node:module';
-import {pathToFileURL} from 'node:url';
 import {readBridge} from '../harness/privacy-bridge.mjs';
 import {within} from '../harness/file-policy.mjs';
 import {projectContext} from '../src/project-core.js';
+import {validateHistoryRecord} from './session-history-record.mjs';
 
-const require = createRequire(import.meta.url);
-const harnessRequire = createRequire(require.resolve('@deepseek-ai/dsh/lib/bin.js'));
-const {assertStoredId, assertVersion, validateStoredEvents, assertContiguous} = await import(
- pathToFileURL(harnessRequire.resolve('@deepseek-ai/dsh-session-persistence')).href
-);
 const ID = /^[a-zA-Z0-9_-]{1,100}$/;
 const PRIVATE = /(?:^|[\\/])(?:\.ssh|\.aws|\.azure|vaults|\.git)(?:[\\/]|$)|(?:^|[\\/])(?:\.env(?:\..*)?|.*\.(?:pem|key|pfx)|deepseek\.credential|workspace\.bin|automations\.bin|privacy-bridge\.bin)$/i;
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -73,10 +67,7 @@ export class DeliverableAccess {
    let record;
    try {
     record = await readBridge(target, key);
-    assertStoredId(id, record.header);
-    assertVersion(record.header);
-    validateStoredEvents(record.header, record.events);
-    assertContiguous(id, record.events, 0);
+    validateHistoryRecord(id, record);
    } catch {
     throw failure('DELIVERABLE_HISTORY', '原生交付历史无法验证，请重新交付文件。');
    }

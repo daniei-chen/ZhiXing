@@ -6,6 +6,11 @@ import {planningAllows} from './shell-policy.mjs';
 const definitions = [
  {id:'office',label:'计算、日期与表格检查',tools:['office_calculate','office_calendar','office_table_check']},
  {id:'files',label:'项目文件读写与目录分页',tools:['office_read_file','office_write_file','office_list_files'],workspace:true},
+ {id:'native-text-read',label:'Harness 原生项目文本读取',tools:['read'],workspace:true,readOnly:true},
+ {id:'native-project-image',label:'Harness 原生项目图片读取',tools:['read_image'],workspace:true,readOnly:true,imageRoute:true,bridge:'office-vision'},
+ {id:'native-text-search',label:'Harness 原生项目文件搜索',tools:['glob','grep'],workspace:true,readOnly:true},
+ {id:'native-text-write',label:'Harness 原生项目文本写入与编辑',tools:['write','edit'],workspace:true,write:true},
+ {id:'native-text-patch',label:'Harness 原生多文件补丁',tools:['apply_patch'],workspace:true,write:true},
  {id:'agent-office',label:'办公文档转换与工作簿重算',tools:['office_convert','office_recalculate'],workspace:true,write:true,inWorkspace:true},
  {id:'agent-office-render',label:'办公页面渲染与图片输入',tools:['office_render'],workspace:true,readOnly:true,imageRoute:true,bridge:'office-vision'},
  {id:'terminal',label:'Agent PowerShell 命令',tools:['office_execute'],workspace:true,write:true},

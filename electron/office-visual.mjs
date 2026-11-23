@@ -1,5 +1,6 @@
 import {runOfficeLayout} from './office-layout.mjs';
-import {prepareVisualAttachment} from './visual-attachments.mjs';
+import {prepareVisualAttachment,supportsVisualImage} from './visual-attachments.mjs';
+import {readWorkspaceBytes} from './workspace-files.mjs';
 import {containsCredentialValue} from '../src/privacy-recognizers.js';
 
 export async function renderOfficeVision(workspaceRoot, {input, pages, sheet, range, dpi}, privacy, {signal, maxRenderImages}) {
@@ -15,4 +16,13 @@ export async function renderOfficeVision(workspaceRoot, {input, pages, sheet, ra
    ...(area === undefined ? {} : {range:area}), maskCount:parsed.visual.maskCount});
  }
  return {receipt:{operation:'render', path:input, pageCount:result.pageCount, dpi:result.dpi, missingFonts:result.missingFonts, images}, records};
+}
+
+export async function readProjectVision(workspaceRoot,input,privacy,signal){
+ if(!supportsVisualImage(input))throw new Error('项目图片支持单帧 PNG 或 JPEG。');
+ if(privacy.secrets.some(secret=>containsCredentialValue(input,secret)))throw new Error('图片路径含已配置的凭证，已停止发送。');
+ const {name,bytes}=await readWorkspaceBytes(workspaceRoot,input);
+ const outputMediaType=/\.png$/i.test(name)?'image/png':'image/jpeg';
+ const {record}=await prepareVisualAttachment({name,bytes,privacy,signal,outputMediaType});
+ return {records:[record]};
 }

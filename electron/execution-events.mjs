@@ -2,6 +2,8 @@ const toolLabels = new Map(Object.entries({
  office_calculate:'数字计算', office_calendar:'日期计算', office_table_check:'表格检查',
  office_read_file:'读取办公文件', office_write_file:'生成办公文件', office_list_files:'列出目录',
  office_convert:'转换办公文档', office_recalculate:'重算工作簿', office_render:'渲染办公页面',
+ read:'读取项目文本', read_image:'读取项目图片', write:'写入项目文本', edit:'编辑项目文本', apply_patch:'应用项目文件补丁',
+ glob:'查找项目文件', grep:'搜索项目文本',
  office_execute:'PowerShell 命令', todo_write:'更新工作计划', ask_user_question:'等待补充',
  skill:'加载办公技能', workflow:'多 Agent 工作流', job_list:'查看后台作业', job_output:'读取后台输出',
  job_kill:'停止后台作业', present:'交付成果文件', web_search:'网页搜索', web_fetch:'读取网页',
@@ -32,7 +34,7 @@ export function projectExecutionEvent(event, childSessionId, calls) {
    const tool = toolLabels.get(data.name) ?? (data.name?.startsWith('mcp__') ? 'MCP 工具' : '内核工具');
    if (reference) {
     if (calls.size >= 512) calls.delete(calls.keys().next().value);
-    calls.set(reference, {tool,time:base.time});
+    calls.set(reference, {name:data.name,tool,time:base.time});
    }
    return {...base, label:`调用 · ${tool}`, category:'tools', status:'running'};
   }
@@ -40,9 +42,11 @@ export function projectExecutionEvent(event, childSessionId, calls) {
    const reference = call(data.message?.toolCallId);
    const started = calls.get(reference);
    calls.delete(reference);
-   const suffix = data.message?.isError ? '失败' : '完成';
+   const stoppedPatch = started?.name === 'apply_patch' && data.meta?.stopped === true;
+   const status = data.message?.isError ? 'failed' : stoppedPatch ? 'interrupted' : 'completed';
+   const suffix = {failed:'失败',interrupted:'未完成',completed:'完成'}[status];
    return {...base, label:started ? `${started.tool} · ${suffix}` : `工具${suffix}`,
-    category:'tools', status:data.message?.isError ? 'failed' : 'completed',
+    category:'tools', status,
     durationMs:base.time >= started?.time ? base.time - started.time : undefined};
   }
   case 'turn/end':
