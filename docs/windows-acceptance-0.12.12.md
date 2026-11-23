@@ -23,6 +23,12 @@ Windows x64 未签名预发布版。DeepSeek Harness 固定为 `0.2.2-rc.5`。�
 
 安装器由该次验收的目录包以 `--prepackaged` 构建。源码与目录包回归各因 Windows 未授予文件符号链接权限跳过一项 `owner.json` 测试。
 
+## 依赖审计结论
+
+生产清单 1,154 个包，0 high、0 critical、34 moderate；其中 **3 条命中安装路径**：`glob@13.0.6` 与 `minimatch@10.2.5` 位于 `node_modules/npm/`（npm CLI 自身，不随产品发布），`uuid@8.3.2` 由 `exceljs` 传递引入并被打进产品包。
+
+`uuid` 的公告是 v3/v5/v6 在传入 `buf` 时缺少边界检查（CVSS 7.5），exceljs 只用 v4 生成内部 id，不接受外部 `buf`，该路径不可达。npm 给出的唯一修复是把 `exceljs` 降级到 3.4.0（major 变更），会丢失 3.5 之后的修复，风险大于收益，因此**本轮不修复**，记录为已知中危、路径不可达。其余 31 条位于构建期工具链，不进产品运行时。
+
 ## 本轮实测
 
 - **运行期观察。** 作用域 `office-home:watch-project`，外部创建文件后收到合批事件，路径正确；解除监视后事件停止。
