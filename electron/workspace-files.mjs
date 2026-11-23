@@ -2,7 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {within} from '../harness/file-policy.mjs';
 import {parseLocalMaterial} from './office-files.mjs';
-const PRIVATE=/(?:^|[\\/])(?:\.ssh|\.aws|\.azure|node_modules|vaults|\.git)(?:[\\/]|$)|(?:^|[\\/])(?:\.env(?:\..*)?|.*\.(?:pem|key|pfx)|deepseek\.credential|workspace\.bin|automations\.bin|privacy-bridge\.bin)$/i;
+const PRIVATE_DIRECTORIES=new Set(['.ssh','.aws','.azure','node_modules','vaults','.git']);
+const PRIVATE_FILES=['.env','.env.*','*.pem','*.key','*.pfx','deepseek.credential','workspace.bin','automations.bin','privacy-bridge.bin'];
+const PRIVATE_FILE=/^(?:\.env(?:\..*)?|.*\.(?:pem|key|pfx)|deepseek\.credential|workspace\.bin|automations\.bin|privacy-bridge\.bin)$/i;
+const PRIVATE={test:value=>value.split(/[\\/]/).some(part=>PRIVATE_DIRECTORIES.has(part.toLowerCase())||PRIVATE_FILE.test(part))};
+export const privateSearchGlobs=[...PRIVATE_DIRECTORIES,...PRIVATE_FILES].flatMap(name=>[`--iglob=!**/${name}`,`--iglob=!**/${name}/**`]);
 const allowedWorkspacePath = (root, target) => {
  const relative = path.relative(root, target);
  return within(root, target) && !PRIVATE.test(relative) && !relative.includes(':');

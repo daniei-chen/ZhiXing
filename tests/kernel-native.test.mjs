@@ -7,6 +7,7 @@ import path from 'node:path';
 import {once} from 'node:events';
 import {pathToFileURL} from 'node:url';
 import ExcelJS from 'exceljs';
+import sharp from 'sharp';
 const url=name=>process.env.ZHIXING_TEST_PACKED_APP?pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP,name)).href:new URL(`../${name}`,import.meta.url).href;
 const {RuntimeManager,prepareRuntime}=await import(url('electron/runtime.mjs'));
 const {KERNEL_DEFAULTS}=await import(url('src/kernel-config.js'));
@@ -190,6 +191,205 @@ test('真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩�
   const wire=JSON.stringify(f.requests);
   for(const marker of [original,source.toString('base64'),phone,JSON.stringify(project).slice(1,-1)])assert(!wire.includes(marker));
  } finally {await f.close();}
+});
+
+test('官方原生文件读写和编辑遵守项目范围、版本检查及脱敏占位符', {timeout:90000}, async () => {
+ const phone='13800000000', calls=['read','write','edit','edit','read','read','read','write','edit'];
+ let planning=false;
+ const f=await fixture((body,index)=>{
+  const history=results(body), completed=history.length;
+  if(planning){
+   if(!completed)return call('read',{file_path:'source.txt'},index);
+   if(completed===1)return call('write',{file_path:'plan.txt',content:'Unexpected'},index);
+   return [{type:'text',text:'NATIVE_READ_ONLY'}];
+  }
+  if(completed>=calls.length)return [{type:'text',text:'NATIVE_FILE_COMPLETE'}];
+  const token=JSON.stringify(history[0]||'').match(/⟦ZX-[^⟧]+-PHONE-\d+⟧/)?.[0];
+  if(completed===1&&!token)throw new Error(`Protected source phone reference is missing: ${JSON.stringify(history[0])}`);
+  const args=[{file_path:'source.txt'}, {file_path:'new.txt',content:`Phone: ${token}`},
+   {file_path:'source.txt',old_string:`Phone: ${token}`,new_string:`Phone: ${token}\nEdited`},
+   {file_path:'unseen.txt',old_string:'Original',new_string:'Unexpected'},
+   {file_path:'../outside.txt'}, {file_path:'.env'}, {file_path:'outside-link/outside.txt'}, {file_path:'denied.txt',content:'Denied'},
+   {file_path:'source.txt',old_string:'Edited',new_string:'Stale replacement'}];
+  return call(calls[completed],args[completed],index);
+ });
+ try {
+  const project=path.join(f.root,'project');await fs.mkdir(project);
+  await fs.writeFile(path.join(project,'source.txt'),`Phone: ${phone}`);
+  await fs.writeFile(path.join(project,'unseen.txt'),'Original');
+  await fs.writeFile(path.join(f.root,'outside.txt'),'OUTSIDE_FILE_MARKER');
+  await fs.symlink(f.root,path.join(project,'outside-link'),process.platform==='win32'?'junction':'dir');
+  await fs.writeFile(path.join(project,'.env'),'PRIVATE_CONFIG_MARKER');
+  const approvals=[];
+  f.manager.onApproval=async request=>{
+   const detail=JSON.parse(request.reason), file=path.basename(detail.path);
+   approvals.push([file,detail.overwrite]);
+   if(file==='denied.txt')return {outcome:'rejected'};
+   if(approvals.filter(([name])=>name==='source.txt').length===2)await fs.writeFile(detail.path,`Phone: ${phone}\nEdited externally`);
+   return {outcome:'allowed-once'};
+  };
+  const config={...f.config,workspaceRoot:project,permission:'ask'};
+  const output=await f.manager.run({sessionId:'native-files',runId:'native-files',prompt:'检查和更新合成项目文本文件。'},config,'synthetic-native-file-key');
+  assert.equal(output.text,'NATIVE_FILE_COMPLETE');assert.equal(f.requests.length,calls.length+1);
+  const final=results(f.requests.at(-1));
+  assert.deepEqual(final.map(block=>block.is_error===true),[false,false,false,true,true,true,true,true,true]);
+  assert.match(JSON.stringify(final.at(-1)),/changed since|变更|已变化/i);
+  assert.deepEqual(approvals,[['new.txt',false],['source.txt',true],['denied.txt',false],['source.txt',true]]);
+  assert.equal(await fs.readFile(path.join(project,'new.txt'),'utf8'),`Phone: ${phone}`);
+  assert.equal(await fs.readFile(path.join(project,'source.txt'),'utf8'),`Phone: ${phone}\nEdited externally`);
+  assert.equal(await fs.readFile(path.join(project,'unseen.txt'),'utf8'),'Original');
+  await assert.rejects(fs.stat(path.join(project,'denied.txt')),{code:'ENOENT'});
+  planning=true;
+  const planned=await f.manager.run({sessionId:'native-file-plan',runId:'native-file-plan',prompt:'只调查。',startInPlanMode:true},config,'synthetic-native-file-key');
+  assert.equal(planned.text,'NATIVE_READ_ONLY');assert.equal(planned.context.planning,true);
+  assert.deepEqual(results(f.requests.at(-1)).map(block=>block.is_error===true),[false,true]);
+  assert.equal(approvals.length,4);await assert.rejects(fs.stat(path.join(project,'plan.txt')),{code:'ENOENT'});
+  const wire=JSON.stringify(f.requests);
+  for(const marker of [phone,'OUTSIDE_FILE_MARKER','PRIVATE_CONFIG_MARKER',JSON.stringify(project).slice(1,-1)])assert(!wire.includes(marker));
+ } finally {await f.close();}
+});
+
+test('官方多文件补丁先审批整批，真实内容变更保留结果和原始文件边界', {timeout:90000}, async()=>{
+ const phone='13800000000';
+ const patch=(...lines)=>['*** Begin Patch',...lines,'*** End Patch'].join('\n');
+ const f=await fixture((body,index)=>{
+  const history=results(body),token=JSON.stringify(history[0]||'').match(/⟦ZX-[^⟧]+-PHONE-\d+⟧/)?.[0];
+  const patches=[
+   patch('*** Add File: copy.txt',`+Phone: ${token}`,'*** Update File: source.txt','@@',`-Phone: ${token}`,`+Phone: ${token}`,'+Updated'),
+   patch('*** Add File: denied-first.txt','+Denied','*** Delete File: source.txt'),
+   patch('*** Add File: invalid-first.txt','+No file','*** Update File: source.txt','@@','-No such text','+Unexpected'),
+   patch('*** Add File: outside-first.txt','+No file','*** Add File: ../outside.txt','+Unexpected'),
+   patch('*** Update File: source.txt','*** Move to: moved.txt','@@','-Updated','+Moved','*** Delete File: copy.txt'),
+  ];
+  if(!history.length)return call('read',{file_path:'source.txt'},index);
+  if(history.length<=patches.length){assert(token);return call('apply_patch',{input:patches[history.length-1]},index);}
+  return [{type:'text',text:'NATIVE_PATCH_COMPLETE'}];
+ });
+ try{
+  const project=path.join(f.root,'project');await fs.mkdir(project);
+  await fs.writeFile(path.join(project,'source.txt'),`Phone: ${phone}\n`);
+  const approvals=[];
+  f.manager.onApproval=async request=>{
+   const {path:targets,overwrite}=JSON.parse(request.reason);approvals.push({targets,overwrite});
+   return {outcome:targets.includes('denied-first')?'rejected':'allowed-once'};
+  };
+  const output=await f.manager.run({sessionId:'native-patch',runId:'native-patch',prompt:'应用合成文本补丁。'},
+   {...f.config,workspaceRoot:project,permission:'ask'},'synthetic-native-patch-key');
+  assert.equal(output.text,'NATIVE_PATCH_COMPLETE');assert.equal(f.requests.length,7);
+  const final=results(f.requests.at(-1));
+  assert.deepEqual(final.map(block=>block.is_error===true),[false,false,true,true,true,false],JSON.stringify(final));
+  assert.equal(approvals.length,4);
+  assert.match(approvals[0].targets,/copy\.txt.*\n.*source\.txt/);
+  assert.match(approvals[3].targets,/source\.txt.*moved\.txt.*\n.*copy\.txt/);
+  assert(approvals.every(row=>row.overwrite));
+  assert.match(await fs.readFile(path.join(project,'moved.txt'),'utf8'),new RegExp(`^Phone: ${phone}\\r?\\nMoved(?:\\r?\\n)?$`));
+  for(const name of ['source.txt','copy.txt','denied-first.txt','invalid-first.txt','outside-first.txt','../outside.txt']){
+   await assert.rejects(fs.stat(path.join(project,name)),{code:'ENOENT'});
+  }
+  assert(!JSON.stringify(f.requests).includes(phone));
+ }finally{await f.close();}
+});
+
+test('原生补丁中途停止后，磁盘、模型回执和重新载入的执行轨迹均保留实际结果', {timeout:45000}, async()=>{
+ const patch=['*** Begin Patch','*** Add File: committed.txt','+committed','*** Delete File: large.txt',
+  '*** Add File: skipped.txt','+skipped','*** End Patch'].join('\n');
+ const f=await fixture((_body,index)=>{
+  if(index===1)return call('read',{file_path:'large.txt',limit:1},index);
+  if(index===2)return call('apply_patch',{input:patch},index);
+  return [{type:'text',text:'PATCH_STOPPED_FIXTURE'}];
+ });
+ try {
+  const project=path.join(f.root,'project');await fs.mkdir(project);
+  const large=Buffer.from('synthetic line\n'.repeat(80000));
+  await fs.writeFile(path.join(project,'large.txt'),large);
+  f.manager.onApproval=async()=>({outcome:'allowed-once'});
+  const id='native-patch-stopped';
+  const output=await f.manager.run({sessionId:id,runId:id,prompt:'处理合成项目文件。'},
+   {...f.config,workspaceRoot:project,permission:'ask'},'synthetic-patch-stopped-key');
+  assert.equal(output.text,'PATCH_STOPPED_FIXTURE');assert.equal(f.requests.length,3);
+  assert.match(JSON.stringify(results(f.requests.at(-1)).at(-1)),/Patch stopped after 1 of 3 operations/);
+  assert.match(await fs.readFile(path.join(project,'committed.txt'),'utf8'),/^committed\r?\n?$/);
+  assert.deepEqual(await fs.readFile(path.join(project,'large.txt')),large);
+  await assert.rejects(fs.stat(path.join(project,'skipped.txt')),{code:'ENOENT'});
+  assert(f.events.some(row=>row.type==='tool/result'&&row.status==='interrupted'&&row.label==='应用项目文件补丁 · 未完成'));
+  const saved=await f.manager.readVault(id);
+  const history=await readBridge(path.join(f.root,id,'history-redact',`${id}.bin`),saved.historyKey);
+  const {projectExecutionEvent}=await import(url('electron/execution-events.mjs'));
+  const calls=new Map(),trace=history.events.map(row=>projectExecutionEvent(row,undefined,calls));
+  assert(trace.some(row=>row?.status==='interrupted'&&row.label==='应用项目文件补丁 · 未完成'));
+ } finally {await f.close();}
+});
+
+test('官方 glob 和 grep 运行随包 ripgrep，排除私密文件与项目外链接并保护匹配文本', {timeout:90000}, async()=>{
+ const phone='13800000000';
+ const actions=[['glob',{pattern:'*'}],['grep',{pattern:'SEARCH_FIXTURE',include:'*.txt'}],
+  ['grep',{pattern:'SEARCH_FIXTURE',path:'../outside'}],['grep',{pattern:'SEARCH_FIXTURE',path:'project-link'}],
+  ['grep',{pattern:'SEARCH_FIXTURE',path:'.env'}]];
+ const f=await fixture((body,index)=>{
+  const action=actions[results(body).length];
+  return action?call(...action,index):[{type:'text',text:'NATIVE_SEARCH_COMPLETE'}];
+ });
+ try{
+  const root=path.join(f.root,'project'),outside=path.join(f.root,'outside');
+  await Promise.all([fs.mkdir(root),fs.mkdir(outside)]);
+  await fs.mkdir(path.join(root,'Vaults'));
+  await Promise.all([
+   fs.writeFile(path.join(root,'surface.txt'),`SEARCH_FIXTURE Phone: ${phone}\n`),
+   fs.writeFile(path.join(root,'Private.KEY'),'SEARCH_FIXTURE PRIVATE_KEY_MARKER'),
+   fs.writeFile(path.join(root,'.env'),'SEARCH_FIXTURE PRIVATE_ENV_MARKER'),
+   fs.writeFile(path.join(root,'Vaults','private-vault.txt'),'SEARCH_FIXTURE PRIVATE_VAULT_MARKER'),
+   fs.writeFile(path.join(outside,'outside.txt'),'SEARCH_FIXTURE OUTSIDE_SEARCH_MARKER'),
+   fs.symlink(outside,path.join(root,'project-link'),process.platform==='win32'?'junction':'dir'),
+  ]);
+  const output=await f.manager.run({sessionId:'native-search',runId:'native-search',prompt:'在项目中搜索合成文件。',startInPlanMode:true},
+   {...f.config,workspaceRoot:root,permission:'ask'},'synthetic-native-search-key');
+  assert.equal(output.text,'NATIVE_SEARCH_COMPLETE');assert.equal(f.requests.length,6);
+  const final=results(f.requests.at(-1));
+  assert.deepEqual(final.map(block=>block.is_error===true),[false,false,true,true,true],JSON.stringify(final));
+  assert.match(JSON.stringify(final[0]),/surface\.txt/);
+  const grep=JSON.stringify(final[1]);
+  assert.match(grep,/surface\.txt/);assert.match(grep,/SEARCH_FIXTURE/);assert.match(grep,/⟦ZX-[^⟧]+-PHONE-\d+⟧/);
+  const wire=JSON.stringify(f.requests);
+  for(const marker of [phone,'PRIVATE_KEY_MARKER','PRIVATE_ENV_MARKER','PRIVATE_VAULT_MARKER','OUTSIDE_SEARCH_MARKER','private-vault.txt','Private.KEY'])assert(!wire.includes(marker));
+ }finally{await f.close();}
+});
+
+test('官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本', {timeout:90000}, async()=>{
+ const phone='13800000000',key='synthetic-native-picture-key';
+ const f=await fixture((body,index)=>{
+  if(index===1)return call('read_image',{file_path:'photo.png'},index);
+  if(index===2)return call('read_image',{file_path:'photo.jpg'},index);
+  if(index===3)return call('read_image',{file_path:'photo.gif'},index);
+  if(index===5)return call('read_image',{file_path:'photo.png'},index);
+  return [{type:'text',text:'NATIVE_IMAGE_COMPLETE'}];
+ });
+ try{
+  const project=path.join(f.root,'project');await fs.mkdir(project);
+  const png=await fs.readFile(new URL('./fixtures/ocr-office-read.png',import.meta.url));
+  const jpg=await sharp(png).jpeg().toBuffer();
+  await Promise.all([fs.writeFile(path.join(project,'photo.png'),png),fs.writeFile(path.join(project,'photo.jpg'),jpg)]);
+  const visualPrivacy=visionPrivacy({},[key]);
+  const config={...f.config,workspaceRoot:project,permission:'ask',inputModalities:['text','image'],visualPolicyKey:visualPrivacy.key,visualPrivacy};
+  const output=await f.manager.run({sessionId:'native-image',runId:'native-image',prompt:'读取合成项目图片。'},config,key);
+  assert.equal(output.text,'NATIVE_IMAGE_COMPLETE');assert.equal(f.requests.length,4);
+  const final=results(f.requests[3]);
+  assert.deepEqual(final.map(row=>row.is_error===true),[false,false,true],JSON.stringify(final.map(row=>row.is_error?row:row.content.map(block=>block.type))));
+  assert.equal(output.context.capabilityManifest.entries.find(item=>item.id==='native-project-image').effective,true);
+  const images=final.slice(0,2).map(row=>row.content.find(block=>block.type==='image').source);
+  assert.deepEqual(images.map(image=>image.media_type),['image/png','image/jpeg']);
+  for(const [image,index] of images.map((image,index)=>[image,index])){
+   const received=Buffer.from(image.data,'base64');assert.notDeepEqual(received,[png,jpg][index]);
+   const text=(await recognizeImage(index?'approved.jpg':'approved.png',received,{allowEmpty:true})).text;
+   assert(!text.replace(/\D/g,'').includes(phone));
+  }
+  const vault=await f.manager.readVault('native-image');assert.equal(vault.visualHistory.redact.imageCount,2);
+  const textOnly=await f.manager.run({sessionId:'native-no-image',runId:'native-no-image',prompt:'文字会话。'}, {...config,inputModalities:['text']},key);
+  assert.equal(textOnly.text,'NATIVE_IMAGE_COMPLETE');assert.equal(f.requests.length,6);
+  assert(!f.requests[4].tools.some(tool=>tool.name==='read_image'));
+  assert.equal(results(f.requests[5]).at(-1).is_error,true);
+  const wire=JSON.stringify(f.requests);
+  for(const data of [phone,png.toString('base64'),jpg.toString('base64')])assert(!wire.includes(data));
+ }finally{await f.close();}
 });
 
 test('原生 Agent Teams 创建、CAS 领取/完成、列表及加密重启恢复',async()=>{

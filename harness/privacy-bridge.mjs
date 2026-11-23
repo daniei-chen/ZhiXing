@@ -205,7 +205,10 @@ async function waitForLock(signal,deadline) {
   });
 }
 export async function readBridge(file, key) {
-  const raw = await fs.readFile(file);
+  return decodeBridge(await fs.readFile(file), key);
+}
+
+export function decodeBridge(raw, key) {
   if (raw.length < 28) throw new Error('工具脱敏映射无法读取。');
   const cipher = createDecipheriv('aes-256-gcm', Buffer.from(key, 'hex'), raw.subarray(0, 12));
   cipher.setAuthTag(raw.subarray(12, 28));

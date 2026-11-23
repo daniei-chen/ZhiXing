@@ -10,10 +10,11 @@ import { parseOfficeFile, parseLocalMaterial, exportOfficeFile } from '../electr
 import {normaliseKernel} from '../src/kernel-config.js';
 import {shellEnvironment, planningAllows} from './shell-policy.mjs';
 import {OFFICE_DOCUMENT_TOOLS, registerOfficeDocumentTools} from './office-document-tools.mjs';
+import {NATIVE_PROJECT_FILE_TOOLS, installNativeProjectFilePolicy} from './native-project-fs.mjs';
 
 export const name='zhixing-office-tools';
 export const inject=['tools','llm','approval','shell','planMode','sandboxPolicy','agents'];
-export const TOOL_NAMES=['office_calculate','office_calendar','office_table_check','office_read_file','office_write_file','office_list_files',...OFFICE_DOCUMENT_TOOLS,'office_execute','todo_write','ask_user_question','skill','web_search','web_fetch','subagent','subagent_fork','list_agents','send_message','interrupt_agent','wait_agent','get_goal','create_goal','update_goal','exit_plan_mode','office_browser','office_schedule','workflow','job_list','job_output','job_kill','present','team_task_create','team_task_get','team_task_list','team_task_update','run_code'];
+export const TOOL_NAMES=['office_calculate','office_calendar','office_table_check','office_read_file','office_write_file','office_list_files',...OFFICE_DOCUMENT_TOOLS,...NATIVE_PROJECT_FILE_TOOLS,'office_execute','todo_write','ask_user_question','skill','web_search','web_fetch','subagent','subagent_fork','list_agents','send_message','interrupt_agent','wait_agent','get_goal','create_goal','update_goal','exit_plan_mode','office_browser','office_schedule','workflow','job_list','job_output','job_kill','present','team_task_create','team_task_get','team_task_list','team_task_update','run_code'];
 const output={schema:{type:'object',additionalProperties:true},render:(_args,value)=>[{type:'text',text:JSON.stringify(value)}]};
 
 export function calculate(numbers,operation){
@@ -104,6 +105,7 @@ export function apply(ctx){
   }}));
  }
  if(root){
+  installNativeProjectFilePolicy(ctx,{root,restoreValue,permit,protectedValue});
   registerOfficeDocumentTools(ctx,{root,restoreValue,permit,protectedValue});
   ctx.tools.register(defineTool({name:'office_execute',description:'在当前项目工作区运行 PowerShell 命令，适合办公文件处理、脚本、数据转换与系统工具。实际执行通过 Harness 进程服务，输出先在本机脱敏。除完全访问外每条命令需要批准。只执行用户交办的工作。',parameters:{command:{type:'string',required:true},description:{type:'string',required:true},timeout_seconds:{type:'integer'}},output,async execute({command,description,timeout_seconds=60},exec){
    exec.signal.throwIfAborted();if(!command.trim()||command.length>20000||!description.trim()||description.length>300||!Number.isInteger(timeout_seconds)||timeout_seconds<1||timeout_seconds>120)throw new Error('命令、说明或超时无效。');

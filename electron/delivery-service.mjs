@@ -3,7 +3,7 @@ import {PrivacySession, TYPE_LABELS} from '../src/privacy-core.js';
 import {PRIVACY_ENGINE_VERSION, normalisePrivacyPolicy, privacyPolicyForMode} from '../src/privacy-policy.js';
 import {containsCredential} from '../src/privacy-recognizers.js';
 
-const formats = new Set(['txt', 'docx', 'xlsx']);
+const formats = new Set(['txt', 'docx', 'xlsx', 'md']);
 const hideTokens = text => text.replace(/⟦ZX-[^⟧\r\n]+-([A-Z]+)-\d+⟧/g, (_token, type) => `【${TYPE_LABELS[type] || '敏感信息'}已隐藏】`);
 const failure = (code, message) => Object.assign(new Error(message), {code, stage: 'delivery'});
 
@@ -32,10 +32,11 @@ export class DeliveryService {
     return {policy, terms, mode, secrets, policyRevision};
   }
 
-  prepare({original, masked, title, action = 'export', recipientScope = 'recipient', format = 'txt'} = {}) {
+  prepare({original, masked, title, action = 'export', recipientScope = 'recipient', format = 'txt'} = {}, {history} = {}) {
     if (typeof original !== 'string' || Buffer.byteLength(original, 'utf8') > 2 * 1024 * 1024 ||
         masked !== undefined && (typeof masked !== 'string' || Buffer.byteLength(masked, 'utf8') > 2 * 1024 * 1024) ||
-        !['export', 'share'].includes(action) || !['recipient', 'self'].includes(recipientScope) || !formats.has(format) || action === 'share' && format !== 'txt') {
+        !['export', 'share'].includes(action) || !['recipient', 'self'].includes(recipientScope) || !formats.has(format) ||
+        action === 'share' && format !== 'txt' || (format === 'md') !== Boolean(history)) {
       throw failure('DELIVERY_INPUT_INVALID', '交付审阅内容、格式或接收范围无效。');
     }
     const context = this.context();
@@ -47,7 +48,7 @@ export class DeliveryService {
     const blocked = checked.blocked || credentialBlocked;
     const text = credentialBlocked ? '检测到已配置凭据，交付已阻断。请从内容中移除后重新审阅。' : recipientScope === 'recipient' ? hideTokens(checked.text) : blocked ? hideTokens(checked.text) : original;
     const reviewId = randomUUID();
-    const contentHash = createHash('sha256').update(JSON.stringify({reviewId, text, action, recipientScope, format})).digest('hex');
+    const contentHash = createHash('sha256').update(JSON.stringify({reviewId, text, action, recipientScope, format, history})).digest('hex');
     const snapshot = {
       reviewId, contentHash, policyRevision: context.policyRevision, recipientScope, action, format,
       text,
@@ -55,7 +56,8 @@ export class DeliveryService {
       blocked,
       ...(credentialBlocked ? {blockedReason: 'CONFIGURED_CREDENTIAL'} : checked.blocked ? {blockedReason: 'PRIVACY_POLICY_BLOCK'} : {}),
       allowedActions: blocked ? [] : [action],
-      name: recipientScope === 'recipient' ? '知行交付（对外版）' : '知行交付（本人版）',
+      name: `${history ? '知行会话' : '知行交付'}（${recipientScope === 'recipient' ? '对外版' : '本人版'}）`,
+      ...(history ? {history} : {}),
       expiresAt: this.now() + this.ttlMs,
     };
     for (const [id, row] of this.snapshots) if (row.expiresAt <= this.now()) this.snapshots.delete(id);

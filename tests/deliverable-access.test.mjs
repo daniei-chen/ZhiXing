@@ -11,6 +11,8 @@ import {pathToFileURL} from 'node:url';
 const packed = process.env.ZHIXING_TEST_PACKED_APP;
 const moduleUrl = relative => packed ? pathToFileURL(path.join(packed, relative)).href : new URL(`../${relative}`, import.meta.url).href;
 const {DeliverableAccess} = await import(moduleUrl('electron/deliverable-access.mjs'));
+const {DeliveryService} = await import(moduleUrl('electron/delivery-service.mjs'));
+const {NativeSessionExport} = await import(moduleUrl('electron/native-session-export.mjs'));
 const {createBridgeKey, writeBridge} = await import(moduleUrl('harness/privacy-bridge.mjs'));
 const require = createRequire(import.meta.url);
 const harnessRequire = createRequire(require.resolve('@deepseek-ai/dsh/lib/bin.js'));
@@ -53,6 +55,85 @@ async function fixture(t) {
  });
  return {directory, root, project, outside, state, key, vaults, access, callbacks, scope, history};
 }
+
+function sessionExportFixture(f, {secrets = [], isBusy = () => false} = {}) {
+ f.state.settings = {persist:true,privacyMode:'redact'};
+ const delivery = new DeliveryService({getSettings:()=>f.state.settings,getSecrets:()=>secrets});
+ const service = new NativeSessionExport({...f.callbacks,delivery,isBusy});
+ const request = (history = {}, options = {}) => ({format:'md',action:'export',history:{...f.scope,mode:'redact',...history},...options});
+ return {delivery,service,request};
+}
+
+const conversation = text => [{type:'user/message',seq:0,time:1,surfaceOp:'append',data:{id:'fixture-user',role:'user',source:{kind:'user'},content:[{type:'text',text}]}}];
+const bind = ({reviewId,contentHash,policyRevision,recipientScope,format}) => ({reviewId,contentHash,policyRevision,recipientScope,format});
+
+test('Harness Markdown 逐模式审阅，主机历史不接受替代正文，交付只使用审阅后的 UTF-8 字节', async t => {
+ const f = await fixture(t);
+ const {delivery,service,request} = sessionExportFixture(f);
+ const phone = '13800000000', masked = '⟦ZX-123456abcdef-PHONE-1⟧';
+ await f.history([], {events:conversation(`脱敏历史 ${masked}`)});
+ await f.history([], {mode:'raw',events:conversation(`原始历史 电话${phone}`)});
+ await f.history([], {id:'child-one',header:{origin:'subagent',parentSession:'chat-one'},events:conversation('子会话内容')});
+ await assert.rejects(service.prepare(request({projectId:'project-two'})), {code:'SESSION_EXPORT_SCOPE'});
+ await assert.rejects(service.prepare(request({workspaceId:'government-home'})), {code:'SESSION_EXPORT_SCOPE'});
+ await assert.rejects(service.prepare(request({sessionId:'child-one'})), {code:'SESSION_EXPORT_SCOPE'});
+ await assert.rejects(service.prepare(request({}, {action:'share'})), {code:'SESSION_EXPORT_FORMAT'});
+ assert.throws(()=>delivery.prepare({original:'伪造',format:'md'}), {code:'DELIVERY_INPUT_INVALID'});
+
+ const redacted = await service.prepare(request({}, {original:'伪造正文',title:'伪造标题',recipientScope:'self'}));
+ assert.match(redacted.text, /^# Untitled Session\n\n> 脱敏历史 /);
+ assert(redacted.text.includes(masked));
+ for (const omitted of [phone, '子会话内容', '原始历史', '伪造']) assert(!redacted.text.includes(omitted));
+
+ const scope = {mode:'raw'};
+ const recipient = await service.prepare(request(scope));
+ assert.match(recipient.text,/原始历史/);assert(!recipient.text.includes(phone));
+ const self = await service.prepare(request(scope,{recipientScope:'self'}));
+ assert(self.text.includes(phone));
+ assert.throws(()=>delivery.resolve({...bind(recipient),recipientScope:'self'},'export'), {code:'DELIVERY_REVIEW_MISMATCH'});
+ const target = path.join(f.outside,'export.md');
+ await delivery.execute(bind(recipient),'export',async(snapshot,validate)=>{
+  assert.deepEqual(service.assertScope(snapshot.history), {...f.scope,...scope});
+  await fs.writeFile(target, Buffer.from(validate().text, 'utf8'));
+ });
+ assert.deepEqual(await fs.readFile(target), Buffer.from(recipient.text, 'utf8'));
+ f.state.settings.privacyPolicy = {actions:{PHONE:'block'}};
+ assert.throws(()=>delivery.resolve(bind(self),'export'), {code:'DELIVERY_POLICY_CHANGED'});
+ const blocked = await service.prepare(request(scope,{recipientScope:'self'}));
+ assert.equal(blocked.blocked,true);assert(!blocked.text.includes(phone));
+ f.state.chats[0].projectId = 'project-two';
+ assert.throws(()=>service.assertScope(blocked.history), {code:'SESSION_EXPORT_SCOPE'});
+});
+
+test('Harness Markdown 阻断当前凭据，拒绝活动会话、关闭持久化、坏日志和重定向目录', async t => {
+ const f = await fixture(t);
+ const key = 'synthetic-legacy-configured-key';
+ let busy = false;
+ const {delivery,service,request} = sessionExportFixture(f,{secrets:[key],isBusy:()=>busy});
+ await assert.rejects(service.prepare(request()), {code:'SESSION_EXPORT_MISSING'});
+ const target = await f.history([], {mode:'raw',events:conversation(`旧日志样例 ${key}`)});
+ for (const recipientScope of ['recipient','self']) {
+  const blocked = await service.prepare(request({mode:'raw'},{recipientScope}));
+  assert.equal(blocked.blockedReason,'CONFIGURED_CREDENTIAL');assert(!blocked.text.includes(key));
+  assert.throws(()=>delivery.resolve(bind(blocked),'export'), {code:'DELIVERY_BLOCKED'});
+ }
+ busy = true;
+ await assert.rejects(service.prepare(request({mode:'raw'})), {code:'SESSION_EXPORT_BUSY'});
+ busy = false; f.state.settings.persist = false;
+ await assert.rejects(service.prepare(request({mode:'raw'})), {code:'SESSION_EXPORT_DISABLED'});
+ f.state.settings.persist = true;
+ await f.history([], {header:{id:'chat-two'},events:conversation('错误归属')});
+ await assert.rejects(service.prepare(request()), {code:'SESSION_EXPORT_HISTORY'});
+ await f.history([], {events:[{...conversation('漏掉序号')[0],seq:5}]});
+ await assert.rejects(service.prepare(request()), {code:'SESSION_EXPORT_HISTORY'});
+ await fs.truncate(target, 24 * 1024 * 1024 + 1);
+ await assert.rejects(service.prepare(request({mode:'raw'})), {code:'SESSION_EXPORT_TOO_LARGE'});
+ const anotherHistory = path.join(f.root,'redirected-history');
+ const historyDirectory = path.dirname(target);
+ await fs.rename(historyDirectory,anotherHistory);
+ await fs.symlink(anotherHistory,historyDirectory,process.platform==='win32'?'junction':'dir');
+ await assert.rejects(service.prepare(request({mode:'raw'})), {code:'SESSION_EXPORT_HISTORY'});
+});
 
 test('项目外真实 present 文件可由专用引用读取，渲染端伪造路径不授予访问', async t => {
  const f = await fixture(t);
@@ -251,6 +332,15 @@ test('真实 Harness 在完全访问下 present 项目外文件后可用主机�
   assert.equal(file.path, result.deliverables[0].path);
   assert.equal((await f.access.read({...f.scope, id: file.id})).text, '真实内核的项目外交付。');
   assert.equal(requests, 2);
+  await manager.close();
+  const {service,request} = sessionExportFixture(f);
+  const transcript = await service.prepare(request());
+  assert(!transcript.blocked);
+  assert.match(transcript.text, /交付合成文件。/);
+  assert.match(transcript.text, /Tool: `present`/);
+  assert.match(transcript.text, /原生项目外交付已完成。/);
+  assert(!transcript.text.includes(target)&&!transcript.text.includes('synthetic-present-key'));
+  assert.equal(requests, 2, 'reading the committed native transcript creates no provider call');
  } finally {
   await manager.close();
   server.closeAllConnections();

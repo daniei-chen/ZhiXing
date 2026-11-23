@@ -100,23 +100,24 @@ function visualBoxes(lines, width, height, privacy) {
   });
 }
 
-async function fitWireImage(png, width, height, original) {
+async function fitWireImage(png, width, height, original, outputMediaType) {
   const scale = Math.min(1, Math.sqrt(VISUAL_MAX_PIXELS / (width * height)), 2048 / Math.max(width, height));
   const w = Math.max(1, Math.floor(width * scale)), h = Math.max(1, Math.floor(height * scale));
   const raster = sharp(png).resize(w, h, { fit: 'fill', withoutEnlargement: true });
-  for (const compressionLevel of [6, 9]) {
+  for (const compressionLevel of outputMediaType === 'image/jpeg' ? [] : [6, 9]) {
     const lossless = await raster.clone().png({ compressionLevel }).toBuffer();
     if (lossless.length <= VISUAL_MAX_BYTES && !lossless.equals(original)) return { bytes: lossless, mediaType: 'image/png' };
   }
-  for (const quality of [88, 74, 60]) {
+  for (const quality of outputMediaType === 'image/png' ? [] : [88, 74, 60]) {
     const compressed = await raster.clone().jpeg({ quality, chromaSubsampling: '4:4:4' }).toBuffer();
     if (compressed.length <= VISUAL_MAX_BYTES && !compressed.equals(original)) return { bytes: compressed, mediaType: 'image/jpeg' };
   }
   throw new Error('图片副本超过 1 MiB，请裁剪图片后重新添加。');
 }
 
-export async function prepareVisualAttachment({ name, bytes, privacy, signal } = {}) {
+export async function prepareVisualAttachment({ name, bytes, privacy, signal, outputMediaType } = {}) {
   signal?.throwIfAborted();
+  if (outputMediaType !== undefined && !outputTypes.has(outputMediaType)) throw new Error('不支持选定的视觉副本格式。');
   if (!supportsVisualImage(name) || !Buffer.isBuffer(bytes) || !bytes.length || bytes.length > MAX_SOURCE_BYTES) {
     throw new Error('请选择 10 MB 以内的 PNG 或 JPEG 图片。');
   }
@@ -140,7 +141,7 @@ export async function prepareVisualAttachment({ name, bytes, privacy, signal } =
     const overlay = '<svg width="' + width + '" height="' + height + '" xmlns="http://www.w3.org/2000/svg">' + rects + '</svg>';
     masked = await sharp(canonical).composite([{ input: Buffer.from(overlay) }]).png().toBuffer();
   }
-  const wire = await fitWireImage(masked, width, height, bytes);
+  const wire = await fitWireImage(masked, width, height, bytes, outputMediaType);
   signal?.throwIfAborted();
 
   const visualId = randomUUID(), hash = digest(wire.bytes);
