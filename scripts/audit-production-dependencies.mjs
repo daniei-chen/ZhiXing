@@ -9,12 +9,21 @@ const destination = path.resolve(process.argv[3] || '.preview/qa-0.12.1-audit/de
 await fs.mkdir(destination, {recursive: true});
 const lock = JSON.parse(await fs.readFile(path.join(repository, 'package-lock.json'), 'utf8'));
 const applicationPackage = JSON.parse(await fs.readFile(path.join(application, 'package.json'), 'utf8'));
-const records = [], omittedOptional = [];
+// Keep in sync with UNUSED_PACKAGE_PATHS in scripts/pack-runtime.cjs: these
+// packages are absent from the shipped tree by design, not by accident.
+const prunedPrefixes = ['node_modules/@deepseek-ai/libreoffice-kit-wasm', 'node_modules/@types',
+  'node_modules/node-pty/prebuilds/win32-arm64', 'node_modules/node-pty/prebuilds/darwin-arm64',
+  'node_modules/node-pty/prebuilds/darwin-x64', 'node_modules/node-pty/prebuilds/linux-x64'];
+const records = [], omittedOptional = [], pruned = [];
 for (const [relative, expected] of Object.entries(lock.packages)) {
   if (!relative.startsWith('node_modules/') || expected.dev || expected.link) continue;
   let bytes;
   try {bytes = await fs.readFile(path.join(application, relative, 'package.json'));}
-  catch (error) {if (expected.optional && error.code === 'ENOENT') {omittedOptional.push(relative); continue;} throw error;}
+  catch (error) {
+    if (error.code === 'ENOENT' && prunedPrefixes.some(prefix => relative === prefix || relative.startsWith(`${prefix}/`))) {pruned.push(relative); continue;}
+    if (expected.optional && error.code === 'ENOENT') {omittedOptional.push(relative); continue;}
+    throw error;
+  }
   const actual = JSON.parse(bytes);
   if (actual.version !== expected.version) throw new Error(`Dependency differs from lock: ${relative}`);
   records.push({path: relative, name: actual.name, version: actual.version, license: actual.license || null,
@@ -24,7 +33,7 @@ records.sort((left, right) => left.path.localeCompare(right.path, 'en'));
 const inventory = {schemaVersion: 1, appVersion: applicationPackage.version, generatedAt: new Date().toISOString(),
   scope: 'Installed production package manifests at lockfile paths; not a full source/binary-license or bundled-JavaScript audit',
   lockSha256: createHash('sha256').update(await fs.readFile(path.join(repository, 'package-lock.json'))).digest('hex'),
-  fingerprint: createHash('sha256').update(JSON.stringify(records)).digest('hex'), packages: records, omittedOptional};
+  fingerprint: createHash('sha256').update(JSON.stringify(records)).digest('hex'), packages: records, omittedOptional, pruned};
 await fs.writeFile(path.join(destination, 'production-inventory.json'), JSON.stringify(inventory, null, 2));
 const sbom = {bomFormat: 'CycloneDX', specVersion: '1.5', serialNumber: `urn:uuid:${randomUUID()}`, version: 1,
   metadata: {timestamp: inventory.generatedAt, component: {type: 'application', name: applicationPackage.name, version: applicationPackage.version},
