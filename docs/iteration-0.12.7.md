@@ -4,4 +4,4 @@
 
 图片资料和项目内 `read_image` 接受单帧 WebP 与 GIF。两者与 PNG/JPEG 共用同一条本机链路：主进程按实际方向解码、按白底展开透明像素、移除元数据，用 Windows OCR 的词框遮罩当前规则命中的文字，再把统一转成 PNG 的副本交给声明 `image` 输入的当前模型。出站仍受本机网关的 PNG/JPEG 校验。动图、扩展名与内容不符以及 BMP 等不支持的文件被明确拒绝，不截取首帧。
 
-本轮验证为源码与本机合成回环：原生会话在真实 Harness 中逐档核对沙箱、历史事件和审批策略；WebP/GIF 走真实 Windows OCR，核对命中、遮罩与实际出站副本。Windows 目录包、桌面专项与安装生命周期证据未在本轮补齐，发布前另行复验。 [能力地图](harness-capability-map.md) · [Windows 验收](windows-acceptance-0.12.7.md)
+本轮验证为源码、目录包与真实 Windows 桌面专项：原生会话在真实 Harness 中逐档核对沙箱、历史事件和审批策略；WebP/GIF 走真实 Windows OCR，核对命中、遮罩与实际出站副本；打包应用完成拖放、重启恢复、替换策略拒绝和正常退出的桌面旅程。安装、升级、卸载与重装生命周期本轮未复跑，安装器配置与存储格式未改。 [能力地图](harness-capability-map.md) · [Windows 验收](windows-acceptance-0.12.7.md)
