@@ -24,7 +24,7 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前版本为 **0.13.9 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [下载完整安装包](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.9/ZhiXing-0.13.9-x64.exe) · [Windows 验收记录](docs/windows-acceptance-0.13.9.md) · [能力与缺口总览](docs/harness-capability-map.md#当前状态总览0134)
+当前版本为 **0.14.0 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [下载完整安装包](https://github.com/daniei-chen/ZhiXing/releases/download/v0.14.0/ZhiXing-0.14.0-x64.exe) · [Windows 验收记录](docs/windows-acceptance-0.14.0.md) · [能力与缺口总览](docs/harness-capability-map.md#当前状态总览0134)
 
 > 下面按版本倒序记录更新。**各版本章节里的「未覆盖」是当时的事实，可能已被后续版本补齐**；当前真实状态以[能力地图的当前状态总览](docs/harness-capability-map.md#当前状态总览0134)为准。
 
@@ -36,7 +36,14 @@
 
 </div>
 
-## 0.13.9 本轮更新
+## 0.14.0 本轮更新
+
+- **发现覆盖漏洞**：`errorText` 在 `src/` 里定义了 **5 次**，0.13.9 只在 `App.jsx` 那份加了网络错误映射，供应商设置、定时任务、插件市场、Harness 插件四处仍显示原始错误串。
+- **新增 `src/error-copy.js`**，五处统一引用，网络错误文案全应用生效。
+- `errorText` 入参改为 `String(error?.message ?? error)`，非 Error 值不再抛二次异常。
+- **错误文案映射仍未在真实网络故障下实测**（连续两版遗留），下一轮优先补。
+
+## 0.13.9 历史更新
 
 - **网络错误说人话**：请求失败时不再抛 `fetch failed`、`401`、`ENOTFOUND` 这类技术串，而是按「用户能做的下一步」给出中文提示（Key 失效／权限不足／请求过频／域名解析失败／连接被拒／连接中断／超时／证书问题）。
 - **匹配不到的错误保持原文**，不猜测性改写；原始文本仍进诊断日志。
@@ -198,27 +205,27 @@
 
 ### 安装 Windows 版
 
-1. [下载 `ZhiXing-0.13.9-x64.exe`](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.9/ZhiXing-0.13.9-x64.exe)，核对 [SHA-256 清单](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.9/SHA256SUMS-release.txt)。
+1. [下载 `ZhiXing-0.14.0-x64.exe`](https://github.com/daniei-chen/ZhiXing/releases/download/v0.14.0/ZhiXing-0.14.0-x64.exe)，核对 [SHA-256 清单](https://github.com/daniei-chen/ZhiXing/releases/download/v0.14.0/SHA256SUMS-release.txt)。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
 
 安装包包含 Node.js、Harness 和插件 npm CLI。Git 工作树需要本机 Git，部分 Office 技能需要额外的本机工具。SenseVoice 语音模型在用户主动准备时另行下载。当前安装包未签名，请核对来源与文件校验值。安装生命周期的结论限于验收记录所列条件。
 
-[0.13.5 GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.13.9)
+[0.13.5 GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.14.0)
 
 | Windows x64 安装资产 | 值 |
 | --- | --- |
-| 文件 | `ZhiXing-0.13.9-x64.exe` |
+| 文件 | `ZhiXing-0.14.0-x64.exe` |
 | 发行状态 | Windows x64 未签名预发布版 |
-| 文件大小 | `338,680,853` bytes |
-| SHA-256 | `3b8cf6569c58ccb2d8adfd5875e9cab56f9eb4254a4f57dd9ac4b9e9a27a67ef` |
+| 文件大小 | `338,681,277` bytes |
+| SHA-256 | `aac2e671a68a126ba9be99312311743c6234aa77938f082ed498fb90285e6799` |
 
-源码回归 **363/364**，目录包回归 **322/323**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败、0 取消。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **5/5**。桌面专项使用本机合成模型服务，核对了批准与拒绝后的实际文件字节、部分补丁的重启后轨迹、7 次模型出站，以及 Markdown 导出增加 0 次模型请求。 [0.13.4 Windows 验收记录](docs/windows-acceptance-0.13.9.md)
+源码回归 **363/364**，目录包回归 **322/323**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败、0 取消。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **5/5**。桌面专项使用本机合成模型服务，核对了批准与拒绝后的实际文件字节、部分补丁的重启后轨迹、7 次模型出站，以及 Markdown 导出增加 0 次模型请求。 [0.13.4 Windows 验收记录](docs/windows-acceptance-0.14.0.md)
 
 同一 Windows 账户的 NSIS 静默安装生命周期在 `0.13.2` 包上复跑：首次安装、同版本覆盖、卸载保留、重装保留与外部目录启动全部通过，项目／会话／草稿／加密配置哈希全程不变。`0.13.3` 另做了降级到 `0.13.2` 再升级回来的验证，数据文件哈希保持、升级后解密核对内容完整。**交互式安装全流程、跨账户解密、`quitAndInstall` 串联与真实云端仍未验证。**
 
-发行页提供完整安装包、机器可读验收摘要、生产依赖路径清单、组件 SBOM、与 0.13.8 的完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交 `20be1b3e257cfdedad337586e5224ce4f629cc4a`。 [v0.13.9 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.13.9) · [外部审计说明](docs/audit-request-0.13.9.md)
+发行页提供完整安装包、机器可读验收摘要、生产依赖路径清单、组件 SBOM、与 0.13.9 的完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交 `b1e7d234c97e13ddf7160d2fb55dd8d38df326e3`。 [v0.14.0 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.14.0) · [外部审计说明](docs/audit-request-0.14.0.md)
 
 ### 连接模型
 
@@ -294,7 +301,7 @@
 | Office 交付 | 已接入 OfficeKit 转换、工作簿重算和按页渲染。复杂排版、结构化报表类型及上游插件的完整生命周期仍待验证 |
 | 平台 | 当前面向 Windows x64。macOS、Linux 分发以及系统桌面 Computer Use 等扩展待独立验证 |
 
-[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.13.9.md) · [界面对照记录](design-qa.md)
+[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.14.0.md) · [界面对照记录](design-qa.md)
 
 ## 0.11.0 的工作重点
 
@@ -354,6 +361,7 @@ Get-FileHash ".\release\知行-0.12.8-x64.exe" -Algorithm SHA256
 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) · [Electron](https://www.electronjs.org/) · [React](https://react.dev/)
 
 <br />
+
 
 
 
