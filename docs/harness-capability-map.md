@@ -2,6 +2,14 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
+## 0.13.2 · 应用日志与诊断导出
+
+新增 `electron/app-log.mjs`：事件级日志写入 `zhixing/logs/app.log`，1 MB 轮转保留两份，密钥类字段替换为 `[redacted]`，长串截断，不记聊天正文与文件内容。记录点：启动、自动更新状态、`uncaughtException`、`unhandledRejection`、`child-process-gone`、`render-process-gone`。注册 `uncaughtException` 后主进程不再因未捕获异常退出，属有意取舍。
+
+设置 → 关于 →「导出诊断信息」生成 `diagnostics.json`（版本／平台／内存／数据量／更新与保存状态）加日志副本，端到端验证通过且不含凭据。
+
+边界：没有远程上报，也没有 crashReporter 与 minidump；崩溃记录点未在真实崩溃下验证；日志明文存放。上版 2 项超时取消本轮未复现。
+
 ## 0.13.1 · 签名管道与长时间运行
 
 签名从硬编码跳过改为构建器默认：无证书时 `no code signing certificate configured, signing is skipped`，设置 `CSC_LINK`／`CSC_KEY_PASSWORD` 后自动签名。证书未申请，**签名成功路径未验证**；`verifyUpdateCodeSignature` 默认为真，未签名升到已签名需人工验证一次。
