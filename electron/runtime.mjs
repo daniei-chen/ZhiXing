@@ -17,7 +17,7 @@ import {normaliseKernel} from '../src/kernel-config.js';
 import {acceptsGoalImages, formatSessionCommand, parseSessionCommand} from '../src/session-commands.js';
 import {applyRuntimeExtensions} from './plugin-profile.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
-import {turnFailureMessage} from './run-failure.mjs';
+import {failureHint, turnFailureMessage} from './run-failure.mjs';
 import {AssistantTextStream} from './assistant-stream.mjs';
 import { VISUAL_MAX_BYTES, VISUAL_MAX_PER_REQUEST, VISUAL_MAX_PIXELS, readVisualAttachment } from './visual-attachments.mjs';
 import {readProjectVision,renderOfficeVision} from './office-visual.mjs';
@@ -670,6 +670,9 @@ export class RuntimeManager{
     }
     const reason=result.events?.findLast(event=>event.type==='turn/end')?.data?.reason;
     const diagnostic=this.executionDisplay(String(reason?JSON.stringify(reason):result.finalResponse||'').slice(0,2000),{providerKey:key,customTerms,privacyPolicy:effectivePolicy});
+    // 界面换成可行动句子之后，内核原来的原因只剩诊断价值：状态码、失败代码
+    // 或空 reason 都要留在日志里，否则支持人员无法判断用户遇到的是哪一类。
+    console.error(`run.turn-failed ${JSON.stringify({finishReason:result.finishReason,hint:failureHint(reason),reason}).slice(0,2000)}`);
     throw Object.assign(new Error(turnFailureMessage(reason)),{code:'RUNTIME_TURN_FAILED',stage:'query',details:{finishReason:result.finishReason,diagnostic}});
    }
    active.finishReason=result.finishReason;

@@ -41,13 +41,13 @@ function mockProvider(mode) {
     hits.push(`${request.method} ${request.url}`);
     if (request.url.endsWith('/models')) {
       response.writeHead(200, { 'content-type': 'application/json' });
-      response.end(JSON.stringify({ data: [{ id: 'deepseek-flash', name: 'QA 假模型' }] }));
+      response.end(JSON.stringify({ data: [{ id: 'deepseek-flash', name: 'QA 假模型', input_modalities: ['text'] }] }));
       return;
     }
-    if (request.url.includes('/messages')) {
+    if (request.url.includes('/chat/completions')) {
       if (mode === 'unauthorized') {
         response.writeHead(401, { 'content-type': 'application/json' });
-        response.end(JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid api key' } }));
+        response.end(JSON.stringify({ error: { message: 'Invalid API key', type: 'invalid_request_error', code: 'invalid_api_key' } }));
         return;
       }
       // 收下请求再断连接：内核把它记成传输失败，而不是 HTTP 失败。
@@ -91,15 +91,31 @@ async function openProviders() {
   if (await ui.evaluate('!!document.querySelector(".provider-back")')) await ui.click('所有供应商', '.provider-back');
 }
 
+async function clickPredicate(selector, predicate) {
+  const point = await ui.evaluate(`(()=>{const nodes=[...document.querySelectorAll(${JSON.stringify(selector)})].filter(e=>e.getClientRects().length);const e=nodes.find(el=>(${predicate}));if(!e)throw Error('no visible match for '+${JSON.stringify(selector)});e.scrollIntoView({block:'nearest'});const r=e.getBoundingClientRect();return {x:(Math.max(r.left,0)+Math.min(r.right,innerWidth))/2,y:(Math.max(r.top,0)+Math.min(r.bottom,innerHeight))/2};})()`);
+  await ui.send('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...point });
+  await ui.send('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...point });
+  await pause(150);
+}
+
 async function configure(baseUrl, { edit = false } = {}) {
   await openProviders();
-  if (edit) await ui.click('DeepSeek', '.provider-row');
-  else await ui.click('DeepSeek', '.provider-preset');
-  await ui.waitFor('!!document.querySelector(".connection-form input[type=url]")');
+  if (edit) await clickPredicate('.provider-row', "el.textContent.includes('QA 假服务')");
+  else {
+    await ui.click('自定义', '.provider-preset');
+    await ui.waitFor('!!document.querySelector(".connection-form input[type=url]")');
+    await ui.fill('input[placeholder="例如，公司模型网关"]', 'QA 假服务');
+    // 自定义供应商默认「使用服务端默认值」，那样只有「关闭」一档；选标准思考
+    // 参数才会出现四档，默认的「高」才发得出去。
+    await ui.click('高级设置', 'button.provider-back');
+    await ui.waitFor('!!document.querySelector("select[aria-label=思考参数]")');
+    await ui.fill('select[aria-label=思考参数]', 'standard');
+  }
+  await ui.waitFor('!!document.querySelector(".connection-form input[type=url]")', 10000);
   await ui.fill('.connection-form input[type=url]', baseUrl);
   await ui.fill('.connection-form input[type=password]', fakeKey);
   await ui.click('拉取模型并保存', '.primary-button');
-  // 保存成功后表单收起，已连接列表里出现 DeepSeek。
+  // 保存成功后表单收起，已连接列表里出现「QA 假服务」。
   const deadline = Date.now() + 60000;
   while (Date.now() < deadline) {
     const warning = await ui.evaluate('(()=>{const n=document.querySelector(".setting-notice[role=alert]");return n?n.textContent.trim():""})()');
@@ -111,12 +127,14 @@ async function configure(baseUrl, { edit = false } = {}) {
 }
 
 async function sendMessage(text) {
-  if (await ui.evaluate('!!document.querySelector(".settings-page")')) await ui.click('关闭对话框', 'button[aria-label="关闭对话框"]');
+  if (await ui.evaluate('!!document.querySelector(".settings-page")')) await ui.click('返回工作台', 'button[aria-label="返回工作台"]');
   await ui.waitFor(`!!document.querySelector(${JSON.stringify(input)})`, 15000);
   // 清掉上一轮的错误气泡，避免读到旧句子。
   await ui.evaluate('(()=>{document.querySelectorAll(".run-error-detail").forEach(node=>node.dataset.stale="1")})()');
   await ui.fill(input, text);
-  await ui.click('发送', send);
+  const sendState = await ui.evaluate('(()=>{const b=document.querySelector("button.send-button");return b?{label:b.getAttribute("aria-label"),disabled:b.disabled}:null})()');
+  if (!sendState || sendState.disabled) throw new Error(`发送按钮不可用：${JSON.stringify(sendState)}；界面提示：${await ui.evaluate('(()=>document.body.innerText.match(/所选[^\\n]*|当前模型[^\\n]*/g)||[]).join(" | ")')}`);
+  await ui.click('发送消息', send);
   const deadline = Date.now() + 90000;
   while (Date.now() < deadline) {
     const text = await ui.evaluate('(()=>{const node=[...document.querySelectorAll(".run-error-detail")].find(item=>item.dataset.stale!=="1");return node?node.textContent.trim():""})()');
@@ -140,13 +158,13 @@ try {
   assert.equal(runtimeVersion, provenance.version);
   await record(`实包运行时报告 ${runtimeVersion}`);
 
-  await configure(`http://127.0.0.1:${unauthorized.server.address().port}/anthropic`);
+  await configure(`http://127.0.0.1:${unauthorized.server.address().port}/v1`);
   const unauthorizedText = await sendMessage('帮我把这段话改得更正式：明天开会。');
   await ui.screenshot(path.join(evidence, 'unauthorized.png'));
   report.cases.push({ name: '真实 401：界面文案', status: 'observed', shown: unauthorizedText }); await persist();
   assert.equal(unauthorizedText, `运行未完成：${COPY.unauthorized}`, `401 后界面显示「${unauthorizedText}」`);
 
-  await configure(`http://127.0.0.1:${reset.server.address().port}/anthropic`, { edit: true });
+  await configure(`http://127.0.0.1:${reset.server.address().port}/v1`, { edit: true });
   const transportText = await sendMessage('再帮我列三条会议要点。');
   await ui.screenshot(path.join(evidence, 'transport.png'));
   report.cases.push({ name: '连接被断开：界面文案', status: 'observed', shown: transportText }); await persist();
@@ -154,7 +172,7 @@ try {
 
   await pause(400);
   const logText = await fs.readFile(logPath, 'utf8');
-  const raw = [...logText.matchAll(/Error occurred in handler for 'runs:prepared': Error: (.+)/g)].map(match => match[1].trim());
+  const raw = [...logText.matchAll(/Error occurred in handler for 'agent:run-prepared': Error: (.+)/g)].map(match => match[1].trim());
   assert.ok(raw.length >= 2, `主进程应记录两次发送失败，实际 ${raw.length}`);
   assert.match(raw[0], /（HTTP 401）/, `主进程第一条缺少 HTTP 401：${raw[0]}`);
   assert.match(raw[1], /（TRANSPORT）/, `主进程第二条缺少 TRANSPORT：${raw[1]}`);
