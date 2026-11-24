@@ -414,7 +414,7 @@ function registerHandlers(){
   await ensureUpdater();
   await workspaceSaveQueue.flush().catch(()=>{});
   installingUpdate=true;
-  setImmediate(()=>autoUpdater.quitAndInstall(false,true));
+  setImmediate(()=>autoUpdater.quitAndInstall(true,true));
   return true;});
  handle('diagnostics:export',async()=>{
   let destination=process.env.ZHIXING_DIAGNOSTICS_DIR;
@@ -654,4 +654,5 @@ app.on('before-quit',event=>{
 });
 app.on('window-all-closed',()=>{if(process.platform!=='darwin')app.quit();});
 app.on('second-instance',()=>{if(windowRef?.isMinimized())windowRef.restore();windowRef?.show();windowRef?.focus();});
+
 
