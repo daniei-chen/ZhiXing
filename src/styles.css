@@ -622,6 +622,8 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .desktop-release-result { display: grid; justify-items: start; gap: 6px; width: 100%; margin-top: 4px; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); }
 .desktop-release-result p { margin: 0; overflow-wrap: anywhere; }
 .desktop-release-result small { color: var(--muted); font-size: 11px; }
+.desktop-update { display: grid; justify-items: start; gap: 6px; width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); }
+.desktop-update p { margin: 0; overflow-wrap: anywhere; }
 .folder-field { display: flex; gap: 4px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 8px; padding: 4px 5px 4px 9px; }
 .folder-field > span { display: flex; gap: 7px; min-width: 0; align-items: center; color: var(--muted); }
 .folder-field > span > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

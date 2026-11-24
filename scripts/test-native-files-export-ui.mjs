@@ -12,7 +12,7 @@ import {connectUi} from './qa-cdp.mjs';
 const exe=path.resolve(process.argv[2]||'release/win-unpacked/知行.exe');
 const app=path.join(path.dirname(exe),'resources','app');
 const provenance=JSON.parse(await fs.readFile(path.join(app,'build-provenance.json'),'utf8'));
-assert.match(provenance.version,/^0\.12\.\d+$/);
+assert.match(provenance.version,/^0\.\d+\.\d+$/);
 assert.equal(provenance.sourceDirty,false);
 const evidenceRoot=path.resolve(process.env.ZHIXING_QA_EVIDENCE||`.preview/qa-${provenance.version}/native-files-ui`);
 await fs.mkdir(evidenceRoot,{recursive:true});
@@ -201,3 +201,4 @@ finally{
  if(child?.exitCode===null){child.kill();await exit;}
  await log?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));
 }
+

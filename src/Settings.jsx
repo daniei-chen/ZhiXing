@@ -91,7 +91,19 @@ function AboutSettings({runtime}) {
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [update, setUpdate] = useState({status:'idle'});
   const desktop = window.zhixing;
+  useEffect(() => {
+    if (!desktop) return undefined;
+    let live = true;
+    desktop.desktopUpdateState().then(value => { if (live) setUpdate(value); }).catch(() => {});
+    const off = desktop.onDesktopUpdate(value => { if (live) setUpdate(value); });
+    return () => { live = false; off?.(); };
+  }, [desktop]);
+  async function runUpdate(action) {
+    if (!desktop) return;
+    try { setUpdate(await action()); } catch (failure) { setError(failure.message || '更新操作失败。'); }
+  }
 
   async function checkForUpdates() {
     if (!desktop || checking) return;
@@ -122,7 +134,19 @@ function AboutSettings({runtime}) {
     <p className="muted">{runtime.version||'DeepSeek Harness · 请在桌面版查看版本'}</p>
     <p>知你所需，行你所托。</p>
     {desktop ? <>
-      <button className="secondary-button" type="button" disabled={checking} onClick={checkForUpdates}>{checking ? '正在检查…' : '检查知行更新'}</button>
+      <div className="desktop-update" role="status">
+        <strong>应用更新</strong>
+        {update.status === 'unavailable' && <p className="settings-note">{update.message || '自动更新只在安装版可用。'}</p>}
+        {update.status === 'idle' && <p className="settings-note">尚未检查。</p>}
+        {update.status === 'checking' && <p className="settings-note">正在检查更新…</p>}
+        {update.status === 'current' && <p className="settings-note">已是最新版本。</p>}
+        {update.status === 'available' && <><p className="settings-note">发现新版本 {update.version}。</p><button className="secondary-button" type="button" onClick={() => runUpdate(desktop.downloadDesktopUpdate)}>下载更新</button></>}
+        {update.status === 'downloading' && <p className="settings-note">正在下载 {update.percent ?? 0}%…</p>}
+        {update.status === 'downloaded' && <><p className="settings-note">更新 {update.version} 已下载，重启后安装。</p><button className="secondary-button" type="button" onClick={() => runUpdate(desktop.installDesktopUpdate)}>重启并安装</button></>}
+        {update.status === 'error' && <p className="setting-notice bad" role="alert">{update.message}</p>}
+        <button className="secondary-button" type="button" onClick={() => runUpdate(desktop.checkDesktopUpdate)}>检查更新</button>
+      </div>
+      <button className="secondary-button" type="button" disabled={checking} onClick={checkForUpdates}>{checking ? '正在查询…' : '在 GitHub 上查看发行记录'}</button>
       {error && <p className="setting-notice bad" role="alert">{error}</p>}
       {result && <div className="desktop-release-result" role="status">
         {!result.latest ? <p>GitHub 尚未发布知行桌面版本。</p> : <>

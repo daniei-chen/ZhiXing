@@ -40,7 +40,13 @@
         ]
       }
     ],
-    "artifactName": "知行-${version}-${arch}.${ext}"
+    "artifactName": "ZhiXing-${version}-${arch}.${ext}"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "daniei-chen",
+    "repo": "ZhiXing",
+    "releaseType": "prerelease"
   },
   "nsis": {
     "oneClick": false,

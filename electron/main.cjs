@@ -8,7 +8,7 @@ const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
 if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
 const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
 const firstInstance=app.requestSingleInstanceLock();
-let windowRef,manager,automations,automationsReady,browserService,terminalService,speechService,servicesReady,fileWatcher,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
+let windowRef,manager,automations,automationsReady,browserService,terminalService,speechService,servicesReady,fileWatcher,autoUpdater,updateState={status:'idle'},installingUpdate=false,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
@@ -163,6 +163,30 @@ function ensureServices(){
   startupMark('init:services');
  })();
  return servicesReady;
+}
+
+// Auto-update stays opt-in: it only reports, never installs without a click.
+function publishUpdate(next){
+ updateState={...next,at:new Date().toISOString()};
+ if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('update:state',updateState);
+}
+async function ensureUpdater(){
+ if(autoUpdater)return autoUpdater;
+ const loaded=await import('electron-updater');
+ const updater=loaded.autoUpdater||loaded.default?.autoUpdater;
+ if(!updater)throw new Error('无法加载自动更新模块。');
+ updater.autoDownload=false;
+ updater.autoInstallOnAppQuit=false;
+ updater.allowPrerelease=true;
+ if(process.env.ZHIXING_UPDATE_FEED)updater.setFeedURL({provider:'generic',url:process.env.ZHIXING_UPDATE_FEED});
+ updater.on('checking-for-update',()=>publishUpdate({status:'checking'}));
+ updater.on('update-available',info=>publishUpdate({status:'available',version:info.version}));
+ updater.on('update-not-available',()=>publishUpdate({status:'current'}));
+ updater.on('download-progress',progress=>publishUpdate({status:'downloading',percent:Math.round(progress.percent),transferred:progress.transferred,total:progress.total}));
+ updater.on('update-downloaded',info=>publishUpdate({status:'downloaded',version:info.version}));
+ updater.on('error',error=>publishUpdate({status:'error',message:String(error?.message||error)}));
+ autoUpdater=updater;
+ return updater;
 }
 function workScope(options={}){const {workspace,project,workspaceRoot}=resolveProjectContext(workspaceContext,options);return {key:`${workspace.id}:${project?.id||options.sessionId||'home'}`,workspaceRoot};}
 function deliverySecrets(){return [
@@ -371,6 +395,25 @@ function registerHandlers(){
  });
  handle('data:save-status',()=>workspaceSaveQueue.state());
  handle('data:save-retry',()=>workspaceSaveQueue.retry());
+ handle('update:state',()=>app.isPackaged?updateState:{status:'unavailable',message:'自动更新只在安装版可用。'});
+ handle('update:check',async()=>{
+  if(!app.isPackaged)return {status:'unavailable',message:'自动更新只在安装版可用。'};
+  const updater=await ensureUpdater();
+  publishUpdate({status:'checking'});
+  try{await updater.checkForUpdates();}catch(error){publishUpdate({status:'error',message:String(error?.message||error)});}
+  return updateState;});
+ handle('update:download',async()=>{
+  const updater=await ensureUpdater();
+  if(updateState.status!=='available')throw new Error('当前没有可下载的更新。');
+  void updater.downloadUpdate().catch(error=>publishUpdate({status:'error',message:String(error?.message||error)}));
+  return updateState;});
+ handle('update:install',async()=>{
+  if(updateState.status!=='downloaded')throw new Error('更新尚未下载完成。');
+  await ensureUpdater();
+  await workspaceSaveQueue.flush().catch(()=>{});
+  installingUpdate=true;
+  setImmediate(()=>autoUpdater.quitAndInstall(false,true));
+  return true;});
  ipcMain.on('app:quit-prepared',(event,result)=>{
   try{trusted(event);}catch{return;}
   if(!quitAckResolver)return;
@@ -533,11 +576,13 @@ else app.whenReady().then(async()=>{
   void ensureServices();
   try{await automationsReady;}catch(error){dialog.showErrorBox('知行启动失败',error.message);app.quit();return;}
   automations.start();
+if(app.isPackaged)setTimeout(()=>{void ensureUpdater().then(updater=>updater.checkForUpdates()).catch(()=>{});},45000).unref();
  app.on('activate',()=>{if(BrowserWindow.getAllWindows().length===0)createWindow();});
 }).catch(e=>{dialog.showErrorBox('知行启动失败',e.message);app.quit();});
 app.on('before-quit',event=>{
  if(!firstInstance){quitting=true;return;}
  if(!windowRef||!workspaceSaveQueue||!manager){quitting=true;return;}
+ if(installingUpdate){quitting=true;return;}
  if(quitting)return;
  event.preventDefault();
  quitting=true;
