@@ -166,6 +166,19 @@ function ensureServices(){
 }
 
 // Auto-update stays opt-in: it only reports, never installs without a click.
+// 自动更新装完不清理下载缓存：本机实测一个 0.13.8 的 323 MB 安装包从上一版
+// 一直留到 0.14.3。启动时删掉已经装过的和过期的下载；正在等的更新比当前版本
+// 新，会留下。失败只记日志，不影响启动。
+async function pruneUpdaterCache(){
+ if(!app.isPackaged)return;
+ try{
+  const {pruneUpdateCache,updaterCacheDir}=await import('./updater-cache.mjs');
+  const cacheDir=await updaterCacheDir({resourcesPath:process.resourcesPath});
+  if(!cacheDir)return;
+  const report=await pruneUpdateCache({cacheDir,currentVersion:app.getVersion()});
+  if(report.removed.length)logEvent('info','updater.cache-pruned',{files:report.removed.length,bytes:report.removedBytes,removed:report.removed.slice(0,8)});
+ }catch(error){logEvent('error','updater.cache-prune-failed',{message:String(error?.message||error)});}
+}
 function logEvent(level,event,detail){void appLog?.write(level,event,detail);}
 function publishUpdate(next){
  updateState={...next,at:new Date().toISOString()};
@@ -597,6 +610,7 @@ else app.whenReady().then(async()=>{
  logEvent('info','app.start',{version:app.getVersion(),previousVersion,updated:Boolean(previousVersion&&previousVersion!==app.getVersion()),packaged:app.isPackaged,platform:process.platform,arch:process.arch,electron:process.versions.electron});
  await fs.mkdir(ROOT,{recursive:true}).catch(()=>{});
  await fs.writeFile(versionFile,app.getVersion()).catch(()=>{});
+ void pruneUpdaterCache();
  process.on('uncaughtException',error=>logEvent('error','uncaughtException',{message:String(error?.message||error),stack:String(error?.stack||'').slice(0,2000)}));
  process.on('unhandledRejection',reason=>logEvent('error','unhandledRejection',{message:String(reason?.message||reason),stack:String(reason?.stack||'').slice(0,2000)}));
  app.on('child-process-gone',(_event,details)=>logEvent('error','child-process-gone',{type:details.type,reason:details.reason,exitCode:details.exitCode}));
