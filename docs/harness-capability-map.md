@@ -2,6 +2,14 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
+## 0.13.0 · 应用内自动更新
+
+接入 `electron-updater`：设置页检查、下载、重启安装，启动后 45 秒后台查一次但不自动下载，安装必须点击。`app-update.yml` 指向 GitHub `daniei-chen/ZhiXing`，`releaseType=prerelease`；安装包改名为 `ZhiXing-${version}-x64.exe`，使 `latest.yml` 的 `url` 与资产一致。`--dir` 构建不写 `app-update.yml`，已由 `scripts/write-update-config.mjs` 补齐。
+
+本地 feed 实测：`checking → available(0.99.0) → downloading(100%) → downloaded`。
+
+边界：只验证了检查、版本比较、下载与 sha512 校验，未从 GitHub 真实下载 338 MB 完整包，也未验证升级后新版本的启动与数据保留；安装包未签名，更新器不提供签名校验，SmartScreen 提示仍在。安装生命周期未在本版复跑。
+
 ## 0.12.12 · 工作区文件观察
 
 打开文件面板时按项目目录建立监视（Windows 递归监视，其余降级单层），事件按 400 ms 合批上报，面板 300 ms 后重载当前目录；切换项目或关闭面板解除，重启后重建。
