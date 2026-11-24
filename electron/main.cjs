@@ -8,7 +8,7 @@ const userDataOverride=app.commandLine.getSwitchValue('user-data-dir');
 if(userDataOverride&&path.isAbsolute(userDataOverride))app.setPath('userData',userDataOverride);
 const ROOT=path.join(app.getPath('userData'),'zhixing'),VAULTS=path.join(ROOT,'vaults');
 const firstInstance=app.requestSingleInstanceLock();
-let windowRef,manager,automations,automationsReady,browserService,terminalService,speechService,servicesReady,fileWatcher,autoUpdater,updateState={status:'idle'},installingUpdate=false,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
+let windowRef,manager,automations,automationsReady,browserService,terminalService,speechService,servicesReady,fileWatcher,autoUpdater,appLog,updateState={status:'idle'},installingUpdate=false,deliverableAccess,deliveryService,nativeSessionExport,quitting=false,workspaceSaveQueue,workspaceContext,resolveProjectContext;
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
@@ -166,8 +166,10 @@ function ensureServices(){
 }
 
 // Auto-update stays opt-in: it only reports, never installs without a click.
+function logEvent(level,event,detail){void appLog?.write(level,event,detail);}
 function publishUpdate(next){
  updateState={...next,at:new Date().toISOString()};
+ logEvent(next.status==='error'?'error':'info','update.state',{status:next.status,version:next.version,percent:next.percent,message:next.message});
  if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('update:state',updateState);
 }
 async function ensureUpdater(){
@@ -414,6 +416,29 @@ function registerHandlers(){
   installingUpdate=true;
   setImmediate(()=>autoUpdater.quitAndInstall(false,true));
   return true;});
+ handle('diagnostics:export',async()=>{
+  let destination=process.env.ZHIXING_DIAGNOSTICS_DIR;
+  if(!destination){
+   const chosen=await dialog.showOpenDialog(windowRef,{title:'选择诊断信息保存目录',properties:['openDirectory','createDirectory']});
+   if(chosen.canceled||!chosen.filePaths[0])return {canceled:true};
+   destination=chosen.filePaths[0];
+  }
+  const {default:nodeOs}=await import('node:os');
+  const target=path.join(destination,`zhixing-diagnostics-${new Date().toISOString().replace(/[:.]/g,'-')}`);
+  await fs.mkdir(target,{recursive:true});
+  const stats=async file=>{try{const value=await fs.stat(file);return {bytes:value.size,modifiedAt:value.mtime.toISOString()};}catch{return null;}};
+  const counts={projects:(workspaceContext?.projects||[]).length,chats:(workspaceContext?.chats||[]).length,automations:(workspaceContext?.automations||[]).length};
+  const summary={
+   generatedAt:new Date().toISOString(),
+   app:{version:app.getVersion(),packaged:app.isPackaged,electron:process.versions.electron,node:process.versions.node,chrome:process.versions.chrome},
+   system:{platform:process.platform,arch:process.arch,release:nodeOs.release(),cpus:nodeOs.cpus().length,totalMemoryMB:Math.round(nodeOs.totalmem()/1048576),freeMemoryMB:Math.round(nodeOs.freemem()/1048576),processUptimeMinutes:Math.round(process.uptime()/60)},
+   data:{workspace:await stats(WORKSPACE_FILE),mcp:await stats(path.join(ROOT,'mcp.bin')),automations:await stats(path.join(ROOT,'automations.bin')),counts},
+   update:updateState,
+   save:workspaceSaveQueue.state()};
+  await fs.writeFile(path.join(target,'diagnostics.json'),JSON.stringify(summary,null,1),'utf8');
+  const copied=await appLog.copyTo(target);
+  logEvent('info','diagnostics.export',{files:copied.length});
+  return {canceled:false,directory:target,files:['diagnostics.json',...copied],summary};});
  ipcMain.on('app:quit-prepared',(event,result)=>{
   try{trusted(event);}catch{return;}
   if(!quitAckResolver)return;
@@ -562,6 +587,13 @@ async function createWindow(){
 }
 if(!firstInstance)app.quit();
 else app.whenReady().then(async()=>{
+ const {AppLog}=await import('./app-log.mjs');
+ appLog=new AppLog({directory:path.join(ROOT,'logs')});
+ logEvent('info','app.start',{version:app.getVersion(),packaged:app.isPackaged,platform:process.platform,arch:process.arch,electron:process.versions.electron});
+ process.on('uncaughtException',error=>logEvent('error','uncaughtException',{message:String(error?.message||error),stack:String(error?.stack||'').slice(0,2000)}));
+ process.on('unhandledRejection',reason=>logEvent('error','unhandledRejection',{message:String(reason?.message||reason)}));
+ app.on('child-process-gone',(_event,details)=>logEvent('error','child-process-gone',{type:details.type,reason:details.reason,exitCode:details.exitCode}));
+ app.on('render-process-gone',(_event,_contents,details)=>logEvent('error','render-process-gone',{reason:details.reason,exitCode:details.exitCode}));
  protocol.handle('zhixing',request=>{
   const url=new URL(request.url);if(url.hostname!=='app')return new Response('Not found',{status:404});
   const root=path.join(__dirname,'..','dist','client'),file=path.resolve(root,`.${decodeURIComponent(url.pathname)}`);

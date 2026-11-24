@@ -92,7 +92,15 @@ function AboutSettings({runtime}) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [update, setUpdate] = useState({status:'idle'});
+  const [diagnostic, setDiagnostic] = useState('');
   const desktop = window.zhixing;
+  async function exportDiagnostics() {
+    if (!desktop) return;
+    try {
+      const result = await desktop.exportDiagnostics();
+      setDiagnostic(result.canceled ? '已取消。' : `已导出到 ${result.directory}`);
+    } catch (failure) { setDiagnostic(failure.message || '导出失败。'); }
+  }
   useEffect(() => {
     if (!desktop) return undefined;
     let live = true;
@@ -145,6 +153,12 @@ function AboutSettings({runtime}) {
         {update.status === 'downloaded' && <><p className="settings-note">更新 {update.version} 已下载，重启后安装。</p><button className="secondary-button" type="button" onClick={() => runUpdate(desktop.installDesktopUpdate)}>重启并安装</button></>}
         {update.status === 'error' && <p className="setting-notice bad" role="alert">{update.message}</p>}
         <button className="secondary-button" type="button" onClick={() => runUpdate(desktop.checkDesktopUpdate)}>检查更新</button>
+      </div>
+      <div className="desktop-update" role="status">
+        <strong>诊断信息</strong>
+        <p className="settings-note">导出版本、系统信息与运行日志，便于远程排查。不包含聊天内容、密钥或文件内容。</p>
+        <button className="secondary-button" type="button" onClick={exportDiagnostics}>导出诊断信息</button>
+        {diagnostic && <p className="settings-note">{diagnostic}</p>}
       </div>
       <button className="secondary-button" type="button" disabled={checking} onClick={checkForUpdates}>{checking ? '正在查询…' : '在 GitHub 上查看发行记录'}</button>
       {error && <p className="setting-notice bad" role="alert">{error}</p>}
