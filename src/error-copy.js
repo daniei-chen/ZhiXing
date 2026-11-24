@@ -20,6 +20,9 @@ const NETWORK_ERROR_COPY = [
   [/TRANSPORT/, '无法连接到模型服务，请检查网络、代理或服务地址后重试。'],
   [/ETIMEDOUT|timed? ?out|超时/i, '请求超时，请检查网络后重试。'],
   [/certificate|CERT_|self.signed/i, 'HTTPS 证书校验未通过，请确认服务地址可信。'],
+  // 本机网关把「连不上上游」记成 502/503/504；这三者对用户就是同一件事：
+  // 服务没连上。500 不算——它是上游自己出错，不能冒充网络问题。
+  [/（HTTP (?:502|503|504)）|502 Bad Gateway|503 Service Unavailable|504 Gateway Timeout/i, '无法连接到模型服务，请检查网络、代理或服务地址后重试。'],
   [/fetch failed|network error|failed to fetch/i, '网络请求失败，请检查网络连接或代理设置。'],
 ];
 

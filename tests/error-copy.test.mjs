@@ -47,6 +47,9 @@ test('每个真实网络故障都有对应的可行动文案', async () => {
     ['模型未完成本次请求（RATE_LIMIT）。请检查服务地址、模型 ID、API Key 或额度。', COPY.rate],
     ['模型未完成本次请求（QUOTA）。请检查服务地址、模型 ID、API Key 或额度。', COPY.rate],
     ['模型未完成本次请求（SERVER）。请检查服务地址、模型 ID、API Key 或额度。', '模型服务内部出错，请稍后再试。'],
+    // 本机网关连不上上游时给 502；500 是上游自己的错，仍保持原文不冒充网络故障。
+    ['模型未完成本次请求（HTTP 502）。请检查服务地址、模型 ID、API Key 或额度。', COPY.transport],
+    ['模型未完成本次请求（HTTP 504）。请检查服务地址、模型 ID、API Key 或额度。', COPY.transport],
   ];
   for (const [raw, expected] of cases) assert.equal(friendlyError(raw), expected, raw);
 });
