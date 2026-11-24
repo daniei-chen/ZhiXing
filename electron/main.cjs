@@ -414,6 +414,7 @@ function registerHandlers(){
   await ensureUpdater();
   await workspaceSaveQueue.flush().catch(()=>{});
   installingUpdate=true;
+  logEvent('info','update.install',{version:updateState.version,from:app.getVersion()});
   setImmediate(()=>autoUpdater.quitAndInstall(true,true));
   return true;});
  handle('diagnostics:export',async()=>{
@@ -589,7 +590,13 @@ if(!firstInstance)app.quit();
 else app.whenReady().then(async()=>{
  const {AppLog}=await import('./app-log.mjs');
  appLog=new AppLog({directory:path.join(ROOT,'logs')});
- logEvent('info','app.start',{version:app.getVersion(),packaged:app.isPackaged,platform:process.platform,arch:process.arch,electron:process.versions.electron});
+ // Record the version we ran last time: after an update the difference tells us
+ // whether this start came from the updater rather than a manual launch.
+ const versionFile=path.join(ROOT,'last-version.txt');
+ const previousVersion=(await fs.readFile(versionFile,'utf8').catch(()=>'')).trim()||null;
+ logEvent('info','app.start',{version:app.getVersion(),previousVersion,updated:Boolean(previousVersion&&previousVersion!==app.getVersion()),packaged:app.isPackaged,platform:process.platform,arch:process.arch,electron:process.versions.electron});
+ await fs.mkdir(ROOT,{recursive:true}).catch(()=>{});
+ await fs.writeFile(versionFile,app.getVersion()).catch(()=>{});
  process.on('uncaughtException',error=>logEvent('error','uncaughtException',{message:String(error?.message||error),stack:String(error?.stack||'').slice(0,2000)}));
  process.on('unhandledRejection',reason=>logEvent('error','unhandledRejection',{message:String(reason?.message||reason),stack:String(reason?.stack||'').slice(0,2000)}));
  app.on('child-process-gone',(_event,details)=>logEvent('error','child-process-gone',{type:details.type,reason:details.reason,exitCode:details.exitCode}));
@@ -654,5 +661,6 @@ app.on('before-quit',event=>{
 });
 app.on('window-all-closed',()=>{if(process.platform!=='darwin')app.quit();});
 app.on('second-instance',()=>{if(windowRef?.isMinimized())windowRef.restore();windowRef?.show();windowRef?.focus();});
+
 
 
