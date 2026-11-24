@@ -2,6 +2,12 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
+## 0.13.4 · 拒绝堆栈与崩溃记录点收口
+
+`unhandledRejection` 增加 `stack`（截断 2000 字符），与 `uncaughtException` 对齐——此前只有 `message`，排查价值有限。生产源码指纹 `ebfae935…` → `0d1c3365…`，是本版唯一运行逻辑改动。
+
+四个崩溃记录点全部真实触发验证：`uncaughtException`（inspector 注入）、`unhandledRejection`（注入未捕获拒绝）、`render-process-gone`（CDP 导航 `chrome://crash/`）、`child-process-gone`（`taskkill /T /F`）。验证的是事件落盘，不是现场可完整重建；强杀时来不及写日志属预期。无远程上报、crashReporter 与 minidump。
+
 ## 0.13.3 · 跨版本存档兼容性
 
 `mergeState` 新增 4 项兼容性用例：旧存档缺新增字段（补齐 `voiceLanguage`／`personalizationEnabled`／`personalInstructions`／`privacyPolicy` 与空数组，用户项目与会话正文原样保留）、未知新字段安全忽略、五种损坏存档回退默认不抛错、幽灵草稿保留条目但不伪造归属。源码回归 364 项中 363 通过。
