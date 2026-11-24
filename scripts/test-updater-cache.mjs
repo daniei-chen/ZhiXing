@@ -51,7 +51,7 @@ async function launch({ localAppData, label }) {
   }
   assert.ok(ui, `${label}: renderer test connection started`);
   await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')', 45000);
-  return { profile, logfile, exit };
+  return { profile, logfile, appLog: path.join(profile, 'zhixing/logs/app.log'), exit };
 }
 
 async function shutdown({ exit }) {
@@ -78,7 +78,7 @@ const waitForLog = async (file, pattern, timeoutMs = 30000) => {
 const caseA = path.join(evidence, 'localappdata-a');
 const pendingA = await seed(caseA, { 'ZhiXing-0.0.9-x64.exe': 4096, 'ZhiXing-99.0.0-x64.exe': 2048, 'current.blockmap': 100, 'update-info.json': 120 });
 const sessionA = await launch({ localAppData: caseA, label: 'a' });
-const prunedA = await waitForLog(sessionA.logfile, /updater\.cache-pruned (\{.*\})/);
+const prunedA = await waitForLog(sessionA.appLog, /updater\.cache-pruned (\{.*\})/);
 assert.ok(prunedA, '场景一：app.log 里出现了 updater.cache-pruned');
 const detailA = JSON.parse(prunedA[1]);
 const remainingA = (await fs.readdir(pendingA)).sort();
@@ -93,7 +93,7 @@ await shutdown(sessionA);
 const caseB = path.join(evidence, 'localappdata-b');
 const pendingB = await seed(caseB, { 'ZhiXing-0.0.8-x64.exe': 2048, 'current.blockmap': 100, 'update-info.json': 120 });
 const sessionB = await launch({ localAppData: caseB, label: 'b' });
-const prunedB = await waitForLog(sessionB.logfile, /updater\.cache-pruned (\{.*\})/);
+const prunedB = await waitForLog(sessionB.appLog, /updater\.cache-pruned (\{.*\})/);
 assert.ok(prunedB, '场景二：app.log 里出现了 updater.cache-pruned');
 const detailB = JSON.parse(prunedB[1]);
 assert.equal(detailB.files, 3, `没有待装安装包时元数据一并清理，实际删了 ${detailB.files} 个`);
