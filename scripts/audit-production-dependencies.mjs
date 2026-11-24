@@ -34,6 +34,18 @@ const inventory = {schemaVersion: 1, appVersion: applicationPackage.version, gen
   scope: 'Installed production package manifests at lockfile paths; not a full source/binary-license or bundled-JavaScript audit',
   lockSha256: createHash('sha256').update(await fs.readFile(path.join(repository, 'package-lock.json'))).digest('hex'),
   fingerprint: createHash('sha256').update(JSON.stringify(records)).digest('hex'), packages: records, omittedOptional, pruned};
+
+// Electron is a devDependency but ships as the application runtime, so `npm audit
+// --omit=dev` never sees its advisories. Record the version here and keep it
+// inside the fingerprint of what actually ships: a 44.7.0 -> 44.11.5 upgrade
+// (GHSA-jr5w-w6x2-84p9) was invisible to this file before.
+try {
+  const electronVersion = JSON.parse(await fs.readFile(path.join(repository, 'node_modules/electron/package.json'), 'utf8')).version;
+  inventory.runtime = {
+    electron: electronVersion,
+    scopeNote: 'Electron ships as the application runtime although npm lists it as a devDependency; audit its advisories with `npm audit` (not --omit=dev) or the Electron security page.',
+  };
+} catch { inventory.runtime = {electron: null, scopeNote: 'Electron manifest missing; runtime advisories were not checked.'}; }
 await fs.writeFile(path.join(destination, 'production-inventory.json'), JSON.stringify(inventory, null, 2));
 const sbom = {bomFormat: 'CycloneDX', specVersion: '1.5', serialNumber: `urn:uuid:${randomUUID()}`, version: 1,
   metadata: {timestamp: inventory.generatedAt, component: {type: 'application', name: applicationPackage.name, version: applicationPackage.version},
