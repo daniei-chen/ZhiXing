@@ -1,6 +1,6 @@
 {
   "name": "office-agent",
-  "version": "0.13.7",
+  "version": "0.13.8",
   "description": "知行 AI 办公助手 · DeepSeek Harness",
   "author": "知行",
   "private": true,
@@ -74,6 +74,7 @@
     "undici@^8.0.0": "8.12.2",
     "fflate@^0.8.0": "0.8.3",
     "@modelcontextprotocol/client@^2.0.0": "2.4.0",
-    "@modelcontextprotocol/core@^2.0.0": "2.4.0"
+    "@modelcontextprotocol/core@^2.0.0": "2.4.0",
+    "uuid": "^11.1.1"
   }
 }
