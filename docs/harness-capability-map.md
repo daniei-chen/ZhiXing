@@ -8,7 +8,11 @@
 
 设置 → 关于 →「导出诊断信息」生成 `diagnostics.json`（版本／平台／内存／数据量／更新与保存状态）加日志副本，端到端验证通过且不含凭据。
 
-边界：没有远程上报，也没有 crashReporter 与 minidump；崩溃记录点未在真实崩溃下验证；日志明文存放。上版 2 项超时取消本轮未复现。
+边界：没有远程上报，也没有 crashReporter 与 minidump；日志明文存放。上版 2 项超时取消本轮未复现。
+
+崩溃记录已真实验证：渲染进程 `chrome://crash/` → `render-process-gone {"reason":"crashed","exitCode":-2147483645}`；主进程 inspector 注入 `uncaughtException` → 日志记下探针消息与堆栈且进程继续运行。`child-process-gone` 与 `unhandledRejection` 仍未触发。
+
+安装生命周期已在本版安装包上复跑（`partial_historical_upgrade_not_run`）：首次安装、同版本覆盖、卸载保留、重装保留、外部目录启动通过；历史升级因缺少与本版匹配的基线未跑。
 
 ## 0.13.1 · 签名管道与长时间运行
 

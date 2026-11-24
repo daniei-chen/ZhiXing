@@ -12,6 +12,9 @@ Windows x64 未签名预发布版。DeepSeek Harness 固定为 `0.2.2-rc.5`。�
 | Windows 桌面专项 | 5/5 |
 | 日志单元测试 | 5/5（写入、脱敏、轮转、导出复制、不可写目录） |
 | 诊断导出端到端 | 通过：目录含 `app.log` + `diagnostics.json`，`app.start` 在册，版本与平台正确，未发现 `sk-…` / `Bearer …` 凭据 |
+| 崩溃记录（渲染进程） | 真实崩溃注入：日志落 `render-process-gone {"reason":"crashed","exitCode":-2147483645}` |
+| 崩溃记录（主进程） | 真实 `uncaughtException` 注入：日志记 `zhixing-main-crash-probe` 与堆栈，进程按设计继续运行 |
+| 安装生命周期 | **本版安装包**：首次安装、同版本覆盖、卸载保留、重装保留、外部目录启动全部通过；项目／会话／草稿／加密配置哈希全部保持；卸载后原始快捷方式按字节恢复、主机数据 92 文件一致；历史升级未跑 |
 | 启动测量 | 10 次中位数：`initialise` 950 ms、窗口显示 1,070 ms、可交互 1,251 ms |
 | `知行.exe` | 246,317,568 bytes，SHA-256 `e641df0db3e8f2e7ab4debcb1b09c7d7fc5d4a1428b900acfd17ec6fb93a180b` |
 | `ZhiXing-0.13.2-x64.exe` | 338,649,406 bytes，SHA-256 `1994a18471c47df8c6ec584604262baf3284f27f1f831723e7ddf6486b13fbef` |
@@ -25,6 +28,8 @@ Windows x64 未签名预发布版。DeepSeek Harness 固定为 `0.2.2-rc.5`。�
 
 ## 证据范围
 
-日志与诊断导出在有内容与空内容两种情况下都验证过，但**没有模拟真实崩溃**（未触发 `uncaughtException` / `render-process-gone` 的真实场景），这几条记录点只验证了能被注册、不据此断言崩溃时一定能留下完整现场。未接入 crashReporter，不生成 minidump。
+崩溃记录这次是**真实验证**的：渲染进程用 CDP 导航到 `chrome://crash/` 触发真实崩溃，主进程用 Node inspector 注入真实 `uncaughtException`，两者都确认写进了 `app.log`。`child-process-gone`、`unhandledRejection` 只验证了注册，未触发；未接入 crashReporter，不生成 minidump。
 
-自动更新逻辑未改动，其实测结果沿用 `0.13.0`，本版未复跑。签名仍未验证（无证书）。**安装生命周期未在本版安装包上复跑**，`0.12.12` 的证据不能推广。真实云服务、交互式安装、跨账户与真实用户资料未覆盖。
+安装生命周期**已在本版安装包上复跑**，`windows-install-lifecycle.json` 状态为 `partial_historical_upgrade_not_run`——首次安装、同版本覆盖、卸载保留、重装保留与外部目录启动全通过，历史版本升级本轮未跑（缺少与本版匹配的旧版基线）。视觉验收与跨 Windows 用户解密为范围外。
+
+自动更新逻辑未改动，其实测结果沿用 `0.13.0`，本版未复跑。签名仍未验证（无证书）。真实云服务、交互式安装、跨账户与真实用户资料未覆盖。
