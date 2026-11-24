@@ -591,7 +591,7 @@ else app.whenReady().then(async()=>{
  appLog=new AppLog({directory:path.join(ROOT,'logs')});
  logEvent('info','app.start',{version:app.getVersion(),packaged:app.isPackaged,platform:process.platform,arch:process.arch,electron:process.versions.electron});
  process.on('uncaughtException',error=>logEvent('error','uncaughtException',{message:String(error?.message||error),stack:String(error?.stack||'').slice(0,2000)}));
- process.on('unhandledRejection',reason=>logEvent('error','unhandledRejection',{message:String(reason?.message||reason)}));
+ process.on('unhandledRejection',reason=>logEvent('error','unhandledRejection',{message:String(reason?.message||reason),stack:String(reason?.stack||'').slice(0,2000)}));
  app.on('child-process-gone',(_event,details)=>logEvent('error','child-process-gone',{type:details.type,reason:details.reason,exitCode:details.exitCode}));
  app.on('render-process-gone',(_event,_contents,details)=>logEvent('error','render-process-gone',{reason:details.reason,exitCode:details.exitCode}));
  protocol.handle('zhixing',request=>{
@@ -654,3 +654,4 @@ app.on('before-quit',event=>{
 });
 app.on('window-all-closed',()=>{if(process.platform!=='darwin')app.quit();});
 app.on('second-instance',()=>{if(windowRef?.isMinimized())windowRef.restore();windowRef?.show();windowRef?.focus();});
+
