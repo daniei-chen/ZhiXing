@@ -24,7 +24,7 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前版本为 **0.13.6 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [下载完整安装包](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.6/ZhiXing-0.13.6-x64.exe) · [Windows 验收记录](docs/windows-acceptance-0.13.6.md) · [能力与缺口总览](docs/harness-capability-map.md#当前状态总览0134)
+当前版本为 **0.13.7 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [下载完整安装包](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.7/ZhiXing-0.13.7-x64.exe) · [Windows 验收记录](docs/windows-acceptance-0.13.7.md) · [能力与缺口总览](docs/harness-capability-map.md#当前状态总览0134)
 
 > 下面按版本倒序记录更新。**各版本章节里的「未覆盖」是当时的事实，可能已被后续版本补齐**；当前真实状态以[能力地图的当前状态总览](docs/harness-capability-map.md#当前状态总览0134)为准。
 
@@ -36,7 +36,14 @@
 
 </div>
 
-## 0.13.6 本轮更新
+## 0.13.7 本轮更新
+
+- **Electron `44.7.0` → `44.11.5`**：修复 `GHSA-jr5w-w6x2-84p9`（high）。`44.7.0` 在受影响区间内。
+- **审计盲区**：Electron 是 `devDependencies` 但打包后即运行时，`npm audit --omit=dev` 和生产审计都漏掉了它。`production-inventory.json` 现记录 `runtime.electron` 并说明核对方式。
+- **34 条 moderate 的来历**：实为 3 条 unique 通告的路径展开，均在不可达路径。
+- **本版未复跑自动更新与安装生命周期**，证据来自 `0.13.6`。
+
+## 0.13.6 历史更新
 
 - **`app.start` 增加 `previousVersion` 与 `updated`**：上次运行版本记在 `last-version.txt`，启动时比较并写回，日志能判断这次启动是否伴随版本变更。
 - **新增 `update.install` 记录**（`{version, from}`）：此前点下「重启并安装」之后没有任何记录，无法判断是没触发还是没装成。
@@ -178,27 +185,27 @@
 
 ### 安装 Windows 版
 
-1. [下载 `ZhiXing-0.13.6-x64.exe`](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.6/ZhiXing-0.13.6-x64.exe)，核对 [SHA-256 清单](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.6/SHA256SUMS-release.txt)。
+1. [下载 `ZhiXing-0.13.7-x64.exe`](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.7/ZhiXing-0.13.7-x64.exe)，核对 [SHA-256 清单](https://github.com/daniei-chen/ZhiXing/releases/download/v0.13.7/SHA256SUMS-release.txt)。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
 
 安装包包含 Node.js、Harness 和插件 npm CLI。Git 工作树需要本机 Git，部分 Office 技能需要额外的本机工具。SenseVoice 语音模型在用户主动准备时另行下载。当前安装包未签名，请核对来源与文件校验值。安装生命周期的结论限于验收记录所列条件。
 
-[0.13.5 GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.13.6)
+[0.13.5 GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.13.7)
 
 | Windows x64 安装资产 | 值 |
 | --- | --- |
-| 文件 | `ZhiXing-0.13.6-x64.exe` |
+| 文件 | `ZhiXing-0.13.7-x64.exe` |
 | 发行状态 | Windows x64 未签名预发布版 |
-| 文件大小 | `338,649,641` bytes |
-| SHA-256 | `78cbab42f5353db622b7b3dc813b903a1744a11bc8d701683f4000aeb52e81b3` |
+| 文件大小 | `338,686,248` bytes |
+| SHA-256 | `333321a9fa586a7c00d40ae05d661a37a123058ef5462627f3d7e58ee00214a4` |
 
-源码回归 **363/364**，目录包回归 **322/323**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败、0 取消。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **5/5**。桌面专项使用本机合成模型服务，核对了批准与拒绝后的实际文件字节、部分补丁的重启后轨迹、7 次模型出站，以及 Markdown 导出增加 0 次模型请求。 [0.13.4 Windows 验收记录](docs/windows-acceptance-0.13.6.md)
+源码回归 **363/364**，目录包回归 **322/323**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败、0 取消。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **5/5**。桌面专项使用本机合成模型服务，核对了批准与拒绝后的实际文件字节、部分补丁的重启后轨迹、7 次模型出站，以及 Markdown 导出增加 0 次模型请求。 [0.13.4 Windows 验收记录](docs/windows-acceptance-0.13.7.md)
 
 同一 Windows 账户的 NSIS 静默安装生命周期在 `0.13.2` 包上复跑：首次安装、同版本覆盖、卸载保留、重装保留与外部目录启动全部通过，项目／会话／草稿／加密配置哈希全程不变。`0.13.3` 另做了降级到 `0.13.2` 再升级回来的验证，数据文件哈希保持、升级后解密核对内容完整。**交互式安装全流程、跨账户解密、`quitAndInstall` 串联与真实云端仍未验证。**
 
-发行页提供完整安装包、机器可读验收摘要、生产依赖路径清单、组件 SBOM、与 0.13.5 的完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交 `671250eafb13371c8982df094b1de0131abe102d`。 [v0.13.6 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.13.6) · [外部审计说明](docs/audit-request-0.13.6.md)
+发行页提供完整安装包、机器可读验收摘要、生产依赖路径清单、组件 SBOM、与 0.13.6 的完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交 `6e99b8fd0ed82eda31f9a82eb021ef943c901c75`。 [v0.13.7 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.13.7) · [外部审计说明](docs/audit-request-0.13.7.md)
 
 ### 连接模型
 
@@ -274,7 +281,7 @@
 | Office 交付 | 已接入 OfficeKit 转换、工作簿重算和按页渲染。复杂排版、结构化报表类型及上游插件的完整生命周期仍待验证 |
 | 平台 | 当前面向 Windows x64。macOS、Linux 分发以及系统桌面 Computer Use 等扩展待独立验证 |
 
-[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.13.6.md) · [界面对照记录](design-qa.md)
+[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.13.7.md) · [界面对照记录](design-qa.md)
 
 ## 0.11.0 的工作重点
 
@@ -334,6 +341,7 @@ Get-FileHash ".\release\知行-0.12.8-x64.exe" -Algorithm SHA256
 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) · [Electron](https://www.electronjs.org/) · [React](https://react.dev/)
 
 <br />
+
 
 
 
