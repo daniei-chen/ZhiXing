@@ -39,6 +39,24 @@
 
 常驻 Host、MCP OAuth、供应商 OAuth 登录、原生 ZIP 导出、完整子会话与附件字节归档、增量加密存储、独立搜索连接、原生 Auto reviewer。
 
+### 验证脚本的三个 bug（0.13.8 修好）
+
+那条实测脚本连续两轮把成功判成失败，原因不是产品，是脚本自己：
+
+1. **`versionOf()` 读不到版本**。它用 PowerShell `Get-Item '<中文路径>'` 取 exe 版本，路径经 `execFileSync` 传递后编码错乱，`Get-Item` 失败落到 `catch` 返回 `null`。于是 `newVersion === targetVersion` 永远不成立，后面检测进程的那段代码根本没执行过。
+2. **读错了日志文件**。改用日志判定后仍然失败，因为脚本用临时 profile 启动应用，而**安装器拉起应用时不带 `--user-data-dir`**，新实例写的是默认 profile 的日志。脚本一直在读一个不会更新的文件。
+3. **版本号格式不等**。最后 `relaunched` 已经为 `true`、`relaunchedVersion` 也对，但 `ok` 仍然 `false`——exe 报 `0.13.8.0`，feed 报 `0.13.8`，字符串直接比较不等。
+
+三处都修好后连跑两次，`ok` 稳定为 `true`：
+
+```json
+{"startVersion":"0.13.7.0","targetVersion":"0.13.8","downloadSeconds":3,"downloaded":true,
+ "oldProcessExited":true,"versionOnDiskAfter":"0.13.8.0","relaunchedVersion":"0.13.8",
+ "relaunched":true,"ok":true}
+```
+
+**教训**：脚本报失败时，先证明脚本本身能报成功。前两轮我把脚本输出当成了产品结论。
+
 ### `quitAndInstall` 实测结果（四次，含修复后）
 
 | 轮次 | 起点 → 目标 | 静默 | 安装 | 自动重启 |
@@ -311,6 +329,7 @@ DeepSeek 原生 Messages、兼容 Messages 和 Chat Completions 通过官方 SDK
 以下仅保留 0.11.0 初期记录，后续最终通过项以该版验收页为准：当时源码侧验证了严格模型解析、MCP 秘密目标身份、作用域草稿、运行 close join、失活锁恢复、Office 安全另存、保存队列与 PNG/WebP 导入，源码 68 项与包内 36 项通过。该初期阶段尚待测的 MCP、草稿/取消、缩放和安装生命周期，不能据此否定后续单独验收，也不能把后续旧版通过结论代替新版。历史详见 [`iteration-0.11.0.md`](iteration-0.11.0.md) 与 [`windows-acceptance-0.11.0.md`](windows-acceptance-0.11.0.md)。
 
 能力接入、源码测试、合成服务、Windows UI 和包内测试分开记录。未覆盖项保留为未完成，不把部分页面 smoke 当作逐页通过，也不宣称“全部通过”。
+
 
 
 
