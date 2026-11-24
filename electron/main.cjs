@@ -372,6 +372,22 @@ function registerHandlers(){
   logEvent('info','workspace.zip',{entries:entries.length,skipped,bytes:bytes.length});
   return {cancelled:false,path:targetFile,entries:entries.length,skipped,bytes:bytes.length};
  });
+ handle('subagent:archive',async options=>{
+  const text=typeof options?.text==='string'?options.text:'';
+  if(!text.trim())throw new Error('没有可归档的子会话内容。');
+  const bytes=Buffer.byteLength(text);
+  if(bytes>2*1024*1024)throw new Error('子会话内容超过 2 MB，无法归档。');
+  let folder;
+  try{const scope=workScope(options);folder=scope.workspaceRoot&&path.isAbsolute(scope.workspaceRoot)?scope.workspaceRoot:undefined;}catch(error){folder=undefined;}
+  const base=String(options.name||'子会话').replace(/[\\/:*?"<>|]/g,'-').trim().slice(0,80)||'子会话';
+  const filename=`${base}.md`;
+  const result=await dialog.showSaveDialog(windowRef,{title:'归档子会话',defaultPath:folder?path.join(folder,filename):filename,filters:[{name:'Markdown',extensions:['md']}]});
+  if(result.canceled||!result.filePath)return {cancelled:true};
+  const target=path.extname(result.filePath).toLowerCase()==='.md'?result.filePath:`${result.filePath}.md`;
+  await fs.writeFile(target,text,'utf8');
+  logEvent('info','subagent.archive',{bytes,messages:Number.isInteger(options.messageCount)?options.messageCount:null});
+  return {cancelled:false,path:target,bytes};
+ });
  handle('app:runtime-status',runtimeStatus);
  handle('providers:save',input=>changeProviders(async rows=>{
   if(!input||typeof input!=='object')throw new Error('供应商格式无效。');

@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {CircleNotch} from '@phosphor-icons/react';
+import {archiveMarkdown} from './subagent-archive.js';
 
 const categories = [
  ['all','全部'], ['tools','工具'], ['agents','子任务'], ['workflow','工作流'],
@@ -20,6 +21,8 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  const [controls,setControls] = useState({});
  const [error,setError] = useState('');
  const [selectedItem,setSelectedItem] = useState(null);
+ const [archiving,setArchiving] = useState('');
+ const [archiveNote,setArchiveNote] = useState('');
  const runs = messages.filter(message=>message.trace?.length || message.children?.length || message.finalization).slice(-40).reverse();
  const archived = runs.find(run=>run.id===selected) ?? (!liveRun ? runs[0] : undefined);
  const reply = selected==='live'&&liveRun ? undefined : archived;
@@ -30,6 +33,17 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  const childRows = new Map(children.map((child,index)=>[child.id,index+1]));
  const jobs = [...new Map(entries.filter(event=>event.category==='jobs'&&event.itemId).map(event=>[event.itemId,event])).values()];
  const controlKey = (action,target) => `${liveRun}:${action}:${target}`;
+ async function archiveChild(child){
+  const api=window.zhixing;if(!api)return;
+  setArchiving(child.id);setArchiveNote('');
+  try{
+   const text=archiveMarkdown({title:reply?.title,child,index:childRows.get(child.id)});
+   const result=await api.archiveSubagent({sessionId,runId:reply?.id,childId:child.id,messageCount:child.messages.length,name:`子会话-${childRows.get(child.id)}`,text});
+   if(result?.cancelled)return;
+   setArchiveNote(`已归档到 ${result.path}`);
+  }catch(cause){setArchiveNote(cause.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}
+  finally{setArchiving('');}
+ }
  async function stop(action,target) {
   const key = controlKey(action,target);
   setControls(old=>({...old,[key]:'pending'}));
@@ -66,13 +80,14 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
     </select>
    </label>
   </div>}
+  {archiveNote&&<p className="execution-note" role="status">{archiveNote}</p>}
   {!!children.length && (filter==='all'||filter==='agents') && <div className="execution-children">
    <h4>协作子任务</h4>
    {children.map(child=><div key={child.id}>
     <span>子任务 {childRows.get(child.id)}{childRows.has(child.parentId) && <small>由子任务 {childRows.get(child.parentId)} 委派</small>}</span>
     <span>{!live&&child.status==='running' ? '已中断' : statusLabels[child.status] || '已结束'}
      {(live||child.messages?.length>0)&&<button className="text-button" onClick={()=>setSelectedItem({type:'agent',id:child.id})}>查看对话</button>}
-     {stopButton('interrupt-agent',child.id,child.status,'停止子任务')}</span>
+     {!live&&!!child.messages?.length&&<button className="text-button" disabled={!!archiving} onClick={()=>archiveChild(child)}>{archiving===child.id?'归档中…':'归档'}</button>}{stopButton('interrupt-agent',child.id,child.status,'停止子任务')}</span>
    </div>)}
   </div>}
   {!!jobs.length && (filter==='all'||filter==='jobs') && <div className="execution-children">
