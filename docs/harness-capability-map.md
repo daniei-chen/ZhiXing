@@ -62,6 +62,12 @@
 
 真实用户路径下每次修改都经过渲染进程，状态一致。
 
+## 0.13.5 · 更新安装改静默
+
+`quitAndInstall(false, true)` 改为 `quitAndInstall(true, true)`。`0.13.4` 上实测的断点：检测、下载（308 秒／323 MB）、旧进程退出、安装器把 exe 换成新版本都成功，但**应用没有自动重启**——非静默模式让 NSIS 停在完成页等待点击，`isForceRunAfter` 因此失效。
+
+**修复效果发布时未验证**：验证需要「旧版本检测到 `0.13.5` 并自行重启」，只能在发布后跑。静默安装看不到进度，是有意取舍。
+
 ## 0.13.4 · 拒绝堆栈与崩溃记录点收口
 
 `unhandledRejection` 增加 `stack`（截断 2000 字符），与 `uncaughtException` 对齐——此前只有 `message`，排查价值有限。生产源码指纹 `ebfae935…` → `0d1c3365…`，是本版唯一运行逻辑改动。
@@ -296,4 +302,5 @@ DeepSeek 原生 Messages、兼容 Messages 和 Chat Completions 通过官方 SDK
 以下仅保留 0.11.0 初期记录，后续最终通过项以该版验收页为准：当时源码侧验证了严格模型解析、MCP 秘密目标身份、作用域草稿、运行 close join、失活锁恢复、Office 安全另存、保存队列与 PNG/WebP 导入，源码 68 项与包内 36 项通过。该初期阶段尚待测的 MCP、草稿/取消、缩放和安装生命周期，不能据此否定后续单独验收，也不能把后续旧版通过结论代替新版。历史详见 [`iteration-0.11.0.md`](iteration-0.11.0.md) 与 [`windows-acceptance-0.11.0.md`](windows-acceptance-0.11.0.md)。
 
 能力接入、源码测试、合成服务、Windows UI 和包内测试分开记录。未覆盖项保留为未完成，不把部分页面 smoke 当作逐页通过，也不宣称“全部通过”。
+
 
