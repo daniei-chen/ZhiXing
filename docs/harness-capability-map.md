@@ -2,6 +2,12 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
+## 0.13.3 · 跨版本存档兼容性
+
+`mergeState` 新增 4 项兼容性用例：旧存档缺新增字段（补齐 `voiceLanguage`／`personalizationEnabled`／`personalInstructions`／`privacyPolicy` 与空数组，用户项目与会话正文原样保留）、未知新字段安全忽略、五种损坏存档回退默认不抛错、幽灵草稿保留条目但不伪造归属。源码回归 364 项中 363 通过。
+
+生产源码指纹与 `0.13.2` 相同——只动测试与版本号。边界：这是单元层面证明，不覆盖安装器替换文件、Electron profile 变化与 DPAPI 加密上下文；历史升级的安装器路径仍未跑。
+
 ## 0.13.2 · 应用日志与诊断导出
 
 新增 `electron/app-log.mjs`：事件级日志写入 `zhixing/logs/app.log`，1 MB 轮转保留两份，密钥类字段替换为 `[redacted]`，长串截断，不记聊天正文与文件内容。记录点：启动、自动更新状态、`uncaughtException`、`unhandledRejection`、`child-process-gone`、`render-process-gone`。注册 `uncaughtException` 后主进程不再因未捕获异常退出，属有意取舍。
