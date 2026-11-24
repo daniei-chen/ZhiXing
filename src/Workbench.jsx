@@ -1,5 +1,5 @@
 import {useEffect,useLayoutEffect,useRef,useState} from 'react';
-import {ArrowClockwise,ArrowLeft,ArrowRight,ArrowSquareOut,ArrowUp,ArrowsInSimple,ArrowsOutSimple,Camera,ChartBar,ChatCircle,CaretDown,CaretRight,CircleNotch,FileText,Files,FolderOpen,Globe,MagnifyingGlass,Plus,SidebarSimple,Stop,TerminalWindow,X} from '@phosphor-icons/react';
+import {Archive,ArrowClockwise,ArrowLeft,ArrowRight,ArrowSquareOut,ArrowUp,ArrowsInSimple,ArrowsOutSimple,Camera,ChartBar,ChatCircle,CaretDown,CaretRight,CircleNotch,FileText,Files,FolderOpen,Globe,MagnifyingGlass,Plus,SidebarSimple,Stop,TerminalWindow,X} from '@phosphor-icons/react';
 import {IconButton} from './ui.jsx';
 import {browserUrl} from '../electron/browser-policy.mjs';
 import {FileCoverage} from './FileCoverage.jsx';
@@ -110,7 +110,7 @@ function SideChatPanel({sideChat,sideChatId,sideChats,sideDraft,sideFiles,onOpen
  </div>;
 }
 function WorkspaceFiles({context,project,attach,openProject,fileRequest}){
- const api=window.zhixing,[tree,setTree]=useState(null),[path,setPath]=useState(''),[preview,setPreview]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);const generation=useRef(0),scopeRef=useRef(''),watchTimer=useRef(null),loadRef=useRef(null),pathRef=useRef('');
+ const api=window.zhixing,[tree,setTree]=useState(null),[path,setPath]=useState(''),[preview,setPreview]=useState(null),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);const generation=useRef(0),scopeRef=useRef(''),watchTimer=useRef(null),loadRef=useRef(null),pathRef=useRef('');
  async function load(next=''){if(!api||!project?.directory)return;const token=++generation.current;setBusy(true);setError('');try{const result=await api.listWorkspaceFiles({...context,path:next});if(token===generation.current){setTree(result);setPath(next);setPreview(null);}}catch(cause){if(token===generation.current)setError(cause.message);}finally{if(token===generation.current)setBusy(false);}}
  loadRef.current=load;pathRef.current=path;
  useEffect(()=>{void load();return()=>{generation.current++;};},[project?.id,project?.directory]);
@@ -138,10 +138,16 @@ function WorkspaceFiles({context,project,attach,openProject,fileRequest}){
    else setError(cause.message);
   }finally{if(token===generation.current)setBusy(false);}
  }
+ async function zipFolder(){
+  setBusy(true);setError('');setNotice('');
+  try{const result=await api.exportProjectZip({...context,path});if(result?.cancelled)return;setNotice(`已打包 ${result.entries} 个文件 → ${result.path}`);}
+  catch(cause){setError(cause.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}
+  finally{setBusy(false);}
+ }
  if(!project?.directory)return <PanelEmpty icon={FolderOpen} title="选择项目工作区" action={<button className="secondary-button" onClick={openProject}>{project?'项目设置':'新建项目'}</button>}>工作区在项目里选择，文件内容只在添加到交办后交给模型。</PanelEmpty>;
  if(!api)return <PanelEmpty icon={FolderOpen} title="本机文件在桌面版中浏览">当前项目已绑定工作区。请在 Windows 桌面版查看真实目录和文件。</PanelEmpty>;
- return <><div className="workspace-file-toolbar"><IconButton icon={ArrowLeft} label="返回上级文件夹" disabled={!path||busy} onClick={()=>load(path.split(/[\\/]/).slice(0,-1).join('/'))}/><span title={project.directory+(path?` / ${path}`:'')}>{path||project.name}</span><IconButton icon={ArrowClockwise} label="刷新工作区文件" disabled={busy} onClick={()=>load(path)}/><IconButton icon={ArrowSquareOut} label="在文件资源管理器中显示" onClick={()=>api.revealWorkspaceFile({...context,path}).catch(cause=>setError(cause.message))}/></div>
- {error&&<p className="workbench-error" role="alert">{error}</p>}{busy&&<p className="workbench-loading"><CircleNotch size={14}/>正在读取…</p>}
+ return <><div className="workspace-file-toolbar"><IconButton icon={ArrowLeft} label="返回上级文件夹" disabled={!path||busy} onClick={()=>load(path.split(/[\\/]/).slice(0,-1).join('/'))}/><span title={project.directory+(path?` / ${path}`:'')}>{path||project.name}</span><IconButton icon={ArrowClockwise} label="刷新工作区文件" disabled={busy} onClick={()=>load(path)}/><IconButton icon={ArrowSquareOut} label="在文件资源管理器中显示" onClick={()=>api.revealWorkspaceFile({...context,path}).catch(cause=>setError(cause.message))}/><IconButton icon={Archive} label="打包为 ZIP" disabled={busy||!tree} onClick={zipFolder}/></div>
+ {error&&<p className="workbench-error" role="alert">{error}</p>}{notice&&<p className="workbench-note" role="status">{notice}</p>}{busy&&<p className="workbench-loading"><CircleNotch size={14}/>正在读取…</p>}
  {preview?<div className="file-preview" key={preview.path}>
   <div className="file-preview-heading"><IconButton icon={ArrowLeft} label="返回文件列表" onClick={()=>setPreview(null)}/><strong title={preview.name}>{preview.name}</strong>{preview.text&&<button className="secondary-button" onClick={()=>attach(preview.text)}><Plus size={13}/>将文字加入交办</button>}</div>
   {supportsLayout(preview.name)?<FileLayout context={context} file={preview} text={preview.text} textError={preview.textError} attach={attach}/>:<><FileCoverage file={preview.text}/><pre>{preview.text.text}</pre></>}

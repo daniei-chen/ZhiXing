@@ -351,6 +351,27 @@ function registerHandlers(){
   return {saved:true,name:path.basename(selected.filePath),missingFonts:result.missingFonts};
  });
  handle('workspace:reveal-file',async options=>{const {workspaceTarget}=await import('./workspace-files.mjs');const {target}=await workspaceTarget(workScope(options).workspaceRoot,options.path||'');require('electron').shell.showItemInFolder(target);return true;});
+ handle('workspace:zip',async options=>{
+  await workspaceSaveQueue.flush();
+  const scope=workScope(options);
+  if(!scope.workspaceRoot)throw new Error('请先在项目设置中选择工作区。');
+  const {workspaceTarget,isPrivateRelative}=await import('./workspace-files.mjs');
+  const {target}=await workspaceTarget(scope.workspaceRoot,options.path||'');
+  const info=await fs.stat(target).catch(()=>null);
+  if(!info?.isDirectory())throw new Error('只能把文件夹打包成 ZIP。');
+  const {collectDirectory,buildZip}=await import('./zip-writer.mjs');
+  const {entries,skipped}=await collectDirectory({root:target,skip:name=>isPrivateRelative(name)});
+  if(!entries.length)throw new Error('这个文件夹里没有可打包的文件。');
+  const suggested=path.join(scope.workspaceRoot,`${path.basename(target)||'workspace'}.zip`);
+  const result=await dialog.showSaveDialog(windowRef,{title:'打包为 ZIP',defaultPath:suggested,filters:[{name:'ZIP',extensions:['zip']}]});
+  if(result.canceled||!result.filePath)return {cancelled:true};
+  const targetFile=path.extname(result.filePath).toLowerCase()==='.zip'?result.filePath:`${result.filePath}.zip`;
+  const bytes=buildZip(entries);
+  await workspaceSaveQueue.flush();
+  await fs.writeFile(targetFile,bytes);
+  logEvent('info','workspace.zip',{entries:entries.length,skipped,bytes:bytes.length});
+  return {cancelled:false,path:targetFile,entries:entries.length,skipped,bytes:bytes.length};
+ });
  handle('app:runtime-status',runtimeStatus);
  handle('providers:save',input=>changeProviders(async rows=>{
   if(!input||typeof input!=='object')throw new Error('供应商格式无效。');

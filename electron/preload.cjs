@@ -19,6 +19,7 @@ onDesktopUpdate:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.
 exportDiagnostics:()=>ipcRenderer.invoke('diagnostics:export'),
  worktree:options=>ipcRenderer.invoke('workspace:worktree',options),
  readWorkspaceFile:options=>ipcRenderer.invoke('workspace:read-file',options),
+ exportProjectZip:options=>ipcRenderer.invoke('workspace:zip',options),
  listDeliverables:options=>ipcRenderer.invoke('deliverables:list',options),
  readDeliverable:options=>ipcRenderer.invoke('deliverables:read',options),
  officeLayout:options=>ipcRenderer.invoke('workspace:office-layout',options),

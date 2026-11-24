@@ -7,6 +7,8 @@ const PRIVATE_FILES=['.env','.env.*','*.pem','*.key','*.pfx','deepseek.credentia
 const PRIVATE_FILE=/^(?:\.env(?:\..*)?|.*\.(?:pem|key|pfx)|deepseek\.credential|workspace\.bin|automations\.bin|privacy-bridge\.bin)$/i;
 const PRIVATE={test:value=>value.split(/[\\/]/).some(part=>PRIVATE_DIRECTORIES.has(part.toLowerCase())||PRIVATE_FILE.test(part))};
 export const privateSearchGlobs=[...PRIVATE_DIRECTORIES,...PRIVATE_FILES].flatMap(name=>[`--iglob=!**/${name}`,`--iglob=!**/${name}/**`]);
+// 打包 ZIP 时复用同一份私密清单：.env、密钥、凭据与内部存储都不进压缩包。
+export const isPrivateRelative=value=>PRIVATE.test(value);
 const allowedWorkspacePath = (root, target) => {
  const relative = path.relative(root, target);
  return within(root, target) && !PRIVATE.test(relative) && !relative.includes(':');
