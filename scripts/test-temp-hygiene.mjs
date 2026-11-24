@@ -56,7 +56,7 @@ async function launch({ tempDir, profile }) {
   }
   assert.ok(ui, 'renderer test connection started');
   await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')', 45000);
-  return { logfile, exit };
+  return { logfile, appLog: path.join(profile, 'zhixing/logs/app.log'), exit };
 }
 
 const waitForLog = async (file, pattern, timeoutMs = 30000) => {
@@ -78,7 +78,7 @@ await mkOld(oursDir, 'Un_A.exe', Buffer.concat([Buffer.from('MZ'), Buffer.alloc(
 const foreignDir = path.join(tempA, foreign);
 await mkOld(foreignDir, 'payload.exe', Buffer.from('MZ another vendor installer'));
 const sessionA = await launch({ tempDir: tempA, profile: path.join(evidence, 'profile-a') });
-const pruned = await waitForLog(sessionA.logfile, /temp\.hygiene (\{.*\})/);
+const pruned = await waitForLog(sessionA.appLog, /temp\.hygiene (\{.*\})/);
 assert.ok(pruned, 'app.log 里出现了 temp.hygiene');
 const detail = JSON.parse(pruned[1]);
 assert.equal(await fs.access(oursDir).then(() => true, () => false), false, '带产品名的 ~nsu.tmp 应被删除');
@@ -97,7 +97,7 @@ const foreignOnly = path.join(tempB, foreign);
 await mkOld(foreignOnly, 'payload.exe', Buffer.from('MZ another vendor installer'));
 const sessionB = await launch({ tempDir: tempB, profile: path.join(evidence, 'profile-b') });
 await pause(2000);
-const logB = await fs.readFile(sessionB.logfile, 'utf8');
+const logB = await fs.readFile(sessionB.appLog, 'utf8');
 assert.ok(!/temp\.hygiene \{/.test(logB), '没有自己的副本时不该记录清理');
 assert.equal(await fs.access(path.join(foreignOnly, 'payload.exe')).then(() => true, () => false), true);
 const appLogB = await fs.readFile(path.join(evidence, 'profile-b', 'zhixing/logs/app.log'), 'utf8');
