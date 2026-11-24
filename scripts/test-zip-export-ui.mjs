@@ -49,7 +49,7 @@ const portsFile = path.join(profile, 'DevToolsActivePort');
 await fs.rm(portsFile, { force: true });
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE; delete env.NODE_PATH; delete env.NODE_OPTIONS;
-child = spawn(exe, [`--user-data-dir=${profile}`, '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=0'], { cwd: evidence, env, stdio: ['ignore', log.fd, log.fd], windowsHide: true });
+child = spawn(exe, [`--user-data-dir=${profile}`, '--inspect=127.0.0.1:0', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=0'], { cwd: evidence, env, stdio: ['ignore', log.fd, log.fd], windowsHide: true });
 const exit = once(child, 'close');
 const deadline = Date.now() + 60000;
 let port = null;
@@ -69,7 +69,13 @@ assert.ok(ui.current, 'renderer connected');
 const uiRef = ui.current;
 
 // 主进程侧接管原生保存对话框：真实调用发生，返回值由脚本决定。
-main = await connectUi(port, true);
+const mainDeadline = Date.now() + 60000;
+while (!main && Date.now() < mainDeadline) {
+  const match = (await fs.readFile(logfile, 'utf8')).match(/Debugger listening on ws:\/\/127\.0\.0\.1:(\d+)/);
+  if (match) main = await connectUi(Number(match[1]), true).catch(() => null);
+  if (!main) await pause(200);
+}
+assert.ok(main, 'main-process test connection started');
 await main.evaluate(`(()=>{
  const {dialog}=process.mainModule.require('electron');
  globalThis.__qaZipDialogs=[];
@@ -77,13 +83,27 @@ await main.evaluate(`(()=>{
  return true;})()`);
 
 await uiRef.waitFor('!!(window.zhixing&&document.readyState==="complete")', 60000);
-const state = await invoke('loadWorkspace');
+await uiRef.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')', 60000);
+let state = null;
+const stateDeadline = Date.now() + 30000;
+while (!state && Date.now() < stateDeadline) {
+  state = await uiRef.evaluate('(async()=>{const value=await window.zhixing.loadWorkspace();return value||null})()');
+  if (!state) await pause(250);
+}
+assert.ok(state, 'workspace state is available');
 state.projects = state.projects || [];
 state.projects.push({ id: 'qa-zip-project', workspaceId: state.workspaceId, name: '打包验收项目', directory: project, expanded: true });
+state.chats = state.chats || [];
+state.chats.push({ id: 'qa-zip-chat', workspaceId: state.workspaceId, projectId: 'qa-zip-project', title: '打包验收会话', createdAt: Date.now(), messages: [] });
 await invoke('saveWorkspace', state);
 await uiRef.send('Page.reload');
 await uiRef.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')', 60000);
-
+await uiRef.waitFor('Array.from(document.querySelectorAll("button")).some(b=>b.textContent.includes("打包验收会话"))', 30000);
+const rowRect = await uiRef.evaluate(`(()=>{const e=document.querySelector('.chat-row[data-chat-id="qa-zip-chat"]');const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
+await uiRef.send('Input.dispatchMouseEvent', {type: 'mousePressed', button: 'left', clickCount: 1, x: rowRect.x, y: rowRect.y});
+await uiRef.send('Input.dispatchMouseEvent', {type: 'mouseReleased', button: 'left', clickCount: 1, x: rowRect.x, y: rowRect.y});
+await pause(500);
+await pause(800);
 await uiRef.click('打开工作面板');
 await uiRef.waitFor('!!document.querySelector(\'select[aria-label="工作面板视图"]\')', 30000);
 await uiRef.evaluate(`(()=>{const s=document.querySelector('select[aria-label="工作面板视图"]');s.value='files';s.dispatchEvent(new Event('change',{bubbles:true}));return s.value;})()`);
