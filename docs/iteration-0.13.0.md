@@ -18,6 +18,8 @@
 2. `downloadDesktopUpdate()` 进入 `downloading`，进度到 100%（1,856 bytes），再收到 `downloaded`。
 3. 状态序列完整：`checking → available → downloading → downloaded`。
 
+真实 GitHub feed 另测一次：打包应用不带任何覆盖直接检查，返回 `current`，证明 GitHub API 调用、`latest.yml` 下载解析与版本比较在真实网络下都能走通；本版已是最新，所以没有可下载项。
+
 构建产物核对：`app-update.yml` 为 `provider: github / owner: daniei-chen / repo: ZhiXing / releaseType: prerelease`；`latest.yml` 的 `url` 与 `path` 均为 `ZhiXing-0.13.0-x64.exe`，sha512 与安装器一致；`electron-updater` 及 `builder-util-runtime`、`js-yaml`、`lazy-val` 已进包。
 
 ## 边界

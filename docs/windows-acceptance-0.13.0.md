@@ -12,6 +12,7 @@ Windows x64 未签名预发布版。DeepSeek Harness 固定为 `0.2.2-rc.5`。�
 | 目录包回归 | 323 项，322 通过，0 失败，0 取消，1 条件跳过 |
 | Windows 桌面专项 | 5/5；真实目录包、真实 Harness、本机合成 Chat Completions |
 | 自动更新（本地 feed） | `checking → available(0.99.0) → downloading(100%) → downloaded` |
+| 自动更新（真实 GitHub feed） | 打包应用检查返回 `current`，说明 API 调用、`latest.yml` 解析与版本比较均正常 |
 | 更新配置 | `app-update.yml` 指向 GitHub `daniei-chen/ZhiXing`，`releaseType=prerelease` |
 | `latest.yml` | `url`/`path` 均为 `ZhiXing-0.13.0-x64.exe`，sha512 与安装器一致 |
 | 启动测量 | 10 次中位数：`initialise` 918 ms、窗口显示 1,034 ms、可交互 1,220 ms |
