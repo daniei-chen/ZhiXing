@@ -180,6 +180,16 @@ async function pruneUpdaterCache(){
  }catch(error){logEvent('error','updater.cache-prune-failed',{message:String(error?.message||error)});}
 }
 function logEvent(level,event,detail){void appLog?.write(level,event,detail);}
+// NSIS 卸载器把自己复制到 %TEMP%\~nsu.tmp 再运行，正常退出会删掉；本机 0.14.5
+// 卸载后留下了 200 KB 的 Un_A.exe。启动时只清能证明是知行留下的那一份。
+async function pruneStuckUninstallerCopy(){
+ if(!app.isPackaged)return;
+ try{
+  const {pruneStuckUninstaller}=await import('./temp-hygiene.mjs');
+  const report=await pruneStuckUninstaller({tempDir:app.getPath('temp')});
+  if(report.removed)logEvent('info','temp.hygiene',{target:'~nsu.tmp',bytes:report.bytes,files:report.files,reason:report.reason});
+ }catch(error){logEvent('error','temp.hygiene-failed',{message:String(error?.message||error)});}
+}
 function publishUpdate(next){
  updateState={...next,at:new Date().toISOString()};
  logEvent(next.status==='error'?'error':'info','update.state',{status:next.status,version:next.version,percent:next.percent,message:next.message});
@@ -611,6 +621,7 @@ else app.whenReady().then(async()=>{
  await fs.mkdir(ROOT,{recursive:true}).catch(()=>{});
  await fs.writeFile(versionFile,app.getVersion()).catch(()=>{});
  void pruneUpdaterCache();
+ void pruneStuckUninstallerCopy();
  process.on('uncaughtException',error=>logEvent('error','uncaughtException',{message:String(error?.message||error),stack:String(error?.stack||'').slice(0,2000)}));
  process.on('unhandledRejection',reason=>logEvent('error','unhandledRejection',{message:String(reason?.message||reason),stack:String(reason?.stack||'').slice(0,2000)}));
  app.on('child-process-gone',(_event,details)=>logEvent('error','child-process-gone',{type:details.type,reason:details.reason,exitCode:details.exitCode}));
