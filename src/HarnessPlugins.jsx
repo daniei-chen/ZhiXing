@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowClockwise, CaretRight, DownloadSimple, MagnifyingGlass, Package, Plus, Trash } from '@phosphor-icons/react';
 import { IconButton, Modal } from './ui.jsx';
 import {PluginBuildApproval} from './PluginBuildApproval.jsx';
+import { errorText } from './error-copy.js';
 
 const desktop = window.zhixing?.manageHarnessPlugins;
 const messages = {
@@ -15,7 +16,7 @@ const messages = {
   'network': '无法连接插件仓库。',
   'management-required': '插件管理依赖此组件。',
 };
-const errorText = error => error.message.replace(/^Error invoking remote method '[^']+': Error: /, '');
+
 
 export function HarnessPlugins() {
   const [rows, setRows] = useState([]);
@@ -143,3 +144,5 @@ export function HarnessPlugins() {
     </Modal>}
   </div>;
 }
+
+

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, FileText, ShieldCheck } from '@phosphor-icons/react';
 import { Modal } from './ui.jsx';
 import { FREQUENCIES, localDate, nextOccurrence, scheduleLabel, taskTargetLabel } from './scheduler.js';
+import { errorText } from './error-copy.js';
 import { automationInput } from './automation-core.js';
 
 const statusLabels = { running: '运行中', completed: '已完成', failed: '失败', stopped: '已停止', interrupted: '已中断' };
-const errorText = error => error.message.replace(/^Error invoking remote method '[^']+': Error: /, '');
+
 const desktopTiming = window.zhixing?.previewAutomationTiming;
 const advancedRules = [['cron', 'Cron 表达式'], ['rrule', 'RRULE 日历规则'], ['after', '延迟一次'], ['every', '固定间隔']];
 const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -184,3 +185,4 @@ function TaskHistory({ modal, scope, close, openRun }) {
 }
 
 export { statusLabels as taskRunStatusLabels };
+

@@ -2,9 +2,10 @@ import {useEffect,useState} from 'react';
 import {MagnifyingGlass,Package,Plus,Trash} from '@phosphor-icons/react';
 import {IconButton,Modal} from './ui.jsx';
 import {PluginBuildApproval} from './PluginBuildApproval.jsx';
+import { errorText } from './error-copy.js';
 
 const installLabels={'not-installed':'可安装',installed:'已安装','update-available':'有更新','different-version':'已安装其他版本',provided:'随内核提供'};
-const errorText=error=>error.message.replace(/^Error invoking remote method '[^']+': Error: /,'');
+
 
 export function PluginMarket(){
  const api=window.zhixing?.manageHarnessPlugins;
@@ -110,3 +111,5 @@ export function PluginMarket(){
   </Modal>}
  </div>;
 }
+
+

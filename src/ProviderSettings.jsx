@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { ArrowClockwise, ArrowLeft, Check, Plug, Plus, SlidersHorizontal, Trash } from '@phosphor-icons/react';
 import { PROVIDER_PRESETS } from './provider-options.js';
+import { errorText } from './error-copy.js';
 
 const CUSTOM = { name: '', protocol: 'openai', baseUrl: '' };
 const protocolLabel = { deepseek: '原生 DeepSeek', anthropic: 'Anthropic Messages', openai: 'Chat Completions' };
-const errorText = error => error.message.replace(/^Error invoking remote method '[^']+': Error: /, '');
+
 
 export function ProviderSettings({ runtime, setRuntime, desktop }) {
   const [draft, setDraft] = useState(null);
@@ -109,3 +110,4 @@ export function ProviderSettings({ runtime, setRuntime, desktop }) {
     {notice && <p className={`setting-notice ${notice.error ? 'bad' : ''}`} role={notice.error ? 'alert' : 'status'}>{!notice.error && <Check size={16}/>} {notice.text}</p>}
   </div>;
 }
+
