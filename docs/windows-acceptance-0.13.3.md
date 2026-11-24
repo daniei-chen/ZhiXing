@@ -11,6 +11,7 @@ Windows x64 未签名预发布版。DeepSeek Harness 固定为 `0.2.2-rc.5`。�
 | 目录包回归 | 323 项，322 通过，0 失败，0 取消，1 条件跳过 |
 | Windows 桌面专项 | 5/5 |
 | 跨版本兼容性 | 旧存档缺字段、未知新字段、损坏存档、幽灵草稿四类输入均不丢数据且不抛错 |
+| **真实升级（检测＋下载）** | 打包 `0.13.2` 连真实 GitHub：`available 0.13.3` → 下载 349 秒 → `downloaded`；缓存包 323 MB，**sha256 与 `ZhiXing-0.13.3-x64.exe` 发布资产完全一致** |
 | 启动测量 | 10 次中位数：`initialise` 933 ms、窗口显示 1,035 ms、可交互 1,211 ms |
 | `知行.exe` | 246,317,568 bytes，SHA-256 `977e25ec99d6854dfd96b8b9ea167759b0eaf316613ea21cfd2c0e77da27a5d3` |
 | `ZhiXing-0.13.3-x64.exe` | 338,650,183 bytes，SHA-256 `ae1429ff400dbd7acf05f9d3254fc9ba95930658146ce723f820f8141178de0f` |

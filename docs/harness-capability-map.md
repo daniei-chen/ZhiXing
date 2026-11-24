@@ -8,6 +8,8 @@
 
 生产源码指纹与 `0.13.2` 相同——只动测试与版本号。边界：这是单元层面证明，不覆盖安装器替换文件、Electron profile 变化与 DPAPI 加密上下文；历史升级的安装器路径仍未跑。
 
+真实升级演练（首次）：打包 `0.13.2` 连真实 GitHub 得到 `available 0.13.3`，下载 349 秒后 `downloaded`，`%LOCALAPPDATA%\zhixing-updater\pending` 里的 338,650,183 字节安装包 sha256 与发布资产一致。`quitAndInstall` 未执行，安装后启动仍未验证。
+
 ## 0.13.2 · 应用日志与诊断导出
 
 新增 `electron/app-log.mjs`：事件级日志写入 `zhixing/logs/app.log`，1 MB 轮转保留两份，密钥类字段替换为 `[redacted]`，长串截断，不记聊天正文与文件内容。记录点：启动、自动更新状态、`uncaughtException`、`unhandledRejection`、`child-process-gone`、`render-process-gone`。注册 `uncaughtException` 后主进程不再因未捕获异常退出，属有意取舍。
