@@ -2,6 +2,14 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
+## 0.13.1 · 签名管道与长时间运行
+
+签名从硬编码跳过改为构建器默认：无证书时 `no code signing certificate configured, signing is skipped`，设置 `CSC_LINK`／`CSC_KEY_PASSWORD` 后自动签名。证书未申请，**签名成功路径未验证**；`verifyUpdateCodeSignature` 默认为真，未签名升到已签名需人工验证一次。
+
+首次空闲 soak：29.8 分钟、54 次采样，工作集 393.1→394.1 MB（+1.0 MB），句柄 2,313→2,390（+77），进程数恒为 4，CPU 近零。只覆盖空闲态，不含会话、模型往返与高负载文件监视。
+
+目录包回归 323 项中 320 通过、0 失败、1 跳过、2 超时取消，取消项未定位。
+
 ## 0.13.0 · 应用内自动更新
 
 接入 `electron-updater`：设置页检查、下载、重启安装，启动后 45 秒后台查一次但不自动下载，安装必须点击。`app-update.yml` 指向 GitHub `daniei-chen/ZhiXing`，`releaseType=prerelease`；安装包改名为 `ZhiXing-${version}-x64.exe`，使 `latest.yml` 的 `url` 与资产一致。`--dir` 构建不写 `app-update.yml`，已由 `scripts/write-update-config.mjs` 补齐。
