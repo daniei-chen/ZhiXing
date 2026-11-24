@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {CircleNotch} from '@phosphor-icons/react';
-import {archiveMarkdown} from './subagent-archive.js';
+import {archiveMarkdown,archiveAllMarkdown} from './subagent-archive.js';
 
 const categories = [
  ['all','全部'], ['tools','工具'], ['agents','子任务'], ['workflow','工作流'],
@@ -33,6 +33,17 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  const childRows = new Map(children.map((child,index)=>[child.id,index+1]));
  const jobs = [...new Map(entries.filter(event=>event.category==='jobs'&&event.itemId).map(event=>[event.itemId,event])).values()];
  const controlKey = (action,target) => `${liveRun}:${action}:${target}`;
+ async function archiveAll(items){
+  const api=window.zhixing;if(!api)return;
+  setArchiving('all');setArchiveNote('');
+  try{
+   const text=archiveAllMarkdown({title,children:items});
+   const result=await api.archiveSubagent({sessionId,runId:reply?.id,messageCount:items.length,name:'子会话-全部',text});
+   if(result?.cancelled)return;
+   setArchiveNote(`已归档到 ${result.path}`);
+  }catch(cause){setArchiveNote(cause.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}
+  finally{setArchiving('');}
+ }
  async function archiveChild(child){
   const api=window.zhixing;if(!api)return;
   setArchiving(child.id);setArchiveNote('');
@@ -82,7 +93,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
   </div>}
   {archiveNote&&<p className="execution-note" role="status">{archiveNote}</p>}
   {!!children.length && (filter==='all'||filter==='agents') && <div className="execution-children">
-   <h4>协作子任务</h4>
+   <h4>协作子任务{children.filter(child=>child.messages?.length).length>1&&!live&&<button className="text-button" disabled={!!archiving} onClick={()=>archiveAll(children)}>全部归档</button>}</h4>
    {children.map(child=><div key={child.id}>
     <span>子任务 {childRows.get(child.id)}{childRows.has(child.parentId) && <small>由子任务 {childRows.get(child.parentId)} 委派</small>}</span>
     <span>{!live&&child.status==='running' ? '已中断' : statusLabels[child.status] || '已结束'}

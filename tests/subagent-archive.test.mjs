@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const { archiveMarkdown } = await import('../src/subagent-archive.js');
+const { archiveMarkdown, archiveAllMarkdown } = await import('../src/subagent-archive.js');
 
 const child = {
   id: 'child-1',
@@ -39,4 +39,21 @@ test('没有消息、没有子会话时拒绝归档', () => {
 test('空消息占位而不是留下空标题', () => {
   const text = archiveMarkdown({ title: 'x', child: { ...child, messages: [{ role: 'user', text: '   ' }] }, index: 1 });
   assert.match(text, /## 交办输入\n\n（空消息）/);
+});
+
+test('批量归档把多个子任务合成一份，跳过没有对话的', () => {
+  const second = { ...child, id: 'child-2', messages: [{ role: 'assistant', text: '第二个子任务的结论。' }] };
+  const empty = { ...child, id: 'child-3', messages: [] };
+  const text = archiveAllMarkdown({ title: '周报整理', children: [child, empty, second], generatedAt: Date.now() });
+  assert.match(text, /^# 子会话归档 · 2 个子任务/m);
+  assert.match(text, /- 所属会话：周报整理/);
+  assert.match(text, /## 子会话归档 · 子任务 1/);
+  assert.match(text, /## 子会话归档 · 子任务 2/);
+  assert.match(text, /第二个子任务的结论。/);
+  assert.doesNotMatch(text, /子任务 3/);
+});
+
+test('没有可归档子任务时批量归档直接拒绝', () => {
+  assert.throws(() => archiveAllMarkdown({ title: 'x', children: [] }), /没有可归档的子任务/);
+  assert.throws(() => archiveAllMarkdown({ title: 'x', children: [{ id: 'a', messages: [] }] }), /没有可归档的子任务/);
 });

@@ -29,3 +29,22 @@ export function archiveMarkdown({ title, child, index, generatedAt = Date.now() 
   });
   return [heading, '', ...meta, '', '---', '', ...body, ''].join('\n');
 }
+
+// 一次交办下可能有多个子任务：合成一份文件，逐个子任务一节，跳过没有对话的。
+export function archiveAllMarkdown({ title, children, generatedAt = Date.now() } = {}) {
+  const usable = (Array.isArray(children) ? children : []).filter(child => Array.isArray(child?.messages) && child.messages.length);
+  if (!usable.length) throw new Error('这次交办没有可归档的子任务对话。');
+  const header = [
+    `# 子会话归档 · ${usable.length} 个子任务`,
+    '',
+    `- 所属会话：${title || '未命名会话'}`,
+    `- 归档时间：${stamp(generatedAt)}`,
+    '',
+    '---',
+    '',
+  ];
+  const sections = usable.map((child, index) => archiveMarkdown({ title, child, index: index + 1, generatedAt })
+    .replace(/^# 子会话归档 · /m, '## 子会话归档 · ')
+    .replace(/^## (交办输入|子任务)/gm, '### $1'));
+  return `${header.join('\n')}${sections.join('\n---\n\n')}`;
+}

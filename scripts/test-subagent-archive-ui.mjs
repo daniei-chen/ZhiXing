@@ -16,6 +16,7 @@ const provenance = JSON.parse(await fs.readFile(path.join(appRoot, 'resources/ap
 const evidence = path.join(root, `.preview/qa-${provenance.version}/subagent-archive`, `run-${Date.now().toString(36)}`);
 const profile = path.join(evidence, 'profile');
 const archive = path.join(evidence, '子会话-1.md');
+const batch = path.join(evidence, '子会话-全部.md');
 const report = {
   layer: 'windows-packaged-app',
   version: provenance.version,
@@ -41,12 +42,20 @@ const child = {
     { role: 'assistant', text: '华东增长 12%，华南持平，北方下滑 3%。' },
   ],
 };
+const child2 = {
+  ...child,
+  id: 'qa-child-2',
+  messages: [
+    { role: 'user', text: '再核对一下北方的跌幅。' },
+    { role: 'assistant', text: '北方下滑 3%，集中在东北。' },
+  ],
+};
 const message = {
   id: 'qa-message-1',
   role: 'assistant',
   text: '汇总完成：华东增长 12%。',
   createdAt: Date.parse('2026-11-25T09:03:10Z'),
-  children: [child],
+  children: [child, child2],
 };
 
 const ui = { current: null };
@@ -121,7 +130,9 @@ const hasButton = await uiRef.evaluate('!!document.querySelector(".execution-chi
 assert.equal(hasButton, true, '子任务行出现归档按钮');
 await record('执行面板的子任务行出现「归档」入口');
 
-await uiRef.click('归档');
+const firstRect = await uiRef.evaluate('(()=>{const b=[...document.querySelectorAll(".execution-children button.text-button")].find(x=>x.textContent==="归档");const r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()');
+await uiRef.send('Input.dispatchMouseEvent', {type:'mousePressed',button:'left',clickCount:1,x:firstRect.x,y:firstRect.y});
+await uiRef.send('Input.dispatchMouseEvent', {type:'mouseReleased',button:'left',clickCount:1,x:firstRect.x,y:firstRect.y});
 await uiRef.waitFor('!!document.querySelector(".execution-note")', 60000);
 const note = await uiRef.evaluate('document.querySelector(".execution-note").textContent');
 assert.match(note, /已归档到/);
@@ -138,6 +149,16 @@ assert.match(written, /## 交办输入\n\n把上周的销售表汇总成一段�
 assert.match(written, /## 子任务\n\n华东增长 12%，华南持平，北方下滑 3%。/);
 await record('归档内容包含会话名、状态、两条消息原文', { bytes: Buffer.byteLength(written) });
 
+await main.evaluate(`(()=>{const {dialog}=process.mainModule.require('electron');const original=dialog.showSaveDialog;dialog.showSaveDialog=async(owner,options)=>({canceled:false,filePath:${JSON.stringify(batch)}});return true;})()`);
+await uiRef.click('全部归档');
+await uiRef.waitFor('document.querySelector(".execution-note")?.textContent.includes("子会话-全部")', 60000);
+const batchText = await fs.readFile(batch, 'utf8');
+assert.match(batchText, /^# 子会话归档 · 2 个子任务/m);
+assert.match(batchText, /## 子会话归档 · 子任务 1/);
+assert.match(batchText, /## 子会话归档 · 子任务 2/);
+assert.match(batchText, /北方下滑 3%，集中在东北。/);
+assert.match(batchText, /### 交办输入/);
+await record('「全部归档」把这次交办的两个子任务合成一份文件', { bytes: Buffer.byteLength(batchText) });
 await main.evaluate(`(()=>{const {dialog}=process.mainModule.require('electron');dialog.showSaveDialog=async()=>({canceled:true});return true;})()`);
 await fs.rm(archive, { force: true });
 await uiRef.click('归档');
