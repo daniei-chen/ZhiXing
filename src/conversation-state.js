@@ -19,6 +19,8 @@ export function consumeConversationDraft(drafts, submission) {
 }
 
 // Renderer projection only. The host's finalization is authoritative; this is not a full audit log.
+import { errorText } from './error-copy.js';
+
 export function finalizeConversationRun(state, job, outcome = {}) {
   const result = outcome.result || outcome.output || {};
   const finalization = outcome.finalization || result.finalization || job.finalization;
@@ -44,12 +46,14 @@ export function finalizeConversationRun(state, job, outcome = {}) {
         if (message.id !== job.replyId || message.runId !== job.runId) return message;
         const currentBody = message.progressText || (!message.pending && message.text) || job.progressText || message.text || '';
         const partial = (outcome.displayRedacted || result.displayRedacted) ? currentBody || result.text || '' : result.text || currentBody;
-        const errorMessage = error?.message || (failed ? '本轮未完成。以上部分输出已保留。' : undefined);
+        // 气泡里给人看的是可行动句子；技术原文留在 errorDetail 供执行面板排查。
+        const technical = error?.message || (failed ? '本轮未完成。以上部分输出已保留。' : undefined);
+        const errorMessage = technical === undefined ? undefined : errorText(technical);
         return {
           ...message, ...result,
           text: partial || (stopped ? '已停止生成。' : failed ? '本轮未完成，未确认任务结果。' : '内核没有返回正文。'),
           pending: false, progressText: '', stopped, error: failed,
-          errorMessage, ...(error ? { errorDetail: { code: error.code, stage: error.stage, message: errorMessage } } : {}),
+          errorMessage, ...(error ? { errorDetail: { code: error.code, stage: error.stage, message: technical } } : {}),
           status: stopped ? 'cancelled' : failed ? 'failed' : 'succeeded',
           finalization,
           trace: trace.slice(-400), traceTruncated: !!job.traceTruncated || trace.length > 400,
