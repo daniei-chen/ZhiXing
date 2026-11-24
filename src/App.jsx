@@ -1178,7 +1178,7 @@ export function App() {
               </div>
               <div className="menu-anchor resources-anchor">
                 <IconButton icon={ListBullets} label="查看当前对话产出与来源" aria-expanded={menu?.name==='resources'} onClick={event=>toggleMenu('resources',event)}/>
-                {menu?.name==='resources'&&<ConversationResources messages={messages} chatTitle={chat?.title} liveTrace={runEvents} running={running} runningTitle={state.chats.find(item=>item.id===running?.chatId)?.title} onOpenDeliverable={openDeliverable} onOpenSource={openConversationSource} onViewActivity={()=>showWorkPage('activity')} onViewFiles={()=>showWorkPage('files')} onAddSource={()=>showWorkPage('browser')} onReturnToRun={returnToRunningChat} onClose={()=>setMenu(null)}/>}
+                {menu?.name==='resources'&&<ConversationResources messages={messages} liveTrace={runEvents} running={running} runningTitle={state.chats.find(item=>item.id===running?.chatId)?.title} onOpenDeliverable={openDeliverable} onOpenSource={openConversationSource} onViewActivity={()=>showWorkPage('activity')} onViewFiles={()=>showWorkPage('files')} onAddSource={()=>showWorkPage('browser')} onReturnToRun={returnToRunningChat} onClose={()=>setMenu(null)}/>}
               </div>
               <IconButton icon={SidebarSimple} label={panel?'隐藏工作面板':'打开工作面板'} aria-expanded={panel} onClick={()=>setPanel(value=>!value)}/>
             </>}
