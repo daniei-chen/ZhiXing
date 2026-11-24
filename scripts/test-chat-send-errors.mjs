@@ -175,8 +175,10 @@ try {
   const raw = [...logText.matchAll(/Error occurred in handler for 'agent:run-prepared': Error: (.+)/g)].map(match => match[1].trim());
   assert.ok(raw.length >= 2, `主进程应记录两次发送失败，实际 ${raw.length}`);
   assert.match(raw[0], /（HTTP 401）/, `主进程第一条缺少 HTTP 401：${raw[0]}`);
-  assert.match(raw[1], /（TRANSPORT）/, `主进程第二条缺少 TRANSPORT：${raw[1]}`);
+  // 断连时先由本机网关接住，它给上游连不上记 502；内核把这句原样带出来。
+  assert.match(raw[1], /（HTTP 502）/, `主进程第二条缺少 HTTP 502：${raw[1]}`);
   assert.notEqual(unauthorizedText, raw[0], '界面不能原样搬出内核技术句');
+  assert.notEqual(transportText, raw[1], '界面不能原样搬出内核技术句');
   report.mainProcessErrors = raw; await persist();
   await record('主进程保留内核状态码，两条界面文案与技术原文不同', { raw });
 
