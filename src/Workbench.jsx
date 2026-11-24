@@ -11,7 +11,7 @@ const pages=[['browser','浏览器',Globe],['files','文件',FolderOpen],['termi
 function ViewPicker({page,setPage}) {
  return <label className="resource-switcher" title="切换工作面板视图"><CaretDown size={12}/><select aria-label="工作面板视图" value={page} onChange={event=>setPage(event.target.value)}>{pages.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>;
 }
-export function Workbench({visible,suspended,onClose,page,setPage,context,scopeKey,scopeReady,scopeError,project,files,fileRequest,messages,liveTrace,liveRun,traceTruncated,statsContext,statsLive,attach,openProject,openDeliverable,mode,privacyMode,...sideProps}){
+export function Workbench({visible,suspended,onClose,page,setPage,context,scopeKey,scopeReady,scopeError,project,files,fileRequest,messages,chatTitle,liveTrace,liveRun,traceTruncated,statsContext,statsLive,attach,openProject,openDeliverable,mode,privacyMode,...sideProps}){
  const [wide,setWide]=useState(false);
  const [,label,PageIcon]=pages.find(([id])=>page===id)||pages[0];
  const panelProps=id=>({hidden:page!==id,'aria-label':pages.find(([key])=>id===key)[1]});
@@ -25,7 +25,7 @@ export function Workbench({visible,suspended,onClose,page,setPage,context,scopeK
   <section className="workbench-view" {...panelProps('files')}>{scopeReady?<WorkspaceFiles key={project?.directory} context={context} project={project} attach={attach} openProject={openProject} fileRequest={fileRequest}/>:syncing}</section>
   <section className="workbench-view" {...panelProps('terminal')}>{scopeReady?<TerminalPanel context={context} scopeKey={scopeKey} project={project} shown={visible&&page==='terminal'&&!suspended} openProject={openProject}/>:syncing}</section>
   <section className="workbench-view" {...panelProps('chat')}><SideChatPanel {...sideProps}/></section>
-  <section className="workbench-view" {...panelProps('activity')}><ExecutionPanel key={context.sessionId} sessionId={context.sessionId} messages={messages} liveTrace={liveTrace} liveRun={liveRun} traceTruncated={traceTruncated} liveTeam={statsLive?statsContext?.team:null}/></section>
+  <section className="workbench-view" {...panelProps('activity')}><ExecutionPanel key={context.sessionId} sessionId={context.sessionId} title={chatTitle} messages={messages} liveTrace={liveTrace} liveRun={liveRun} traceTruncated={traceTruncated} liveTeam={statsLive?statsContext?.team:null}/></section>
   <section className="workbench-view" {...panelProps('deliverables')}><DeliverablesPanel messages={messages} project={project} openDeliverable={openDeliverable}/></section>
   <section className="workbench-view" {...panelProps('stats')}><StatsPanel context={statsContext} live={statsLive}/></section>
   <section className="workbench-view workbench-details" {...panelProps('details')}><h3>交办详情</h3><dl><div><dt>工作模式</dt><dd>{mode==='government'?'政务':'办公'}</dd></div><div><dt>项目</dt><dd>{project?.name||'个人聊天'}</dd></div><div><dt>工作区</dt><dd>{project?.directory||'尚未关联'}</dd></div><div><dt>发送方式</dt><dd>{privacyMode==='raw'?'非脱敏模式':'自动脱敏'}</dd></div></dl><h3>已选资料 · {files.length}</h3>{files.map(file=><p key={file.id}><FileText size={15}/>{file.name}</p>)}{!files.length&&<p className="muted">从网页或文件面板添加资料。</p>}</section>

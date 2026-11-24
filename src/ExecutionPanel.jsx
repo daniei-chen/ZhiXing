@@ -14,7 +14,7 @@ const statusLabels = {
 const formatTime = time => new Date(time).toLocaleTimeString('zh-CN',{hour12:false});
 const duration = ms => ms >= 1000 ? `${(ms/1000).toFixed(2)} 秒` : `${ms} 毫秒`;
 
-export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, sessionId, liveTeam}) {
+export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, sessionId, liveTeam, title}) {
  const [selected,setSelected] = useState('');
  const [filter,setFilter] = useState('all');
  const [limit,setLimit] = useState(30);
@@ -37,7 +37,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
   const api=window.zhixing;if(!api)return;
   setArchiving(child.id);setArchiveNote('');
   try{
-   const text=archiveMarkdown({title:reply?.title,child,index:childRows.get(child.id)});
+   const text=archiveMarkdown({title,child,index:childRows.get(child.id)});
    const result=await api.archiveSubagent({sessionId,runId:reply?.id,childId:child.id,messageCount:child.messages.length,name:`子会话-${childRows.get(child.id)}`,text});
    if(result?.cancelled)return;
    setArchiveNote(`已归档到 ${result.path}`);

@@ -47,7 +47,6 @@ const message = {
   text: '汇总完成：华东增长 12%。',
   createdAt: Date.parse('2026-11-25T09:03:10Z'),
   children: [child],
-  trace: [{ type: 'subagents', category: 'agents', label: '子任务已结束', status: 'finished', childSessionId: child.id, children: [child] }],
 };
 
 const ui = { current: null };
@@ -106,12 +105,15 @@ await invoke('saveWorkspace', state);
 await uiRef.send('Page.reload');
 await uiRef.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')', 60000);
 await uiRef.waitFor('Array.from(document.querySelectorAll(".chat-row")).some(row=>row.textContent.includes("子会话归档验收"))', 30000);
-const rowRect = await uiRef.evaluate('(()=>{const e=[...document.querySelectorAll(".chat-row")].find(r=>r.textContent.includes("子会话归档验收"));const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()');
-await uiRef.send('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, x: rowRect.x, y: rowRect.y });
-await uiRef.send('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: rowRect.x, y: rowRect.y });
-await pause(600);
+const rowRect = await uiRef.evaluate('(()=>{const row=[...document.querySelectorAll(".chat-row")].find(r=>r.textContent.includes("子会话归档验收"));const r=row.getBoundingClientRect();return {x:r.x+40,y:r.y+r.height/2};})()');
+await uiRef.send('Input.dispatchMouseEvent', {type:'mousePressed',button:'left',clickCount:1,x:rowRect.x,y:rowRect.y});
+await uiRef.send('Input.dispatchMouseEvent', {type:'mouseReleased',button:'left',clickCount:1,x:rowRect.x,y:rowRect.y});
+await pause(900);
+await uiRef.waitFor('document.body.textContent.includes("汇总完成：华东增长 12%")', 30000);
+await pause(400);
 
-await uiRef.click('打开工作面板');
+const panelClosed = await uiRef.evaluate('!![...document.querySelectorAll("button")].find(b=>b.getAttribute("aria-label")==="打开工作面板")');
+if (panelClosed) await uiRef.click('打开工作面板');
 await uiRef.waitFor('!!document.querySelector(\'select[aria-label="工作面板视图"]\')', 30000);
 await uiRef.evaluate('(()=>{const s=document.querySelector(\'select[aria-label="工作面板视图"]\');s.value="activity";s.dispatchEvent(new Event("change",{bubbles:true}));return s.value;})()');
 await uiRef.waitFor('!!document.querySelector(".execution-children")', 30000);
