@@ -31,7 +31,6 @@
   "npmRebuild": false,
   "win": {
     "icon": "public/brand/zhixing.ico",
-    "signExecutable": false,
     "target": [
       {
         "target": "nsis",
