@@ -22,6 +22,14 @@ export function decodeModels(body) {
   return rows;
 }
 
+// fetch() 把底层原因藏在 error.cause 里。丢掉它，界面就只能显示一句笼统的
+// “无法读取模型列表”；保留系统错误码，统一的错误文案才能给出下一步。
+export function failureCode(error) {
+  if (error?.name === 'TimeoutError' || error?.cause?.name === 'TimeoutError') return 'TIMEOUT';
+  const code = error?.cause?.code || error?.code || '';
+  return typeof code === 'string' && /^[A-Z][A-Z0-9_]{2,40}$/.test(code) ? code : '';
+}
+
 export async function fetchModels(configuration, key) {
   assertModelCredential(key);
   const base = new URL(configuration.baseUrl);
@@ -35,7 +43,10 @@ export async function fetchModels(configuration, key) {
   let response;
   try {
     response = await fetch(base, { headers: { ...auth, Accept: 'application/json' }, redirect: 'error', signal: AbortSignal.timeout(12000) });
-  } catch { throw new Error('无法读取模型列表，请检查网络和 API 地址。'); }
+  } catch (error) {
+    const code = failureCode(error);
+    throw new Error(`无法读取模型列表${code ? `（${code}）` : ''}，请检查网络和 API 地址。`);
+  }
   if (!response.ok) throw new Error(`读取模型列表失败（HTTP ${response.status}），已保留当前配置。`);
   if (Number(response.headers.get('content-length')) > 512000) throw new Error('模型列表过大。');
   const reader = response.body.getReader(); let size = 0, text = ''; const decoder = new TextDecoder();

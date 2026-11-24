@@ -48,3 +48,6 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - 2026-11-21 用户追加：完成新版后同步 GitHub，并发布完整 Windows 安装包供外部 AI 审计；同时提供对应源码版本、校验值、真实验收结果及未覆盖范围。
 - 0.12.1 凭证策略：可用模型 Key 至少 8 个无空格的可打印 ASCII 字符；旧的过短 Key 提示重配。非脱敏模式始终拦截规则识别的凭证，不得因为 SECRET=mask 放行原文。本机测试按当前模式运行，但不读取已保存 Key；实际发送由主进程另行检查。隐私语义更新必须提高引擎版本并让旧自动化授权失效。
 - 2026-11-21 独立审计收口：先复现 R01–R06，保留动态键/schema 的语义并对敏感动态键安全拒绝；导出和分享由主进程生成并校验当前策略快照。业务终态、结果保存、进程退出分别记录，退出未确认继续隔离，保存重试不得重复运行模型或工具。删除须级联草稿且失败可恢复；普通脱敏不增加逐次确认。保持当前框架、存储、灰白品牌与三个顶栏入口，分层公布源码、合成运行、Windows 和真实云端证据。
+
+- 0.14.1 错误文案要求端到端可信：主进程不得把网络失败压成一句笼统的话，必须保留系统错误码（ECONNREFUSED／ENOTFOUND／ECONNRESET／TIMEOUT）或 HTTP 状态；界面统一由 src/error-copy.js 映射成可行动文案并整体替换，原始技术文本只进诊断日志。新增或修改文案必须同时更新 tests/error-copy.test.mjs 与 scripts/test-error-copy-ui.mjs，并在 Windows 实包上跑 npm run test:errors，不允许只靠映射单测宣称已完成。
+- 发版第 9 步之后并列增加 Windows 实包错误文案验收（npm run test:errors），与原生文件导出验收同级；两套脚本都用临时 profile 启动打包 EXE，不改用户安装目录。
