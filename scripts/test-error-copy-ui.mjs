@@ -50,12 +50,12 @@ closed.closeAllConnections();await new Promise(resolve=>closed.close(resolve));
 const nonexistent=`https://qa-error-copy-${Date.now().toString(36)}.invalid/v1`;
 const fakeKey='sk-qa-error-copy-0000000000000000';
 
-let ui,main,child,exit,log;
+let ui,main,child,exit,log,logPath;
 const input='textarea[aria-label="聊天输入框"]';
 const notice='.setting-notice[role=alert]';
 let nameSeq=0;
 async function launch(){
- const logfile=path.join(evidence,`app-${report.exits.length}.log`);
+ const logfile=path.join(evidence,`app-${report.exits.length}.log`);logPath=logfile;
  log=await fs.open(logfile,'a');
  const portsFile=path.join(profile,'DevToolsActivePort');await fs.rm(portsFile,{force:true});
  const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;delete env.NODE_PATH;delete env.NODE_OPTIONS;
@@ -73,9 +73,8 @@ async function launch(){
  const activeProfile=await main.evaluate("process.mainModule.require('electron').app.getPath('userData')");
  assert.equal(path.resolve(activeProfile),path.resolve(profile));
  await ui.waitFor(`!!document.querySelector(${JSON.stringify(input)})&&!document.querySelector(${JSON.stringify(input)}).disabled`,45000);
- // 记录界面上真正交给用户的那次 IPC 原始错误，不改写任何返回值。
- await ui.evaluate(`(()=>{const api=window.zhixing;const original=api.saveProvider.bind(api);window.__qaRaw=null;
-  api.saveProvider=async(...args)=>{try{return await original(...args);}catch(error){window.__qaRaw=String(error&&error.message||error);throw error;}};return true;})()`);
+ // contextBridge 暴露的对象是只读的，不能在页面里包一层 saveProvider 抓原始错误；
+ // 主进程日志里的 "Error occurred in handler for 'providers:save'" 才是那一次的真实消息。
 }
 async function openFeature(){
  if(await ui.evaluate('!!document.querySelector("button[aria-label=展开侧栏]")'))await ui.click('展开侧栏');
@@ -98,21 +97,19 @@ async function attempt({label,baseUrl,expected,cause,name}){
  await ui.fill('input[placeholder="例如，公司模型网关"]',provider);
  await ui.fill('.connection-form input[type=url]',baseUrl);
  await ui.fill('.connection-form input[type=password]',fakeKey);
- await ui.evaluate('window.__qaRaw=null');
  await ui.click('拉取模型并保存','.primary-button');
  await ui.waitFor(`!!document.querySelector(${JSON.stringify(notice)})`,30000);
  const shown=(await ui.evaluate(`document.querySelector(${JSON.stringify(notice)}).textContent`)).trim();
- const raw=await ui.evaluate('window.__qaRaw');
  const saved=await ui.evaluate('(async()=>{const status=await window.zhixing.runtimeStatus();return status.providers.length})()');
  await ui.evaluate(`document.querySelector(${JSON.stringify(notice)}).scrollIntoView({block:"center"})`);
  await ui.screenshot(path.join(evidence,`${name}.png`));
- report.cases.push({name:label,status:'observed',cause,expected,shown,raw,savedProviders:saved});
+ report.cases.push({name:label,status:'observed',cause,expected,shown,savedProviders:saved});
  await persist();
  assert.equal(shown,expected,`${label}: 界面文案应为「${expected}」，实际「${shown}」`);
  assert.equal(saved,0,`${label}: 失败的拉取不应留下供应商`);
  const technical='请检查网络和 API 地址。';
  assert(!shown.includes(technical),`${label}: 界面仍然显示笼统的技术文案`);
- await record(`${label}（${cause}）显示「${shown}」`,{expected,cause,raw});
+ await record(`${label}（${cause}）显示「${shown}」`,{expected,cause});
 }
 
 let failure;
@@ -144,6 +141,18 @@ try{
  await attempt({label:'无响应的服务地址按 12 秒超时给出超时文案',baseUrl:hangUrl,
   cause:'TIMEOUT',expected:COPY.TIMEOUT,name:'timeout'});
 
+ // 主进程日志里留下的是带错误码的技术句；界面显示的是另一句。两者同时留档。
+ await pause(400);
+ const logText=await fs.readFile(logPath,'utf8');
+ const raw=[...logText.matchAll(/Error occurred in handler for 'providers:save': Error: (.+)/g)].map(match=>match[1].trim());
+ assert.equal(raw.length,4,`主进程应记录四次拉取失败，实际 ${raw.length}`);
+ [/（HTTP 401）/,new RegExp(`（${missingHost}）`),/（ECONNREFUSED）/,/（TIMEOUT）/].forEach((pattern,index)=>
+  assert.match(raw[index],pattern,`主进程第 ${index+1} 条错误缺少真实原因：${raw[index]}`));
+ const observed=report.cases.filter(entry=>entry.status==='observed');
+ observed.forEach((entry,index)=>assert.notEqual(entry.shown,raw[index],'界面不能原样搬出主进程的技术句'));
+ report.mainProcessErrors=raw;await persist();
+ await record('主进程保留真实错误码，四个界面文案都与技术原文不同',{raw});
+
  report.status='passed';await persist();
 }catch(error){
  failure=error;report.status='failed';report.error=String(error?.message||error);
@@ -153,17 +162,15 @@ try{
  hang.closeAllConnections();hang.close();
  try{
   if(ui&&child?.exitCode===null){
-   await ui.evaluate('window.zhixing.windowControl("close")').catch(()=>{});
-   const closed=await Promise.race([exit,pause(30000,null).then(()=>null)]);
-   if(!closed){
-    report.close='windowControl did not quit; used app.quit()';
-    await main?.evaluate("process.mainModule.require('electron').app.quit()").catch(()=>{});
-    await Promise.race([exit,pause(20000,null).then(()=>{throw new Error('Packaged app did not close');})]);
-   }
+   void ui.evaluate('window.zhixing.windowControl("close")').catch(()=>{});
+   // 关掉主进程调试连接：Electron 退出时会等调试器断开，留着连接会看起来像没退出。
+   main?.close();main=null;
+   const closed=await Promise.race([exit,pause(40000,null).then(()=>null)]);
+   if(!closed){child.kill();await exit;report.closeError='Packaged app did not close';failure??=new Error('Packaged app did not close');}
   }
   if(exit){const [code,signal]=await exit;report.exits.push({code,signal});await persist();
    if(code!==0)failure??=new Error(`Packaged app exited with ${code}`);}
  }catch(error){report.closeError=String(error?.message||error);await persist();failure??=error;}
- finally{main?.close();ui?.close();if(child?.exitCode===null){child.kill();await exit;}await log?.close();}
+ finally{ui?.close();if(child?.exitCode===null){child.kill();await exit;}await log?.close();}
 }
 if(failure)throw failure;
