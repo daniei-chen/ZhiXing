@@ -9,6 +9,7 @@ import { friendlyError, errorText } from '../src/error-copy.js';
 const packed = process.env.ZHIXING_TEST_PACKED_APP;
 const load = name => import(packed ? pathToFileURL(path.join(packed, 'electron', name)).href : `../electron/${name}`);
 const { failureCode, fetchModels } = await load('model-catalog.mjs');
+const { failureHint, turnFailureMessage } = await load('run-failure.mjs');
 const key = 'Ab7!xyZ9';
 
 // 这些句子是产品承诺的一部分：用户看到的不是技术串，而是下一步做什么。
@@ -23,6 +24,7 @@ const COPY = {
   timeout: '请求超时，请检查网络后重试。',
   certificate: 'HTTPS 证书校验未通过，请确认服务地址可信。',
   fetch: '网络请求失败，请检查网络连接或代理设置。',
+  transport: '无法连接到模型服务，请检查网络、代理或服务地址后重试。',
 };
 
 test('每个真实网络故障都有对应的可行动文案', async () => {
@@ -71,6 +73,29 @@ test('主进程保留系统错误码，界面把整句换成对应文案', async
   assert.match(error.message, /^无法读取模型列表（ECONNREFUSED），请检查网络和 API 地址。$/, error.message);
   // 界面拿到的就是这句带错误码的消息，经过同一层 IPC 包装后仍要落到连接被拒绝的文案。
   assert.equal(errorText(new Error(`Error invoking remote method 'providers:save': Error: ${error.message}`)), COPY.refused);
+});
+
+test('发送失败时内核给出的状态与代码被带进句子，界面再整句替换', async () => {
+  const unauthorized = '模型未完成本次请求（HTTP 401）。请检查服务地址、模型 ID、API Key 或额度。';
+  assert.equal(friendlyError(unauthorized), COPY.unauthorized);
+  assert.equal(friendlyError('模型未完成本次请求（TRANSPORT）。请检查服务地址、模型 ID、API Key 或额度。'), COPY.transport);
+  assert.equal(friendlyError('模型未完成本次请求（TIMEOUT）。请检查服务地址、模型 ID、API Key 或额度。'), COPY.timeout);
+  // 渲染层拿到的是经 IPC 包装的同一个句子，必须还能认出 401。
+  assert.equal(errorText(new Error(`Error invoking remote method 'runs:prepared': Error: ${unauthorized}`)), COPY.unauthorized);
+});
+
+test('内核没有给出状态时不编造原因', async () => {
+  const generic = '模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。';
+  assert.equal(turnFailureMessage(undefined), generic);
+  assert.equal(turnFailureMessage({ kind: 'error' }), generic);
+  assert.equal(turnFailureMessage({ kind: 'error', error: { code: 'CONTENT_REFUSED', message: 'x' } }), generic);
+  assert.equal(turnFailureMessage({ kind: 'error', error: { status: '401' } }), generic);
+  assert.equal(turnFailureMessage({ kind: 'error', error: { status: 700 } }), generic);
+  assert.equal(turnFailureMessage({ kind: 'error', error: { status: 403 } }), '模型未完成本次请求（HTTP 403）。请检查服务地址、模型 ID、API Key 或额度。');
+  assert.equal(failureHint({ error: { status: 429 } }), 'HTTP 429');
+  assert.equal(failureHint({ error: { code: 'TRANSPORT' } }), 'TRANSPORT');
+  assert.equal(failureHint({ error: { code: 'ABORTED' } }), '');
+  assert.equal(failureHint(null), '');
 });
 
 test('超时与未知原因不冒充网络故障', async () => {

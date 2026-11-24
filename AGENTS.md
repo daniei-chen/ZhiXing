@@ -53,3 +53,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - 发版第 9 步之后并列增加 Windows 实包错误文案验收（npm run test:errors），与原生文件导出验收同级；两套脚本都用临时 profile 启动打包 EXE，不改用户安装目录。
 - 安装生命周期复跑的固定顺序（0.14.2 起）：先用 `scripts/backup-host-bytes.ps1` 取冷备份（此时必须已正常关闭应用），再用**保留快捷方式**的方式卸载用户安装（`Uninstall 知行.exe /S /currentuser --keep-shortcuts`），最后跑 `scripts/qa-install-lifecycle.ps1 -Mode Run`。若卸载器连快捷方式一起删掉，脚本会在前置检查报 `Shortcut inventory differs from its byte backup`——因为备份清单里记着两条快捷方式，而当前一条都没有。快捷方式可以按备份逐字节还原，不需要重做备份。
 - 生命周期脚本要求的 FixtureManifest 里 `sourceAppVersion` 必须等于**首个安装包**的版本；没有 BaselineInstaller 时即候选版本。合成 fixture 可以先由旧版创建，但要用候选版重新读一遍、重新保存后再写清单，否则版本字段是假的。
+- 0.14.3 聊天发送失败也必须说清下一步：内核把失败压成 `turn/end` 的 `reason.error`（含 `status`／`code`）时，主进程要用 `electron/run-failure.mjs` 把它带进用户句子的括号里，界面再由 `src/error-copy.js` 整句替换。只有 HTTP 状态或 `TRANSPORT`／`TIMEOUT` 这类已映射代码才带；`CONTENT_REFUSED` 等无法给出行动建议的代码保持原句，不编造原因。发送路径的实包验收是 `npm run test:chat`（本地假服务：模型目录成功，对话分别 401 与断连）。

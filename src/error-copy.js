@@ -8,6 +8,9 @@ const NETWORK_ERROR_COPY = [
   [/ENOTFOUND|EAI_AGAIN|getaddrinfo/i, '解析不到服务地址，请检查网络连接或代理设置。'],
   [/ECONNREFUSED/i, '服务地址拒绝连接，请确认地址和端口是否正确。'],
   [/ECONNRESET|socket hang up|EPIPE/i, '连接被中途断开，请检查网络后重试。'],
+  // 内核把传输层失败统一记成 TRANSPORT，不保留底层 Socket 代码；
+  // 这是聊天发送路径唯一还能拿到的网络线索，不能落回笼统的失败句。
+  [/TRANSPORT/, '无法连接到模型服务，请检查网络、代理或服务地址后重试。'],
   [/ETIMEDOUT|timed? ?out|超时/i, '请求超时，请检查网络后重试。'],
   [/certificate|CERT_|self.signed/i, 'HTTPS 证书校验未通过，请确认服务地址可信。'],
   [/fetch failed|network error|failed to fetch/i, '网络请求失败，请检查网络连接或代理设置。'],

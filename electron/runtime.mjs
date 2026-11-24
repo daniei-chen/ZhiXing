@@ -17,6 +17,7 @@ import {normaliseKernel} from '../src/kernel-config.js';
 import {acceptsGoalImages, formatSessionCommand, parseSessionCommand} from '../src/session-commands.js';
 import {applyRuntimeExtensions} from './plugin-profile.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
+import {turnFailureMessage} from './run-failure.mjs';
 import {AssistantTextStream} from './assistant-stream.mjs';
 import { VISUAL_MAX_BYTES, VISUAL_MAX_PER_REQUEST, VISUAL_MAX_PIXELS, readVisualAttachment } from './visual-attachments.mjs';
 import {readProjectVision,renderOfficeVision} from './office-visual.mjs';
@@ -669,7 +670,7 @@ export class RuntimeManager{
     }
     const reason=result.events?.findLast(event=>event.type==='turn/end')?.data?.reason;
     const diagnostic=this.executionDisplay(String(reason?JSON.stringify(reason):result.finalResponse||'').slice(0,2000),{providerKey:key,customTerms,privacyPolicy:effectivePolicy});
-    throw Object.assign(new Error('模型未完成本次请求。请检查服务地址、模型 ID、API Key 或额度。'),{code:'RUNTIME_TURN_FAILED',stage:'query',details:{finishReason:result.finishReason,diagnostic}});
+    throw Object.assign(new Error(turnFailureMessage(reason)),{code:'RUNTIME_TURN_FAILED',stage:'query',details:{finishReason:result.finishReason,diagnostic}});
    }
    active.finishReason=result.finishReason;
    await waitContext(directory,bridgeKey,sessionId,{planning:request.expectedPlanning});

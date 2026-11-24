@@ -1,6 +1,6 @@
 {
   "name": "office-agent",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "description": "知行 AI 办公助手 · DeepSeek Harness",
   "author": "知行",
   "private": true,
@@ -22,7 +22,8 @@
     "test:privacy": "node --test --test-concurrency=1 tests/privacy.test.mjs tests/credential-boundary.test.mjs tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/privacy-gateway.test.mjs tests/delivery-review.test.mjs",
     "test:kernel": "node --test --test-concurrency=1 tests/kernel.test.mjs tests/kernel-native.test.mjs tests/runtime-context.test.mjs",
     "test:delivery": "node --test --test-concurrency=1 tests/delivery-review.test.mjs tests/delivery-review-ui.test.mjs",
-    "test:audit": "node --test --test-concurrency=1 tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/delivery-review.test.mjs tests/runtime-finalization.test.mjs tests/automation-persistence.test.mjs tests/conversation-state.test.mjs"
+    "test:audit": "node --test --test-concurrency=1 tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/delivery-review.test.mjs tests/runtime-finalization.test.mjs tests/automation-persistence.test.mjs tests/conversation-state.test.mjs",
+    "test:chat": "node scripts/test-chat-send-errors.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {
