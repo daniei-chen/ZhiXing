@@ -25,6 +25,7 @@ const COPY = {
   certificate: 'HTTPS 证书校验未通过，请确认服务地址可信。',
   fetch: '网络请求失败，请检查网络连接或代理设置。',
   transport: '无法连接到模型服务，请检查网络、代理或服务地址后重试。',
+  rate: '请求太频繁或额度已用尽，请稍后再试，或到账户里检查余额与限额。',
 };
 
 test('每个真实网络故障都有对应的可行动文案', async () => {
@@ -40,6 +41,12 @@ test('每个真实网络故障都有对应的可行动文案', async () => {
     ['无法读取模型列表（TIMEOUT），请检查网络和 API 地址。', COPY.timeout],
     ['request to https://api.example/v1 failed, reason: self signed certificate', COPY.certificate],
     ['TypeError: fetch failed', COPY.fetch],
+    // 聊天发送路径：Chat Completions 适配器只给供应商无关代码，没有状态行。
+    ['模型未完成本次请求（AUTH）。请检查服务地址、模型 ID、API Key 或额度。', COPY.unauthorized],
+    ['模型未完成本次请求（ACCOUNT_TOKEN_INVALID）。请检查服务地址、模型 ID、API Key 或额度。', COPY.unauthorized],
+    ['模型未完成本次请求（RATE_LIMIT）。请检查服务地址、模型 ID、API Key 或额度。', COPY.rate],
+    ['模型未完成本次请求（QUOTA）。请检查服务地址、模型 ID、API Key 或额度。', COPY.rate],
+    ['模型未完成本次请求（SERVER）。请检查服务地址、模型 ID、API Key 或额度。', '模型服务内部出错，请稍后再试。'],
   ];
   for (const [raw, expected] of cases) assert.equal(friendlyError(raw), expected, raw);
 });
@@ -89,6 +96,11 @@ test('内核没有给出状态时不编造原因', async () => {
   assert.equal(turnFailureMessage(undefined), generic);
   assert.equal(turnFailureMessage({ kind: 'error' }), generic);
   assert.equal(turnFailureMessage({ kind: 'error', error: { code: 'CONTENT_REFUSED', message: 'x' } }), generic);
+  // 适配器把状态写在消息开头时同样要认出来，不能让 401 落回笼统句。
+  assert.equal(turnFailureMessage({ kind: 'error', error: { message: '401: {"message":"Invalid API key"}', code: 'AUTH' } }),
+    '模型未完成本次请求（HTTP 401）。请检查服务地址、模型 ID、API Key 或额度。');
+  assert.equal(failureHint({ error: { code: 'AUTH' } }), 'AUTH');
+  assert.equal(failureHint({ error: { message: 'HTTP 500 upstream' } }), 'HTTP 500');
   assert.equal(turnFailureMessage({ kind: 'error', error: { status: '401' } }), generic);
   assert.equal(turnFailureMessage({ kind: 'error', error: { status: 700 } }), generic);
   assert.equal(turnFailureMessage({ kind: 'error', error: { status: 403 } }), '模型未完成本次请求（HTTP 403）。请检查服务地址、模型 ID、API Key 或额度。');

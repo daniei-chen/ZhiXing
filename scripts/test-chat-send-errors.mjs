@@ -162,13 +162,13 @@ try {
   const unauthorizedText = await sendMessage('帮我把这段话改得更正式：明天开会。');
   await ui.screenshot(path.join(evidence, 'unauthorized.png'));
   report.cases.push({ name: '真实 401：界面文案', status: 'observed', shown: unauthorizedText }); await persist();
-  assert.equal(unauthorizedText, `运行未完成：${COPY.unauthorized}`, `401 后界面显示「${unauthorizedText}」`);
+  assert.equal(unauthorizedText, COPY.unauthorized, `401 后界面显示「${unauthorizedText}」`);
 
   await configure(`http://127.0.0.1:${reset.server.address().port}/v1`, { edit: true });
   const transportText = await sendMessage('再帮我列三条会议要点。');
   await ui.screenshot(path.join(evidence, 'transport.png'));
   report.cases.push({ name: '连接被断开：界面文案', status: 'observed', shown: transportText }); await persist();
-  assert.equal(transportText, `运行未完成：${COPY.transport}`, `断连后界面显示「${transportText}」`);
+  assert.equal(transportText, COPY.transport, `断连后界面显示「${transportText}」`);
 
   await pause(400);
   const logText = await fs.readFile(logPath, 'utf8');

@@ -2,6 +2,13 @@
 // 用户看不出下一步该做什么。这里按可行动性归类；匹配不到的保持原文，
 // 不做猜测性改写。原始文本仍会进诊断日志。
 const NETWORK_ERROR_COPY = [
+  // 供应商无关的失败代码（内核 LLM_FAILURE_CODES）：适配器给不出 HTTP 状态
+  // 时，代码是唯一还能指向下一步的线索。用中文括号锚定，避免误伤正文。
+  [/（(?:AUTH|ACCOUNT_TOKEN_INVALID|MISSING_CREDENTIAL|INVALID_CREDENTIAL)）/, 'API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。'],
+  [/（(?:RATE_LIMIT|QUOTA|ACCOUNT_QUOTA)）/, '请求太频繁或额度已用尽，请稍后再试，或到账户里检查余额与限额。'],
+  [/（SERVER）/, '模型服务内部出错，请稍后再试。'],
+  [/（CONTEXT_WINDOW_EXCEEDED）/, '对话内容超出模型一次能处理的长度，请新建聊天或减少资料后再试。'],
+  [/（UNKNOWN_MODEL）/, '服务端不认这个模型，请刷新模型目录后重新选择。'],
   [/401|unauthorized|invalid api key|incorrect api key|authentication/i, 'API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。'],
   [/403|forbidden/i, '服务端拒绝了这次请求（403），请检查 API Key 权限或账户状态。'],
   [/429|rate.?limit|too many requests/i, '请求太频繁（429），请稍等再试。'],
