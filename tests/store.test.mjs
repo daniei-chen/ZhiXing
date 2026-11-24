@@ -104,3 +104,73 @@ test('启动恢复最近的有效草稿作用域并保留中断输出',()=>{
  assert.equal(restoredDraftView(restored).newDraftId,'home-draft');
  restored.drafts={};assert.equal(restoredDraftView(restored),null);
 });
+
+test('旧版本存档缺少新增字段时补默认且不丢用户数据', () => {
+ // A 0.12-era payload: version 2, no voice/personalisation fields, no documents
+ // array, no appliedAutomationRuns. Loading it must not throw and must keep the
+ // user's own project and chat intact.
+ const legacy = {
+  version: 2,
+  workspaces: [{ id: 'office-home', name: '办公', type: 'office', directory: 'D:/work' }],
+  workspaceId: 'office-home',
+  projects: [{ id: 'p-user', name: '季度复盘', workspaceId: 'office-home' }],
+  chats: [{ id: 'c-user', title: '周报', projectId: 'p-user', messages: [{ id: 'm1', role: 'user', text: '帮我写周报' }] }],
+  settings: { persist: true, privacyMode: 'redact', permission: 'ask' },
+ };
+ const merged = mergeState(legacy);
+ assert.equal(merged.version, 2);
+ assert.equal(merged.projects.find(project => project.id === 'p-user')?.name, '季度复盘');
+ assert.equal(merged.chats.find(chat => chat.id === 'c-user')?.messages[0].text, '帮我写周报');
+ assert.deepEqual(merged.automations, []);
+ assert.deepEqual(merged.documents, []);
+ assert.deepEqual(merged.appliedAutomationRuns, []);
+ assert.equal(merged.settings.voiceLanguage, 'zh-CN');
+ assert.equal(merged.settings.personalizationEnabled, false);
+ assert.equal(merged.settings.personalInstructions, '');
+ assert.ok(merged.settings.privacyPolicy, 'privacy policy must fall back to a valid default');
+ // Old projects have no directory of their own: they inherit the workspace one.\n assert.equal(merged.projects.find(project => project.id === 'p-user')?.directory, 'D:/work');
+});
+
+test('未知的多余字段被忽略而不是让启动失败', () => {
+ const future = {
+  version: 2,
+  workspaces: [{ id: 'office-home', name: '办公', type: 'office', directory: null }],
+  workspaceId: 'office-home',
+  projects: [], chats: [],
+  settings: {},
+  someFutureArray: [{ id: 'x' }],
+  someFutureObject: { anything: true },
+ };
+ const merged = mergeState(future);
+ assert.equal(merged.version, 2);
+ assert.equal(Object.hasOwn(merged, 'someFutureArray'), false);
+ assert.equal(Object.hasOwn(merged, 'someFutureObject'), false);
+ assert.equal(merged.workspaceId, 'office-home');
+});
+
+test('损坏的存档回退到默认状态而不是抛错', () => {
+ for (const broken of [null, undefined, {}, { version: 99 }, { version: 2, projects: 'nope', chats: [] }]) {
+  const merged = mergeState(broken);
+  assert.equal(merged.version, 2);
+  assert.ok(Array.isArray(merged.projects) && merged.projects.length > 0);
+  assert.ok(Array.isArray(merged.chats));
+  assert.equal(merged.workspaceId, merged.workspaces[0].id);
+ }
+});
+
+test('旧版草稿引用已删除会话时不会凭空恢复', () => {
+ const legacy = {
+  version: 2,
+  workspaces: [{ id: 'office-home', name: '办公', type: 'office', directory: null }],
+  workspaceId: 'office-home',
+  projects: [], chats: [],
+  settings: { persist: true },
+  drafts: { 'chat:ghost': { text: '残留草稿', files: [] } },
+ };
+ const merged = mergeState(legacy);
+ const draft = merged.drafts['chat:ghost'];
+ assert.ok(draft, 'draft entry is retained for inspection');
+ assert.equal(draft.chatId, null);
+ assert.equal(draft.kind, undefined);
+});
+
