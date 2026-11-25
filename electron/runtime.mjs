@@ -299,7 +299,7 @@ export class RuntimeManager{
   // Execution traces carry a protected summary. Restored local content stays
   // on the dedicated draft channel and the private call's result/error.result.
   const text=this.executionDisplay(active.output.text,active.safeContext);
-  const result={runId:active.runId,sessionId:active.sessionId,text,masked:text,privacyMode:active.output.privacyMode,finishReason:active.output.finishReason,displayRedacted:true};
+  const result={runId:active.runId,sessionId:active.sessionId,text,masked:text,privacyMode:active.output.privacyMode,finishReason:active.output.finishReason,displayRedacted:true,...(active.output.unrestored>0?{unrestored:active.output.unrestored}:{})};
   return {result,output:result};
  }
  watchHarness(active,harness){
@@ -685,14 +685,18 @@ export class RuntimeManager{
    const final=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(response,customTerms,effectivePolicy);
    if(final.blocked||containsCredential(response,key))throw new Error('模型输出包含疑似凭证，已停止显示。');
    let text=response;
+   let unrestored=0;
    if(privacyMode==='redact'){
     const restored=vault.restore(final.text,{allowedTokens:originalTokens});
-    if(restored.unknown.length)throw new Error('输出包含无法归属本任务的占位符，已停止还原。');
+    // 无法归属本任务的占位符多半是模型把别处的记号复述了出来。丢掉整段回答对用户
+    // 没有好处：保留正文、换成中性标记，并把处数带回界面提示。
+    unrestored=restored.unknown.length;
+    if(unrestored)console.error(`privacy.restore-unknown ${JSON.stringify({count:unrestored})}`);
     text=restored.text.replace(/⟦ZX-[^⟧]+⟧/g,'【敏感值待核实】');
    }
    if(containsCredential(text,key))throw new Error('还原后的输出包含模型凭证，已停止显示。');
    const childDetails=[...children.values()].map(child=>({...child,messages:(transcripts.get(child.id)||[]).map(row=>({...row,text:this.executionDisplay(row.text,active.controls)}))}));
-   active.output={runId,sessionId,text,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,children:childDetails,plan:plan.map(item=>({...item,content:this.executionDisplay(vault.restore(item.content,{allowedTokens:originalTokens}).text,{providerKey:key,customTerms,privacyPolicy:effectivePolicy})}))};
+   active.output={runId,sessionId,text,unrestored,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,children:childDetails,plan:plan.map(item=>({...item,content:this.executionDisplay(vault.restore(item.content,{allowedTokens:originalTokens}).text,{providerKey:key,customTerms,privacyPolicy:effectivePolicy})}))};
    active.resultReady=true;
    this.emitEvent({runId,sessionId,type:'draft',source:'validated-result',final:true,text});
    await closeHarness(active,h);await active.draftTail;

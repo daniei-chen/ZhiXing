@@ -675,6 +675,7 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .workspace-save-banner.failed span { min-width: 0; overflow-wrap: anywhere; }
 .workspace-save-banner.failed .secondary-button { flex: none; min-height: 28px; padding: 4px 8px; font-size: 11px; }
 .workspace-save-banner.recovering { color: var(--text); }
+.restore-note { margin: 6px 0 2px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--muted); font-size: 12px; line-height: 1.5; }
 .run-error-detail { margin: 9px 0; color: var(--danger); font-size: 12px; line-height: 1.6; }
 .transcript-new-content { position: fixed; z-index: 21; bottom: 102px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); font-size: 12px; white-space: nowrap; }
 
