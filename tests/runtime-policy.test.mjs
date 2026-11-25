@@ -89,7 +89,7 @@ test('运行管理器关闭会等待最终保存，晚到取消不改写成功�
   const settled=await terminal,terminalEvent=events.filter(event=>event.type==='run/terminal').at(-1);
   assert.deepEqual(settled,{runId:'settled-success',sessionId:'settled-success',status:'succeeded',finishReason:'completed',finalization:settled.finalization});
   assert(Number.isSafeInteger(settled.finalization.eventWatermark));assert(settled.finalization.eventWatermark>0);
-  assert.deepEqual(settled.finalization,{runId:'settled-success',executionStatus:'completed',persistenceStatus:'saved',processStatus:'exited',eventWatermark:settled.finalization.eventWatermark,deliverables:[],children:[]});
+  assert.deepEqual(settled.finalization,{runId:'settled-success',executionStatus:'completed',persistenceStatus:'saved',processStatus:'exited',eventWatermark:settled.finalization.eventWatermark,deliverables:[],changes:[],children:[]});
   assert.deepEqual(terminalEvent.finalization,settled.finalization);
   await closing;assert.equal(closed,true);
   assert.equal(events.filter(event=>event.type==='run/terminal').at(-1).status,'succeeded');

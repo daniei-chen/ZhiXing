@@ -860,6 +860,14 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .answer-text code.inline-file-ref { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
 .answer-text code.inline-file-ref:hover { background: var(--hover); }
 .answer-text code.inline-file-ref:focus-visible { outline: 2px solid var(--quiet); outline-offset: 1px; }
+.change-files { display: grid; gap: 6px; margin: 9px 0 2px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.change-files header { display: flex; align-items: baseline; gap: 7px; color: var(--muted); font-size: 11px; }
+.change-files header strong { color: var(--text); font-size: 12px; font-weight: 550; }
+.change-files ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.change-files li button { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 3px 0; background: none; border: 0; color: var(--text); font-size: 12px; text-align: left; }
+.change-files li button:hover span { text-decoration: underline; }
+.change-files li button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.change-files li button small { flex: none; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .deliverable-files { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 9px 0 2px; }
 .deliverable-files[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
 .deliverable-card { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); text-align: left; }

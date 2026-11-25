@@ -17,6 +17,7 @@ import {startPrivacyGateway} from './privacy-gateway.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
 import {acceptsGoalImages, formatSessionCommand, parseSessionCommand} from '../src/session-commands.js';
 import {applyRuntimeExtensions} from './plugin-profile.mjs';
+import {mergeChanges} from './change-summary.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
 import {failureHint, turnFailureMessage} from './run-failure.mjs';
 import {AssistantTextStream} from './assistant-stream.mjs';
@@ -555,7 +556,7 @@ export class RuntimeManager{
    this.watchHarness(active,h);
    if(active.cancelled)throw new Error('任务已停止。');
    const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void (active.readyForCancel?interruptHarness(active,h):closeHarness(active,h)).catch(()=>{});},kernel.taskTimeoutSeconds*1000);
-   let result;let plan=[];const children=new Map(),deliverables=[],calls=new Map(),jobs=new Map();active.jobs=jobs;active.children=children;active.deliverables=deliverables;
+   let result;let plan=[];const children=new Map(),deliverables=[],changes=[],calls=new Map(),jobs=new Map();active.jobs=jobs;active.children=children;active.deliverables=deliverables;
    let nextStats=0;
    const emitStats=()=>{
     if(Date.now()<nextStats)return;
@@ -611,7 +612,8 @@ export class RuntimeManager{
        transcripts.set(eventSession,rows);
       }
      }
-     if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.emitEvent({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
+     if(e?.type==='tool/result'&&Array.isArray(e.data?.meta?.diffs)){const merged=mergeChanges(changes,e.data.meta);changes.length=0;changes.push(...merged);}
+      if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.emitEvent({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
      if(n.params.sessionId===sessionId&&e?.type==='assistant/message'){
       const partial=e.data?.message?.content?.filter(block=>block.type==='text').map(block=>block.text).join('');
       if(partial)active.draftTail=active.draftTail.then(async()=>{
@@ -699,7 +701,7 @@ export class RuntimeManager{
    }
    if(containsCredential(text,key))throw new Error('还原后的输出包含模型凭证，已停止显示。');
    const childDetails=[...children.values()].map(child=>({...child,messages:(transcripts.get(child.id)||[]).map(row=>({...row,text:this.executionDisplay(row.text,active.controls)}))}));
-   active.output={runId,sessionId,text,unrestored,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,children:childDetails,plan:plan.map(item=>({...item,content:this.executionDisplay(vault.restore(item.content,{allowedTokens:originalTokens}).text,{providerKey:key,customTerms,privacyPolicy:effectivePolicy})}))};
+   active.output={runId,sessionId,text,unrestored,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,changes,children:childDetails,plan:plan.map(item=>({...item,content:this.executionDisplay(vault.restore(item.content,{allowedTokens:originalTokens}).text,{providerKey:key,customTerms,privacyPolicy:effectivePolicy})}))};
    active.resultReady=true;
    this.emitEvent({runId,sessionId,type:'draft',source:'validated-result',final:true,text});
    await closeHarness(active,h);await active.draftTail;
@@ -729,7 +731,7 @@ export class RuntimeManager{
    if(safeError){publicError=this.cleanupError(active,safeError);if(!this.safeMetadata(active,safeError.code,/^[A-Z][A-Z0-9_]{0,79}$/))publicError.code=active.cancelled?'RUNTIME_CANCELLED':'RUNTIME_EXECUTION_FAILED';if(!this.safeMetadata(active,safeError.stage,/^[a-z][a-z0-9_-]{0,39}$/))publicError.stage=cleanupError===safeError?'close':'query';}
    active.finalization={runId,executionStatus:active.cancelled?'cancelled':active.output?'completed':'failed',persistenceStatus:saved.persistenceStatus,processStatus:harnessClosed?'exited':'cleanup_pending',eventWatermark:active.eventWatermark,
     ...(publicError?{error:publicError}:{}),
-    deliverables:active.output?.deliverables||[],children:active.output?.children||[...(active.children?.values()||[])]};
+    deliverables:active.output?.deliverables||[],changes:active.output?.changes||[],children:active.output?.children||[...(active.children?.values()||[])]};
    active.settlement={runId,sessionId,status,finishReason:active.finishReason,finalization:active.finalization};
    const terminal={runId,sessionId,type:'run/terminal',status,finalization:active.finalization,...active.finishReason?{finishReason:active.finishReason}:{},...this.resultFields(active)};
    if(!harnessClosed){active.status='cleanup_pending';active.cleanupError=this.cleanupError(active,cleanupError);this.scheduleCleanup(active);}

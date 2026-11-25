@@ -60,6 +60,7 @@ export function finalizeConversationRun(state, job, outcome = {}) {
           trace: trace.slice(-400), traceTruncated: !!job.traceTruncated || trace.length > 400,
           children: finalization?.children || result.children || job.children || message.children || [],
           deliverables: finalization?.deliverables || result.deliverables || job.deliverables || message.deliverables || [],
+          changes: finalization?.changes || result.changes || job.changes || message.changes || [],
           plan: result.plan || job.plan || message.plan,
           context: result.context || job.context || message.context,
         };
