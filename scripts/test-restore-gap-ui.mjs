@@ -114,6 +114,35 @@ try {
   assert.equal(report.logged, true, '日志里没有 privacy.restore-unknown');
   await record('诊断日志记下了无法归属的处数', { logged: report.logged });
 
+  // 导出与分享的正文是纯文本，气泡里的灰字带不过去——两边都要带同一句说明。
+  const openReview = async (open) => {
+    await open();
+    await ui.waitFor('!!document.querySelector(".privacy-text pre")', 30000);
+    let value = '';
+    for (let i = 0; i < 80; i += 1) {
+      value = (await ui.evaluate('document.querySelector(".privacy-text pre")?.textContent?.trim()||""')).trim();
+      if (value && !value.startsWith('正在准备主机审阅') && value !== '审阅未完成。') break;
+      await pause(300);
+    }
+    return value;
+  };
+  const exported = await openReview(() => ui.click('导出成果', 'button[aria-label="导出成果"]'));
+  report.exported = exported.slice(-160); await persist();
+  assert.ok(exported.includes('本段有 1 处占位符无法归属对应任务'), `导出正文没有「待核实」说明：${exported.slice(-200)}`);
+  assert.ok(exported.includes('【敏感值待核实】'), '导出正文里没有中性标记');
+  await record('导出这条回答时正文带上「待核实」说明', { tail: exported.slice(-80) });
+  await ui.evaluate('document.querySelector(".privacy-modal")?.querySelector("button[aria-label=\"关闭\"], .modal-close")?.click(); true').catch(() => {});
+  await pause(400);
+
+  const shared = await openReview(async () => {
+    await ui.click('会话操作', 'button[aria-label="会话操作"]');
+    await pause(300);
+    await ui.evaluate(`(()=>{const item=[...document.querySelectorAll('.menu-item,button')].find(node=>node.textContent.trim().startsWith('分享或转发'));if(item)item.click();return Boolean(item);})()`);
+  });
+  report.shared = shared.slice(-160); await persist();
+  assert.ok(shared.includes('本会话有 1 处占位符无法归属对应任务'), `分享正文没有「待核实」说明：${shared.slice(-200)}`);
+  await record('分享整个会话时正文带上「待核实」说明', { tail: shared.slice(-80) });
+
   report.status = 'passed'; await persist();
   console.log(JSON.stringify({ status: report.status, cases: report.cases.length, note: report.note, evidence }, null, 2));
 } catch (error) {

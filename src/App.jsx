@@ -21,7 +21,7 @@ import { composePrompt, workflows } from './office-workflows.js';
 import { REASONING_LEVELS } from './model-options.js';
 import { selectedModel } from './provider-options.js';
 import { runStatusLabel, toolTimeline } from './run-status.js';
-import { restoreNotice } from './privacy-warning.js';
+import { restoreNotice, exportNote, sumUnrestored } from './privacy-warning.js';
 import { applyAutomationResults } from './automation-core.js';
 import { acceptsGoalImages, formatSessionCommand, parseSessionCommand } from './session-commands.js';
 
@@ -1018,10 +1018,13 @@ export function App() {
   }
 
   function openExport(message, { format, titleSuffix = '', includeHistory = false } = {}) {
-    const original = message?.text || chatText(chat);
+    // 导出与分享的正文是纯文本，气泡里的「待核实」灰字带不过去，附一句同样的说明。
+    const gap = message ? exportNote(message.unrestored) : exportNote(sumUnrestored(chat?.messages), { whole: true });
+    const withGap = value => value ? value + gap : value;
+    const original = withGap(message?.text || chatText(chat));
     if (!original) return;
     const history = includeHistory && desktop && chat ? {sessionId:chat.id,workspaceId:chat.workspaceId,projectId:chat.projectId||null} : undefined;
-    openModal({ type: 'export-review', original, masked: message?.masked ?? (message ? undefined : chatText(chat, { protectedView: true })), title: `${chat?.title || '知行成果'}${titleSuffix}`, history, ...(format?{format}:{}) });
+    openModal({ type: 'export-review', original, masked: withGap(message?.masked ?? (message ? undefined : chatText(chat, { protectedView: true }))), title: `${chat?.title || '知行成果'}${titleSuffix}`, history, ...(format?{format}:{}) });
   }
 
   async function saveExport(delivery) {
@@ -1054,7 +1057,7 @@ export function App() {
   }
 
   async function shareCurrentChat() {
-    const original = chatText(chat);
+    const original = chatText(chat) + exportNote(sumUnrestored(chat?.messages), { whole: true });
     if (!original) return;
     openModal({ type: 'export-review', action: 'share', original, masked: chatText(chat, { protectedView: true }), title: chat.title || '知行会话' });
   }
