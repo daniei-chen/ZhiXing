@@ -128,6 +128,7 @@ try {
   assert.ok(!detail.missing, '回答下方没有「详情」');
   assert.equal(detail.summary, '详情');
   assert.equal(detail.rows['状态'], '已完成');
+  assert.ok((detail.rows['发送方式'] || '').startsWith('脱敏模式'), `详情里没有发送方式：${JSON.stringify(detail.rows)}`);
   assert.ok(/\d+ 秒|不到 1 秒/.test(detail.rows['耗时'] || ''), `耗时行不对：${JSON.stringify(detail.rows)}`);
   assert.ok((detail.rows['原文还原'] || '').includes('1 处'), `详情里没有还原处数：${JSON.stringify(detail.rows)}`);
   await record('详情里写明状态、耗时与无法归属的占位符处数', detail);

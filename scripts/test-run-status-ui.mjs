@@ -174,6 +174,7 @@ try {
   report.runSummary = summary; await persist();
   assert.ok(summary, '真实云端回答下方没有「详情」');
   assert.equal(summary['状态'], '已完成');
+  assert.ok((summary['发送方式'] || '').startsWith('脱敏模式'), `详情里没有发送方式：${JSON.stringify(summary)}`);
   assert.ok(summary['耗时'], '详情缺少耗时');
   assert.ok(!('原文还原' in summary), '没有占位符问题时不应出现还原行');
   await record('真实云端回答的详情显示状态与耗时，且不虚构还原问题', summary);
