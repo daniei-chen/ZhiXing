@@ -143,11 +143,12 @@ try {
   assert.equal((await labels()).length, initial.length, '清空搜索后事件数量没有恢复');
   await record('清空搜索恢复全部事件');
 
-  await ui.click('收起所有事件', 'button');
+  // 面板底部按钮会被 content-visibility 跳过，getClientRects 为空，按可见性找不到，直接派发 DOM click。
+  await ui.evaluate('(()=>{const node=[...document.querySelectorAll(".execution-search button")].find(button=>button.textContent.trim()==="收起所有事件");if(!node)throw new Error("Missing 收起所有事件");node.click();return true})()');
   await pause(250);
   const allClosed = await ui.evaluate('[...document.querySelectorAll(".execution-entry")].every(node=>!node.open)');
   assert.equal(allClosed, true, '「收起所有事件」后仍有展开的行');
-  await ui.click('展开所有事件', 'button');
+  await ui.evaluate('(()=>{const node=[...document.querySelectorAll(".execution-search button")].find(button=>button.textContent.trim()==="展开所有事件");if(!node)throw new Error("Missing 展开所有事件");node.click();return true})()');
   await pause(250);
   const allOpen = await ui.evaluate('[...document.querySelectorAll(".execution-entry")].every(node=>node.open)');
   assert.equal(allOpen, true, '「展开所有事件」后仍有收起的行');

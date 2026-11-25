@@ -31,7 +31,7 @@
 | --- | --- | --- | --- |
 | 消息反馈（赞／踩／原因） | `dsh-message-feedback`、`dsh-command-feedback`、`dsh-client-ui-message-feedback` | **未做** | 知行气泡下没有反馈入口 |
 | 秘钥遮蔽显示 | `dsh-client-ui-secret-mask` | 部分：脱敏网关 + 凭证阻断 | Harness 是界面层遮蔽，知行是发送前替换，口径不同要写清 |
-| 轨迹视图 | `dsh-client-ui-trajectory` | 部分：工具时间线 + 详情 | Harness 的轨迹面板（步骤、耗时、原始事件）没有对应界面 |
+| 轨迹视图 | `dsh-client-ui-trajectory` | **部分（0.25.0 起可检索）**：执行面板已有按交办切换、事件分类、状态／耗时／轮次／步骤、子任务与后台作业、检索（标签／状态／分类，含子任务与作业名）、展开／收起全部、子会话与作业输出、归档 | 未做：桌面版按轮次分组的记录表、单条记录检查器里的输入／输出／token 用量、时间概览（TTFT／吞吐／缩放）、按轮次折叠、代码视图语法高亮 |
 | 交付物视图 | `dsh-deliverable-file-references`、`dsh-client-ui-deliverables` | 部分：产出文件计数与列表 | 未做「从回答跳到文件」的引用关系 |
 | 会话日志 | `dsh-client-ui-settings-session-log` | **未核对** | 知行有 `app.log` 与诊断导出，但是否等价未核对 |
 
