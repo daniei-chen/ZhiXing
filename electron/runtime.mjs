@@ -556,7 +556,7 @@ export class RuntimeManager{
    this.watchHarness(active,h);
    if(active.cancelled)throw new Error('任务已停止。');
    const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void (active.readyForCancel?interruptHarness(active,h):closeHarness(active,h)).catch(()=>{});},kernel.taskTimeoutSeconds*1000);
-   let result;let plan=[];const children=new Map(),deliverables=[],changes=[],calls=new Map(),jobs=new Map();active.jobs=jobs;active.children=children;active.deliverables=deliverables;
+   let result;let plan=[];const children=new Map(),deliverables=[],changes=[],calls=new Map(),writes=new Map(),jobs=new Map();active.jobs=jobs;active.children=children;active.deliverables=deliverables;
    let nextStats=0;
    const emitStats=()=>{
     if(Date.now()<nextStats)return;
@@ -612,7 +612,8 @@ export class RuntimeManager{
        transcripts.set(eventSession,rows);
       }
      }
-     if(e?.type==='tool/result'&&Array.isArray(e.data?.meta?.diffs)){for(const entry of diffEntries(e.data.meta))changes.push(entry);if(changes.length>500)changes.splice(0,changes.length-500);}
+     if(e?.type==='tool/call'&&(e.data?.name==='write'||e.data?.name==='edit')&&typeof e.data?.arguments==='string'){try{const parsed=JSON.parse(e.data.arguments);const target=parsed?.file_path;if(typeof target==='string'&&target.trim()){writes.set(e.data.callId,{name:e.data.name,file:target.trim(),content:typeof parsed.content==='string'?parsed.content:undefined});if(writes.size>256)writes.delete(writes.keys().next().value);}}catch{}}
+      if(e?.type==='tool/result'&&(Array.isArray(e.data?.meta?.diffs)||e.data?.meta?.operation==='create')){const call=writes.get(e.data?.message?.toolCallId);writes.delete(e.data?.message?.toolCallId);const entries=diffEntries(e.data?.meta);if(!entries.length&&e.data?.meta?.operation==='create'&&call?.name==='write'&&call.content!==undefined){const lines=call.content===''?0:call.content.replace(/\n$/,'').split('\n').length;entries.push({path:call.file,added:lines,deleted:0,estimated:false});}for(const entry of entries){if(!path.isAbsolute(entry.path)&&typeof directory==='string'&&directory)entry.path=path.join(directory,entry.path);changes.push(entry);}if(changes.length>500)changes.splice(0,changes.length-500);}
       if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.emitEvent({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
      if(n.params.sessionId===sessionId&&e?.type==='assistant/message'){
       const partial=e.data?.message?.content?.filter(block=>block.type==='text').map(block=>block.text).join('');
