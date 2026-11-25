@@ -65,7 +65,6 @@ export function App() {
   const [toast, setToastState] = useState(null);
   const [deliverableBusy, setDeliverableBusy] = useState({});
   const [reviewPath, setReviewPath] = useState("");
-  const reviewSource=[...messages].reverse().find(item=>item.changes?.length)||null;
   const [transcriptHasNew,setTranscriptHasNew]=useState(false);
   const [runtime, setRuntime] = useState({ configured: false });
   const [events, setEvents] = useState([]);
@@ -246,6 +245,7 @@ export function App() {
   const project = projects.find(item => item.id === (chat?.projectId || projectId));
   const scopeReady=!desktop||!project||nativeProjects?.some(item=>item.id===project.id&&item.workspaceId===project.workspaceId&&(item.directory||null)===(project.directory||null));
   const messages = chat?.messages || [];
+  const reviewSource=[...messages].reverse().find(item=>item.changes?.length)||null;
   const currentContextMessage = messages.findLast(message => message.context && (message.privacyMode || 'redact') === state.settings.privacyMode);
   const currentGoal = currentContextMessage?.context?.goal;
   const goalAction = currentGoal?.phase === 'complete' ? ['/goal', '查看目标']
