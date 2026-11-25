@@ -17,7 +17,7 @@ import {startPrivacyGateway} from './privacy-gateway.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
 import {acceptsGoalImages, formatSessionCommand, parseSessionCommand} from '../src/session-commands.js';
 import {applyRuntimeExtensions} from './plugin-profile.mjs';
-import {mergeChanges} from './change-summary.mjs';
+import {diffEntries, mergeEntries} from './change-summary.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
 import {failureHint, turnFailureMessage} from './run-failure.mjs';
 import {AssistantTextStream} from './assistant-stream.mjs';
@@ -612,7 +612,7 @@ export class RuntimeManager{
        transcripts.set(eventSession,rows);
       }
      }
-     if(e?.type==='tool/result'&&Array.isArray(e.data?.meta?.diffs)){const merged=mergeChanges(changes,e.data.meta);changes.length=0;changes.push(...merged);}
+     if(e?.type==='tool/result'&&Array.isArray(e.data?.meta?.diffs)){for(const entry of diffEntries(e.data.meta))changes.push(entry);if(changes.length>500)changes.splice(0,changes.length-500);}
       if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.emitEvent({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
      if(n.params.sessionId===sessionId&&e?.type==='assistant/message'){
       const partial=e.data?.message?.content?.filter(block=>block.type==='text').map(block=>block.text).join('');
@@ -701,7 +701,8 @@ export class RuntimeManager{
    }
    if(containsCredential(text,key))throw new Error('还原后的输出包含模型凭证，已停止显示。');
    const childDetails=[...children.values()].map(child=>({...child,messages:(transcripts.get(child.id)||[]).map(row=>({...row,text:this.executionDisplay(row.text,active.controls)}))}));
-   active.output={runId,sessionId,text,unrestored,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,changes,children:childDetails,plan:plan.map(item=>({...item,content:this.executionDisplay(vault.restore(item.content,{allowedTokens:originalTokens}).text,{providerKey:key,customTerms,privacyPolicy:effectivePolicy})}))};
+   const restoredChanges=mergeEntries(privacyMode==='redact'?changes.map(entry=>{const restored=vault.restore(entry.path,{allowedTokens:originalTokens});if(restored.unknown.length)return null;return {...entry,path:restored.text.replace(/⟦ZX-[^⟧]+⟧/g,'【敏感值待核实】')};}).filter(Boolean):changes);
+   active.output={runId,sessionId,text,unrestored,masked:final.text,modelInput:input.text,finishReason:result.finishReason,protectCount:vault.entries().length,privacyMode,context,deliverables,changes:restoredChanges,children:childDetails,plan:plan.map(item=>({...item,content:this.executionDisplay(vault.restore(item.content,{allowedTokens:originalTokens}).text,{providerKey:key,customTerms,privacyPolicy:effectivePolicy})}))};
    active.resultReady=true;
    this.emitEvent({runId,sessionId,type:'draft',source:'validated-result',final:true,text});
    await closeHarness(active,h);await active.draftTail;

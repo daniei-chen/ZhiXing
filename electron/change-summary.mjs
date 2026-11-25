@@ -1,7 +1,7 @@
 // 本轮改动文件的行数统计。桌面版（dsh-workspace-changes）在每轮开始/结束时取 git 快照，
 // 对 git 覆盖不到、由文件工具写入的路径另行整文件捕获；本轮先在知行里做后者：
 // write/edit 的 tool/result 自带 meta.diffs（每个已应用 hunk 的 before/after 文本），
-// 用行级 LCS 算新增/删除行数，按路径累计。二进制与超大文件不记行数。
+// 用行级 LCS 算新增/删除行数。路径可能带着本会话的占位符，所以先收集条目、还原路径后再合并。
 export const CHANGE_LIMIT = 200;
 const TEXT_LIMIT = 65536;
 const LINE_LIMIT = 4000;
@@ -44,32 +44,31 @@ export function lineDelta(before, after) {
   return { added: Math.max(0, afterLines - count), deleted: Math.max(0, beforeLines - count), estimated };
 }
 
-// 一个 tool/result 的 meta.diffs 转成本轮的改动条目；同一路径的多次编辑累加。
+// 一个 tool/result 的 meta.diffs 转成本轮的改动条目（不合并，交给还原路径之后再合并）。
 export function diffEntries(meta) {
   const diffs = Array.isArray(meta?.diffs) ? meta.diffs : [];
-  const entries = new Map();
+  const entries = [];
   for (const diff of diffs) {
-    const path = typeof diff?.path === 'string' ? diff.path.trim() : '';
-    if (!path) continue;
+    const target = typeof diff?.path === 'string' ? diff.path.trim() : '';
+    if (!target) continue;
     const delta = lineDelta(diff.oldText ?? '', diff.newText ?? '');
-    const previous = entries.get(path) || { path, added: 0, deleted: 0, estimated: false };
-    entries.set(path, {
-      path,
-      added: previous.added + delta.added,
-      deleted: previous.deleted + delta.deleted,
-      estimated: previous.estimated || delta.estimated,
-    });
+    entries.push({ path: target, added: delta.added, deleted: delta.deleted, estimated: delta.estimated });
   }
-  return [...entries.values()];
+  return entries;
 }
 
-export function mergeChanges(changes, meta, limit = CHANGE_LIMIT) {
-  const merged = new Map(Array.isArray(changes) ? changes.map(change => [change.path, { ...change }]) : []);
-  for (const entry of diffEntries(meta)) {
-    const previous = merged.get(entry.path);
-    merged.set(entry.path, previous
-      ? { path: entry.path, added: previous.added + entry.added, deleted: previous.deleted + entry.deleted, estimated: previous.estimated || entry.estimated }
-      : entry);
+// 按路径合并：同一文件多次编辑累加，超过上限丢弃最早的路径。
+export function mergeEntries(entries, limit = CHANGE_LIMIT) {
+  const merged = new Map();
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    const target = typeof entry?.path === 'string' ? entry.path.trim() : '';
+    if (!target) continue;
+    const added = Number.isFinite(entry.added) ? entry.added : 0;
+    const deleted = Number.isFinite(entry.deleted) ? entry.deleted : 0;
+    const previous = merged.get(target);
+    merged.set(target, previous
+      ? { path: target, added: previous.added + added, deleted: previous.deleted + deleted, estimated: previous.estimated || entry.estimated === true }
+      : { path: target, added, deleted, estimated: entry.estimated === true });
     if (merged.size > limit) merged.delete(merged.keys().next().value);
   }
   while (merged.size > limit) merged.delete(merged.keys().next().value);
