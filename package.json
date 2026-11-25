@@ -38,7 +38,8 @@
     "test:restore-gap": "node scripts/test-restore-gap-ui.mjs",
     "maintenance:preview": "node scripts/clean-preview-evidence.mjs --keep-release-assets",
     "maintenance:updater-cache": "node scripts/clean-dev-updater-cache.mjs",
-    "test:compaction": "node scripts/test-compaction-ui.mjs \"release/win-unpacked/知行.exe\""
+    "test:compaction": "node scripts/test-compaction-ui.mjs \"release/win-unpacked/知行.exe\"",
+    "test:feedback": "node scripts/test-feedback-ui.mjs \"release/win-unpacked/知行.exe\""
   },
   "main": "electron/main.cjs",
   "dependencies": {

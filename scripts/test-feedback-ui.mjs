@@ -98,10 +98,20 @@ try {
   await record('弹窗给出 7 个固定分类，并说明只记本机', panel);
 
   await ui.click('任务结果', '.feedback-chip');
-  await ui.fill('反馈备注', noteText);
+  await ui.fill('textarea[aria-label="反馈备注"]', noteText);
   const counter = await ui.evaluate('document.querySelector(\'.feedback-count\')?.textContent ?? ""');
   assert.match(counter, /8192/);
   await ui.click('保存反馈', 'button.primary-button');
+  await pause(1500);
+  const diag = await ui.evaluate(`(()=>({
+    panel: !!document.querySelector('.feedback-panel'),
+    recorded: document.querySelector('.feedback-recorded')?.textContent ?? null,
+    toast: [...document.querySelectorAll('.toast,[role=status],[role=alert]')].map(n=>n.textContent.trim()).filter(Boolean).slice(0,4),
+    count: document.querySelector('.feedback-count')?.textContent ?? '',
+    error: document.querySelector('.feedback-panel .feedback-error')?.textContent ?? null,
+  }))()`);
+  report.afterSave = diag;
+  console.log('after save: ' + JSON.stringify(diag));
   await ui.waitFor('!!document.querySelector(\'.feedback-recorded\')', 15000);
   const recorded = await ui.evaluate('document.querySelector(\'.feedback-recorded\').textContent.trim()');
   assert.equal(recorded, '本机反馈：赞 · 任务结果');

@@ -3,7 +3,7 @@ import test from 'node:test';
 import {
   FEEDBACK_CATEGORIES, FEEDBACK_NOTE_MAX_BYTES, categoryLabel, feedbackEntry, feedbackFor, feedbackLabel,
   mergeFeedback, noteBytes, removeFeedback, validateFeedback,
-} from '../src/message-feedback.js';
+} from '../electron/message-feedback.mjs';
 
 const base = { conversationId: 'c1', messageId: 'm1', rating: 'up', category: null, note: '' };
 

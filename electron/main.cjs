@@ -477,7 +477,7 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
   try{const data=JSON.parse(text);return {entries:Array.isArray(data?.entries)?data.entries:[]};}catch{throw new Error('本机反馈记录无法读取。');}
  });
  handle('feedback:save',async input=>{
-  const {feedbackEntry,mergeFeedback}=await import('../src/message-feedback.js');
+  const {feedbackEntry,mergeFeedback}=await import('./message-feedback.mjs');
   const result=feedbackEntry(input);
   if(!result.ok)throw new Error(FEEDBACK_ERRORS[result.code]||'反馈格式不正确。');
   const current=await readEncrypted(FEEDBACK_FILE);
@@ -488,7 +488,7 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
   return result.value;
  });
  handle('feedback:clear',async ({conversationId,messageId}={})=>{
-  const {removeFeedback}=await import('../src/message-feedback.js');
+  const {removeFeedback}=await import('./message-feedback.mjs');
   const current=await readEncrypted(FEEDBACK_FILE);
   if(!current)return true;
   let entries=[];
