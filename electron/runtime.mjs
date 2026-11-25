@@ -27,7 +27,7 @@ const harnessRequire=createRequire(require.resolve('@deepseek-ai/dsh/lib/bin.js'
 const baseRequire=createRequire(harnessRequire.resolve('@deepseek-ai/dsh-base'));
 const sourceRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
-const disabled=['tool-fs','tool-working-directory','terminal-bash','terminal-pwsh','persistent-bash','persistent-pwsh','pty','subprocess','image-offload','jobs','mcp-resources','sessions','session-checkpoint-policy'];
+const disabled=['tool-fs','tool-working-directory','terminal-bash','terminal-pwsh','persistent-bash','persistent-pwsh','pty','subprocess','jobs','mcp-resources','sessions','session-checkpoint-policy'];
 
 function visionError(code, message) {
  return Object.assign(new Error(message), {code, stage:'prepare'});
