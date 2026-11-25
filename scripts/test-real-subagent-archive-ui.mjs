@@ -147,7 +147,9 @@ await uiRef.waitFor(`document.querySelector('.transcript')?.textContent.includes
 await pause(1200);
 assert.equal(report.fixtureError, undefined);
 const parentRequest = report.requests.find(item => !item.childRequest);
-const childRequest = report.requests.find(item => item.childRequest);
+let childRequest = report.requests.find(item => item.childRequest);
+const childDeadline = Date.now() + 30000;
+while (!childRequest && Date.now() < childDeadline) { await pause(500); childRequest = report.requests.find(item => item.childRequest); }
 assert.ok(parentRequest, 'parent model request recorded');
 assert.ok(parentRequest.tools.includes('subagent'), 'subagent tool was offered to the parent');
 assert.ok(childRequest, 'child session issued its own model request');
