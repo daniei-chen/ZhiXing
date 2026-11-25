@@ -1,13 +1,14 @@
 import { REASONING_LEVELS } from './model-options.js';
 
 // 供应商页里也要能改思考强度：只显示当前模型真实支持的档位。
-export function currentModel(providers, settings = {}) {
-  const provider = (providers || []).find(row => row.id === settings.modelProviderId);
+// 档位（levels）只出现在 runtime.models 这份扁平清单里，provider.models 是原始记录。
+export function currentModel(runtime = {}, settings = {}) {
+  const provider = (runtime.providers || []).find(row => row.id === settings.modelProviderId);
   if (!provider) return null;
-  const model = (provider.models || []).find(row => row.id === settings.model);
+  const model = (runtime.models || []).find(row => row.id === settings.model && row.providerId === settings.modelProviderId)
+    || (provider.models || []).find(row => row.id === settings.model);
   return model ? { provider, model } : null;
 }
-
 export function reasoningChoices(current) {
   const levels = current?.model?.levels;
   if (!Array.isArray(levels) || !levels.length) return [];

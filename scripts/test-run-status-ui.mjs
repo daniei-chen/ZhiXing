@@ -126,6 +126,26 @@ try {
   assert.ok(restored && restored.rows === before, '恢复后列表行数没有回来');
   await record('单个模型可以从列表移除，并能一键恢复', report.hiddenModel);
 
+  // —— 供应商页里选思考强度：按钮只给当前模型支持的档位，点了就写回工作区设置
+  const effort = await ui.evaluate(`(async()=>{
+    const section=document.querySelector('.provider-effort');
+    const buttons=[...document.querySelectorAll('.provider-effort-choices button')];
+    const labels=buttons.map(b=>b.textContent.trim());
+    const current=buttons.find(b=>b.getAttribute('aria-pressed')==='true')?.textContent.trim()||null;
+    const target=buttons.find(b=>b.textContent.trim()==='高')||buttons.at(-1);
+    if(!target)return {labels,current,problem:document.querySelector('.provider-effort-hint')?.textContent.trim()||''};
+    target.click();
+    await new Promise(r=>setTimeout(r,900));
+    const settings=(await window.zhixing.loadWorkspace()).settings;
+    return {labels,current,picked:target.textContent.trim(),reasoning:settings.reasoning,hint:document.querySelector('.provider-effort-hint')?.textContent.trim()||'',notice:document.querySelector('.setting-notice')?.textContent.trim()||''};
+  })()`);
+  report.providerEffort = effort; await persist();
+  assert.ok(effort.labels.length > 0, `供应商页没有思考档位按钮：${JSON.stringify(effort)}`);
+  assert.ok(effort.picked, '找不到可点的档位');
+  const expected = { '关闭': 'off', '低': 'low', '高': 'high', '最高': 'max' }[effort.picked];
+  assert.equal(effort.reasoning, expected, `点了「${effort.picked}」但设置是 ${effort.reasoning}`);
+  await record('供应商页里能选当前模型的思考强度，并写回工作区设置', effort);
+
   // —— 状态文案：设置回原模型，回到工作台发消息，抓运行中的状态行
   await ui.evaluate(`(async()=>{const s=await window.zhixing.loadWorkspace();s.settings={...s.settings,model:${JSON.stringify(model)}};await window.zhixing.saveWorkspace(s);})()`);
   await ui.click('返回工作台', 'button[aria-label="返回工作台"]');
