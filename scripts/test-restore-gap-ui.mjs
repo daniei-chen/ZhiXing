@@ -114,6 +114,24 @@ try {
   assert.equal(report.logged, true, '日志里没有 privacy.restore-unknown');
   await record('诊断日志记下了无法归属的处数', { logged: report.logged });
 
+  // 详情里也要能看见这一轮的状态与还原情况，而不是只有气泡一句灰字。
+  const detail = await ui.evaluate(`(async()=>{
+    const node=document.querySelector('article.assistant-message .run-summary');
+    if(!node)return {missing:true};
+    node.open=true;
+    await new Promise(r=>setTimeout(r,300));
+    const rows={};
+    node.querySelectorAll('.run-summary-row').forEach(row=>{rows[row.querySelector('dt').textContent.trim()]=row.querySelector('dd').textContent.trim();});
+    return {summary:node.querySelector('summary').textContent.trim(),rows};
+  })()`);
+  report.detail = detail; await persist();
+  assert.ok(!detail.missing, '回答下方没有「详情」');
+  assert.equal(detail.summary, '详情');
+  assert.equal(detail.rows['状态'], '已完成');
+  assert.ok(/\d+ 秒|不到 1 秒/.test(detail.rows['耗时'] || ''), `耗时行不对：${JSON.stringify(detail.rows)}`);
+  assert.ok((detail.rows['原文还原'] || '').includes('1 处'), `详情里没有还原处数：${JSON.stringify(detail.rows)}`);
+  await record('详情里写明状态、耗时与无法归属的占位符处数', detail);
+
   // 导出与分享的正文是纯文本，气泡里的灰字带不过去——两边都要带同一句说明。
   const openReview = async (open) => {
     await open();

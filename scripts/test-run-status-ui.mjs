@@ -170,6 +170,14 @@ try {
   await record('运行中显示「思考中」或工具动作，没有内核阶段文案', { labels: report.statusLabels });
   assert.ok(answered, '消息没有在本轮完成');
 
+  const summary = await ui.evaluate(`(()=>{const node=document.querySelector('article.assistant-message .run-summary');if(!node)return null;node.open=true;const rows={};node.querySelectorAll('.run-summary-row').forEach(row=>{rows[row.querySelector('dt').textContent.trim()]=row.querySelector('dd').textContent.trim();});return rows;})()`);
+  report.runSummary = summary; await persist();
+  assert.ok(summary, '真实云端回答下方没有「详情」');
+  assert.equal(summary['状态'], '已完成');
+  assert.ok(summary['耗时'], '详情缺少耗时');
+  assert.ok(!('原文还原' in summary), '没有占位符问题时不应出现还原行');
+  await record('真实云端回答的详情显示状态与耗时，且不虚构还原问题', summary);
+
   report.status = 'passed'; await persist();
   console.log(JSON.stringify({ status: report.status, cases: report.cases.length, evidence }, null, 2));
 } catch (error) {
