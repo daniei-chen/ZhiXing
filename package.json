@@ -31,7 +31,8 @@
     "test:subagent": "node scripts/test-real-subagent-archive-ui.mjs",
     "test:cloud": "node scripts/test-real-cloud-chat.mjs",
     "test:cloud-privacy": "node scripts/test-real-cloud-privacy.mjs",
-    "test:ui-status": "node scripts/test-run-status-ui.mjs"
+    "test:ui-status": "node scripts/test-run-status-ui.mjs",
+    "test:tools-ui": "node scripts/test-tool-timeline-ui.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {
