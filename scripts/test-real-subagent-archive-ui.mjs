@@ -50,8 +50,10 @@ const server = http.createServer(async (req, res) => {
     const toolMessages = body.messages.filter(message => message.role === 'tool');
     const lastUser = body.messages.filter(message => message.role === 'user').at(-1);
     const number = report.requests.length + 1;
-    const childRequest = !tools.includes('subagent') || (toolMessages.length === 0 && tools.length < 6);
-    report.requests.push({ number, model: body.model, tools: tools.slice(0, 40), toolMessages: toolMessages.length, childRequest, prompt: String(lastUser?.content ?? '').slice(0, 120), toolResult: toolMessages.length ? JSON.stringify(toolMessages.at(-1)).slice(0, 400) : null });
+    const lastMessage = body.messages.at(-1);
+    const lastContent = String(lastMessage?.content ?? '');
+    const childRequest = lastMessage?.role === 'user' && lastContent.includes('只回答数字') && !lastContent.startsWith('Background subagent');
+    report.requests.push({ number, model: body.model, tools: tools.slice(0, 40), toolMessages: toolMessages.length, childRequest, prompt: String(lastUser?.content ?? '').slice(0, 120), lastRole: body.messages.at(-1)?.role, lastText: String(body.messages.at(-1)?.content ?? '').slice(0, 160), systemCount: body.messages.filter(m => m.role === 'system').length, toolResult: toolMessages.length ? JSON.stringify(toolMessages.at(-1)).slice(0, 400) : null });
     void persist();
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store' });
     const emit = (delta, finish = null) => `data: ${JSON.stringify({ id: `qa-real-${number}`, object: 'chat.completion.chunk', created: 1, model, choices: [{ index: 0, delta, finish_reason: finish }] })}\n\n`;

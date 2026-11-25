@@ -167,6 +167,14 @@ await uiRef.send('Input.dispatchMouseEvent', {type:'mouseReleased',button:'left'
 await pause(1500);
 assert.equal(await fs.access(archive).then(() => true, () => false), false);
 assert.equal(await uiRef.evaluate('!!document.querySelector(".execution-note")'), false);
+await main.evaluate(`(()=>{const {dialog}=process.mainModule.require('electron');dialog.showSaveDialog=async()=>({canceled:false,filePath:${JSON.stringify(archive)}});return true;})()`);
+await uiRef.click('归档');
+await uiRef.waitFor('document.querySelector(".execution-note")?.textContent.includes("-2")', 60000);
+const secondPath = (await uiRef.evaluate('document.querySelector(".execution-note").textContent')).replace(/^已归档到 /, "").trim();
+assert.match(secondPath, /-2\.md$/);
+const secondText = await fs.readFile(secondPath, 'utf8');
+assert.match(secondText, /^# 子会话归档 · 子任务 1/m);
+await record('同名归档已存在时自动加 -2，不覆盖上一份', { secondPath: path.basename(secondPath) });
 await record('取消保存时不写文件、不显示成功提示');
 
 report.status = 'passed';

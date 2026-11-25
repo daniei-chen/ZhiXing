@@ -38,7 +38,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
   setArchiving('all');setArchiveNote('');
   try{
    const text=archiveAllMarkdown({title,children:items});
-   const result=await api.archiveSubagent({sessionId,runId:reply?.id,messageCount:items.length,name:'子会话-全部',text});
+   const result=await api.archiveSubagent({sessionId,runId:reply?.id,messageCount:items.length,name:title,text});
    if(result?.cancelled)return;
    setArchiveNote(`已归档到 ${result.path}`);
   }catch(cause){setArchiveNote(cause.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}
@@ -49,7 +49,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
   setArchiving(child.id);setArchiveNote('');
   try{
    const text=archiveMarkdown({title,child,index:childRows.get(child.id)});
-   const result=await api.archiveSubagent({sessionId,runId:reply?.id,childId:child.id,messageCount:child.messages.length,name:`子会话-${childRows.get(child.id)}`,text});
+   const result=await api.archiveSubagent({sessionId,runId:reply?.id,childId:child.id,messageCount:child.messages.length,name:title,index:childRows.get(child.id),text});
    if(result?.cancelled)return;
    setArchiveNote(`已归档到 ${result.path}`);
   }catch(cause){setArchiveNote(cause.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}

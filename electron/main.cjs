@@ -360,6 +360,7 @@ function registerHandlers(){
   const info=await fs.stat(target).catch(()=>null);
   if(!info?.isDirectory())throw new Error('只能把文件夹打包成 ZIP。');
   const {collectDirectory,buildZip}=await import('./zip-writer.mjs');
+ const {archiveFileName,numberedName}=await import('./archive-name.mjs');
   const {entries,skipped}=await collectDirectory({root:target,skip:name=>isPrivateRelative(name)});
   if(!entries.length)throw new Error('这个文件夹里没有可打包的文件。');
   const suggested=path.join(scope.workspaceRoot,`${path.basename(target)||'workspace'}.zip`);
@@ -379,12 +380,19 @@ function registerHandlers(){
   if(bytes>2*1024*1024)throw new Error('子会话内容超过 2 MB，无法归档。');
   let folder;
   try{const scope=workScope(options);folder=scope.workspaceRoot&&path.isAbsolute(scope.workspaceRoot)?scope.workspaceRoot:undefined;}catch(error){folder=undefined;}
-  const base=String(options.name||'子会话').replace(/[\\/:*?"<>|]/g,'-').trim().slice(0,80)||'子会话';
-  const filename=`${base}.md`;
+  const filename=archiveFileName({title:options.name,index:Number.isInteger(options.index)?options.index:undefined});
   const result=await dialog.showSaveDialog(windowRef,{title:'归档子会话',defaultPath:folder?path.join(folder,filename):filename,filters:[{name:'Markdown',extensions:['md']}]});
   if(result.canceled||!result.filePath)return {cancelled:true};
-  const target=path.extname(result.filePath).toLowerCase()==='.md'?result.filePath:`${result.filePath}.md`;
-  await fs.writeFile(target,text,'utf8');
+  const chosen=path.extname(result.filePath).toLowerCase()==='.md'?result.filePath:`${result.filePath}.md`;
+  let target=chosen;
+  for(let attempt=1;attempt<=20;attempt+=1){
+   try{await fs.writeFile(target,text,{encoding:'utf8',flag:'wx'});break;}
+   catch(error){
+    if(error.code!=='EEXIST')throw error;
+    if(attempt===20)throw new Error('同名归档已存在，且无法再命名，请换一个文件名。');
+    target=path.join(path.dirname(chosen),numberedName(path.basename(chosen),attempt+1));
+   }
+  }
   logEvent('info','subagent.archive',{bytes,messages:Number.isInteger(options.messageCount)?options.messageCount:null});
   return {cancelled:false,path:target,bytes};
  });
