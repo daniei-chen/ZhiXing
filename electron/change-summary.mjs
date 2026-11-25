@@ -65,10 +65,11 @@ export function mergeEntries(entries, limit = CHANGE_LIMIT) {
     if (!target) continue;
     const added = Number.isFinite(entry.added) ? entry.added : 0;
     const deleted = Number.isFinite(entry.deleted) ? entry.deleted : 0;
+    const display = typeof entry.display === 'string' && entry.display.trim() ? entry.display.trim() : undefined;
     const previous = merged.get(target);
     merged.set(target, previous
-      ? { path: target, added: previous.added + added, deleted: previous.deleted + deleted, estimated: previous.estimated || entry.estimated === true }
-      : { path: target, added, deleted, estimated: entry.estimated === true });
+      ? { path: target, added: previous.added + added, deleted: previous.deleted + deleted, estimated: previous.estimated || entry.estimated === true, ...(previous.display ? { display: previous.display } : display ? { display } : {}) }
+      : { path: target, added, deleted, estimated: entry.estimated === true, ...(display ? { display } : {}) });
     if (merged.size > limit) merged.delete(merged.keys().next().value);
   }
   while (merged.size > limit) merged.delete(merged.keys().next().value);

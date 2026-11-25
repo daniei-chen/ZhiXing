@@ -48,6 +48,18 @@ test('mergeEntries 跨多次工具结果累计，并有上限', () => {
   assert.deepEqual(mergeEntries(undefined), []);
 });
 
+test('合并时保留工作区相对展示名', () => {
+  const merged = mergeEntries([
+    { path: 'C:\\工作区\\a.md', display: 'a.md', added: 1, deleted: 0 },
+    { path: 'C:\\工作区\\a.md', display: 'a.md', added: 2, deleted: 1 },
+    { path: 'b.md', added: 1, deleted: 0 },
+  ]);
+  assert.deepEqual(merged, [
+    { path: 'C:\\工作区\\a.md', added: 3, deleted: 1, estimated: false, display: 'a.md' },
+    { path: 'b.md', added: 1, deleted: 0, estimated: false },
+  ]);
+});
+
 test('汇总总计', () => {
   assert.deepEqual(changeTotals([{ added: 2, deleted: 1 }, { added: 0, deleted: 3 }]), { total: 2, added: 2, deleted: 4 });
   assert.deepEqual(changeTotals(undefined), { total: 0, added: 0, deleted: 0 });
