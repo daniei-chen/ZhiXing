@@ -17,7 +17,11 @@ AGENTS 里记的最近一次完整生命周期是 **0.19.0**（53 步 / 38 通�
 
 ## 结果
 
-RESULT_PLACEHOLDER
+- 证据目录：`.preview/qa-0.24.0/install-evidence-20261126-015447-772fd12f/`（起于 01:54:47，终于 02:09:13，约 14.5 分钟；`sourceHead` 为 `524d5580`，工作树干净）。
+- 结论：**53 步 / 38 通过 / 15 观察 / 0 失败 / 0 未跑**，状态 `passed_configured_nonvisual_lifecycle`，`blockers` 为空。
+- 覆盖：首次安装、同版本覆盖、历史升级（0.14.0 → 0.24.0）、卸载保留、重装保留、工作目录外启动、项目哈希、会话哈希、草稿哈希、加密配置哈希（密文保留且应用可读）全部 `passed`；`visualAcceptance`、`crossWindowsUserDecryption` 仍 `outside_scope`。
+- 与 0.19.0 的对照：步数、通过与观察数、覆盖项**完全一致**——这五个版本的改动没有破坏安装、升级、卸载、重装与数据保留。注意口径：这不是「新功能通过」，而是「0.19.0 的结论在新包上仍然成立」。
+- 装回用户环境：安装 163 秒、退出码 0；`知行.exe` SHA-256 `a3200f37…` 与发布资产一致；两条快捷方式按字节还原（`C39575C1…`、`DB05A293…`）；日志 `app.start {"version":"0.24.0","previousVersion":"0.24.0","updated":false}`（本次是同版本重装）；进程 4 个（main / gpu-process / utility / renderer）。
 
 ## 边界
 
