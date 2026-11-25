@@ -10,8 +10,9 @@ const STATUS = {
 
 export function durationText(startedAt, finishedAt) {
   if (startedAt == null || finishedAt == null || finishedAt < startedAt) return '';
-  const seconds = Math.round((finishedAt - startedAt) / 1000);
-  if (seconds < 1) return '不到 1 秒';
+  const elapsed = finishedAt - startedAt;
+  if (elapsed < 1000) return '不到 1 秒';
+  const seconds = Math.round(elapsed / 1000);
   if (seconds < 60) return `${seconds} 秒`;
   const minutes = Math.floor(seconds / 60);
   const rest = seconds % 60;
