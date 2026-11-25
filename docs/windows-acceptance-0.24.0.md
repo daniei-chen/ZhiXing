@@ -44,7 +44,7 @@
 
 - 只做逐消息反馈；桌面版的会话级 `/feedback` 命令与弹窗未实现、未核对。
 - 反馈存在知行自己的 `feedback.bin`（`safeStorage` 加密），不是桌面版的 Session 日志事件；语义等价、格式不同。
-- **本版未能在 GitHub 发布**：2026-11-26 00:06 起 `api.github.com` 与 `github.com` 连续返回 `000`（DNS 指向本地代理 `198.18.0.13`），v0.23.0 的 release 也未创建。两版 18 个资产已在本地组装完毕，网络恢复后按 v0.23.0 → v0.24.0 顺序补发。
+- GitHub API 从 2026-11-26 00:06 起中断约 100 分钟（`api.github.com` 与 `github.com` 返回 `000`，任务栏 fake-IP 段 `198.18.0.13`），v0.23.0 的 release 与 v0.24.0 的发布都因此延后；02:0x 恢复后两版先后补发，远端各 18 个资产，`mismatched=0`、`extras=[]`。
 - 安装生命周期仍是 0.19.0 的 53 步；`ENOTFOUND` 文案仍未端到端触发；`visualAcceptance`、`crossWindowsUserDecryption` 仍 `outside_scope`；安装器未签名。
 
 [本轮迭代](iteration-0.24.0.md) · [审计说明](audit-request-0.24.0.md) · [机制对照](harness-parity.md)
