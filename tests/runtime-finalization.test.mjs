@@ -162,14 +162,25 @@ test('RunFinalization 内核已退出而映射写盘失败保留恢复文件，�
  }finally{await f.dispose();}
 });
 
-test('RunFinalization 输出凭证/未知占位符校验失败绝不标 completed 或附 result',async()=>{
- for(const finalResponse of [`Synthetic response ${key}`,'Synthetic response ⟦ZX-foreign-PHONE-1⟧']){
-  const f=await fixture({queryFails:false,finalResponse});f.allowExit();try{
-   await assert.rejects(run(f),error=>{assert.equal(error.finalization.executionStatus,'failed');assert.equal(error.result,undefined);return true;});
-   const terminal=f.events.at(-1);assert.equal(terminal.finalization.executionStatus,'failed');assert.equal(terminal.result,undefined);assert.equal(terminal.output,undefined);
-   assert(!JSON.stringify(terminal).includes(key));
-  }finally{await f.dispose();}
- }
+test('RunFinalization 输出凭证绝不标 completed 或附 result',async()=>{
+ const f=await fixture({queryFails:false,finalResponse:`Synthetic response ${key}`});f.allowExit();try{
+  await assert.rejects(run(f),error=>{assert.equal(error.finalization.executionStatus,'failed');assert.equal(error.result,undefined);return true;});
+  const terminal=f.events.at(-1);assert.equal(terminal.finalization.executionStatus,'failed');assert.equal(terminal.result,undefined);assert.equal(terminal.output,undefined);
+  assert(!JSON.stringify(terminal).includes(key));
+ }finally{await f.dispose();}
+});
+
+// 0.17.0 起：无法归属的占位符不再让整段回答失败。它仍然不会被还原（防跨任务），
+// 但正文照常交付，令牌换成中性标记，unrestored 把处数带回界面。
+test('RunFinalization 无法归属的占位符保留正文、不还原、并记下处数',async()=>{
+ const token='⟦ZX-foreign-PHONE-1⟧';
+ const f=await fixture({queryFails:false,finalResponse:`Synthetic response ${token}`});f.allowExit();try{
+  const settled=await run(f);const result=settled?.result||settled||{};
+  assert.equal(result.unrestored,1,JSON.stringify(settled));
+  assert.equal(result.text.includes(token),false,result.text);
+  assert.ok(result.text.includes('【敏感值待核实】'),result.text);
+  const terminal=f.events.at(-1);assert.notEqual(terminal.finalization.executionStatus,'failed');
+ }finally{await f.dispose();}
 });
 
 test('R03 有效最终正文完成但 close 失败时，经 terminal/error.result 保留同一安全结果',async()=>{
