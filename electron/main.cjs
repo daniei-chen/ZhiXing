@@ -360,7 +360,6 @@ function registerHandlers(){
   const info=await fs.stat(target).catch(()=>null);
   if(!info?.isDirectory())throw new Error('只能把文件夹打包成 ZIP。');
   const {collectDirectory,buildZip}=await import('./zip-writer.mjs');
- const {archiveFileName,numberedName}=await import('./archive-name.mjs');
   const {entries,skipped}=await collectDirectory({root:target,skip:name=>isPrivateRelative(name)});
   if(!entries.length)throw new Error('这个文件夹里没有可打包的文件。');
   const suggested=path.join(scope.workspaceRoot,`${path.basename(target)||'workspace'}.zip`);
@@ -378,6 +377,7 @@ function registerHandlers(){
   if(!text.trim())throw new Error('没有可归档的子会话内容。');
   const bytes=Buffer.byteLength(text);
   if(bytes>2*1024*1024)throw new Error('子会话内容超过 2 MB，无法归档。');
+ const {archiveFileName,numberedName}=await import('./archive-name.mjs');
   let folder;
   try{const scope=workScope(options);folder=scope.workspaceRoot&&path.isAbsolute(scope.workspaceRoot)?scope.workspaceRoot:undefined;}catch(error){folder=undefined;}
   const filename=archiveFileName({title:options.name,index:Number.isInteger(options.index)?options.index:undefined});
