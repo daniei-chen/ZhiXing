@@ -6,6 +6,8 @@ export function changedFilesLabel(count) {
 }
 
 export function displayPath(file) {
+  const display = typeof file?.display === 'string' ? file.display.trim() : '';
+  if (display) return display;
   const path = typeof file?.path === 'string' ? file.path.trim() : '';
   return path || '未命名文件';
 }

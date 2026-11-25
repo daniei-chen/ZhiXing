@@ -13,6 +13,11 @@ test('路径缺失时给占位，不抛错', () => {
   assert.equal(displayPath({}), '未命名文件');
 });
 
+test('给了工作区相对名就用相对名，完整路径留给 title', () => {
+  assert.equal(displayPath({ path: 'C:\\工作区\\成果\\季度汇总.docx', display: '成果\\季度汇总.docx' }), '成果\\季度汇总.docx');
+  assert.equal(displayPath({ path: 'C:\\工作区\\a.md', display: '  ' }), 'C:\\工作区\\a.md');
+});
+
 test('行数写成 +新增 / -删除', () => {
   assert.equal(changeCounts({ added: 6, deleted: 0 }).label, '+6 −0');
   assert.equal(changeCounts({ added: 2, deleted: 3 }).label, '+2 −3');
