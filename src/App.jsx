@@ -19,6 +19,7 @@ import { PrivacySession } from './privacy-core.js';
 import { privacyPolicyForMode } from './privacy-policy.js';
 import { composePrompt, workflows } from './office-workflows.js';
 import { REASONING_LEVELS } from './model-options.js';
+import { summaryRows } from './run-summary.js';
 import { selectedModel } from './provider-options.js';
 import { runStatusLabel, toolTimeline } from './run-status.js';
 import { restoreNotice, exportNote, sumUnrestored } from './privacy-warning.js';
@@ -796,7 +797,7 @@ export function App() {
     }
     active.current = job; setRunning(job);
     const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl, visual }) => ({ id, name, size, path, sourceUrl, ...(visual ? { visual } : {}) })) };
-    const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0 };
+    const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0, startedAt: Date.now() };
     setState(current => {
       const target = current.chats.find(item => item.id === draft.sessionId);
       const now = Date.now();
@@ -1211,7 +1212,8 @@ export function App() {
                   {(()=>{const rows=toolTimeline(message.pending?runEvents:message.trace);if(!rows.length)return null;return <details className="tool-strip" open><summary>{rows.length} 次工具调用</summary><ol>{rows.map(row=><li key={row.key} data-status={row.status}>{row.label}{Number.isSafeInteger(row.durationMs)&&row.durationMs>=100?<small>{(row.durationMs/1000).toFixed(1)}s</small>:null}</li>)}</ol></details>;})()}
                   {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':runStatusLabel(events,running?.runId)}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl}/>}
                   {message.unrestored>0 && <p className="restore-note" role="status">{restoreNotice(message.unrestored)}</p>}
-                  {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
+                  {!message.pending&&<details className="run-summary"><summary>详情</summary><dl>{summaryRows(message).map(row => <div className="run-summary-row" key={row.key}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl></details>}
+            {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
                   {message.context?.measurement && <p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow || 128000).toLocaleString()} tokens {message === currentContextMessage && <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/compact')}>压缩上下文</button>}</p>}
                   {message.finalization?.processStatus === 'cleanup_pending' && <p className="muted" role="status">执行已结束，内核退出仍待确认；请使用上方的重试清理。</p>}
                   {['pending', 'failed'].includes(message.finalization?.persistenceStatus) && <p className="muted" role="status">本次执行结果尚未保存。重试保存不会重新运行工具。</p>}

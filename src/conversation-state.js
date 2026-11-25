@@ -56,6 +56,7 @@ export function finalizeConversationRun(state, job, outcome = {}) {
           errorMessage, ...(error ? { errorDetail: { code: error.code, stage: error.stage, message: technical } } : {}),
           status: stopped ? 'cancelled' : failed ? 'failed' : 'succeeded',
           finalization,
+          finishedAt: terminal.time,
           trace: trace.slice(-400), traceTruncated: !!job.traceTruncated || trace.length > 400,
           children: finalization?.children || result.children || job.children || message.children || [],
           deliverables: finalization?.deliverables || result.deliverables || job.deliverables || message.deliverables || [],

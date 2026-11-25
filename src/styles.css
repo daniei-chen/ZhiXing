@@ -683,6 +683,15 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .workspace-save-banner.failed .secondary-button { flex: none; min-height: 28px; padding: 4px 8px; font-size: 11px; }
 .workspace-save-banner.recovering { color: var(--text); }
 .restore-note { margin: 6px 0 2px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--muted); font-size: 12px; line-height: 1.5; }
+.run-summary { margin: 6px 0 2px; font-size: 12px; color: var(--muted); }
+.run-summary summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 4px; }
+.run-summary summary::-webkit-details-marker { display: none; }
+.run-summary summary::before { content: "▸"; font-size: 10px; }
+.run-summary[open] summary::before { content: "▾"; }
+.run-summary dl { margin: 6px 0 0; display: grid; gap: 4px; }
+.run-summary-row { display: flex; gap: 8px; }
+.run-summary-row dt { min-width: 56px; color: var(--muted); }
+.run-summary-row dd { margin: 0; color: var(--text); }
 .run-error-detail { margin: 9px 0; color: var(--danger); font-size: 12px; line-height: 1.6; }
 .transcript-new-content { position: fixed; z-index: 21; bottom: 102px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); font-size: 12px; white-space: nowrap; }
 
