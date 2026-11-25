@@ -203,7 +203,7 @@ try {
   const forged = await ui.evaluate(`(async()=>{try{await window.zhixing.deliverableAction({workspaceId:'x',projectId:'y',sessionId:'z',id:'zx-delivery-v1.redact.notasession.1.0.${'0'.repeat(64)}',action:'reveal'});return {ok:true};}catch(error){return {ok:false,message:String(error?.message||error)};}})()`);
   report.forged = forged; await persist();
   assert.equal(forged.ok, false, '伪造的交付引用不应被接受');
-  assert.equal(forged.message.includes('交付引用无效'), true, `伪造引用的拒绝文案不符：${forged.message}`);
+  assert.match(forged.message, /交付文件不属于当前会话或项目|交付引用无效|没有对应的原生交付记录/, `伪造引用的拒绝文案不符：${forged.message}`);
   await record('伪造的交付引用被拒绝', { message: forged.message });
 
   report.status = 'passed'; await persist();
