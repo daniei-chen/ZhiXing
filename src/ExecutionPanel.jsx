@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {CircleNotch} from '@phosphor-icons/react';
 import {archiveMarkdown,archiveAllMarkdown} from './subagent-archive.js';
+import {filterTrace,matchesLabel,traceSearchSummary} from './trace-filter.js';
 
 const categories = [
  ['all','全部'], ['tools','工具'], ['agents','子任务'], ['workflow','工作流'],
@@ -23,6 +24,8 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  const [selectedItem,setSelectedItem] = useState(null);
  const [archiving,setArchiving] = useState('');
  const [archiveNote,setArchiveNote] = useState('');
+ const [search,setSearch] = useState('');
+ const [collapsed,setCollapsed] = useState(()=>new Set());
  const runs = messages.filter(message=>message.trace?.length || message.children?.length || message.finalization).slice(-40).reverse();
  const archived = runs.find(run=>run.id===selected) ?? (!liveRun ? runs[0] : undefined);
  const reply = selected==='live'&&liveRun ? undefined : archived;
@@ -30,8 +33,14 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
  const entries = (live ? liveTrace : reply?.trace || []).filter(event=>event.label);
  const children = live ? liveTrace.findLast(event=>event.type==='subagents')?.children || [] : reply?.children || [];
  const recent = entries.filter(event=>filter==='all'||(event.category || 'session')===filter).slice().reverse();
+ const visible = filterTrace(recent, search);
+ const entryKey = event => `${event.runId}-${event.childSessionId||'root'}-${event.sequence??event.time}-${event.label}`;
  const childRows = new Map(children.map((child,index)=>[child.id,index+1]));
  const jobs = [...new Map(entries.filter(event=>event.category==='jobs'&&event.itemId).map(event=>[event.itemId,event])).values()];
+ // 搜索同样覆盖子任务与后台作业：桌面版 Trajectory 的搜索也能命中已折叠的子调用。
+ const jobIndex = item => jobs.findIndex(job=>job.itemId===item.itemId)+1;
+ const visibleChildren = children.filter(child=>matchesLabel(`子任务 ${childRows.get(child.id)} ${statusLabels[child.status]||''}`,search));
+ const visibleJobs = jobs.filter(job=>matchesLabel(`作业 ${jobIndex(job)} ${statusLabels[job.status]||''}`,search));
  const controlKey = (action,target) => `${liveRun}:${action}:${target}`;
  async function archiveAll(items){
   const api=window.zhixing;if(!api)return;
@@ -91,20 +100,26 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
     </select>
    </label>
   </div>}
+  {(live || runs.length>0) && <div className="execution-search">
+   <input aria-label="搜索轨迹" placeholder="搜索" value={search} onChange={event=>setSearch(event.target.value)}/>
+   <button type="button" className="text-button" disabled={!visible.length||visible.slice(0,limit).every(event=>collapsed.has(entryKey(event)))} onClick={()=>setCollapsed(new Set(visible.slice(0,limit).map(entryKey)))}>收起所有事件</button>
+   <button type="button" className="text-button" disabled={!collapsed.size} onClick={()=>setCollapsed(new Set())}>展开所有事件</button>
+   {!!search.trim() && <small role="status">{traceSearchSummary(search,visible.length,recent.length)}</small>}
+  </div>}
   {archiveNote&&<p className="execution-note" role="status">{archiveNote}</p>}
-  {!!children.length && (filter==='all'||filter==='agents') && <div className="execution-children">
-   <h4>协作子任务{children.filter(child=>child.messages?.length).length>1&&!live&&<button className="text-button" disabled={!!archiving} onClick={()=>archiveAll(children)}>全部归档</button>}</h4>
-   {children.map(child=><div key={child.id}>
+  {!!visibleChildren.length && (filter==='all'||filter==='agents') && <div className="execution-children">
+   <h4>协作子任务{visibleChildren.filter(child=>child.messages?.length).length>1&&!live&&<button className="text-button" disabled={!!archiving} onClick={()=>archiveAll(visibleChildren)}>全部归档</button>}</h4>
+   {visibleChildren.map(child=><div key={child.id}>
     <span>子任务 {childRows.get(child.id)}{childRows.has(child.parentId) && <small>由子任务 {childRows.get(child.parentId)} 委派</small>}</span>
     <span>{!live&&child.status==='running' ? '已中断' : statusLabels[child.status] || '已结束'}
      {(live||child.messages?.length>0)&&<button className="text-button" onClick={()=>setSelectedItem({type:'agent',id:child.id})}>查看对话</button>}
      {!live&&!!child.messages?.length&&<button className="text-button" disabled={!!archiving} onClick={()=>archiveChild(child)}>{archiving===child.id?'归档中…':'归档'}</button>}{stopButton('interrupt-agent',child.id,child.status,'停止子任务')}</span>
    </div>)}
   </div>}
-  {!!jobs.length && (filter==='all'||filter==='jobs') && <div className="execution-children">
+  {!!visibleJobs.length && (filter==='all'||filter==='jobs') && <div className="execution-children">
    <h4>后台作业</h4>
-   {jobs.map((job,index)=><div key={job.itemId}>
-    <span>作业 {index+1}{childRows.has(job.childSessionId) && <small>子任务 {childRows.get(job.childSessionId)}</small>}</span>
+   {visibleJobs.map(job=><div key={job.itemId}>
+    <span>作业 {jobIndex(job)}{childRows.has(job.childSessionId) && <small>子任务 {childRows.get(job.childSessionId)}</small>}</span>
     <span>{!live&&job.status==='running'?'运行已结束':statusLabels[job.status]||'已结束'}
      {live&&<button className="text-button" onClick={()=>setSelectedItem({type:'job',id:job.itemId})}>查看输出</button>}
      {stopButton('stop-job',job.itemId,job.status,'停止作业')}</span>
@@ -116,7 +131,8 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
   {(live?traceTruncated:reply?.traceTruncated) && <p className="settings-note">较早的事件已达到记录上限。</p>}
   {recent.length ? <>
    <div className="execution-list">
-    {recent.slice(0,limit).map((event,index)=><details className="execution-entry" key={`${event.runId}-${event.childSessionId||'root'}-${event.sequence??event.time}-${recent.length-index}`}>
+    {visible.slice(0,limit).map(event=>{const key=entryKey(event);const open=!collapsed.has(key);return <details className="execution-entry" key={key} open={open}
+      onToggle={changed=>{const nowOpen=changed.currentTarget.open;setCollapsed(old=>{const next=new Set(old);if(nowOpen)next.delete(key);else next.add(key);return next;});}}>
      <summary><span>{event.label}</span><time dateTime={new Date(event.time).toISOString()}>{formatTime(event.time)}</time></summary>
      <dl>
       <div><dt>来源</dt><dd>{event.childSessionId?(childRows.has(event.childSessionId)?`子任务 ${childRows.get(event.childSessionId)}`:'子任务'):'当前会话'}</dd></div>
@@ -125,9 +141,10 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
       {event.step!==undefined&&<div><dt>步骤</dt><dd>{event.step}</dd></div>}
       {event.durationMs!==undefined&&<div><dt>耗时</dt><dd>{duration(event.durationMs)}</dd></div>}
      </dl>
-    </details>)}
+    </details>;})}
    </div>
-   {recent.length>limit && <button className="secondary-button execution-more" onClick={()=>setLimit(value=>value+30)}>显示更早的事件</button>}
+   {visible.length>limit && <button className="secondary-button execution-more" onClick={()=>setLimit(value=>value+30)}>显示更早的事件</button>}
+   {!visible.length && <p className="empty-note">{traceSearchSummary(search,0,recent.length)}</p>}
   </> : <p className="empty-note">{live||reply?'这次交办暂无这一类事件。':'交办开始后，这里会显示工具调用、子任务、工作流和后台作业。'}</p>}
  </div>;
 }

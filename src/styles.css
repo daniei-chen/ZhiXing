@@ -891,6 +891,9 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .execution-transcript p {margin-top:4px}
 .execution-detail form {display:flex;gap:7px;align-items:flex-end}
 .execution-detail textarea {min-width:0;flex:1;min-height:50px;border:1px solid var(--line);border-radius:6px;padding:6px;background:var(--surface);resize:vertical}
+.execution-search {display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:8px 0 4px}
+.execution-search input {min-width:0;flex:1 1 140px;border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:var(--surface);font-size:12px}
+.execution-search small {color:var(--muted);font-size:11px}
 .execution-entry {border-bottom:1px solid var(--line)}
 .execution-entry summary {cursor:pointer;padding:9px 5px}
 .execution-entry summary:hover {background:var(--hover)}
