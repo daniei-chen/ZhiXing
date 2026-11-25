@@ -19,7 +19,7 @@
 
 | Harness 机制 | 包 | 知行现状 | 差距 |
 | --- | --- | --- | --- |
-| 压缩引擎与策略 | `dsh-compaction`、`dsh-compaction-basic` | **已对标口径**（0.22.0）：桌面版无配置即默认 `thresholdRatio .8`／`retainRatio .16`／`headroomTokens 65536`，知行原来是 8192，128k 窗口下压缩点从 54,272 被推到 102,400；现已改成桌面版数值（`electron/compaction-policy.mjs`） | 阈值口径已对；**压缩后提示文案未逐字对照**，真实压缩事件未跑过 |
+| 压缩引擎与策略 | `dsh-compaction`、`dsh-compaction-basic` | **已对标并有实包证据**：0.22.0 把 headroom 从 8,192 改回桌面版的 65,536（128k 窗口阈值 54,272）；0.23.0 用 `npm run test:compaction` 在实包上真的触发了压缩——第 8 轮摘要请求、第 9 轮请求 216,056→122,222 字符并带 checkpoint，消息 14→10 | 桌面版压缩后无提示（轨迹与会话包均无渲染），知行同样不弹提示；摘要内容质量未评估 |
 | 图像卸载 | `dsh-compaction-image-offload` | **已挂载**（0.22.1）：桌面版 `dsh-base` 一直挂它；0.22.0 曾因 `disabled` 清单同 id 禁用优先而没生效，0.22.1 修掉并有读落盘补丁的回归用例 | **未观察过真实卸载**：需要图片路由被判超预算 |
 | 工具结果剪枝 | `dsh-compaction-tool-result-pruner` | **已对标**：桌面版 `thresholdChars 8192`／`headChars 4096`／`tailChars 1024`，知行逐字一致 | — |
 | 手动压缩命令 | `dsh-command-compact` | 已对标（`/compact`） | 命令提示与 Harness 文案未逐字对齐 |
