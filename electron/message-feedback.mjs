@@ -16,10 +16,20 @@ export const FEEDBACK_CATEGORIES = [
 export const FEEDBACK_NOTE_MAX_BYTES = 8192;
 
 const CATEGORY_IDS = new Set(FEEDBACK_CATEGORIES.map(item => item.id));
-const encoder = new TextEncoder();
+
+// 不依赖 TextEncoder：组件测试跑在 jsdom 里没有这个全局，按码点自己算 UTF-8 字节数，
+// 结果与 Buffer.byteLength(text,'utf8') 一致。
+export function utf8Bytes(text) {
+  let bytes = 0;
+  for (const character of String(text ?? '')) {
+    const code = character.codePointAt(0);
+    bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+  }
+  return bytes;
+}
 
 export function noteBytes(note) {
-  return encoder.encode(String(note ?? '')).length;
+  return utf8Bytes(note);
 }
 
 /** 校验一条反馈；返回 {ok:true,value} 或 {ok:false,code}，code 与桌面版失败码同名。 */

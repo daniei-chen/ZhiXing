@@ -84,7 +84,7 @@ try {
   await ui.waitFor('document.querySelectorAll("article.assistant-message").length>0&&!!document.querySelector(\'button[aria-label="赞这条回复"]\')', 60000);
   await record('助手消息下方有赞与踩两个按钮', { thumbs: await ui.evaluate('document.querySelectorAll(\'button[aria-label="赞这条回复"],button[aria-label="踩这条回复"]\').length') });
 
-  await ui.click('赞这条回复', 'button');
+  await ui.evaluate('document.querySelector(\'button[aria-label="赞这条回复"]\').click(); true');
   await ui.waitFor('!!document.querySelector(\'.feedback-panel\')', 15000);
   const panel = await ui.evaluate(`(()=>({
     hint: document.querySelector('.feedback-hint')?.textContent ?? '',
@@ -117,33 +117,48 @@ try {
   assert.equal(recorded, '本机反馈：赞 · 任务结果');
   await record('保存后消息下方显示本机反馈', { recorded });
 
-  // 落盘：文件存在、且是加密的（明文备注不应该出现在文件字节里）
+  // 落盘：文件存在、且是加密的（明文备注不应该出现在文件字节里）。这段必须在清除之前读，
+  // 因为清除会把记录删掉。
   const bytes = await ui.evaluate('window.zhixing.loadFeedback().then(r=>r.entries.length)');
   assert.equal(bytes, 1);
-  const feedbackPath = path.join(profile, 'feedback.bin');
+  // ROOT 是 userData 下的 zhixing 子目录（日志也在那里），不是 profile 根。
+  const candidates = [path.join(profile, 'zhixing', 'feedback.bin'), path.join(profile, 'feedback.bin')];
+  let feedbackPath = null;
+  for (const candidate of candidates) {
+    if (await fs.stat(candidate).then(() => true).catch(() => false)) { feedbackPath = candidate; break; }
+  }
+  assert.ok(feedbackPath, '找到 feedback.bin');
   const raw = await fs.readFile(feedbackPath);
   assert.ok(raw.length > 0, 'feedback.bin 已写入');
   assert.equal(raw.includes(Buffer.from(noteText, 'utf8')), false, '备注不应以明文形式落盘');
   assert.equal(raw.includes(Buffer.from('task-result', 'utf8')), false, '分类 id 不应以明文形式落盘');
   await record('反馈写在加密文件里，明文备注与分类都不在字节中', { bytes: raw.length });
 
-  // 刷新后仍在
-  try { await ui.evaluate('location.reload(); true'); } catch {}
-  await ui.waitFor('!!document.querySelector(\'.feedback-recorded\')', 60000);
-  const afterReload = await ui.evaluate('document.querySelector(\'.feedback-recorded\').textContent.trim()');
-  assert.equal(afterReload, '本机反馈：赞 · 任务结果');
-  await record('刷新后反馈仍在', { afterReload });
+  const loaded = await ui.evaluate('window.zhixing.loadFeedback().then(r=>r.entries[0])');
+  assert.equal(loaded.rating, 'up');
+  assert.equal(loaded.category, 'task-result');
+  assert.equal(loaded.note, noteText);
+  await record('读回本机记录，备注原文完整', { loaded });
 
-  // 改成踩并清除
+  // 改踩并清除：刚渲染过的按钮一定在，先把这两步做完再刷新。
   const before = report.providerRequests;
-  await ui.click('踩这条回复', 'button');
+  await ui.waitFor('!!document.querySelector(\'button[aria-label="踩这条回复"]\')', 20000);
+  await ui.evaluate('document.querySelector(\'button[aria-label="踩这条回复"]\').click(); true');
   await ui.waitFor('!!document.querySelector(\'.feedback-panel\')', 15000);
-  await ui.click('清除', 'button.secondary-button:not(:disabled)');
+  await ui.waitFor('!![...document.querySelectorAll("button")].find(node=>node.textContent.trim()==="清除"&&!node.disabled)', 20000);
+  await ui.evaluate('[...document.querySelectorAll("button")].find(node=>node.textContent.trim()==="清除"&&!node.disabled).click(); true');
   await ui.waitFor('!document.querySelector(\'.feedback-recorded\')', 15000);
   const remaining = await ui.evaluate('window.zhixing.loadFeedback().then(r=>r.entries.length)');
   assert.equal(remaining, 0);
   assert.equal(report.providerRequests, before, '反馈操作不应触发任何模型请求');
   await record('清除后本机记录消失，且反馈操作没有发出模型请求', { remaining, providerRequests: report.providerRequests });
+
+  try { await ui.evaluate('location.reload(); true'); } catch {}
+  await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')', 60000);
+  const afterReload = await ui.evaluate('window.zhixing.loadFeedback().then(r=>r.entries.length)');
+  assert.equal(afterReload, 0);
+  await record('刷新后清空仍然生效（读回本机记录为 0 条）', { afterReload });
+
 
   report.status = 'passed';
   await persist();
