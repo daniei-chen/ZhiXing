@@ -112,6 +112,20 @@ try {
   assert.equal(String(after.settings.model).toLowerCase(), String(target).toLowerCase(), `当前模型没有切换：${after.settings.model}`);
   await record('点击「设为当前」后工作区模型真的切换了', report.selection);
 
+  // —— 移除单个模型：列表少一行、出现隐藏提示，恢复后行数回来
+  const before = await ui.evaluate('(()=>document.querySelectorAll(".provider-catalog li").length)()');
+  const hidden = await ui.evaluate(`(async()=>{const row=[...document.querySelectorAll('.provider-catalog li')].find(li=>li.querySelector('button.model-hide'));if(!row)return null;const name=row.querySelector('span')?.textContent.trim();row.querySelector('button.model-hide').click();return name;})()`);
+  assert.ok(hidden, '找不到可移除的模型');
+  await pause(1200);
+  const afterHide = await ui.evaluate('(()=>({rows:document.querySelectorAll(".provider-catalog li").length,note:document.querySelector(".provider-hidden-note")?.textContent.trim()||"",notice:document.querySelector(".setting-notice")?.textContent.trim()||""}))()');
+  report.hiddenModel = { before, hidden, ...afterHide }; await persist();
+  assert.equal(afterHide.rows, before - 1, '移除后列表行数没有减少');
+  assert.ok(/已隐藏 1 个模型/u.test(afterHide.note), `没有出现隐藏提示：${afterHide.note}`);
+  const restored = await ui.evaluate(`(async()=>{const button=[...document.querySelectorAll('.provider-hidden-note button')].find(b=>b.textContent.includes('恢复'));if(!button)return null;button.click();await new Promise(r=>setTimeout(r,1200));return {rows:document.querySelectorAll('.provider-catalog li').length,note:document.querySelector('.provider-hidden-note')?.textContent.trim()||''};})()`);
+  report.hiddenModel.restored = restored; await persist();
+  assert.ok(restored && restored.rows === before, '恢复后列表行数没有回来');
+  await record('单个模型可以从列表移除，并能一键恢复', report.hiddenModel);
+
   // —— 状态文案：设置回原模型，回到工作台发消息，抓运行中的状态行
   await ui.evaluate(`(async()=>{const s=await window.zhixing.loadWorkspace();s.settings={...s.settings,model:${JSON.stringify(model)}};await window.zhixing.saveWorkspace(s);})()`);
   await ui.click('返回工作台', 'button[aria-label="返回工作台"]');
@@ -135,20 +149,6 @@ try {
   }
   await record('运行中显示「思考中」或工具动作，没有内核阶段文案', { labels: report.statusLabels });
   assert.ok(answered, '消息没有在本轮完成');
-
-  // —— 移除单个模型：列表少一行、出现隐藏提示，恢复后行数回来
-  const before = await ui.evaluate('(()=>document.querySelectorAll(".provider-catalog li").length)()');
-  const hidden = await ui.evaluate(`(async()=>{const row=[...document.querySelectorAll('.provider-catalog li')].find(li=>li.querySelector('button.model-hide'));if(!row)return null;const name=row.querySelector('span')?.textContent.trim();row.querySelector('button.model-hide').click();return name;})()`);
-  assert.ok(hidden, '找不到可移除的模型');
-  await pause(1200);
-  const afterHide = await ui.evaluate('(()=>({rows:document.querySelectorAll(".provider-catalog li").length,note:document.querySelector(".provider-hidden-note")?.textContent.trim()||"",notice:document.querySelector(".setting-notice")?.textContent.trim()||""}))()');
-  report.hiddenModel = { before, hidden, ...afterHide }; await persist();
-  assert.equal(afterHide.rows, before - 1, '移除后列表行数没有减少');
-  assert.ok(/已隐藏 1 个模型/u.test(afterHide.note), `没有出现隐藏提示：${afterHide.note}`);
-  const restored = await ui.evaluate(`(async()=>{const button=[...document.querySelectorAll('.provider-hidden-note button')].find(b=>b.textContent.includes('恢复'));if(!button)return null;button.click();await new Promise(r=>setTimeout(r,1200));return {rows:document.querySelectorAll('.provider-catalog li').length,note:document.querySelector('.provider-hidden-note')?.textContent.trim()||''};})()`);
-  report.hiddenModel.restored = restored; await persist();
-  assert.ok(restored && restored.rows === before, '恢复后列表行数没有回来');
-  await record('单个模型可以从列表移除，并能一键恢复', report.hiddenModel);
 
   report.status = 'passed'; await persist();
   console.log(JSON.stringify({ status: report.status, cases: report.cases.length, evidence }, null, 2));
