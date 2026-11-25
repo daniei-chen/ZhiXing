@@ -10,6 +10,7 @@ import {AgentQuestion} from './AgentQuestion.jsx';
 import {Workbench} from './Workbench.jsx';
 import {ConversationResources} from './ConversationResources.jsx';
 import {AnswerText} from './AnswerText.jsx';
+import {DeliveryCards} from './DeliveryCards.jsx';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
 import { BrandMark, IconButton, MenuItem, Modal } from './ui.jsx';
 import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText, workspaceDeletion, orphanDrafts, newConversationDrafts, appendDraftFiles, recoverSubmittedDraft } from './store.js';
@@ -1248,7 +1249,7 @@ export function App() {
                   {message.imported&&<ImportedActivity message={message} onOpenUrl={openAnswerUrl}/>}
                   <AgentChildren items={message.pending?runEvents.findLast(event=>event.type==='subagents')?.children:message.children} onView={()=>showWorkPage('activity')}/>
                   <TaskPlan items={message.pending?events.findLast(event=>event.runId===running?.runId&&event.type==='plan')?.plan:message.plan}/>
-                  {message.deliverables?.length>0&&<div className="deliverable-files">{message.deliverables.map((file,index)=><button key={index} onClick={()=>void openDeliverable(file)}><FileText size={18}/><span><strong>{file.path.split(/[\\/]/).at(-1)}</strong><small>{file.description||'成果文件'}</small></span></button>)}</div>}
+                  {message.deliverables?.length>0&&<DeliveryCards files={message.deliverables} onOpen={openDeliverable}/>}
                   {message === currentContextMessage && message.context.planning && <p className="context-usage">规划模式 · 只读调查与方案设计 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/plan off')}>退出规划模式</button></p>}
                   {message === currentContextMessage && currentGoal && <p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[currentGoal.phase] || currentGoal.phase} · 第 {currentGoal.roundsStarted} / {currentGoal.maxGoalRounds} 轮 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, goalAction[0])}>{goalAction[1]}</button></p>}
                   {message.pending&&message.progressText&&<AnswerText text={message.progressText} onOpenUrl={openAnswerUrl}/>}
