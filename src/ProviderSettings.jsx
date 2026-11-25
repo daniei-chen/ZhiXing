@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowClockwise, ArrowLeft, Check, Plug, Plus, SlidersHorizontal, Trash } from '@phosphor-icons/react';
+import { currentModel as resolveCurrentModel, reasoningState } from './provider-reasoning.js';
 import { PROVIDER_PRESETS } from './provider-options.js';
 import { errorText } from './error-copy.js';
 
@@ -137,7 +138,16 @@ export function ProviderSettings({ runtime, setRuntime, desktop, settings, setSe
             </select></label>}
             <label className="form-label provider-wide">手动添加模型 ID<textarea rows={3} maxLength={8050} value={draft.manualModels} onChange={event => update('manualModels', event.target.value)} placeholder="服务没有模型列表时，每行填写一个 ID"/></label>
           </div>}
-          {draft.models?.length > 0 && <details className="provider-catalog" open><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}><span>{model.name || model.id}</span><span className="model-actions">{setSetting && draft.id ? (currentModel === model.id && currentProvider === draft.id ? <span className="model-current"><Check size={13}/>当前</span> : <button type="button" className="plain-button model-pick" onClick={() => { setSetting('modelSelection', { id: model.id, providerId: draft.id }); setNotice({ text: `已把「${model.name || model.id}」设为当前模型` }); }}>设为当前</button>) : null}{desktop && draft.id ? <button type="button" className="plain-button model-hide" title="从列表里移除这个模型" aria-label={`移除 ${model.name || model.id}`} disabled={!!action} onClick={() => hideModel(model)}><Trash size={13}/></button> : null}</span></li>)}</ul>{draft.hiddenModels?.length ? <p className="provider-hidden-note">已隐藏 {draft.hiddenModels.length} 个模型<button type="button" className="plain-button" disabled={!!action} onClick={restoreModels}>恢复全部</button></p> : null}</details>}
+          {draft.models?.length > 0 && <details className="provider-catalog" open><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}><span>{model.name || model.id}</span><span className="model-actions">{setSetting && draft.id ? (currentModel === model.id && currentProvider === draft.id ? <span className="model-current"><Check size={13}/>当前</span> : <button type="button" className="plain-button model-pick" onClick={() => { setSetting('modelSelection', { id: model.id, providerId: draft.id }); setNotice({ text: `已把「${model.name || model.id}」设为当前模型` }); }}>设为当前</button>) : null}{desktop && draft.id ? <button type="button" className="plain-button model-hide" title="从列表里移除这个模型" aria-label={`移除 ${model.name || model.id}`} disabled={!!action} onClick={() => hideModel(model)}><Trash size={13}/></button> : null}</span></li>)}</ul>{(() => {
+    const state = reasoningState({ current: resolveCurrentModel(providers, settings || {}), settings: settings || {} });
+    const mine = state.choices.length && (resolveCurrentModel(providers, settings || {})?.provider?.id === draft.id);
+    return <section className="provider-effort" aria-label="当前模型的思考强度">
+      <h4>当前模型的思考强度</h4>
+      {mine ? <div className="provider-effort-choices" role="group" aria-label="思考档位">{state.choices.map(level => <button type="button" key={level.id} className={state.selected?.id === level.id ? 'effort-choice is-current' : 'effort-choice'} aria-pressed={state.selected?.id === level.id} disabled={!setSetting} onClick={() => { setSetting('reasoning', level.id); setNotice({ text: '已把思考强度设为「' + level.label + '」' }); }}>{level.label}</button>)}</div> : null}
+      {state.problem ? <p className="provider-effort-hint">{state.problem}</p> : mine ? <p className="provider-effort-hint">{state.selected ? '当前：' + state.selected.label + ' · ' + state.selected.description : '请选择一档后交办。'}</p> : <p className="provider-effort-hint">这个供应商的模型还不是当前模型，先在列表里「设为当前」再选档位。</p>}
+    </section>;
+  })()}
+  {draft.hiddenModels?.length ? <p className="provider-hidden-note">已隐藏 {draft.hiddenModels.length} 个模型<button type="button" className="plain-button" disabled={!!action} onClick={restoreModels}>恢复全部</button></p> : null}</details>}
         </fieldset>
         <div className="form-actions">
           {!!draft.id && <button type="button" className="plain-button provider-remove" disabled={!!action} onClick={() => setRemoving(true)}><Trash size={15}/>移除</button>}

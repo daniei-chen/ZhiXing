@@ -627,6 +627,13 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .model-actions { display: inline-flex; align-items: center; gap: 4px; }
 .model-hide { color: var(--muted); padding: 0 2px; }
 .model-hide:hover { color: var(--danger); }
+.provider-effort { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--border); }
+.provider-effort h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+.provider-effort-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.effort-choice { border: 1px solid var(--border); background: transparent; border-radius: 999px; padding: 4px 12px; font-size: 12px; color: var(--text); cursor: pointer; }
+.effort-choice.is-current { border-color: var(--text); font-weight: 600; }
+.effort-choice:disabled { opacity: .5; cursor: default; }
+.provider-effort-hint { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
 .provider-hidden-note { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; color: var(--muted); font-size: 12px; }
 .model-current { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .provider-removal { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 10px; font-size: 12px; }
