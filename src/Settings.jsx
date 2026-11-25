@@ -75,7 +75,7 @@ export function Settings({ modal, close, setModal, state, scope, setSetting, run
           </article>)}</div>
           <button className="secondary-button" onClick={() => setModal({ type: 'new-project' })}><Plus size={16}/>新建项目</button>
         </>}
-        {tab === '供应商' && <ProviderSettings runtime={runtime} setRuntime={setRuntime} desktop={window.zhixing}/>}
+        {tab === '供应商' && <ProviderSettings runtime={runtime} setRuntime={setRuntime} desktop={window.zhixing} settings={state.settings} setSetting={setSetting}/>}
         {tab === 'MCP 连接' && <McpSettings/>}
         {tab === 'Agent 内核' && <KernelSettings runtime={runtime} setRuntime={setRuntime} inspectionScope={{workspaceId:scope.workspace.id,projectId:scope.project?.id||null,permission:state.settings.permission,...(state.settings.modelProviderId?{providerId:state.settings.modelProviderId,modelId:state.settings.model,reasoning:state.settings.reasoning}:{})}}/>}
         {tab === '通知' && <>

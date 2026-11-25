@@ -7,7 +7,9 @@ const CUSTOM = { name: '', protocol: 'openai', baseUrl: '' };
 const protocolLabel = { deepseek: '原生 DeepSeek', anthropic: 'Anthropic Messages', openai: 'Chat Completions' };
 
 
-export function ProviderSettings({ runtime, setRuntime, desktop }) {
+export function ProviderSettings({ runtime, setRuntime, desktop, settings, setSetting }) {
+  const currentModel = settings?.model;
+  const currentProvider = settings?.modelProviderId;
   const [draft, setDraft] = useState(null);
   const [action, setAction] = useState('');
   const [notice, setNotice] = useState(null);
@@ -93,7 +95,7 @@ export function ProviderSettings({ runtime, setRuntime, desktop }) {
             </select></label>}
             <label className="form-label provider-wide">手动添加模型 ID<textarea rows={3} maxLength={8050} value={draft.manualModels} onChange={event => update('manualModels', event.target.value)} placeholder="服务没有模型列表时，每行填写一个 ID"/></label>
           </div>}
-          {draft.models?.length > 0 && <details className="provider-catalog"><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}>{model.name}</li>)}</ul></details>}
+          {draft.models?.length > 0 && <details className="provider-catalog" open><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}><span>{model.name || model.id}</span>{setSetting && draft.id ? (currentModel === model.id && currentProvider === draft.id ? <span className="model-current"><Check size={13}/>当前</span> : <button type="button" className="plain-button model-pick" onClick={() => { setSetting('modelSelection', { id: model.id, providerId: draft.id }); setNotice({ text: `已把「${model.name || model.id}」设为当前模型` }); }}>设为当前</button>) : null}</li>)}</ul></details>}
         </fieldset>
         <div className="form-actions">
           {!!draft.id && <button type="button" className="plain-button provider-remove" disabled={!!action} onClick={() => setRemoving(true)}><Trash size={15}/>移除</button>}

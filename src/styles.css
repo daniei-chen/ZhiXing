@@ -612,6 +612,10 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .provider-catalog { color: var(--muted); font-size: 12px; }
 .provider-catalog ul { max-height: 172px; overflow: auto; padding-left: 23px; overflow-wrap: anywhere; }
 .provider-catalog summary { cursor: pointer; }
+.provider-catalog li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.provider-catalog li > span:first-child { overflow-wrap: anywhere; }
+.model-pick { color: var(--text); font-size: 12px; padding: 0 4px; }
+.model-current { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .provider-removal { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 10px; font-size: 12px; }
 .provider-remove { margin-right: auto; display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
 .endpoint-field { margin-top: 7px; }
