@@ -19,10 +19,10 @@
 
 | Harness 机制 | 包 | 知行现状 | 差距 |
 | --- | --- | --- | --- |
-| 压缩引擎与策略 | `dsh-compaction`、`dsh-compaction-basic` | **已对标并有实包证据**：0.22.0 把 headroom 从 8,192 改回桌面版的 65,536（128k 窗口阈值 54,272）；0.23.0 用 `npm run test:compaction` 在实包上真的触发了压缩——第 8 轮摘要请求、第 9 轮请求 216,056→122,222 字符并带 checkpoint，消息 14→10 | 桌面版压缩后无提示（轨迹与会话包均无渲染），知行同样不弹提示；摘要内容质量未评估 |
+| 压缩引擎与策略 | `dsh-compaction`、`dsh-compaction-basic` | **已对标并有实包证据**：0.22.0 把 headroom 从 8,192 改回桌面版的 65,536（128k 窗口阈值 54,272）；0.23.0 用 `npm run test:compaction` 在实包上真的触发了压缩——第 8 轮摘要请求、第 9 轮请求 216,056→122,222 字符并带 checkpoint，消息 14→10 | 桌面版压缩后无提示（轨迹与会话包均无渲染），知行同样不弹提示；摘要内容质量未评估 ；0.31.0 逐项核对了 `thresholdRatio`／`retainRatio`／`headroomTokens`／`compactionRetries`／`maxOverflowRetries`／`auto` 与修剪器 `8192`／`4096`／`1024`，均与桌面版默认一致（小窗口 headroom 收缩是知行自有处理） |
 | 图像卸载 | `dsh-compaction-image-offload` | **已挂载**（0.22.1）：桌面版 `dsh-base` 一直挂它；0.22.0 曾因 `disabled` 清单同 id 禁用优先而没生效，0.22.1 修掉并有读落盘补丁的回归用例 | **未观察过真实卸载**：需要图片路由被判超预算 |
 | 工具结果剪枝 | `dsh-compaction-tool-result-pruner` | **已对标**：桌面版 `thresholdChars 8192`／`headChars 4096`／`tailChars 1024`，知行逐字一致 | — |
-| 手动压缩命令 | `dsh-command-compact` | 已对标（`/compact`） | 命令提示与 Harness 文案未逐字对齐 |
+| 手动压缩命令 | `dsh-command-compact` | **已对标并有实包证据**：0.31.0 的 `npm run test:compact-command` 在打包 EXE 上真按 `/compact`——空会话不发任何模型请求、界面显示内核的「没有可压缩历史」；带参数只给中文用法提示；两轮对话后恰好一次摘要请求，界面给出 `Compacted 6 history items (~3353 tokens).`；压缩后下一轮请求带 `This is an automatically generated checkpoint` 前言且消息数 7→6 | 成功与空历史文案沿用内核英文（桌面版是否在 UI 层本地化未核对）；命令提示的中英文未逐字对齐 |
 | token 计量 | `dsh-token-meter` | 已对标：输入框 token 计量条 | 未对照 Harness 的计数口径（是否含附件、系统提示） |
 
 ## 会话与消息
