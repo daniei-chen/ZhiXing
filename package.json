@@ -1,6 +1,6 @@
 {
   "name": "office-agent",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "description": "知行 AI 办公助手 · DeepSeek Harness",
   "author": "知行",
   "private": true,
@@ -32,7 +32,8 @@
     "test:cloud": "node scripts/test-real-cloud-chat.mjs",
     "test:cloud-privacy": "node scripts/test-real-cloud-privacy.mjs",
     "test:ui-status": "node scripts/test-run-status-ui.mjs",
-    "test:tools-ui": "node scripts/test-tool-timeline-ui.mjs"
+    "test:tools-ui": "node scripts/test-tool-timeline-ui.mjs",
+    "test:workspace-tools": "node scripts/test-real-cloud-workspace-tools.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {
