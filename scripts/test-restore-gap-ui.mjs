@@ -131,8 +131,11 @@ try {
   assert.ok(exported.includes('本段有 1 处占位符无法归属对应任务'), `导出正文没有「待核实」说明：${exported.slice(-200)}`);
   assert.ok(exported.includes('【敏感值待核实】'), '导出正文里没有中性标记');
   await record('导出这条回答时正文带上「待核实」说明', { tail: exported.slice(-80) });
-  await ui.evaluate('document.querySelector(".privacy-modal")?.querySelector("button[aria-label=\"关闭\"], .modal-close")?.click(); true').catch(() => {});
-  await pause(400);
+  await ui.evaluate(`(()=>{const target=document.activeElement||document.body;target.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));return true;})()`).catch(() => {});
+  for (let i = 0; i < 40; i += 1) {
+    if (!(await ui.evaluate('Boolean(document.querySelector(".privacy-modal"))'))) break;
+    await pause(200);
+  }
 
   const shared = await openReview(async () => {
     await ui.click('会话操作', 'button[aria-label="会话操作"]');
