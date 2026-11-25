@@ -406,6 +406,7 @@ function registerHandlers(){
   return rows.some(row=>row.id===provider.id)?rows.map(row=>row.id===provider.id?provider:row):[...rows,provider];
  }));
  handle('providers:remove',id=>changeProviders(rows=>rows.filter(row=>row.id!==id)));
+handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setModelHidden(rows,options||{})));
  handle('providers:refresh',id=>changeProviders(async rows=>{
   const provider=rows.find(row=>row.id===id);
   if(!provider)throw new Error('所选供应商已移除。');

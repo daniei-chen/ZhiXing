@@ -85,16 +85,27 @@ export function legacyProvider(configuration, key) {
   };
 }
 
+export function setModelHidden(providers, { providerId, modelId, hidden = true } = {}) {
+  const provider = providers.find(row => row.id === providerId);
+  if (!provider) throw new Error('供应商已移除。');
+  if (!provider.models.some(model => model.id === modelId)) throw new Error('这个模型不在当前目录里。');
+  const hiddenModels = new Set(provider.hiddenModels || []);
+  if (hidden) hiddenModels.add(modelId); else hiddenModels.delete(modelId);
+  return providers.map(row => row.id === providerId ? { ...row, hiddenModels: [...hiddenModels] } : row);
+}
+
 export function publicProviders(providers) {
   return providers.map(({ key, ...provider }) => {
     let credentialReentryRequired=false;
     try { assertModelCredential(key); } catch { credentialReentryRequired=true; }
-    return { ...provider, configured: Boolean(key), credentialReentryRequired };
+    const hiddenModels = provider.hiddenModels || [];
+    const models = provider.models.filter(model => !hiddenModels.includes(model.id));
+    return { ...provider, models, hiddenModels, configured: Boolean(key), credentialReentryRequired };
   });
 }
 
 export function providerModels(providers) {
-  return providers.flatMap(provider => provider.models.map(model => ({
+  return providers.flatMap(provider => provider.models.filter(model => !(provider.hiddenModels || []).includes(model.id)).map(model => ({
     ...model, providerId: provider.id, providerName: provider.name,
     inputModalities: modelInputModalities(provider, model),
     levels: modelReasoning(provider, model).levels,

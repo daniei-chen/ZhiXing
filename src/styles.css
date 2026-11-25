@@ -624,6 +624,10 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .provider-catalog li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 0; }
 .provider-catalog li > span:first-child { overflow-wrap: anywhere; }
 .model-pick { color: var(--text); font-size: 12px; padding: 0 4px; }
+.model-actions { display: inline-flex; align-items: center; gap: 4px; }
+.model-hide { color: var(--muted); padding: 0 2px; }
+.model-hide:hover { color: var(--danger); }
+.provider-hidden-note { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; color: var(--muted); font-size: 12px; }
 .model-current { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .provider-removal { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 10px; font-size: 12px; }
 .provider-remove { margin-right: auto; display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }

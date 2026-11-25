@@ -30,6 +30,48 @@ export function ProviderSettings({ runtime, setRuntime, desktop, settings, setSe
     setDraft(current => ({ ...current, [field]: value }));
   }
 
+  async function hideModel(model) {
+    if (!desktop || action) return;
+    setAction('hide');
+    setNotice(null);
+    try {
+      const next = await desktop.hideProviderModel({ providerId: draft.id, modelId: model.id, hidden: true });
+      setRuntime(next);
+      const left = (draft.models || []).filter(row => row.id !== model.id);
+      setDraft(current => ({ ...current, models: left, hiddenModels: [...(current.hiddenModels || []), model.id] }));
+      if (currentModel === model.id && currentProvider === draft.id && left.length && setSetting) {
+        setSetting('modelSelection', { id: left[0].id, providerId: draft.id });
+        setNotice({ text: `已移除「${model.name || model.id}」，当前模型换成「${left[0].name || left[0].id}」` });
+      } else {
+        setNotice({ text: `已移除「${model.name || model.id}」` });
+      }
+    } catch (error) {
+      setNotice({ error: true, text: errorText(error) });
+    } finally {
+      setAction('');
+    }
+  }
+
+  async function restoreModels() {
+    if (!desktop || action) return;
+    setAction('restore');
+    setNotice(null);
+    try {
+      let next = null;
+      for (const modelId of draft.hiddenModels || []) {
+        next = await desktop.hideProviderModel({ providerId: draft.id, modelId, hidden: false });
+      }
+      if (next) setRuntime(next);
+      const provider = (next?.providers || []).find(row => row.id === draft.id);
+      setDraft(current => ({ ...current, models: provider?.models || current.models, hiddenModels: provider?.hiddenModels || [] }));
+      setNotice({ text: '已恢复全部模型' });
+    } catch (error) {
+      setNotice({ error: true, text: errorText(error) });
+    } finally {
+      setAction('');
+    }
+  }
+
   async function perform(kind) {
     if (!desktop || action) return;
     setAction(kind);
@@ -95,7 +137,7 @@ export function ProviderSettings({ runtime, setRuntime, desktop, settings, setSe
             </select></label>}
             <label className="form-label provider-wide">手动添加模型 ID<textarea rows={3} maxLength={8050} value={draft.manualModels} onChange={event => update('manualModels', event.target.value)} placeholder="服务没有模型列表时，每行填写一个 ID"/></label>
           </div>}
-          {draft.models?.length > 0 && <details className="provider-catalog" open><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}><span>{model.name || model.id}</span>{setSetting && draft.id ? (currentModel === model.id && currentProvider === draft.id ? <span className="model-current"><Check size={13}/>当前</span> : <button type="button" className="plain-button model-pick" onClick={() => { setSetting('modelSelection', { id: model.id, providerId: draft.id }); setNotice({ text: `已把「${model.name || model.id}」设为当前模型` }); }}>设为当前</button>) : null}</li>)}</ul></details>}
+          {draft.models?.length > 0 && <details className="provider-catalog" open><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}><span>{model.name || model.id}</span><span className="model-actions">{setSetting && draft.id ? (currentModel === model.id && currentProvider === draft.id ? <span className="model-current"><Check size={13}/>当前</span> : <button type="button" className="plain-button model-pick" onClick={() => { setSetting('modelSelection', { id: model.id, providerId: draft.id }); setNotice({ text: `已把「${model.name || model.id}」设为当前模型` }); }}>设为当前</button>) : null}{desktop && draft.id ? <button type="button" className="plain-button model-hide" title="从列表里移除这个模型" aria-label={`移除 ${model.name || model.id}`} disabled={!!action} onClick={() => hideModel(model)}><Trash size={13}/></button> : null}</span></li>)}</ul>{draft.hiddenModels?.length ? <p className="provider-hidden-note">已隐藏 {draft.hiddenModels.length} 个模型<button type="button" className="plain-button" disabled={!!action} onClick={restoreModels}>恢复全部</button></p> : null}</details>}
         </fieldset>
         <div className="form-actions">
           {!!draft.id && <button type="button" className="plain-button provider-remove" disabled={!!action} onClick={() => setRemoving(true)}><Trash size={15}/>移除</button>}
