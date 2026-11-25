@@ -413,6 +413,15 @@ kbd { font: 11px/1.3 "Cascadia Mono", "Consolas", monospace; color: var(--muted)
 .answer-text h3 { margin: 7px 0 4px; font-size: 16px; }
 .error-message .answer-text { color: var(--danger); }
 .answer-actions { display: flex; align-items: center; margin: 7px 0 0 32px; }
+.tool-strip { margin: 8px 0 2px; font-size: 12px; color: var(--muted); }
+.tool-strip summary { cursor: pointer; list-style: none; }
+.tool-strip summary::-webkit-details-marker { display: none; }
+.tool-strip summary::before { content: "▸ "; }
+.tool-strip[open] summary::before { content: "▾ "; }
+.tool-strip ol { list-style: none; margin: 6px 0 0; padding: 0 0 0 2px; display: flex; flex-direction: column; gap: 4px; }
+.tool-strip li { display: flex; align-items: center; gap: 8px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); width: fit-content; max-width: 100%; }
+.tool-strip li[data-status="failed"] { border-color: var(--danger, #b42318); color: var(--danger, #b42318); }
+.tool-strip li small { color: var(--muted); font-variant-numeric: tabular-nums; }
 .thinking-label { display: flex; align-items: center; gap: 8px; margin-left: 38px; color: var(--muted); }
 .thinking-label svg { animation: spin 1.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

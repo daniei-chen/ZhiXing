@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const { runStatusLabel, liveToolCalls, IDLE_LABEL } = await import('../src/run-status.js');
+const { runStatusLabel, toolTimeline, liveToolCalls, IDLE_LABEL } = await import('../src/run-status.js');
 
 const run = 'run-1';
 
@@ -23,19 +23,39 @@ test('有工具在跑时显示工具动作，而不是阶段名', () => {
   assert.equal(runStatusLabel(events, run), '正在网页搜索');
 });
 
+test('工具已经出结果时回到「思考中」', () => {
+  const events = [
+    { runId: run, category: 'tools', label: '调用 · 网页搜索', sequence: 1 },
+    { runId: run, category: 'tools', label: '网页搜索 · 完成', sequence: 2, status: 'completed' },
+  ];
+  assert.equal(runStatusLabel(events, run), '思考中');
+});
+
 test('只有推理事件时回到「思考中」', () => {
   const events = [{ runId: run, category: 'reasoning', label: '内核启动中' }];
   assert.equal(runStatusLabel(events, run), '思考中');
 });
 
-test('工具提示保留最近几条，按顺序', () => {
+test('工具时间线包含调用与结果，按顺序，只取最近几条', () => {
+  const trace = [
+    { category: 'tools', label: '调用 · 网页搜索', sequence: 1, status: 'running' },
+    { category: 'reasoning', label: '思考', sequence: 2 },
+    { category: 'tools', label: '网页搜索 · 完成', sequence: 3, status: 'completed', durationMs: 1200 },
+    { category: 'tools', label: '调用 · 读取网页', sequence: 4, status: 'running' },
+    { category: 'tools', label: '读取网页 · 失败', sequence: 5, status: 'failed' },
+  ];
+  const rows = toolTimeline(trace);
+  assert.deepEqual(rows.map(row => row.label), ['调用 · 网页搜索', '网页搜索 · 完成', '调用 · 读取网页', '读取网页 · 失败']);
+  assert.equal(rows[1].durationMs, 1200);
+  assert.equal(rows[1].status, 'completed');
+  assert.equal(toolTimeline(trace, 2).length, 2);
+  assert.equal(toolTimeline(trace, 2)[1].label, '读取网页 · 失败');
+});
+
+test('liveToolCalls 只看当前运行', () => {
   const events = [
     { runId: run, category: 'tools', label: '调用 · 网页搜索', sequence: 1 },
-    { runId: run, category: 'reasoning', label: '思考', sequence: 2 },
-    { runId: run, category: 'tools', label: '调用 · 读取网页', sequence: 3 },
-    { runId: 'other', category: 'tools', label: '调用 · 别的运行', sequence: 4 },
+    { runId: 'other', category: 'tools', label: '调用 · 别的运行', sequence: 2 },
   ];
-  assert.deepEqual(liveToolCalls(events, run).map(item => item.label), ['调用 · 网页搜索', '调用 · 读取网页']);
-  const many = Array.from({ length: 6 }, (_, index) => ({ runId: run, category: 'tools', label: `调用 · 工具${index}`, sequence: index }));
-  assert.deepEqual(liveToolCalls(many, run, 2).map(item => item.label), ['调用 · 工具4', '调用 · 工具5']);
+  assert.deepEqual(liveToolCalls(events, run).map(item => item.label), ['调用 · 网页搜索']);
 });

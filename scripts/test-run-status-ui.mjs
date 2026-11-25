@@ -136,6 +136,23 @@ try {
   await record('运行中显示「思考中」或工具动作，没有内核阶段文案', { labels: report.statusLabels });
   assert.ok(answered, '消息没有在本轮完成');
 
+  // —— 工具时间线：让模型真的调用一个工具，确认消息下方自动出现调用记录
+  await ui.fill(input, '请调用 glob 工具，列出当前工作区根目录下所有 .md 文件，只告诉我数量。');
+  await ui.click('发送消息', send);
+  const toolDeadline = Date.now() + 150000;
+  let toolRows = [];
+  while (Date.now() < toolDeadline) {
+    const snapshot = await ui.evaluate(`(()=>{const strips=[...document.querySelectorAll('.tool-strip')];const last=strips.at(-1);return {strips:strips.length,rows:last?[...last.querySelectorAll('li')].map(li=>li.textContent.trim()):[],label:document.querySelector('.thinking-label')?.textContent.trim()||'',busy:Boolean(document.querySelector('.thinking-label'))};})()`);
+    if (snapshot.rows.length) { toolRows = snapshot.rows; if (!snapshot.busy) break; }
+    if (!snapshot.busy && snapshot.rows.length) break;
+    await pause(300);
+  }
+  await ui.screenshot(path.join(evidence, 'tool-strip.png'));
+  report.toolRows = toolRows; await persist();
+  assert.ok(toolRows.length > 0, '消息下方没有出现工具调用记录');
+  assert.ok(toolRows.some(label => /调用 · |· 完成|· 失败/u.test(label)), `工具记录内容不符合预期：${toolRows.join(' | ')}`);
+  await record('工具调用自动显示在消息下方', { rows: toolRows.slice(0, 4) });
+
   report.status = 'passed'; await persist();
   console.log(JSON.stringify({ status: report.status, cases: report.cases.length, evidence }, null, 2));
 } catch (error) {
