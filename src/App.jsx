@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowCounterClockwise, ArrowUpRight, Check, CircleNotch, Copy, DownloadSimple, FileText, FloppyDisk, FolderOpen, ListBullets, NotePencil, Plus, ShareNetwork, ShieldCheck, SidebarSimple, WarningCircle, Info } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ArrowUpRight, Check, CircleNotch, Copy, DownloadSimple, FileText, FloppyDisk, FolderOpen, ListBullets, NotePencil, Plus, ShareNetwork, ShieldCheck, SidebarSimple, ThumbsDown, ThumbsUp, WarningCircle, Info } from '@phosphor-icons/react';
 import { Titlebar, Sidebar, AppRail } from './Sidebar.jsx';
 import { Composer } from './Composer.jsx';
 import { Dialogs } from './Dialogs.jsx';
@@ -25,6 +25,7 @@ import { runStatusLabel, toolTimeline } from './run-status.js';
 import { restoreNotice, exportNote, sumUnrestored } from './privacy-warning.js';
 import { applyAutomationResults } from './automation-core.js';
 import { acceptsGoalImages, formatSessionCommand, parseSessionCommand } from './session-commands.js';
+import { FEEDBACK_CATEGORIES, FEEDBACK_NOTE_MAX_BYTES, feedbackFor, feedbackLabel, noteBytes } from './message-feedback.js';
 
 const desktop = window.zhixing;
 const uuid = () => crypto.randomUUID();
@@ -41,6 +42,8 @@ export function App() {
   const [loaded, setLoaded] = useState(!desktop);
   const [nativeProjects,setNativeProjects]=useState(null);
   const [workspaceSave, setWorkspaceSave] = useState({ status: desktop ? 'recovering' : 'saved', requestedRevision: 0, persistedRevision: 0 });
+  const [feedbackEntries, setFeedbackEntries] = useState([]);
+  const [feedbackDraft, setFeedbackDraft] = useState(null);
   const [view, setView] = useState(() => ({ section: 'home', chatId: null, projectId: null, newDraftId: uuid() }));
   const [sidebarOpen, setSidebar] = useState(() => innerWidth > 700);
   const [panel, setPanel] = useState(false);
@@ -298,6 +301,7 @@ export function App() {
       setWorkspaceSave({ status: 'failed', requestedRevision: 0, persistedRevision: 0, errorCode: '无法读取本机工作空间。' });
       setToast('本地工作空间无法读取，已保留磁盘上的数据。');
     }).finally(() => { if (mounted) setLoaded(true); });
+    if (desktop.loadFeedback) desktop.loadFeedback().then(result => { if (mounted) setFeedbackEntries(result?.entries ?? []); }).catch(() => {});
     desktop.runtimeStatus().then(status => { if (mounted) setRuntime(status); }).catch(() => {});
     desktop.runtimeCleanupStatus?.().then(value => { if (mounted) setCleanupPending(value); }).catch(() => {});
     const unsubscribe = desktop.onRuntimeEvent(event => {
@@ -1067,6 +1071,45 @@ export function App() {
     return desktop?.writeClipboardText ? desktop.writeClipboardText(text) : navigator.clipboard.writeText(text);
   }
 
+  // 反馈只落本机：桌面版 dsh-message-feedback 同样只写 Session 日志、不进模型历史。
+  // 这里没有 Session 日志可写，就单独存一份加密文件，并明确告诉用户可以清除。
+  function openFeedback(message, rating) {
+    const existing = feedbackFor(feedbackEntries, chat?.id ?? '', message.id);
+    setFeedbackDraft({
+      messageId: message.id,
+      rating: existing?.rating === rating ? existing.rating : rating,
+      category: existing?.category ?? null,
+      note: existing?.note ?? '',
+    });
+  }
+
+  async function saveFeedbackDraft() {
+    if (!feedbackDraft || !desktop?.saveFeedback) return;
+    try {
+      const saved = await desktop.saveFeedback({
+        conversationId: chat?.id ?? '', messageId: feedbackDraft.messageId,
+        rating: feedbackDraft.rating, category: feedbackDraft.category, note: feedbackDraft.note,
+      });
+      setFeedbackEntries(current => [...current.filter(item => !(item.conversationId === saved.conversationId && item.messageId === saved.messageId)), saved]);
+      setFeedbackDraft(null);
+      setToast('反馈已记录在本机，不会发给模型。');
+    } catch (error) {
+      setToast(errorText(error), 'error');
+    }
+  }
+
+  async function clearFeedbackDraft() {
+    if (!feedbackDraft || !desktop?.clearFeedback) return;
+    try {
+      await desktop.clearFeedback({ conversationId: chat?.id ?? '', messageId: feedbackDraft.messageId });
+      setFeedbackEntries(current => current.filter(item => !(item.conversationId === (chat?.id ?? '') && item.messageId === feedbackDraft.messageId)));
+      setFeedbackDraft(null);
+      setToast('已清除这条反馈。');
+    } catch (error) {
+      setToast(errorText(error), 'error');
+    }
+  }
+
   async function shareReviewedChat(delivery) {
     try {
       if (desktop) {
@@ -1220,12 +1263,31 @@ export function App() {
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}
                   {!message.pending && <div className="answer-actions">
                     {!!message.text && <><IconButton icon={Copy} label="复制回复" onClick={() => writeClipboardText(message.text).then(() => setToast('已复制。')).catch(error => setToast(errorText(error), 'error'))}/><IconButton icon={DownloadSimple} label="导出成果" onClick={() => openExport(message)}/></>}
+                    {!message.imported && <><IconButton icon={ThumbsUp} label="赞这条回复" className={feedbackFor(feedbackEntries, chat?.id ?? '', message.id)?.rating === 'up' ? 'feedback-on' : ''} onClick={() => openFeedback(message, 'up')}/><IconButton icon={ThumbsDown} label="踩这条回复" className={feedbackFor(feedbackEntries, chat?.id ?? '', message.id)?.rating === 'down' ? 'feedback-on' : ''} onClick={() => openFeedback(message, 'down')}/></>}
                     {index === messages.length - 1 && !message.imported && <IconButton icon={ArrowCounterClockwise} label="再次执行" disabled={!!running || busy} onClick={() => submit(message.id)}/>}
                     {message.masked && <IconButton icon={ShieldCheck} label="查看发送详情" onClick={() => {
                       const source = messages.slice(0, index).findLast(item => item.role === 'user');
                       openModal({ type: 'privacy', original: source?.prompt || source?.text, preview: { text: source?.protected, privacyMode: source?.privacyMode }, output: message.masked });
                     }}/>}
                   </div>}
+                  {(() => {
+                    const saved = feedbackFor(feedbackEntries, chat?.id ?? '', message.id);
+                    if (!saved) return null;
+                    return <p className="feedback-recorded">本机反馈：{feedbackLabel(saved)}</p>;
+                  })()}
+                  {feedbackDraft?.messageId === message.id && <section className="feedback-panel" aria-label="消息反馈">
+                    <p className="feedback-hint">只记在本机，不会发给模型，也不会随工作空间导出。</p>
+                    <div className="feedback-categories" role="group" aria-label="反馈分类">
+                      {FEEDBACK_CATEGORIES.map(item => <button key={item.id} type="button" className={feedbackDraft.category === item.id ? 'feedback-chip active' : 'feedback-chip'} aria-pressed={feedbackDraft.category === item.id} onClick={() => setFeedbackDraft(current => ({ ...current, category: current.category === item.id ? null : item.id }))}>{item.label}</button>)}
+                    </div>
+                    <textarea aria-label="反馈备注" rows={3} value={feedbackDraft.note} placeholder="补充说明（可选）" onChange={event => setFeedbackDraft(current => ({ ...current, note: event.target.value }))}/>
+                    <div className="feedback-actions">
+                      <small className={noteBytes(feedbackDraft.note) > FEEDBACK_NOTE_MAX_BYTES ? 'feedback-count over' : 'feedback-count'}>{noteBytes(feedbackDraft.note)} / {FEEDBACK_NOTE_MAX_BYTES} 字节</small>
+                      <button type="button" className="secondary-button" onClick={() => setFeedbackDraft(null)}>取消</button>
+                      <button type="button" className="secondary-button" disabled={noteBytes(feedbackDraft.note) > FEEDBACK_NOTE_MAX_BYTES} onClick={() => void clearFeedbackDraft()}>清除</button>
+                      <button type="button" className="primary-button" disabled={noteBytes(feedbackDraft.note) > FEEDBACK_NOTE_MAX_BYTES} onClick={() => void saveFeedbackDraft()}>保存反馈</button>
+                    </div>
+                  </section>}
                 </article>)}
                 {transcriptHasNew&&<button className="transcript-new-content" type="button" onClick={returnTranscriptToBottom}>有新内容 · 回到底部</button>}
               </section> : <div className="empty-stage"><section className="welcome" aria-label={project ? '项目交办' : '新建交办'}>

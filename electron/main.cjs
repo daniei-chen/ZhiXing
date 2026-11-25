@@ -22,6 +22,9 @@ const STARTUP_TRACE=process.env.ZHIXING_STARTUP_TRACE==='1';
 const startupMark=label=>{if(STARTUP_TRACE)process.stderr.write(`[startup] ${label} +${Math.round(process.uptime()*1000)}ms\n`);};
 startupMark('main:module');
 const WORKSPACE_FILE=path.join(ROOT,'workspace.bin');
+const FEEDBACK_FILE=path.join(ROOT,'feedback.bin');
+// 反馈失败码沿用桌面版词汇，界面按这里的中文句子显示，不把码直接丢给用户。
+const FEEDBACK_ERRORS={'rating-invalid':'请先选择赞或踩。','category-invalid':'分类不在可选范围内。','note-blank':'备注只有空格，请填写内容或留空。','note-too-large':'备注超过 8192 字节，请精简后重试。','message-missing':'这条消息还没有可用的定位，无法记录反馈。'};
 const VISUAL_ROOT=path.join(ROOT,'visual');
 const VOLATILE_TERMS=Symbol('volatileTerms');
 const stagedVisuals=new Map();
@@ -464,6 +467,33 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
   const result=workspaceSaveQueue.save(workspaceSaveQueue.requestedRevision+1,state);
   await result;
   void automationsReady.then(()=>automations.tick()).catch(()=>{});
+  return true;
+ });
+ // 消息反馈：与 Harness 桌面版 dsh-message-feedback 同口径——只写本机 Session 之外的独立文件，
+ // 不进模型历史，也不随工作空间导出。
+ handle('feedback:load',async()=>{
+  const text=await readEncrypted(FEEDBACK_FILE);
+  if(!text)return {entries:[]};
+  try{const data=JSON.parse(text);return {entries:Array.isArray(data?.entries)?data.entries:[]};}catch{throw new Error('本机反馈记录无法读取。');}
+ });
+ handle('feedback:save',async input=>{
+  const {feedbackEntry,mergeFeedback}=await import('../src/message-feedback.js');
+  const result=feedbackEntry(input);
+  if(!result.ok)throw new Error(FEEDBACK_ERRORS[result.code]||'反馈格式不正确。');
+  const current=await readEncrypted(FEEDBACK_FILE);
+  let entries=[];
+  if(current){try{const data=JSON.parse(current);entries=Array.isArray(data?.entries)?data.entries:[];}catch{throw new Error('本机反馈记录无法读取。');}}
+  const merged=mergeFeedback(entries,result.value).slice(-2000);
+  await writeEncrypted(FEEDBACK_FILE,JSON.stringify({version:1,entries:merged}));
+  return result.value;
+ });
+ handle('feedback:clear',async ({conversationId,messageId}={})=>{
+  const {removeFeedback}=await import('../src/message-feedback.js');
+  const current=await readEncrypted(FEEDBACK_FILE);
+  if(!current)return true;
+  let entries=[];
+  try{const data=JSON.parse(current);entries=Array.isArray(data?.entries)?data.entries:[];}catch{throw new Error('本机反馈记录无法读取。');}
+  await writeEncrypted(FEEDBACK_FILE,JSON.stringify({version:1,entries:removeFeedback(entries,String(conversationId||''),String(messageId||''))}));
   return true;
  });
  handle('data:save-status',()=>workspaceSaveQueue.state());
