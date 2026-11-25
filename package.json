@@ -30,7 +30,8 @@
     "test:archive": "node scripts/test-subagent-archive-ui.mjs",
     "test:subagent": "node scripts/test-real-subagent-archive-ui.mjs",
     "test:cloud": "node scripts/test-real-cloud-chat.mjs",
-    "test:cloud-privacy": "node scripts/test-real-cloud-privacy.mjs"
+    "test:cloud-privacy": "node scripts/test-real-cloud-privacy.mjs",
+    "test:ui-status": "node scripts/test-run-status-ui.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {
