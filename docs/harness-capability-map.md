@@ -2,7 +2,7 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
-## 当前状态总览（0.14.11）
+## 当前状态总览（0.14.12）
 
 下面是**今天**的结论，不随历史章节变化。历史章节记录的是各版本当时的声明，可能已被后续版本补上或推翻；有冲突时以本节为准。
 
@@ -26,6 +26,10 @@
 
 0.14.10 把归档文件命名收口：文件名带会话名与日期，写盘改为独占创建，同名时按 `-2`…`-20` 退让，不再覆盖上一份。真实子任务归档仍未通过，排查结论（子会话始终未发出模型请求）记入 AGENTS.md。
 
+0.14.11 是验收版：没有产品代码改动，在当前安装包上完整复跑安装生命周期（首装、同版本覆盖、卸载保留、重装、工作目录外启动），44 步 31 通过，`historicalUpgrade` 仍未跑，状态 `partial_historical_upgrade_not_run`。
+
+0.14.12 用 0.14.0 安装包作历史基线，把 `historicalUpgrade` 从未跑变成 `passed_same_account_fixture_only`：历史档案由 0.14.0 自己创建（三个自定义项目 + 会话 + 草稿），生命周期 53 步、38 通过、0 未跑。
+
 ### 已接入并有验证证据
 
 | 能力 | 最强证据层级 |
@@ -47,7 +51,7 @@
 | 项目文件夹打包成 ZIP | Windows 实包 4 项（`npm run test:zip`：入口、写盘、读回内容与排除项、取消）；多选、ZIP64、内容级密钥识别未覆盖 |
 | 子会话归档 | Windows 实包 6 项（`npm run test:archive`：单条、批量、同名不覆盖、读回内容、取消），子会话记录为合成数据；真实子任务归档脚本 `npm run test:subagent` 未通过（子会话未发出模型请求） |
 | 安装器临时目录残留的清理 | Windows 实包 2 场景（`npm run test:temp`）+ 真实机器删除一个 209,663 字节的 `~nsu.tmp`；`ns*.tmp` 与其他应用的残留不在范围 |
-| Windows 安装生命周期（当前安装包） | `0.14.11` 安装包跑 `scripts/qa-install-lifecycle.ps1 -Mode Run`：44 步、31 passed、`historicalUpgrade` not_run（无更老基线）、状态 `partial_historical_upgrade_not_run`；首装／同版本覆盖／卸载保留／重装／工作目录外启动与项目・会话・草稿・加密配置哈希均通过；`visualAcceptance`、`crossWindowsUserDecryption` 仍 outside_scope |
+| Windows 安装生命周期（当前安装包） | `0.14.12` 安装包 + `0.14.0` 基线跑 `scripts/qa-install-lifecycle.ps1 -Mode Run`：53 步、38 passed、0 not_run，状态 `passed_configured_nonvisual_lifecycle`；首装／同版本覆盖／**历史升级（同账户合成档案）**／卸载保留／重装／工作目录外启动与项目・会话・草稿・加密配置哈希均通过；`visualAcceptance`、`crossWindowsUserDecryption` 仍 outside_scope |
 
 
 ### 已接入、但没有真实验证
