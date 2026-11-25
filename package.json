@@ -35,7 +35,9 @@
     "test:tools-ui": "node scripts/test-tool-timeline-ui.mjs",
     "test:workspace-tools": "node scripts/test-real-cloud-workspace-tools.mjs",
     "test:tool-redaction": "node scripts/test-real-cloud-tool-redaction.mjs",
-    "test:restore-gap": "node scripts/test-restore-gap-ui.mjs"
+    "test:restore-gap": "node scripts/test-restore-gap-ui.mjs",
+    "maintenance:preview": "node scripts/clean-preview-evidence.mjs --keep-release-assets",
+    "maintenance:updater-cache": "node scripts/clean-dev-updater-cache.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {
