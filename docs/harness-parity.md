@@ -19,9 +19,9 @@
 
 | Harness 机制 | 包 | 知行现状 | 差距 |
 | --- | --- | --- | --- |
-| 压缩引擎与策略 | `dsh-compaction`、`dsh-compaction-basic` | 已对标：`/compact` 与自动压缩接在内核里 | 未对照 Harness 的**触发阈值、保留策略、压缩后提示文案** |
-| 图像卸载 | `dsh-compaction-image-offload` | **未核对** | 知行是否把老图片换成占位说明，未查 |
-| 工具结果剪枝 | `dsh-compaction-tool-result-pruner` | **未核对** | 长工具结果是否参与压缩、是否被剪枝，未查 |
+| 压缩引擎与策略 | `dsh-compaction`、`dsh-compaction-basic` | **已对标口径**（0.22.0）：桌面版无配置即默认 `thresholdRatio .8`／`retainRatio .16`／`headroomTokens 65536`，知行原来是 8192，128k 窗口下压缩点从 54,272 被推到 102,400；现已改成桌面版数值（`electron/compaction-policy.mjs`） | 阈值口径已对；**压缩后提示文案未逐字对照**，真实压缩事件未跑过 |
+| 图像卸载 | `dsh-compaction-image-offload` | **已挂载**（0.22.1）：桌面版 `dsh-base` 一直挂它；0.22.0 曾因 `disabled` 清单同 id 禁用优先而没生效，0.22.1 修掉并有读落盘补丁的回归用例 | **未观察过真实卸载**：需要图片路由被判超预算 |
+| 工具结果剪枝 | `dsh-compaction-tool-result-pruner` | **已对标**：桌面版 `thresholdChars 8192`／`headChars 4096`／`tailChars 1024`，知行逐字一致 | — |
 | 手动压缩命令 | `dsh-command-compact` | 已对标（`/compact`） | 命令提示与 Harness 文案未逐字对齐 |
 | token 计量 | `dsh-token-meter` | 已对标：输入框 token 计量条 | 未对照 Harness 的计数口径（是否含附件、系统提示） |
 
