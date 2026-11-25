@@ -12,6 +12,7 @@ import {ConversationResources} from './ConversationResources.jsx';
 import {AnswerText} from './AnswerText.jsx';
 import {DeliveryCards} from './DeliveryCards.jsx';
 import {ChangedFiles} from './ChangedFiles.jsx';
+import {actionDoneLabel,actionFailureLabel} from './file-actions.js';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
 import { BrandMark, IconButton, MenuItem, Modal } from './ui.jsx';
 import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText, workspaceDeletion, orphanDrafts, newConversationDrafts, appendDraftFiles, recoverSubmittedDraft } from './store.js';
@@ -61,6 +62,7 @@ export function App() {
   const [settingsPage, setSettingsPage] = useState(null);
   const [question,setQuestion]=useState(null);
   const [toast, setToastState] = useState(null);
+  const [deliverableBusy, setDeliverableBusy] = useState({});
   const [transcriptHasNew,setTranscriptHasNew]=useState(false);
   const [runtime, setRuntime] = useState({ configured: false });
   const [events, setEvents] = useState([]);
@@ -1182,6 +1184,20 @@ export function App() {
     navigate('home', target.id, target.projectId, false, target.workspaceId);
     showWorkPage('activity');
   }
+  async function deliverableAction(file, action) {
+    if (!desktop?.deliverableAction || !chat?.id) { setToast('打开或定位文件需要在桌面版的所属会话中进行。'); return; }
+    const token=viewToken.current;
+    setDeliverableBusy(current=>({...current,[file.path]:action}));
+    try {
+      const references=await desktop.listDeliverables(workContext);
+      const reference=references.findLast(item=>item.path===file.path);
+      if (!reference?.available || !reference.id) throw new Error(reference?.reason||'没有找到可核验的原生交付记录，请在原会话中重新交付。');
+      const outcome=await desktop.deliverableAction({...workContext,id:reference.id,action});
+      if (token!==viewToken.current) return;
+      setToast(outcome?.kind==='revealed'?actionDoneLabel('reveal'):actionDoneLabel('open'));
+    } catch (error) { if (token===viewToken.current) setToast(actionFailureLabel(action)+errorText(error),'error'); }
+    finally { setDeliverableBusy(current=>{const next={...current};delete next[file.path];return next;}); }
+  }
   async function openDeliverable(file) {
     setMenu(null);
     if (!desktop?.listDeliverables || !chat?.id) { setToast('交付预览需要在桌面版的所属会话中打开。'); return; }
@@ -1251,7 +1267,7 @@ export function App() {
                   <AgentChildren items={message.pending?runEvents.findLast(event=>event.type==='subagents')?.children:message.children} onView={()=>showWorkPage('activity')}/>
                   <TaskPlan items={message.pending?events.findLast(event=>event.runId===running?.runId&&event.type==='plan')?.plan:message.plan}/>
                   {message.changes?.length>0&&<ChangedFiles files={message.changes} onOpen={()=>showWorkPage('files')}/>}
-                  {message.deliverables?.length>0&&<DeliveryCards files={message.deliverables} onOpen={openDeliverable}/>}
+                  {message.deliverables?.length>0&&<DeliveryCards files={message.deliverables} onOpen={openDeliverable} onAction={deliverableAction} pending={deliverableBusy}/>}
                   {message === currentContextMessage && message.context.planning && <p className="context-usage">规划模式 · 只读调查与方案设计 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/plan off')}>退出规划模式</button></p>}
                   {message === currentContextMessage && currentGoal && <p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[currentGoal.phase] || currentGoal.phase} · 第 {currentGoal.roundsStarted} / {currentGoal.maxGoalRounds} 轮 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, goalAction[0])}>{goalAction[1]}</button></p>}
                   {message.pending&&message.progressText&&<AnswerText text={message.progressText} onOpenUrl={openAnswerUrl}/>}

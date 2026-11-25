@@ -870,6 +870,15 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .change-files li button small { flex: none; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .deliverable-files { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 9px 0 2px; }
 .deliverable-files[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
+.deliverable-slot { position: relative; display: flex; }
+.deliverable-slot .deliverable-card { flex: 1; min-width: 0; }
+.deliverable-actions { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: var(--surface); color: var(--muted); opacity: 0; }
+.deliverable-slot:hover .deliverable-actions, .deliverable-actions:focus-visible, .deliverable-actions[aria-expanded="true"] { opacity: 1; }
+.deliverable-actions:hover { color: var(--text); background: var(--hover); }
+.file-action-menu { position: absolute; z-index: 30; top: 26px; right: 4px; display: grid; min-width: 168px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); box-shadow: 0 10px 26px rgb(0 0 0 / 12%); }
+.file-action-menu button { padding: 6px 9px; border: 0; border-radius: 6px; background: none; color: var(--text); font-size: 12px; text-align: left; }
+.file-action-menu button:hover:not(:disabled) { background: var(--hover); }
+.file-action-menu button:disabled { color: var(--muted); }
 .deliverable-card { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); text-align: left; }
 .deliverable-card:hover { border-color: var(--quiet); background: var(--hover); }
 .deliverable-card > svg { flex: none; color: var(--muted); }

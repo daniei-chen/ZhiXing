@@ -192,6 +192,32 @@ export class DeliverableAccess {
   return {id: options.id, name: path.basename(target), path: target, bytes, sessionId: scope.sessionId};
  }
 
+ // 打开/定位只接受已核验的交付引用：解析签名、确认文件仍是同一个普通文件。
+ async locate(options) {
+  const file = await this.verify(options);
+  await this.scope(options);
+  return {id: file.id, name: file.name, path: file.path, sessionId: file.sessionId, size: file.size};
+ }
+
+ async verify(options) {
+  if (typeof options?.id !== 'string' || options.id.length > 300) throw failure('DELIVERABLE_REFERENCE', '交付引用无效，请刷新产出列表。');
+  const parts = options.id.split('.');
+  if (parts.length !== 6 || parts[0] !== 'zx-delivery-v1' || !['redact', 'raw'].includes(parts[1]) || !ID.test(parts[2])
+   || !/^(0|[1-9]\d*)$/.test(parts[3]) || !/^(0|[1-9]\d*)$/.test(parts[4]) || !/^[a-f0-9]{64}$/.test(parts[5])) {
+   throw failure('DELIVERABLE_REFERENCE', '交付引用无效，请刷新产出列表。');
+  }
+  const {scope, key, entries} = await this.entries(options);
+  const entry = entries.find(item => item.mode === parts[1] && item.historySessionId === parts[2]
+   && item.sequence === Number(parts[3]) && item.index === Number(parts[4]));
+  if (!entry) throw failure('DELIVERABLE_REFERENCE', '此会话没有对应的原生交付记录。');
+  const {target, stat: expected} = await this.fileInfo(entry.file);
+  const expectedSignature = this.reference(scope, key, entry, target).split('.').at(-1);
+  if (!timingSafeEqual(Buffer.from(parts[5], 'hex'), Buffer.from(expectedSignature, 'hex'))) {
+   throw failure('DELIVERABLE_REFERENCE', '交付引用或文件位置已变化，请刷新产出列表。');
+  }
+  return {id: options.id, name: path.basename(target), path: target, sessionId: scope.sessionId, size: expected.size};
+ }
+
  async read(options) {
   const file = await this.readBytes(options);
   const {parseLocalMaterial} = await import('./office-files.mjs');

@@ -336,7 +336,16 @@ function registerHandlers(){
  });
  handle('workspace:read-file',async options=>{await workspaceSaveQueue.flush();const {readWorkspaceFile}=await import('./workspace-files.mjs');return readWorkspaceFile(workScope(options).workspaceRoot,options.path);});
  handle('deliverables:list',async options=>{await workspaceSaveQueue.flush();return deliverableAccess.list(options);});
- handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();return deliverableAccess.read(options);});
+ handle('deliverables:action',async options=>{
+  const action=options?.action;
+  if(action!=='open'&&action!=='reveal')throw Object.assign(new Error('未知的交付文件操作。'),{code:'DELIVERABLE_ACTION'});
+  const file=await deliverableAccess.locate(options);
+  if(action==='reveal'){shell.showItemInFolder(file.path);return {kind:'revealed',name:file.name};}
+  const failureMessage=await shell.openPath(file.path);
+  if(failureMessage)throw Object.assign(new Error('系统没有可用的默认应用：'+failureMessage),{code:'DELIVERABLE_OPEN'});
+  return {kind:'opened',name:file.name};
+});
+handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();return deliverableAccess.read(options);});
  handle('workspace:office-layout',async options=>{
   await workspaceSaveQueue.flush();
   const {runOfficeLayout,recognizeOfficePage}=await import('./office-layout.mjs');
