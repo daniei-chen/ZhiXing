@@ -47,7 +47,11 @@ const closed=http.createServer(()=>{});
 closed.listen(0,'127.0.0.1');await once(closed,'listening');
 const closedUrl=`http://127.0.0.1:${closed.address().port}/v1`;
 closed.closeAllConnections();await new Promise(resolve=>closed.close(resolve));
-const nonexistent=`https://qa-error-copy-${Date.now().toString(36)}.invalid/v1`;
+// 本机的 DNS 会把普通域名解析到代理的 fake-IP 段（.invalid 也一样），所以「不存在的主机」必须先真的解析失败：
+// 超过 63 个字符的标签会让 getaddrinfo 直接返回 ENOTFOUND，这不是造假，是一次真实的解析失败。
+const nonexistent=`https://${'a'.repeat(64)}.invalid/v1`;
+// 同时保留普通 `.invalid` 作为对照：它在本机会被代理接住并给出别的网络错误码，文案也必须有对应项。
+const intercepted=`https://qa-error-copy-${Date.now().toString(36)}.invalid/v1`;
 const fakeKey='sk-qa-error-copy-0000000000000000';
 
 let ui,main,child,exit,log,logPath;
@@ -121,16 +125,27 @@ try{
  report.appVersion=runtimeResolved.appVersion;await persist();
  await record(`实包运行时报告 ${runtimeResolved.appVersion}`,{sourceCommit:provenance.sourceCommit,sourceDirty:provenance.sourceDirty});
 
- const unauthorized=await probe('https://api.deepseek.com/models',{Authorization:`Bearer ${fakeKey}`});
+  // 本机网络偶发丢包（实测出现过 ECONNRESET），真实 401 这条用例重试几次再用结果。
+  let unauthorized='';
+  for(let probeAttempt=0;probeAttempt<4&&unauthorized!=='HTTP_401';probeAttempt+=1){
+    if(probeAttempt>0)await pause(5000);
+    unauthorized=await probe('https://api.deepseek.com/models',{Authorization:`Bearer ${fakeKey}`});
+  }
  assert.equal(unauthorized,'HTTP_401');
  await attempt({label:'真实 401 的 API Key 被换成可行动的文案',baseUrl:'https://api.deepseek.com',
   cause:unauthorized,expected:COPY.HTTP_401,name:'http-401'});
 
- const missingHost=await probe(nonexistent);
- assert(!missingHost.startsWith('HTTP_'),'不存在的域名不应返回 HTTP 状态');
- assert(COPY[missingHost],`本机对不存在域名的错误码 ${missingHost} 没有对应文案，需要更新映射`);
- await attempt({label:'不存在的域名按真实错误码给出对应文案',baseUrl:nonexistent,
-  cause:missingHost,expected:COPY[missingHost],name:'no-such-host'});
+  const missingHost=await probe(nonexistent);
+  assert.equal(missingHost,'ENOTFOUND',`真实解析失败应得到 ENOTFOUND，实际 ${missingHost}（本机 DNS 行为变了就要重新确认用例前提）`);
+  await attempt({label:'解析不到的主机显示「解析不到服务地址」',baseUrl:nonexistent,
+   cause:missingHost,expected:COPY.ENOTFOUND,name:'dns-enotfound'});
+
+  // 对照：普通 `.invalid` 在本机会被本机 DNS／代理接住，拿到的是别的网络错误码，同样必须有对应文案。
+  const interceptedCode=await probe(intercepted);
+  assert(!interceptedCode.startsWith('HTTP_'),'被接住的不存在域名不应返回 HTTP 状态');
+  assert(COPY[interceptedCode],`本机对 ${interceptedCode} 没有对应文案，需要更新映射`);
+  await attempt({label:`被本机网络接住时按实际错误码 ${interceptedCode} 给文案`,baseUrl:intercepted,
+   cause:interceptedCode,expected:COPY[interceptedCode],name:'intercepted-host'});
 
  const refused=await probe(`${closedUrl}/models`);
  assert.equal(refused,'ECONNREFUSED');
@@ -145,13 +160,12 @@ try{
  await pause(400);
  const logText=await fs.readFile(logPath,'utf8');
  const raw=[...logText.matchAll(/Error occurred in handler for 'providers:save': Error: (.+)/g)].map(match=>match[1].trim());
- assert.equal(raw.length,4,`主进程应记录四次拉取失败，实际 ${raw.length}`);
- [/（HTTP 401）/,new RegExp(`（${missingHost}）`),/（ECONNREFUSED）/,/（TIMEOUT）/].forEach((pattern,index)=>
-  assert.match(raw[index],pattern,`主进程第 ${index+1} 条错误缺少真实原因：${raw[index]}`));
- const observed=report.cases.filter(entry=>entry.status==='observed');
+  const observed=report.cases.filter(entry=>entry.status==='observed');
+  assert.equal(raw.length,observed.length,`主进程应记录 ${observed.length} 次拉取失败，实际 ${raw.length}`);
+  observed.forEach((entry,position)=>{const label=entry.cause.replace('_',' ');assert.ok(raw[position].includes(`（${label}）`),`主进程第 ${position+1} 条错误缺少真实原因 ${label}：${raw[position]}`)});
  observed.forEach((entry,index)=>assert.notEqual(entry.shown,raw[index],'界面不能原样搬出主进程的技术句'));
  report.mainProcessErrors=raw;await persist();
- await record('主进程保留真实错误码，四个界面文案都与技术原文不同',{raw});
+ await record('主进程保留真实错误码，每条界面文案都与技术原文不同',{raw});
 
  report.status='passed';await persist();
 }catch(error){
