@@ -27,6 +27,8 @@ export function runSummary(message) {
   const children = Array.isArray(message?.children) ? message.children.length : 0;
   const deliverables = Array.isArray(message?.deliverables) ? message.deliverables.length : 0;
   const unrestored = Number(message?.unrestored) || 0;
+  const mode = message?.privacyMode === 'raw' ? '非脱敏模式' : message?.privacyMode ? '脱敏模式' : '';
+  const protectedCount = Number(message?.protectCount) || 0;
   return {
     status: message?.status || (message?.pending ? 'running' : ''),
     statusLabel: message?.pending ? '进行中' : STATUS[message?.status] || '未知',
@@ -36,6 +38,8 @@ export function runSummary(message) {
     deliverables,
     unrestored,
     restoreNote: restoreNotice(unrestored),
+    mode,
+    protectedCount,
     errorCode: message?.errorDetail?.code || '',
   };
 }
@@ -44,6 +48,7 @@ export function summaryRows(message) {
   const summary = runSummary(message);
   const rows = [
     { key: 'status', label: '状态', value: summary.statusLabel },
+    ...(summary.mode ? [{ key: 'mode', label: '发送方式', value: summary.protectedCount ? `${summary.mode}（本机替换 ${summary.protectedCount} 处敏感信息）` : summary.mode }] : []),
     { key: 'duration', label: '耗时', value: summary.duration || '未记录' },
     { key: 'tools', label: '工具调用', value: summary.tools ? `${summary.tools} 条记录` : '没有调用工具' },
     { key: 'children', label: '子任务', value: summary.children ? `${summary.children} 个` : '没有子任务' },

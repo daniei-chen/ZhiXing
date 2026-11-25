@@ -61,3 +61,14 @@ test('没有工具、子任务、产出时不显示空的产出行', () => {
   assert.equal(rows.find(item => item.key === 'tools').value, '没有调用工具');
   assert.equal(rows.find(item => item.key === 'duration').value, '不到 1 秒');
 });
+
+test('详情里写明发送方式与本机替换处数', () => {
+  const redacted = summaryRows({ status: 'succeeded', startedAt: 0, privacyMode: 'redact', protectCount: 3, trace });
+  const mode = redacted.find(item => item.key === 'mode');
+  assert.ok(mode, JSON.stringify(redacted));
+  assert.equal(mode.value, '脱敏模式（本机替换 3 处敏感信息）');
+  const raw = summaryRows({ status: 'succeeded', startedAt: 0, privacyMode: 'raw', protectCount: 0, trace });
+  assert.equal(raw.find(item => item.key === 'mode').value, '非脱敏模式');
+  const unknown = summaryRows({ status: 'succeeded', startedAt: 0, trace });
+  assert.ok(!unknown.some(item => item.key === 'mode'));
+});
