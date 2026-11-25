@@ -1,18 +1,20 @@
-// NSIS 卸载器运行前会把自己复制到 %TEMP%\~nsu.tmp\Un_A.exe，正常退出时删掉。
-// 本机 0.14.5 卸载完，这个目录连同 200 KB 的 Un_A.exe 一直留着（04:53 写入，
-// 05:24 仍在）。启动时清掉**能证明是知行留下的**那一份：
+// NSIS 卸载器/安装器会在 %TEMP% 里留下临时目录：~nsu.tmp 是卸载器副本，
+// 安装过程中的 nsXXXX.tmp 目录会在正常退出时删掉，但本机实测每次安装/升级都
+// 留下一个，里面是 200 KB 的 old-uninstaller.exe。
 //
-//   1. 目录名必须是 NSIS 固定的 ~nsu.tmp；
-//   2. 里面的可执行文件字节里要含 UTF-16 的「知行」，或其他 NSIS 卸载器不会有
-//      的产品名标记——别的应用的 NSIS 卸载器也在用同一个目录名，不能凭名字删；
-//   3. 目录至少 10 分钟没被写过，避免和正在进行的安装/卸载抢文件。
+// 只清**能证明是知行留下的**那一份：
+//   1. 目录名必须是 NSIS 的形状（~nsu.tmp 或 nsXXXX.tmp）；
+//   2. 里面的可执行文件字节里要含 UTF-16 的「知行」或 UTF-8 的 zhixing；
+//   3. 目录至少 10 分钟没被写过，避免和正在进行的安装/卸载抢文件；
+//   4. 删除失败（被占用）就原样留着，只记日志。
 //
-// 任何一条不满足就原样留着，只记日志。
+// 任何一条不满足就跳过，别家应用的 NSIS 临时目录同样叫这些名字。
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const STUCK = '~nsu.tmp';
 const DEFAULT_MARKERS = ['知行', 'zhixing'];
+const CANDIDATE = /^(?:~nsu\.tmp|ns[a-z0-9]{4,}\.tmp)$/i;
 
 export function containsMarker(bytes, markers = DEFAULT_MARKERS) {
   for (const marker of markers) {
@@ -20,6 +22,11 @@ export function containsMarker(bytes, markers = DEFAULT_MARKERS) {
     if (bytes.includes(Buffer.from(marker, 'utf8'))) return true;
   }
   return false;
+}
+
+/** NSIS 临时目录名是否是我们要看的形状。 */
+export function isNsisTempName(name) {
+  return typeof name === 'string' && CANDIDATE.test(name);
 }
 
 /**
@@ -50,22 +57,19 @@ async function readCandidates(directory) {
   return found;
 }
 
-/**
- * 清理卡住的 ~nsu.tmp。返回结构化结果，不抛异常给启动路径。
- */
-export async function pruneStuckUninstaller({ tempDir, now = Date.now(), minAgeMs = 10 * 60 * 1000, markers = DEFAULT_MARKERS, maxBytes = 64 * 1024 * 1024 }) {
-  if (!tempDir) return { removed: false, reason: 'no-temp-dir' };
-  const target = path.join(tempDir, STUCK);
-  const stat = await fs.stat(target).catch(error => (error.code === 'ENOENT' ? null : Promise.reject(error)));
-  if (!stat || !stat.isDirectory()) return { removed: false, reason: 'missing' };
+// 判断一个候选目录：字节数、是否我们、最新写入时间、结论。
+async function inspect(directory, { now, minAgeMs, markers, maxBytes }) {
+  const stat = await fs.stat(directory).catch(error => (error.code === 'ENOENT' ? null : Promise.reject(error)));
+  if (!stat || !stat.isDirectory()) return { name: path.basename(directory), reason: 'missing', bytes: 0 };
   let newestMtimeMs = stat.mtimeMs;
   let totalBytes = 0;
-  const executables = await readCandidates(target);
+  const executables = await readCandidates(directory);
   for (const file of executables) {
     const info = await fs.stat(file).catch(() => null);
-    if (info) { newestMtimeMs = Math.max(newestMtimeMs, info.mtimeMs); totalBytes += info.size; }
+    if (!info) continue;
+    newestMtimeMs = Math.max(newestMtimeMs, info.mtimeMs);
+    totalBytes += info.size;
   }
-  // 只读可执行文件的头部做标记判断：卸载器 stub 几百 KB，不需要整份读入。
   let ours = false;
   for (const file of executables) {
     if (ours) break;
@@ -75,7 +79,43 @@ export async function pruneStuckUninstaller({ tempDir, now = Date.now(), minAgeM
     if (bytes && containsMarker(bytes, markers)) ours = true;
   }
   const verdict = judgeStuckUninstaller({ exists: true, newestMtimeMs, now, minAgeMs, ours });
-  if (!verdict.remove) return { removed: false, reason: verdict.reason, bytes: totalBytes };
-  await fs.rm(target, { recursive: true, force: true });
-  return { removed: true, reason: verdict.reason, bytes: totalBytes, files: executables.length };
+  return { name: path.basename(directory), remove: verdict.remove, reason: verdict.reason, bytes: totalBytes, files: executables.length };
+}
+
+/**
+ * 清理 %TEMP% 里属于知行的 NSIS 临时目录。
+ * 返回结构化结果，不抛异常给启动路径。
+ */
+export async function pruneStuckUninstaller({ tempDir, now = Date.now(), minAgeMs = 10 * 60 * 1000, markers = DEFAULT_MARKERS, maxBytes = 64 * 1024 * 1024 }) {
+  if (!tempDir) return { removed: false, reason: 'no-temp-dir' };
+  let items;
+  try {
+    items = await fs.readdir(tempDir, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT') return { removed: false, reason: 'no-temp-dir' };
+    throw error;
+  }
+  const names = items.filter(item => item.isDirectory() && isNsisTempName(item.name)).map(item => item.name);
+  if (!names.length) return { removed: false, reason: 'missing', removedDirectories: [], skipped: [] };
+
+  const removedDirectories = [];
+  const skipped = [];
+  for (const name of names) {
+    const verdict = await inspect(path.join(tempDir, name), { now, minAgeMs, markers, maxBytes });
+    if (!verdict.remove) {
+      skipped.push({ name: verdict.name, reason: verdict.reason });
+      continue;
+    }
+    try {
+      await fs.rm(path.join(tempDir, name), { recursive: true, force: true, maxRetries: 2, retryDelay: 200 });
+      removedDirectories.push({ name: verdict.name, bytes: verdict.bytes, files: verdict.files });
+    } catch (error) {
+      skipped.push({ name: verdict.name, reason: error.code === 'EPERM' || error.code === 'EBUSY' ? 'in-use' : 'delete-failed' });
+    }
+  }
+  const bytes = removedDirectories.reduce((total, item) => total + item.bytes, 0);
+  if (!removedDirectories.length) {
+    return { removed: false, reason: skipped[0]?.reason ?? 'missing', removedDirectories, skipped };
+  }
+  return { removed: true, reason: 'stale-uninstaller-copy', bytes, files: removedDirectories.reduce((total, item) => total + item.files, 0), removedDirectories, skipped };
 }

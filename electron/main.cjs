@@ -187,7 +187,9 @@ async function pruneStuckUninstallerCopy(){
  try{
   const {pruneStuckUninstaller}=await import('./temp-hygiene.mjs');
   const report=await pruneStuckUninstaller({tempDir:app.getPath('temp')});
-  if(report.removed)logEvent('info','temp.hygiene',{target:'~nsu.tmp',bytes:report.bytes,files:report.files,reason:report.reason});
+  // 只删能证明是自己的目录；被占用、删除失败或还没到时间的要留痕，纯粹「别家的目录」不记事件。
+  const noticed=(report.skipped||[]).filter(item=>['in-use','delete-failed','recent'].includes(item.reason));
+  if(report.removed||noticed.length)logEvent('info','temp.hygiene',{targets:(report.removedDirectories||[]).map(item=>item.name),bytes:report.bytes,files:report.files,reason:report.reason,skipped:noticed});
  }catch(error){logEvent('error','temp.hygiene-failed',{message:String(error?.message||error)});}
 }
 function publishUpdate(next){

@@ -109,6 +109,26 @@ ui?.close(); ui = null;
 child.kill(); await sessionB.exit.catch(() => {});
 await log.close();
 
+// 场景三：安装过程留下的 nsXXXX.tmp 也是我们的（每次安装/升级留一个），要一起清。
+const tempC = path.join(evidence, 'temp-c');
+const installLeftover = path.join(tempC, 'nsaB12.tmp');
+await mkOld(installLeftover, 'old-uninstaller.exe', Buffer.concat([Buffer.from('MZ'), Buffer.alloc(128, 7), Buffer.from('知行', 'utf16le')]));
+const foreignC = path.join(tempC, foreign);
+await mkOld(foreignC, 'payload.exe', Buffer.from('MZ another vendor installer'));
+const sessionC = await launch({ tempDir: tempC, profile: path.join(evidence, 'profile-c') });
+const prunedC = await waitForLog(sessionC.appLog, /temp\.hygiene (\{.*\})/);
+assert.ok(prunedC, '安装残留场景里出现了 temp.hygiene');
+const detailC = JSON.parse(prunedC[1]);
+assert.equal(await fs.access(installLeftover).then(() => true, () => false), false, '带产品名的 nsaB12.tmp 应被删除');
+assert.equal(await fs.access(path.join(foreignC, 'payload.exe')).then(() => true, () => false), true, '别家应用的同名目录必须保留');
+assert.ok(detailC.targets.includes('nsaB12.tmp'), `日志应记录被删目录名，实际 ${JSON.stringify(detailC.targets)}`);
+await record('安装过程留下的 nsXXXX.tmp 一并清理，别家目录保留', { removed: 'nsaB12.tmp', kept: foreign, logged: detailC });
+await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {});
+await Promise.race([sessionC.exit, pause(30000)]).catch(() => {});
+ui?.close(); ui = null;
+child.kill(); await sessionC.exit.catch(() => {});
+await log.close();
+
 report.status = 'passed';
 await persist();
 console.log(JSON.stringify({ status: report.status, cases: report.cases.length, evidence }, null, 2));
