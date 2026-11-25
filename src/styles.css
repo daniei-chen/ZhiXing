@@ -857,6 +857,9 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .terminal-status>span:first-child {overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .execution-panel {padding:20px;overflow:auto;font-size:12px;flex:1}
 .execution-panel h3,.workbench-details h3 {font-size:15px;font-weight:550;margin-bottom:8px}
+.answer-text code.inline-file-ref { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.answer-text code.inline-file-ref:hover { background: var(--hover); }
+.answer-text code.inline-file-ref:focus-visible { outline: 2px solid var(--quiet); outline-offset: 1px; }
 .deliverable-files { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 9px 0 2px; }
 .deliverable-files[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
 .deliverable-card { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); text-align: left; }
