@@ -168,6 +168,7 @@ await pause(1500);
 assert.equal(await fs.access(archive).then(() => true, () => false), false);
 assert.equal(await uiRef.evaluate('!!document.querySelector(".execution-note")'), false);
 await main.evaluate(`(()=>{const {dialog}=process.mainModule.require('electron');dialog.showSaveDialog=async()=>({canceled:false,filePath:${JSON.stringify(archive)}});return true;})()`);
+await fs.writeFile(archive, 'occupied\n', 'utf8');
 const againRect = await uiRef.evaluate('(()=>{const b=[...document.querySelectorAll(".execution-children button.text-button")].find(x=>x.textContent==="归档");const r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()');
 await uiRef.send('Input.dispatchMouseEvent', {type:'mousePressed',button:'left',clickCount:1,x:againRect.x,y:againRect.y});
 await uiRef.send('Input.dispatchMouseEvent', {type:'mouseReleased',button:'left',clickCount:1,x:againRect.x,y:againRect.y});
