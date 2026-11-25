@@ -160,7 +160,9 @@ try {
   report.rows = { added, removed, gaps, total: view.rows.length }; await persist();
   assert.equal(added.includes('第七行'), true, `新增行里没有第七行：${added.join(' | ')}`);
   assert.equal(added.includes('改过的第三行'), true, `新增行里没有改过的第三行：${added.join(' | ')}`);
-  assert.equal(removed.includes('第一行'), true, `删除行里没有第一行：${removed.join(' | ')}`);
+  assert.equal(removed.includes('第八行'), true, `删除行里没有第八行：${removed.join(' | ')}`);
+  assert.equal(removed.includes('第一行'), false, `保留下来的一行不该被标成删除：${removed.join(' | ')}`);
+  assert.equal(removed.includes('第二行'), false, `保留下来的一行不该被标成删除：${removed.join(' | ')}`);
   assert.ok(gaps >= 1, `不同批次的改动之间应有折叠行，实际 ${gaps}`);
   assert.equal(view.diffLabel.includes(firstFile), true, `对比区标题没带文件名：${view.diffLabel}`);
   await record('对比行区分新增、删除与折叠', { added: added.length, removed: removed.length, gaps });
