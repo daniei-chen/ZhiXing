@@ -61,6 +61,7 @@ export function finalizeConversationRun(state, job, outcome = {}) {
           children: finalization?.children || result.children || job.children || message.children || [],
           deliverables: finalization?.deliverables || result.deliverables || job.deliverables || message.deliverables || [],
           changes: finalization?.changes || result.changes || job.changes || message.changes || [],
+    changeDiffs: finalization?.changeDiffs || result.changeDiffs || job.changeDiffs || message.changeDiffs || [],
           plan: result.plan || job.plan || message.plan,
           context: result.context || job.context || message.context,
         };

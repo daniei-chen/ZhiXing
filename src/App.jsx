@@ -13,6 +13,7 @@ import {AnswerText} from './AnswerText.jsx';
 import {DeliveryCards} from './DeliveryCards.jsx';
 import {ChangedFiles} from './ChangedFiles.jsx';
 import {actionDoneLabel,actionFailureLabel} from './file-actions.js';
+import {ReviewPanel} from './ReviewPanel.jsx';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
 import { BrandMark, IconButton, MenuItem, Modal } from './ui.jsx';
 import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText, workspaceDeletion, orphanDrafts, newConversationDrafts, appendDraftFiles, recoverSubmittedDraft } from './store.js';
@@ -63,6 +64,8 @@ export function App() {
   const [question,setQuestion]=useState(null);
   const [toast, setToastState] = useState(null);
   const [deliverableBusy, setDeliverableBusy] = useState({});
+  const [reviewPath, setReviewPath] = useState("");
+  const reviewSource=[...messages].reverse().find(item=>item.changes?.length)||null;
   const [transcriptHasNew,setTranscriptHasNew]=useState(false);
   const [runtime, setRuntime] = useState({ configured: false });
   const [events, setEvents] = useState([]);
@@ -1176,6 +1179,7 @@ export function App() {
   }
   const runEvents=runningHere?events.filter(event=>event.runId===running.runId):[];
   const statsHere=runningHere&&liveStats?.runId===running.runId?liveStats.context:null;
+  function openReview(path){ setReviewPath(typeof path==="string"?path:""); showWorkPage("review"); }
   function showWorkPage(page){setWorkPage(page);setPanel(true);setMenu(null);}
   function returnToRunningChat() {
     const target = latest.current.chats.find(item => item.id === running?.chatId);
@@ -1266,7 +1270,7 @@ export function App() {
                   {message.imported&&<ImportedActivity message={message} onOpenUrl={openAnswerUrl}/>}
                   <AgentChildren items={message.pending?runEvents.findLast(event=>event.type==='subagents')?.children:message.children} onView={()=>showWorkPage('activity')}/>
                   <TaskPlan items={message.pending?events.findLast(event=>event.runId===running?.runId&&event.type==='plan')?.plan:message.plan}/>
-                  {message.changes?.length>0&&<ChangedFiles files={message.changes} onOpen={()=>showWorkPage('files')}/>}
+                  {message.changes?.length>0&&<ChangedFiles files={message.changes} onOpen={file=>openReview(file?.path)}/>}
                   {message.deliverables?.length>0&&<DeliveryCards files={message.deliverables} onOpen={openDeliverable} onAction={deliverableAction} pending={deliverableBusy}/>}
                   {message === currentContextMessage && message.context.planning && <p className="context-usage">规划模式 · 只读调查与方案设计 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/plan off')}>退出规划模式</button></p>}
                   {message === currentContextMessage && currentGoal && <p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[currentGoal.phase] || currentGoal.phase} · 第 {currentGoal.roundsStarted} / {currentGoal.maxGoalRounds} 轮 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, goalAction[0])}>{goalAction[1]}</button></p>}
@@ -1319,7 +1323,7 @@ export function App() {
               <Composer settings={state.settings} files={files} input={input} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage||!!question}/>
             </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={useTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
           </div>
-          {room&&<Workbench key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={()=>setPanel(false)} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/>}
+          {room&&<Workbench key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={()=>setPanel(false)} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/>}
 
         </div>
       </main>

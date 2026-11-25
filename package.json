@@ -1,6 +1,6 @@
 {
   "name": "office-agent",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "description": "知行 AI 办公助手 · DeepSeek Harness",
   "author": "知行",
   "private": true,
@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "electron": "node scripts/run-desktop.mjs",
-    "test": "node --test --test-concurrency=2 tests/privacy.test.mjs tests/credential-boundary.test.mjs tests/delivery-review.test.mjs tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/privacy-gateway.test.mjs tests/kernel-native.test.mjs tests/capability-manifest.test.mjs tests/capability-runtime.test.mjs tests/office-directory.test.mjs tests/office.test.mjs tests/store.test.mjs tests/conversation-state.test.mjs tests/conversation-resources.test.mjs tests/deliverable-access.test.mjs tests/assistant-stream.test.mjs tests/automation.test.mjs tests/automation-persistence.test.mjs tests/runtime.test.mjs tests/runtime-image-ocr.test.mjs tests/runtime-vision.test.mjs tests/runtime-cleanup.test.mjs tests/runtime-finalization.test.mjs tests/runtime-context.test.mjs tests/privacy-lock-recovery.test.mjs tests/runtime-launch.test.mjs tests/runtime-policy.test.mjs tests/runtime-lifecycle.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/desktop-release.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/speech-audio.test.mjs tests/speech-service.test.mjs tests/providers.test.mjs tests/error-copy.test.mjs tests/mcp-identity.test.mjs tests/mcp-destination.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs tests/app-log.test.mjs tests/updater-cache.test.mjs tests/temp-hygiene.test.mjs tests/zip-writer.test.mjs tests/change-summary.test.mjs tests/inline-references.test.mjs tests/file-actions.test.mjs tests/changed-files.test.mjs tests/deliverable-cards.test.mjs tests/trace-filter.test.mjs tests/run-status.test.mjs tests/providers-hidden-model.test.mjs tests/privacy-warning.test.mjs tests/provider-reasoning.test.mjs tests/message-feedback.test.mjs tests/compaction-policy.test.mjs tests/runtime-patch.test.mjs tests/run-summary.test.mjs tests/subagent-archive.test.mjs tests/archive-name.test.mjs",
+    "test": "node --test --test-concurrency=2 tests/privacy.test.mjs tests/credential-boundary.test.mjs tests/delivery-review.test.mjs tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/privacy-gateway.test.mjs tests/kernel-native.test.mjs tests/capability-manifest.test.mjs tests/capability-runtime.test.mjs tests/office-directory.test.mjs tests/office.test.mjs tests/store.test.mjs tests/conversation-state.test.mjs tests/conversation-resources.test.mjs tests/deliverable-access.test.mjs tests/assistant-stream.test.mjs tests/automation.test.mjs tests/automation-persistence.test.mjs tests/runtime.test.mjs tests/runtime-image-ocr.test.mjs tests/runtime-vision.test.mjs tests/runtime-cleanup.test.mjs tests/runtime-finalization.test.mjs tests/runtime-context.test.mjs tests/privacy-lock-recovery.test.mjs tests/runtime-launch.test.mjs tests/runtime-policy.test.mjs tests/runtime-lifecycle.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/desktop-release.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/speech-audio.test.mjs tests/speech-service.test.mjs tests/providers.test.mjs tests/error-copy.test.mjs tests/mcp-identity.test.mjs tests/mcp-destination.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs tests/app-log.test.mjs tests/updater-cache.test.mjs tests/temp-hygiene.test.mjs tests/zip-writer.test.mjs tests/change-summary.test.mjs tests/inline-references.test.mjs tests/review-diff.test.mjs tests/review-view.test.mjs tests/file-actions.test.mjs tests/changed-files.test.mjs tests/deliverable-cards.test.mjs tests/trace-filter.test.mjs tests/run-status.test.mjs tests/providers-hidden-model.test.mjs tests/privacy-warning.test.mjs tests/provider-reasoning.test.mjs tests/message-feedback.test.mjs tests/compaction-policy.test.mjs tests/runtime-patch.test.mjs tests/run-summary.test.mjs tests/subagent-archive.test.mjs tests/archive-name.test.mjs",
     "test:packed": "node scripts/test-packed.mjs",
     "electron:dist": "npm run build && electron-builder --win --x64 --dir && node scripts/generate-installer-path-policy.mjs && node scripts/write-update-config.mjs",
     "electron:install": "npm run electron:dist && electron-builder --win nsis --x64",
@@ -44,7 +44,8 @@
     "test:deliverables": "node scripts/test-deliverable-cards-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:inline-refs": "node scripts/test-inline-references-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:changes": "node scripts/test-changed-files-ui.mjs \"release/win-unpacked/知行.exe\"",
-    "test:actions": "node scripts/test-deliverable-actions-ui.mjs \"release/win-unpacked/知行.exe\""
+    "test:actions": "node scripts/test-deliverable-actions-ui.mjs \"release/win-unpacked/知行.exe\"",
+    "test:review": "node scripts/test-review-ui.mjs \"release/win-unpacked/知行.exe\""
   },
   "main": "electron/main.cjs",
   "dependencies": {

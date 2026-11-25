@@ -154,8 +154,8 @@ try {
   await pause(1200);
   const panel = await ui.evaluate('(()=>{const select=document.querySelector(\'select[aria-label="工作面板视图"]\');return {view:select?.value||\'\',visible:!!document.querySelector(".workbench")};})()');
   report.panel = panel; await persist();
-  assert.equal(panel.view, 'files', `点击改动文件没有打开文件页：${JSON.stringify(panel)}`);
-  await record('点击改动文件打开工作面板文件页', panel);
+  assert.equal(panel.view, 'review', `点击改动文件没有打开对比视图：${JSON.stringify(panel)}`);
+  await record('点击改动文件打开改动对比视图', panel);
 
   report.status = 'passed'; await persist();
   console.log(JSON.stringify({ status: report.status, cases: report.cases.length, evidence }, null, 2));

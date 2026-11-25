@@ -860,6 +860,25 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .answer-text code.inline-file-ref { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
 .answer-text code.inline-file-ref:hover { background: var(--hover); }
 .answer-text code.inline-file-ref:focus-visible { outline: 2px solid var(--quiet); outline-offset: 1px; }
+.review-panel { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; height: 100%; min-height: 0; padding: 12px; }
+.review-head { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; }
+.review-head strong { font-size: 13px; }
+.review-head small { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.review-files { margin: 0; padding: 0; list-style: none; overflow: auto; border-right: 1px solid var(--line); }
+.review-files li { margin: 0 6px 2px 0; }
+.review-files button { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 8px; border: 0; border-radius: 7px; background: none; color: var(--text); font-size: 12px; text-align: left; }
+.review-files button span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.review-files button small { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.review-files button:hover { background: var(--hover); }
+.review-files button.active { background: var(--hover); font-weight: 600; }
+.review-diff { overflow: auto; min-height: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
+.review-line { display: grid; grid-template-columns: 44px 44px minmax(0, 1fr); gap: 6px; padding: 1px 8px; white-space: pre; }
+.review-line code { overflow-wrap: anywhere; white-space: pre-wrap; }
+.review-line.add { background: rgb(46 160 67 / 10%); }
+.review-line.remove { background: rgb(248 81 73 / 10%); }
+.review-line.gap { display: block; padding: 2px 8px; color: var(--muted); background: var(--hover); text-align: center; }
+.review-number { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; user-select: none; }
+.review-note { margin: 8px; color: var(--muted); font-size: 12px; }
 .change-files { display: grid; gap: 6px; margin: 9px 0 2px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .change-files header { display: flex; align-items: baseline; gap: 7px; color: var(--muted); font-size: 11px; }
 .change-files header strong { color: var(--text); font-size: 12px; font-weight: 550; }

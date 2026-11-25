@@ -8,7 +8,7 @@ export function ChangedFiles({files,onOpen}) {
   return <section className="change-files" data-count={list.length}>
     <header><FileCode size={15}/><strong>{changedFilesLabel(list.length)}</strong><small>{changedFilesTotalLabel(list)}</small></header>
     <ul>{list.map((file,index)=><li key={`${file?.path||''}:${index}`}>
-      <button type="button" title={displayPath(file)} onClick={()=>onOpen?.()}>
+      <button type="button" title={displayPath(file)} onClick={()=>onOpen?.(file)}>
         <span>{displayPath(file)}</span><small>{changeCounts(file).label}</small>
       </button>
     </li>)}</ul>
