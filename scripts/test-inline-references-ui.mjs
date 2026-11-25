@@ -27,7 +27,11 @@ const files = [
   { path: '说明.pdf' },
 ];
 for (const file of files) await fs.writeFile(path.join(workspaceDir, file.path), `QA inline reference ${file.path}\n`);
-const answer = '已完成。主文件是 `季度汇总.docx`，目录版见 `成果\\明细.xlsx`；同名文件 `明细.xlsx` 与未交付的 `不存在.docx` 保持普通代码，代码块里的 `季度汇总.docx` 也不该变成链接。\n\n```\n季度汇总.docx\n```\n';
+const TICK = '\u0060';
+const FENCE = TICK.repeat(3);
+const answer = () => '已完成。主文件是 ' + TICK + '季度汇总.docx' + TICK + '，另见 ' + TICK + '说明.pdf' + TICK +
+  '；同名文件 ' + TICK + '明细.xlsx' + TICK + ' 与未交付的 ' + TICK + '不存在.docx' + TICK + ' 保持普通代码，代码块里的 ' + TICK + '季度汇总.docx' + TICK + ' 也不该变成链接。' +
+  '\n\n' + FENCE + '\n季度汇总.docx\n' + FENCE + '\n';
 const report = {
   layer: 'windows-packaged-app + real-kernel + local fake provider + project workspace', version: provenance.version,
   sourceCommit: provenance.sourceCommit, sourceDirty: provenance.sourceDirty,
@@ -63,7 +67,7 @@ const server = http.createServer((request, response) => {
       write(chunk({ tool_calls: [{ index: 0, id: 'call-qa-inline', type: 'function', function: { name: 'present', arguments: JSON.stringify({ files }) } }] }));
       write({ ...base, choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] });
     } else {
-      write(chunk({ content: answer }));
+      write(chunk({ content: answer() }));
       write({ ...base, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] });
     }
     response.write('data: [DONE]\n\n');
@@ -71,7 +75,7 @@ const server = http.createServer((request, response) => {
   });
 });
 
-const snapshot = () => ui.evaluate(`(()=>{const box=[...document.querySelectorAll('.assistant-message .answer-text')].at(-1);if(!box)return {refs:[],codes:[],blockRefs:0,text:''};const refs=[...box.querySelectorAll('code.inline-file-ref')];return {refs:refs.map(node=>({text:node.textContent.trim(),title:node.getAttribute('title')||'',role:node.getAttribute('role')||''})),codes:[...box.querySelectorAll('code')].map(node=>node.textContent.trim()),blockRefs:box.querySelectorAll('pre code.inline-file-ref').length,text:box.innerText};})()`);
+const snapshot = () => ui.evaluate(`(()=>{const box=[...document.querySelectorAll('.assistant-message .answer-text')].at(-1);if(!box)return {refs:[],codes:[],blockRefs:0,text:''};const refs=[...box.querySelectorAll('code.inline-file-ref')];return {refs:refs.map(node=>({text:node.textContent.trim(),title:node.getAttribute('title')||'',role:node.getAttribute('role')||''})),codes:[...box.querySelectorAll('code')].map(node=>node.textContent.trim()),blockRefs:box.querySelectorAll('pre code.inline-file-ref').length,preCodes:box.querySelectorAll('.answer-code code').length,inlineCodes:box.querySelectorAll('p code').length,text:box.innerText};})()`);
 let ui = null, child = null, exit = null, log = null;
 try {
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
@@ -134,11 +138,11 @@ try {
 
   assert.ok(state.text.includes('已完成'), `回答正文没有出现：${state.text.slice(0, 120)}`);
   assert.equal(state.refs.length, 2, `可点击引用数量不对：${state.refs.map(item => item.text).join(' | ')}`);
-  assert.deepEqual(state.refs.map(item => item.text), ['季度汇总.docx', '成果\\明细.xlsx'], `可点击的 token 不符：${state.refs.map(item => item.text).join(' | ')}`);
+  assert.deepEqual(state.refs.map(item => item.text), ['季度汇总.docx', '说明.pdf'], `可点击的 token 不符：${state.refs.map(item => item.text).join(' | ')}`);
   await record('唯一 basename 与精确路径变成可点击引用', { refs: state.refs });
 
-  assert.equal(state.refs[0].title, '成果\\季度汇总.docx', `引用 title 不是完整路径：${state.refs[0].title}`);
-  assert.equal(state.refs[1].title, '成果\\明细.xlsx', `引用 title 不是完整路径：${state.refs[1].title}`);
+  assert.equal(state.refs[1].title, path.join(workspaceDir, '说明.pdf'), `引用 title 不是完整路径：${state.refs[1].title}`);
+  assert.equal(state.refs[1].title, path.join(workspaceDir, '成果', '明细.xlsx'), `引用 title 不是完整路径：${state.refs[1].title}`);
   assert.equal(state.refs[0].role, 'link', `引用缺少 link 角色：${state.refs[0].role}`);
   await record('引用保留代码标签并把完整路径放进 title');
 
