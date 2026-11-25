@@ -32,7 +32,7 @@
 | 消息反馈（赞／踩／原因） | `dsh-message-feedback`、`dsh-command-feedback`、`dsh-client-ui-message-feedback` | **未做** | 知行气泡下没有反馈入口 |
 | 秘钥遮蔽显示 | `dsh-client-ui-secret-mask` | 部分：脱敏网关 + 凭证阻断 | Harness 是界面层遮蔽，知行是发送前替换，口径不同要写清 |
 | 轨迹视图 | `dsh-client-ui-trajectory` | **部分（0.25.0 起可检索）**：执行面板已有按交办切换、事件分类、状态／耗时／轮次／步骤、子任务与后台作业、检索（标签／状态／分类，含子任务与作业名）、展开／收起全部、子会话与作业输出、归档 | 未做：桌面版按轮次分组的记录表、单条记录检查器里的输入／输出／token 用量、时间概览（TTFT／吞吐／缩放）、按轮次折叠、代码视图语法高亮 |
-| 交付物视图 | `dsh-workspace-changes`、`dsh-deliverable-file-references`、`dsh-client-ui-deliverables` | **部分（0.28.0 起有改动文件卡片）**：轮次末尾依次给出改动文件卡片（文件 + 工作区相对名 + 每文件增删行数 + 合计）与交付卡片（文件名＋说明或文件类型、多文件双列、超过四个默认收起）；正文中命名交付文件的唯一 basename 变成可点引用（完整路径进 `title`、键盘可触发、歧义不链接） | 未做：git 工作树快照（终端／外部程序的改动不进卡片）、review tab 与逐文件对比、在默认应用打开／定位、右侧 Sidebar 预览、按「记录的精确参数」匹配；改动的行数是各次写入累加，不等于最终文件真实差异 |
+| 交付物视图 | `dsh-workspace-changes`、`dsh-deliverable-file-references`、`dsh-client-ui-deliverables` | **部分（0.29.0 起交付卡片可打开／定位）**：轮次末尾依次给出改动文件卡片（文件 + 工作区相对名 + 每文件增删行数 + 合计）与交付卡片（文件名＋说明或文件类型、多文件双列、超过四个默认收起、每张卡片的「⋯」给出预览／在默认应用中打开／在文件管理器中显示）；正文里命名交付文件的唯一 basename 变成可点引用（完整路径进 `title`、键盘可触发、歧义不链接） | 未做：git 工作树快照（终端／外部程序的改动不进卡片）、review tab 与逐文件对比、右侧 Sidebar 预览、`skipped`／`nativeUnavailable` 两种动作状态、右键上下文菜单；「在默认应用中打开」的成功路径未在自动验收中点击；改动的行数是各次写入累加，不等于最终文件真实差异 |
 | 会话日志 | `dsh-client-ui-settings-session-log` | **未核对** | 知行有 `app.log` 与诊断导出，但是否等价未核对 |
 
 ## 代理、协作与自动化
