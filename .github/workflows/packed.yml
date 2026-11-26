@@ -20,7 +20,7 @@ concurrency:
 jobs:
   windows-packed:
     runs-on: windows-latest
-    timeout-minutes: 95
+    timeout-minutes: 100
     defaults:
       run:
         shell: pwsh
@@ -54,9 +54,21 @@ jobs:
           npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/install.log"
           exit $LASTEXITCODE
 
+      - name: Prepare the locked Electron executable
+        id: electron
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          node node_modules/electron/install.js 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/electron.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path -LiteralPath 'node_modules/electron/dist/electron.exe' -PathType Leaf)) {
+            Write-Error 'The locked Electron installer did not provide the Windows executable.'
+            exit 1
+          }
+
       - name: Build Windows directory package
         id: package
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.electron.outcome == 'success' }}
         timeout-minutes: 12
         run: |
           Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
@@ -184,7 +196,7 @@ jobs:
       - name: Require every package gate to pass
         if: ${{ always() }}
         env:
-          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.package.outcome }} ${{ steps.verify.outcome }} ${{ steps.packed.outcome }} ${{ steps.errors.outcome }} ${{ steps.native.outcome }} ${{ steps.tools.outcome }} ${{ steps.phase0a.outcome }} ${{ steps.nsis.outcome }}
+          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.electron.outcome }} ${{ steps.package.outcome }} ${{ steps.verify.outcome }} ${{ steps.packed.outcome }} ${{ steps.errors.outcome }} ${{ steps.native.outcome }} ${{ steps.tools.outcome }} ${{ steps.phase0a.outcome }} ${{ steps.nsis.outcome }}
         run: |
           if (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {
             Write-Error "A packaged check failed or did not run: $env:CI_REQUIRED_OUTCOMES"

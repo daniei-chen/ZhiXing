@@ -1,5 +1,6 @@
 // Collect explicit synthetic QA evidence, never entire profiles or workspaces.
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { createReadStream } from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -106,6 +107,7 @@ async function journey(directory, prefix, depth = 0) {
 
 for (const name of [
   'install',
+  'electron',
   'package',
   'verify',
   'packed',
@@ -162,6 +164,17 @@ if (checksums) {
   );
 }
 const packedDirectory = await directorySize(path.join(root, 'release/win-unpacked'));
+const steps = JSON.parse(process.env.CI_STEP_RESULTS || '{}');
+let checkoutCommit = null;
+try {
+  checkoutCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+    cwd: root,
+    encoding: 'utf8',
+    windowsHide: true,
+  }).trim();
+} catch {
+  // A failed checkout still deserves an explicit failure report, not a guessed SHA.
+}
 
 await fs.writeFile(
   path.join(target, 'checks.json'),
@@ -169,7 +182,7 @@ await fs.writeFile(
     {
       schemaVersion: 1,
       layer:
-        'Windows hosted runner: packaged EXE, real Harness with synthetic providers, network error probes, uninstalled unsigned NSIS candidate',
+        'Windows hosted packaging workflow; only successful steps below establish their respective coverage',
       notCovered: [
         'installer execution and upgrade lifecycle',
         'user installation or D drive',
@@ -178,11 +191,22 @@ await fs.writeFile(
         'manual visual review unless separately recorded',
       ],
       sourceRef: process.env.GITHUB_REF,
+      checkoutCommit,
       workflowSha: process.env.GITHUB_SHA,
       runId: process.env.GITHUB_RUN_ID,
       node: process.version,
       version,
-      steps: JSON.parse(process.env.CI_STEP_RESULTS || '{}'),
+      steps,
+      coverage: {
+        directoryPackageBuilt: steps.package?.outcome === 'success',
+        packagedSourceMatched: steps.verify?.outcome === 'success',
+        packagedRegressionPassed: steps.packed?.outcome === 'success',
+        networkErrorUiPassed: steps.errors?.outcome === 'success',
+        nativeFilesUiPassed: steps.native?.outcome === 'success',
+        toolTimelineUiPassed: steps.tools?.outcome === 'success',
+        phase0aUiPassed: steps.phase0a?.outcome === 'success',
+        uninstalledNsisBuilt: steps.nsis?.outcome === 'success',
+      },
       packedDirectory,
       binaries,
       files: copied,

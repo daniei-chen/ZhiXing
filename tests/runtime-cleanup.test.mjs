@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import {EventEmitter} from 'node:events';
 import {pathToFileURL} from 'node:url';
 
 const app = process.env.ZHIXING_TEST_PACKED_APP;
@@ -17,6 +18,8 @@ async function createFixture({startError, runError, missingContext = false, cont
  const root = await fs.mkdtemp(path.join(parent, 'zhixing-runtime-cleanup-'));
  const vaults = new Map();
  const closeError = new Error('runtime process did not exit within 6000ms after SIGKILL was refused');
+ const child = Object.assign(new EventEmitter(), {exitCode: null, signalCode: null});
+ const closeEntryCodes = [];
  let closes = 0;
  const manager = new RuntimeManager({
   root,
@@ -24,7 +27,7 @@ async function createFixture({startError, runError, missingContext = false, cont
   writeVault: async (id, state) => vaults.set(id, state),
   createGateway: async () => ({baseUrl: 'http://127.0.0.1:1', apiKey: 'synthetic-test-key', close: async () => {}}),
   createHarness: async (directory, configuration) => ({
-   client: {exitCode: configuration.exitCode ?? 0},
+   zhixingProcess: child,
    async start() {
     if (startError) throw startError;
     if (missingContext) return;
@@ -32,13 +35,20 @@ async function createFixture({startError, runError, missingContext = false, cont
      [contextId]: {tools: [], skills: []},
     });
    },
-   async close() { closes++; if (closeFails) throw closeError; },
+   async close() {
+    closes++;
+    closeEntryCodes.push(child.exitCode);
+    if (closeFails) throw closeError;
+    child.exitCode = configuration.exitCode ?? 0;
+    child.emit('exit', child.exitCode, child.signalCode);
+   },
    client: {
     request: async () => ({}),
     subscribeSessionTree() {
      let release;
      const closed = new Promise(resolve => { release = resolve; });
-     return {tryNext: () => undefined, close: release, async *[Symbol.asyncIterator]() { await closed; }};
+     // This synthetic subscription emits no events; closing ends the empty sequence.
+     return {tryNext: () => undefined, close: release, async *[Symbol.asyncIterator]() { await closed; yield* []; }};
     },
    },
    session: () => ({run: async () => {
@@ -48,7 +58,7 @@ async function createFixture({startError, runError, missingContext = false, cont
   }),
  });
  return {
-  root, manager, vaults, closeError, closeCount: () => closes,
+  root, manager, vaults, closeError, child, closeEntryCodes, closeCount: () => closes,
   config: {baseUrl: 'https://synthetic.invalid', model: 'synthetic-model', reasoning: 'off'},
   async close() {
    await manager.close();
@@ -153,9 +163,16 @@ test('目录检查启动失败与关闭失败均可诊断，未确认退出时�
 
 test('SDK close resolution records process termination even when the exit status is nonzero', async () => {
  const fixture = await createFixture({contextId: 'kernel-check', closeFails: false});
+ const exitCode = 3221226505;
+ const exits = [];
+ fixture.child.on('exit', (code, signal) => exits.push({code, signal}));
  try {
-  const report = await fixture.manager.check({...fixture.config, exitCode: 3221226505}, 'synthetic-test-key');
+  assert.equal(fixture.child.exitCode, null);
+  const report = await fixture.manager.check({...fixture.config, exitCode}, 'synthetic-test-key');
   assert.deepEqual(report, {tools: [], skills: []});
+  assert.deepEqual(fixture.closeEntryCodes, [null]);
+  assert.equal(fixture.child.exitCode, exitCode);
+  assert.deepEqual(exits, [{code: exitCode, signal: null}]);
   assert.equal(fixture.closeCount(), 1);
   assert.deepEqual(await fs.readdir(fixture.root), []);
  } finally {

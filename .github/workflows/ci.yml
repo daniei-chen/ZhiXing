@@ -8,7 +8,7 @@ name: Windows source checks
 # installer, upgrade lifecycle, signed release, or real-cloud acceptance run.
 on:
   push:
-    branches: [main, fix/phase-0a-audit]
+    branches: [main]
     paths-ignore: ['**/*.md', 'docs/**']
   pull_request:
     paths-ignore: ['**/*.md', 'docs/**']
