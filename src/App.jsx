@@ -108,6 +108,7 @@ export function App() {
   const draftScopes = useRef({});
   const removedDraftKeys = useRef(new Set());
   const runJobs = useRef(new Map());
+  const pendingRunSettlements = useRef(new Set());
   const forgottenRuntimeIds = useRef({ sessions: new Set(), runs: new Set() });
   const deletionBusy = useRef(false);
   const automationLatest = useRef(automationState);
@@ -473,6 +474,10 @@ export function App() {
         check();
       });
       if (storageFailed.current) throw new Error('本机工作空间读取失败，现有文件保持在磁盘中。');
+      // The private run promise carries the complete local result. A terminal
+      // event can clear active before that promise settles, and runJobs can be
+      // pruned by deletion, so keep these handoffs outside both projections.
+      while (pendingRunSettlements.current.size) await Promise.all([...pendingRunSettlements.current]);
       // The host can send a final run event immediately before asking to quit.
       // Keep the existing two-frame barrier so React commits that outcome
       // before latest.current is used for the final workspace snapshot.
@@ -791,6 +796,13 @@ export function App() {
     const incoming = outcome.finalization || outcome.result?.finalization;
     // A late promise resolution must not undo a host-confirmed cleanup retry.
     if (incoming && !(job.finalization?.processStatus === 'exited' && incoming.processStatus === 'cleanup_pending')) job.finalization = incoming;
+    if (!draftProducersLive.current) {
+      // React ignores updates after global fallback unmounts App. Preserve the
+      // result for its retained durability barrier without writing over a new
+      // App: remount/reload must wait for the complete handoff before saving.
+      latest.current = finalizeConversationRun(latest.current, job, { ...outcome, finalization: job.finalization });
+      return;
+    }
     setState(current => finalizeConversationRun(current, job, { ...outcome, finalization: job.finalization }));
   }
 
@@ -907,6 +919,9 @@ export function App() {
     });
     if (draft.sideScope) setSideSelection({scope:draft.sideScope,id:draft.sessionId});
     else navigate('home', draft.sessionId, draft.projectId);
+    let releaseSettlement;
+    const settled = new Promise(resolve => { releaseSettlement = resolve; });
+    pendingRunSettlements.current.add(settled);
     try {
       const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
       finalizeRun(job, { result });
@@ -926,6 +941,8 @@ export function App() {
       finalizeRun(job, { status: job.terminalStatus || 'failed', result: error.result, output: error.output, finalization: error.finalization, error: { code: error.code, stage: error.stage, message: `运行未完成：${errorText(error)}` } });
     } finally {
       if (active.current === job) { active.current = null; setRunning(null); }
+      pendingRunSettlements.current.delete(settled);
+      releaseSettlement();
     }
   }
 

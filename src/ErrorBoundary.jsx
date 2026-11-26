@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component {
         <p>
           {workbench
             ? '可以重试显示工作面板，当前聊天仍可继续使用。'
-            : '请重试显示界面。若仍未恢复，可以重新载入。'}
+            : '重试会等待当前任务结束并保存，再恢复界面。若仍未恢复，可以重新载入。'}
         </p>
         {this.state.restoreFailed && <p>最后的更改仍未保存，请检查磁盘空间后重试。</p>}
         <div className="render-error-actions">
@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component {
             disabled={this.state.restoring}
             onClick={() => void this.restore()}
           >
-            {this.state.restoring ? '正在保存…' : '重试显示'}
+            {this.state.restoring ? '正在等待任务与保存…' : '重试显示'}
           </button>
           {!workbench && (
             <button

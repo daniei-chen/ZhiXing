@@ -15,7 +15,10 @@ const source = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8'
 const visualImports = new Map([...source.matchAll(/import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+\.jsx|@phosphor-icons\/react)['"]/g)]
   .map(([, names, name]) => [name, names.split(',').map(value => value.trim())]));
 const compiled = await build({
-  entryPoints: [fileURLToPath(new URL('../src/App.jsx', import.meta.url))],
+  stdin: {
+    contents: "export { App } from './src/App.jsx'; export { flushRendererDurability } from './src/renderer-durability.js';",
+    resolveDir: fileURLToPath(new URL('..', import.meta.url)), sourcefile: 'draft-test-entry.mjs', loader: 'js',
+  },
   bundle: true, write: false, platform: 'node', format: 'cjs', jsx: 'transform',
   jsxFactory: '__element', jsxFragment: '__fragment', logLevel: 'silent',
   banner: {js: 'const __element=globalThis.__element, __fragment="Fragment";'},
@@ -132,7 +135,7 @@ async function mount(saved = fixture(), overrides = {}) {
     }
   }
   await flush();
-  return {flush, unmount, nodes, component, button, text, snapshots, draftSnapshots, listeners, get renders() { return renders; }, get stored() { return stored; }, get pendingRun() { return pendingRun; }, get pendingPrepare() { return pendingPrepare; }};
+  return {flush, unmount, flushDurability: options => sandbox.module.exports.flushRendererDurability(options), nodes, component, button, text, snapshots, draftSnapshots, listeners, get renders() { return renders; }, get stored() { return stored; }, get pendingRun() { return pendingRun; }, get pendingPrepare() { return pendingPrepare; }};
 }
 
 async function openDraft(app, marker) {
@@ -377,6 +380,65 @@ function sharedPersistence(saved = fixture()) {
       saveDrafts: async drafts => { value = { ...value, drafts: structuredClone(drafts) }; writes.push('drafts'); },
     },
   };
+}
+
+for (const status of ['completed', 'failed', 'cancelled']) {
+  test(`全局恢复等待旧任务${status}完整交接，正文和交付物保存后才可重挂`, async () => {
+    const host = sharedPersistence();
+    const old = await mount(host.value, host.desktop);
+    old.component('Composer').setInput('HANDOFF_TASK');
+    await old.flush();
+    const sending = old.component('Composer').onSubmit();
+    await old.flush();
+    assert(old.pendingRun);
+    const chat = host.value.chats[0], reply = chat.messages.at(-1);
+    const partial = `LOCAL_STREAM_${status}`;
+    old.listeners.get('RuntimeEvent')({ type: 'draft', runId: reply.runId, text: partial });
+    await old.flush({ advance: 0 });
+
+    if (status === 'cancelled') {
+      // This event releases active.current before the private run promise.
+      // Its protected summary is not the complete local result to preserve.
+      old.listeners.get('RuntimeEvent')({ type: 'run/terminal', runId: reply.runId, sessionId: chat.id, status: 'cancelled',
+        finalization: { executionStatus: status, persistenceStatus: 'saved', processStatus: 'exited' },
+        result: { text: 'PROTECTED_EVENT_SUMMARY', displayRedacted: true },
+      });
+      await old.flush({ advance: 0 });
+    }
+
+    old.unmount();
+    await old.flush({ advance: 0 });
+    const renders = old.renders, writes = host.writes.length;
+    let restored = false;
+    const restoring = old.flushDurability().then(() => { restored = true; });
+    await old.flush({ advance: 10000 });
+    assert.equal(restored, false, 'recovery must wait even after a terminal event clears active');
+    assert.equal(host.writes.length, writes, 'the barrier must not commit a stale interrupted snapshot');
+
+    const delivered = [{ id: `delivered-${status}`, name: '实际交付.txt', reference: 'LOCAL_DELIVERY_REFERENCE' }];
+    const finalization = { executionStatus: status, persistenceStatus: 'saved', processStatus: 'exited', eventWatermark: 11 };
+    const result = { ...(status === 'completed' ? { text: 'FULL_PRIVATE_RESULT', masked: 'PROTECTED_RESULT' } : {}), deliverables: delivered, finalization };
+    if (status === 'completed') old.pendingRun.resolve(result);
+    else old.pendingRun.reject(Object.assign(new Error(`synthetic ${status}`), { result, finalization }));
+    await sending;
+    await restoring;
+    assert.equal(restored, true);
+    assert.equal(old.renders, renders, 'handoff does not remount the disposed App');
+    const expected = status === 'completed' ? 'FULL_PRIVATE_RESULT' : partial;
+    const storedReply = host.value.chats[0].messages.at(-1);
+    assert.equal(storedReply.text, expected);
+    assert.equal(storedReply.pending, false);
+    assert.equal(storedReply.status, status === 'completed' ? 'succeeded' : status);
+    assert.deepEqual(structuredClone(storedReply.deliverables), delivered);
+    assert.equal(storedReply.finalization.executionStatus, status);
+
+    const current = await mount(host.value, host.desktop);
+    const reloaded = current.stored.chats[0].messages.at(-1);
+    assert.equal(reloaded.text, expected);
+    assert.equal(reloaded.status, storedReply.status);
+    assert.deepEqual(structuredClone(reloaded.deliverables), delivered);
+    current.unmount();
+  });
 }
 
 test('App卸载后的旧运行失败不能将恢复草稿写回新App的较新输入', async () => {

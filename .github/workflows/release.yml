@@ -61,8 +61,6 @@ jobs:
         shell: pwsh
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      RELEASE_EVIDENCE: ${{ runner.temp }}/zhixing-release-evidence
-      RELEASE_BUNDLE: ${{ runner.temp }}/zhixing-release-bundle
     steps:
       - name: Check out the exact release source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -84,6 +82,10 @@ jobs:
           digest-mismatch: error
       - name: Prepare isolated evidence and caches
         run: |
+          $env:RELEASE_EVIDENCE = "$env:RUNNER_TEMP/zhixing-release-evidence"
+          $env:RELEASE_BUNDLE = "$env:RUNNER_TEMP/zhixing-release-bundle"
+          "RELEASE_EVIDENCE=$env:RELEASE_EVIDENCE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RELEASE_BUNDLE=$env:RELEASE_BUNDLE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           New-Item -ItemType Directory -Force "$env:RELEASE_EVIDENCE/logs", "$env:RELEASE_EVIDENCE/journeys", "$env:RELEASE_EVIDENCE/dependencies" | Out-Null
           $releaseLocalData = "$env:RUNNER_TEMP/zhixing-release-local-data"
           $releaseTemporary = "$env:RUNNER_TEMP/zhixing-release-temp"
