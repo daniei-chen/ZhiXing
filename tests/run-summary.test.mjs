@@ -5,8 +5,8 @@ const { runSummary, summaryRows, durationText } = await import('../src/run-summa
 
 const trace = [
   { type: 'run/started', time: 1000 },
-  { type: 'tool/call', time: 2000 },
-  { type: 'tool/result', time: 2200 },
+  { type: 'tool/call', category: 'tools', callId: 'event-2', time: 2000 },
+  { type: 'tool/result', category: 'tools', callId: 'event-2', time: 2200 },
   { type: 'run/terminal', time: 81000, status: 'completed' },
 ];
 
@@ -25,7 +25,8 @@ test('完成的一轮汇总状态、耗时、工具与子任务', () => {
   });
   assert.equal(summary.statusLabel, '已完成');
   assert.equal(summary.duration, '1 分 20 秒');
-  assert.equal(summary.tools, 2);
+  assert.equal(summary.tools, 1);
+  assert.equal(summary.toolSummary, '1 次工具调用');
   assert.equal(summary.children, 2);
   assert.equal(summary.deliverables, 1);
   assert.equal(summary.unrestored, 0);
@@ -71,4 +72,13 @@ test('详情里写明发送方式与本机替换处数', () => {
   assert.equal(raw.find(item => item.key === 'mode').value, '非脱敏模式');
   const unknown = summaryRows({ status: 'succeeded', startedAt: 0, trace });
   assert.ok(!unknown.some(item => item.key === 'mode'));
+});
+
+test('详情和时间线采用同一计数口径，旧结果与被截断的范围明确显示', () => {
+  const old = [{ type: 'tool/call', category: 'tools' }, { type: 'tool/result', category: 'tools' }];
+  assert.equal(runSummary({ trace: old }).tools, 1);
+  assert.equal(summaryRows({ trace: old }).find(row => row.key === 'tools').value, '1 次工具调用 · 1 条历史结果未关联');
+  assert.equal(summaryRows({ trace, traceTruncated: true }).find(row => row.key === 'tools').value, '已保留 1 次工具调用');
+  assert.equal(runSummary({ trace: [{ category: 'tools', label: '调用 · 读取项目文本' }] }).tools, 1);
+  assert.equal(runSummary({ trace: [{ category: 'tool', label: '调用 · 读取项目文本' }] }).tools, 1);
 });

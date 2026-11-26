@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,mkdtemp,readFile,writeFile} from 'node:fs/promises';
+import {mkdir,mkdtemp,readFile,realpath,rm,writeFile} from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-import {once} from 'node:events';
 import {createRequire} from 'node:module';
 import {build} from 'esbuild';
 
@@ -12,9 +12,33 @@ const repository=path.resolve(import.meta.dirname,'..');
 
 test('Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试', {timeout:120000}, async context=>{
   assert.equal(process.platform,'win32','This targeted renderer journey requires Windows Electron.');
-  const root=path.resolve(repository,'.preview/qa-0.12.1-audit/agent-c');
-  await mkdir(root,{recursive:true});
-  const directory=await mkdtemp(path.join(root,'renderer-'));
+  const root = await realpath(os.tmpdir());
+  const directory = await mkdtemp(path.join(root, 'zhixing-recovery-ui-'));
+  let child, closed, launchError, output = '';
+  context.after(async () => {
+    if (child && child.exitCode === null && child.signalCode === null) child.kill();
+    if (closed) await closed;
+    try {
+      // Opt-in evidence contains bounded text reports only, never profiles or bundles.
+      if (process.env.ZHIXING_TEST_EVIDENCE_DIR) {
+        const evidence = path.join(path.resolve(process.env.ZHIXING_TEST_EVIDENCE_DIR), path.basename(directory));
+        await mkdir(evidence, {recursive: true});
+        for (const name of ['journey.json', 'summary.json', 'failure.json']) {
+          const body = await readFile(path.join(directory, name)).catch(error => {
+            if (error.code !== 'ENOENT') throw error;
+          });
+          if (body && body.length <= 64 * 1024) await writeFile(path.join(evidence, name), body);
+        }
+        await writeFile(path.join(evidence, 'electron.log'), Buffer.from(output).subarray(-64 * 1024));
+        console.log(`Text evidence: ${evidence}`);
+      }
+    } finally {
+      const resolved = await realpath(directory);
+      assert.equal(path.dirname(resolved), root);
+      assert(path.basename(resolved).startsWith('zhixing-recovery-ui-'));
+      await rm(resolved, {recursive: true, force: true, maxRetries: 6, retryDelay: 150});
+    }
+  });
   // Observation only, in this isolated test bundle: retain the real App/event
   // implementation while exposing snapshots of otherwise private memory refs.
   const observeConversationMemory={name:'observe-conversation-memory',setup(builder){builder.onLoad({filter:/[\\/]src[\\/]App\.jsx$/},async({path:filename})=>{const source=await readFile(filename,'utf8'),anchor='  latest.current = state;';assert.equal(source.split(anchor).length,2);return {loader:'jsx',resolveDir:path.dirname(filename),contents:source.replace(anchor,`  window.__qaConversationMemory = () => ({ jobs: [...runJobs.current], positions: [...transcriptPositions.current], transcriptChatId: transcriptChatId.current, draftScopes: draftScopes.current, events, liveStats, question, active: active.current?.runId || null });\n${anchor}`)};});}};
@@ -222,12 +246,15 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
     }).catch(error=>{console.error(error.stack);app.exit(1);});
   `);
   const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;
-  const child=spawn(require('electron'),[path.join(directory,'main.cjs')],{env,signal:context.signal,windowsHide:true,stdio:['ignore','pipe','pipe']});
-  let output='';child.stdout.on('data',data=>{output+=data;});child.stderr.on('data',data=>{output+=data;});
-  const [code]=await once(child,'exit');
-  await writeFile(path.join(directory,'electron.log'),output);
-  assert.equal(code,0,output+`\nEvidence: ${directory}`);
+  child=spawn(require('electron'),[path.join(directory,'main.cjs')],{env,signal:context.signal,windowsHide:true,stdio:['ignore','pipe','pipe']});
+  closed = new Promise(resolve => child.once('close', (code, signal) => resolve([code, signal])));
+  child.on('error', error => { launchError = error; });
+  const collect = data => { output = (output + data).slice(-256 * 1024); };
+  child.stdout.on('data', collect); child.stderr.on('data', collect);
+  const [code] = await closed;
+  if (launchError) throw launchError;
+  assert.equal(code,0,output);
   const summary=JSON.parse(await readFile(path.join(directory,'summary.json'),'utf8'));
   assert.equal(summary.passed,true);assert.equal(summary.records,11);assert.equal(summary.rendererErrors.length,0);
-  console.log(`Evidence: ${directory}; ${summary.records} business checkpoints passed.`);
+  console.log(`${summary.records} business checkpoints passed; isolated temporary files are removed after verification.`);
 });

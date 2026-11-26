@@ -24,9 +24,9 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前版本为 **0.14.0 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [下载完整安装包](https://github.com/daniei-chen/ZhiXing/releases/download/v0.14.0/ZhiXing-0.14.0-x64.exe) · [Windows 验收记录](docs/windows-acceptance-0.14.0.md) · [能力与缺口总览](docs/harness-capability-map.md#当前状态总览0134)
+当前源码基线为 **0.40.0 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [已发布版本](https://github.com/daniei-chen/ZhiXing/releases) · [0.40.0 历史验收记录](docs/windows-acceptance-0.40.0.md) · [能力与缺口总览](docs/harness-capability-map.md)
 
-> 下面按版本倒序记录更新。**各版本章节里的「未覆盖」是当时的事实，可能已被后续版本补齐**；当前真实状态以[能力地图的当前状态总览](docs/harness-capability-map.md#当前状态总览0134)为准。
+> **开发中的 Phase 0A 源码候选：** [审计核实与修复说明](docs/phase-0a-audit.md) · [本轮证据](docs/evidence/phase-0a/summary.json) · [成熟化路线](docs/maturity-roadmap.md)。本分支未升版本、未生成新安装包；源码、合成运行、Windows 实包和真实云端证据分别记录。下方保留 0.14.0 及以前的历史更新，不代表当前候选已通过相应门禁。
 
 <div align="center">
 
@@ -36,7 +36,7 @@
 
 </div>
 
-## 0.14.0 本轮更新
+## 0.14.0 历史更新
 
 - **发现覆盖漏洞**：`errorText` 在 `src/` 里定义了 **5 次**，0.13.9 只在 `App.jsx` 那份加了网络错误映射，供应商设置、定时任务、插件市场、Harness 插件四处仍显示原始错误串。
 - **新增 `src/error-copy.js`**，五处统一引用，网络错误文案全应用生效。
@@ -174,7 +174,7 @@
 
 0.12.2 的锁恢复、目录分页、多份草稿恢复和能力状态清单仍保留在 [0.12.2 验收记录](docs/windows-acceptance-0.12.2.md)，不与本版安装包混用。
 
-## 0.12.2 本轮更新
+## 0.12.2 历史更新
 
 - **锁恢复可验证**：隐私映射主锁和 guard 在创建阶段崩溃后可以恢复，活进程、token、junction、坏 owner 和 Windows 删除中状态保持失败关闭；更新回调不会因重试重复执行。
 - **目录结果完整**：`office_list_files` 支持分页、总数、续页和截断状态，121 项与 1,000 项目录可完整遍历，超过 10,000 项明确拒绝返回不完整结果。
@@ -182,7 +182,7 @@
 - **能力状态真实可见**：Agent 内核设置读取实际工具目录和模型工具声明，显示注册、启用、当前可调度和阻断原因。PTC 的 `run_code` 与经程序调用的办公工具分开标示。
 - **回归门禁进入正式入口**：新增测试已经加入 `npm test`、组件测试和包内测试，0.12.2 源码回归为 335 项，334 项通过，1 项因 Windows 文件符号链接权限条件跳过。
 
-## 0.12.1 本轮更新
+## 0.12.1 历史更新
 
 - **隐私边界一致**：两协议和 MCP 检查动态 JSON 键、工具 schema 属性与约束，敏感字段安全拒绝，保留工具语义；raw 仍拦截凭据。普通交办继续自动脱敏，不增加每次发送的重复确认。
 - **交付由主机绑定**：TXT、DOCX、XLSX 和分享使用当前规则的审阅快照，绑定内容、策略、范围、动作和格式；旧 masked 不替代当前原文检查，renderer 不能注入另一份正文。
@@ -190,7 +190,7 @@
 - **失败与删除可恢复**：失败后原地恢复输入，保留终态轨迹；删除级联所属草稿和解析附件副本，按最新归属保留已移动聊天；资料去重追加，超限明确反馈。
 - **独立插件链保留**：随包 npm 更新到 11.21.3，核对实际嵌套路径与组件清单。生产审计 high/critical 为零，仍有 moderate 告警及未覆盖供应链场景，详见验收说明。
 
-## 0.12.0 已发布基线
+## 0.12.0 历史基线
 
 - **真实内核接入**：原生 Agent Teams 支持共享任务、负责人、依赖与版本检查；原生 `run_code` 可编排工具，默认关闭，仅在绑定项目并选择完全访问时启用。两者已用真实 Harness 和本机合成模型服务验证，不是固定演示回复。
 - **执行边界修复**：PowerShell 接入官方 Windows 写入沙箱；命令子进程清除内核秘密变量。修复主/子会话预览混流、非推理模型默认路由、429/503 重试、成果审批与规划模式检查顺序。Windows ACL 沙箱不代表隔离全部文件读取与网络。
@@ -205,14 +205,16 @@
 
 ### 安装 Windows 版
 
-1. [下载 `ZhiXing-0.14.0-x64.exe`](https://github.com/daniei-chen/ZhiXing/releases/download/v0.14.0/ZhiXing-0.14.0-x64.exe)，核对 [SHA-256 清单](https://github.com/daniei-chen/ZhiXing/releases/download/v0.14.0/SHA256SUMS-release.txt)。
+1. 在 [GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases) 选择已发布的 Windows 安装包，同时核对该版本的 `SHA256SUMS-release.txt`、验收摘要和未覆盖范围。本分支的 Phase 0A 源码候选尚无新安装包。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
 
 安装包包含 Node.js、Harness 和插件 npm CLI。Git 工作树需要本机 Git，部分 Office 技能需要额外的本机工具。SenseVoice 语音模型在用户主动准备时另行下载。当前安装包未签名，请核对来源与文件校验值。安装生命周期的结论限于验收记录所列条件。
 
-[0.13.5 GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.14.0)
+#### 0.14.0 历史资产与证据
+
+以下安装资产、测试数字和生命周期说明保留当时版本的记录，不是当前源码候选的验收结果。[0.14.0 历史发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.14.0)
 
 | Windows x64 安装资产 | 值 |
 | --- | --- |
@@ -221,7 +223,7 @@
 | 文件大小 | `338,681,277` bytes |
 | SHA-256 | `aac2e671a68a126ba9be99312311743c6234aa77938f082ed498fb90285e6799` |
 
-源码回归 **363/364**，目录包回归 **322/323**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败、0 取消。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **5/5**。桌面专项使用本机合成模型服务，核对了批准与拒绝后的实际文件字节、部分补丁的重启后轨迹、7 次模型出站，以及 Markdown 导出增加 0 次模型请求。 [0.13.4 Windows 验收记录](docs/windows-acceptance-0.14.0.md)
+源码回归 **363/364**，目录包回归 **322/323**，各有 1 项因 Windows 文件符号链接权限跳过，0 失败、0 取消。组件 **14/14**，Sites **4/4**，Windows 目录包专项 **5/5**。桌面专项使用本机合成模型服务，核对了批准与拒绝后的实际文件字节、部分补丁的重启后轨迹、7 次模型出站，以及 Markdown 导出增加 0 次模型请求。 [0.14.0 历史 Windows 验收记录](docs/windows-acceptance-0.14.0.md)
 
 同一 Windows 账户的 NSIS 静默安装生命周期在 `0.13.2` 包上复跑：首次安装、同版本覆盖、卸载保留、重装保留与外部目录启动全部通过，项目／会话／草稿／加密配置哈希全程不变。`0.13.3` 另做了降级到 `0.13.2` 再升级回来的验证，数据文件哈希保持、升级后解密核对内容完整。**交互式安装全流程、跨账户解密、`quitAndInstall` 串联与真实云端仍未验证。**
 
@@ -237,7 +239,7 @@
 
 从「添加」选择附件或项目资料，先确认提取结果。执行权限提供「请求批准」「帮我批准」「完全访问」，文件操作、网页、命令与 MCP 均受实际权限策略约束。
 
-文件成果可从产出列表或项目文件面板打开。同名 Agent 写入使用新文件名另存，回执显示实际路径。会话支持复制与导出，分享前可审阅接收方版内容。「再次执行」会保留原问答并追加一次新的请求。
+文件成果可从产出列表或项目文件面板打开。`office_write_file` 和 OfficeKit 成果遇到同名文件时编号另存，回执显示实际路径；原生 `write` / `edit` 等工具可以按获批范围修改现有文件。会话支持复制与导出，分享前可审阅接收方版内容。「再次执行」会保留原问答并追加一次新的请求。
 
 ## 从一件具体的事开始
 
@@ -294,14 +296,14 @@
 | 原生项目工具 | `read`、`write`、`edit`、`apply_patch`、`glob`、`grep`、`read_image`（PNG、JPEG、WebP、GIF 单帧）与 `working_directory` 会话工作目录已接入，执行权限使用内核原生预设。完整上游沙箱与跨启动文件观察未覆盖 |
 | 供应商认证 | 当前使用 API Key。完整 OAuth、刷新与账号切换隔离待实现 |
 | 会话导入 | 支持 DeepSeek 导出 ZIP 的当前分支、随包图片和部分活动记录。全分支与完整工具轨迹迁移待实现 |
-| 会话导出 | 支持主会话 Markdown 与既有 TXT/DOCX/XLSX。原生 ZIP、子会话及附件字节完整归档待实现 |
+| 会话导出 | 支持主会话 Markdown 与既有 TXT/DOCX/XLSX；另有项目目录 ZIP 与子会话已显示文本归档。完整子会话工具参数、产物与附件字节归档仍不齐全 |
 | 协作执行 | 子 Agent、工作流、作业及 Agent Teams 已接入；真实 PTC 默认关闭，需项目和完全访问。跨启动 live jobs、复杂多 Agent 负载及长期稳定性仍待验证 |
 | 搜索 | DeepSeek 路由使用官方搜索。OpenAI/Anthropic 兼容路由不借用模型 Key，未配置独立搜索服务时会在执行轨迹中明确显示暂不可用 |
 | 定时任务 | 由桌面主进程调度，创建默认暂停，内容、模型或资料变化后重新审阅。应用退出后停止调度，重开按已定义规则处理到期任务 |
 | Office 交付 | 已接入 OfficeKit 转换、工作簿重算和按页渲染。复杂排版、结构化报表类型及上游插件的完整生命周期仍待验证 |
 | 平台 | 当前面向 Windows x64。macOS、Linux 分发以及系统桌面 Computer Use 等扩展待独立验证 |
 
-[Harness 能力验收表](docs/harness-capability-map.md) · [Windows 验收记录](docs/windows-acceptance-0.14.0.md) · [界面对照记录](design-qa.md)
+[Harness 能力验收表](docs/harness-capability-map.md) · [0.40.0 历史 Windows 验收记录](docs/windows-acceptance-0.40.0.md) · [界面对照记录](design-qa.md)
 
 ## 0.11.0 的工作重点
 
@@ -314,7 +316,7 @@
 
 ## 源码开发
 
-验证环境为 **Windows 11 x64 · Node.js 24.19.0 · npm 11**。
+历史桌面验证环境为 **Windows 11 x64 · Node.js 24.19.0 · npm 11**。Phase 0A 的本轮本地证据来自 Linux / Node.js 24.22.3，Windows 专属项保留未覆盖状态，详见 [证据摘要](docs/evidence/phase-0a/summary.json)。
 
 ```powershell
 git clone https://github.com/daniei-chen/ZhiXing.git
@@ -343,16 +345,16 @@ npm run test:browser
 npm run electron:install
 npm run test:packed -- ".\release\win-unpacked\知行.exe"
 npm run test:browser -- ".\release\win-unpacked\知行.exe"
-Get-FileHash ".\release\知行-0.12.8-x64.exe" -Algorithm SHA256
+Get-ChildItem .\release\*-x64.exe | Get-FileHash -Algorithm SHA256
 ```
 
-目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。构建提交、源码指纹与锁文件校验值见 [0.12.7 Windows 验收记录](docs/windows-acceptance-0.12.8.md)。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留。打包携带与 Node.js 版本一致的许可证文件。
+目录包输出到 `release/win-unpacked/`，NSIS 安装包输出到 `release/`。`npm run electron:dist` 可单独生成目录包，`npm run electron:install` 会重新生成目录包并构建安装器。构建提交、源码指纹与锁文件校验值须对应本次构建；记录格式可参考 [0.40.0 历史 Windows 验收](docs/windows-acceptance-0.40.0.md)。重新构建后应针对新包复验 Windows 页面及安装、升级、卸载与重装保留。打包携带与 Node.js 版本一致的许可证文件。
 
 ## 参与完善
 
 欢迎通过 Issue 提交可复现的问题与办公场景。请附版本、Windows 环境、复现步骤和预期结果，使用合成资料和已去除敏感信息的日志。模型 Key、MCP 凭据和真实业务原件应妥善保管。
 
-[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [0.12.8 迭代记录](docs/iteration-0.12.8.md) · [0.12.8 审计说明](docs/audit-request-0.12.8.md)
+[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [Phase 0A 审计核实](docs/phase-0a-audit.md) · [成熟化路线](docs/maturity-roadmap.md)
 
 ## 致谢
 

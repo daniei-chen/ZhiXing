@@ -242,3 +242,53 @@ test('关闭持久保存时新草稿仍可在本轮切回，发送到主机的�
   assert.equal(reloaded.component('Composer').input, '');
   assert(!reloaded.nodes().some(node => node.props.className === 'running-return unsent-drafts'));
 });
+
+test('助手正文先于改动与交付卡片，工具摘要和操作栏各在对应一侧', async () => {
+  const saved = fixture();
+  saved.chats = [{
+    id: 'completed-chat', workspaceId: saved.workspaceId, title: '有实际交付的会话',
+    messages: [{
+      id: 'completed-reply', role: 'assistant', text: '正文说明', status: 'succeeded',
+      trace: [{type: 'tool/call', category: 'tools', callId: 'write-1', label: '调用 · 写入项目文本', status: 'running'}],
+      changes: [{path: '交付/说明.txt', added: 1, removed: 0}],
+      deliverables: [{path: '交付/说明.txt'}],
+    }],
+  }];
+  const app = await mount(saved);
+  app.component('Sidebar').openChat('completed-chat');
+  await app.flush();
+  const content = app.nodes().find(node => node.props.className === 'assistant-content');
+  assert(content);
+  const visible = app.nodes(content);
+  const position = name => visible.findIndex(node => node.type.displayName === name || node.props.className === name);
+  const order = ['tool-strip', 'AnswerText', 'ChangedFiles', 'DeliveryCards', 'answer-actions'].map(position);
+  assert(order.every(index => index >= 0));
+  assert(order.every((index, offset) => offset === 0 || index > order[offset - 1]));
+  assert(app.nodes().some(node => node.type.displayName === 'BrandMark' && node.props.className === 'assistant-icon'));
+});
+
+test('反馈超过备注上限后仍能清除，只禁止保存超限内容', async () => {
+  const saved = fixture();
+  saved.chats = [{
+    id: 'feedback-chat', workspaceId: saved.workspaceId, title: '反馈会话',
+    messages: [{id: 'feedback-reply', role: 'assistant', text: '可以反馈的回复', status: 'succeeded'}],
+  }];
+  const cleared = [];
+  const app = await mount(saved, {clearFeedback: async value => { cleared.push(value); }});
+  app.component('Sidebar').openChat('feedback-chat');
+  await app.flush();
+  const open = app.nodes().find(node => node.type.displayName === 'IconButton' && node.props.label === '赞这条回复');
+  open.props.onClick();
+  await app.flush();
+  const note = app.nodes().find(node => node.type === 'textarea' && node.props['aria-label'] === '反馈备注');
+  note.props.onChange({target: {value: '中'.repeat(2800)}});
+  await app.flush();
+  assert.equal(app.button('保存反馈').props.disabled, true);
+  assert.notEqual(app.button('清除').props.disabled, true);
+  app.button('清除').props.onClick();
+  await app.flush();
+  assert.equal(cleared.length, 1);
+  assert.equal(cleared[0].conversationId, 'feedback-chat');
+  assert.equal(cleared[0].messageId, 'feedback-reply');
+  assert(!app.nodes().some(node => node.props.className === 'feedback-panel'));
+});

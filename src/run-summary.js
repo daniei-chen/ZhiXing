@@ -1,4 +1,5 @@
 import { restoreNotice } from './privacy-warning.js';
+import { toolTimeline, toolTimelineSummary } from './run-status.js';
 
 // 气泡只显示正文与错误句。想看「这一轮到底做了什么」需要一个稳定的结构：
 // 状态、耗时、工具调用次数、子任务、产出、还原情况、错误码。
@@ -23,7 +24,8 @@ export function runSummary(message) {
   const trace = Array.isArray(message?.trace) ? message.trace : [];
   const lastTime = trace.length ? trace[trace.length - 1]?.time : undefined;
   const finishedAt = message?.finishedAt || lastTime || (message?.pending ? undefined : message?.updatedAt);
-  const tools = trace.filter(event => event?.type === 'tool/call' || event?.type === 'tool/result' || event?.category === 'tool').length;
+  const timeline = toolTimeline(trace);
+  const tools = timeline.filter(row => row.counted).length;
   const children = Array.isArray(message?.children) ? message.children.length : 0;
   const deliverables = Array.isArray(message?.deliverables) ? message.deliverables.length : 0;
   const unrestored = Number(message?.unrestored) || 0;
@@ -34,6 +36,7 @@ export function runSummary(message) {
     statusLabel: message?.pending ? '进行中' : STATUS[message?.status] || '未知',
     duration: durationText(message?.startedAt, finishedAt),
     tools,
+    toolSummary: toolTimelineSummary(timeline, { truncated: !!message?.traceTruncated }),
     children,
     deliverables,
     unrestored,
@@ -50,7 +53,7 @@ export function summaryRows(message) {
     { key: 'status', label: '状态', value: summary.statusLabel },
     ...(summary.mode ? [{ key: 'mode', label: '发送方式', value: summary.protectedCount ? `${summary.mode}（本机替换 ${summary.protectedCount} 处敏感信息）` : summary.mode }] : []),
     { key: 'duration', label: '耗时', value: summary.duration || '未记录' },
-    { key: 'tools', label: '工具调用', value: summary.tools ? `${summary.tools} 条记录` : '没有调用工具' },
+    { key: 'tools', label: '工具调用', value: summary.toolSummary },
     { key: 'children', label: '子任务', value: summary.children ? `${summary.children} 个` : '没有子任务' },
   ];
   if (summary.deliverables) rows.push({ key: 'deliverables', label: '产出文件', value: `${summary.deliverables} 个` });

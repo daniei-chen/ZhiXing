@@ -26,7 +26,7 @@ import { composePrompt, workflows } from './office-workflows.js';
 import { REASONING_LEVELS } from './model-options.js';
 import { summaryRows } from './run-summary.js';
 import { selectedModel } from './provider-options.js';
-import { runStatusLabel, toolTimeline } from './run-status.js';
+import { runStatusLabel, toolTimeline, toolTimelineSummary } from './run-status.js';
 import { restoreNotice, exportNote, sumUnrestored } from './privacy-warning.js';
 import { applyAutomationResults } from './automation-core.js';
 import { acceptsGoalImages, formatSessionCommand, parseSessionCommand } from './session-commands.js';
@@ -1267,18 +1267,30 @@ export function App() {
               {chat ? <section className="transcript" ref={transcript} onScroll={onTranscriptScroll} aria-label="聊天记录">
                 {!messages.length && <p className="transcript-empty">这段聊天还没有消息。</p>}
                 {messages.map((message, index) => message.role === 'user' ? <article className="user-message" key={message.id || index}>{message.text&&<p>{message.text}</p>}<ChatAttachments files={message.files}/></article> : <article className={`assistant-message ${message.error ? 'error-message' : ''}`} key={message.id || index}>
-                  <div className="assistant-byline"><span className="assistant-icon"><NotePencil size={17}/></span><strong>{message.imported?'DeepSeek':'知行'}</strong><small>{message.imported?'导入记录':message.demo ? '演示回复' : message.error ? '运行错误' : message.stopped ? '已停止' : message.privacyMode === 'raw' ? '非脱敏模式' : '脱敏模式'}</small></div>
+                  <div className="assistant-byline"><BrandMark className="assistant-icon"/><strong>{message.imported?'DeepSeek':'知行'}</strong><small>{message.imported?'导入记录':message.demo ? '演示回复' : message.error ? '运行错误' : message.stopped ? '已停止' : message.privacyMode === 'raw' ? '非脱敏模式' : '脱敏模式'}</small></div>
+                  <div className="assistant-content">
                   {message.imported&&<ImportedActivity message={message} onOpenUrl={openAnswerUrl}/>}
                   <AgentChildren items={message.pending?runEvents.findLast(event=>event.type==='subagents')?.children:message.children} onView={()=>showWorkPage('activity')}/>
                   <TaskPlan items={message.pending?events.findLast(event=>event.runId===running?.runId&&event.type==='plan')?.plan:message.plan}/>
-                  {message.changes?.length>0&&<ChangedFiles files={message.changes} onOpen={file=>openReview(file?.path)}/>}
-                  {message.deliverables?.length>0&&<DeliveryCards files={message.deliverables} onOpen={openDeliverable} onAction={deliverableAction} pending={deliverableBusy}/>}
                   {message === currentContextMessage && message.context.planning && <p className="context-usage">规划模式 · 只读调查与方案设计 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/plan off')}>退出规划模式</button></p>}
                   {message === currentContextMessage && currentGoal && <p className="context-usage">持续目标 · {({active:'进行中',paused:'已暂停',complete:'已完成',blocked:'需要补充'})[currentGoal.phase] || currentGoal.phase} · 第 {currentGoal.roundsStarted} / {currentGoal.maxGoalRounds} 轮 <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, goalAction[0])}>{goalAction[1]}</button></p>}
+                  {(() => {
+                    const rows = toolTimeline(message.pending ? runEvents : message.trace);
+                    if (!rows.length) return null;
+                    const truncated = message.pending ? running?.traceTruncated : message.traceTruncated;
+                    return <details className="tool-strip">
+                      <summary>{toolTimelineSummary(rows, { truncated })}</summary>
+                      <ol>{rows.map(row => <li key={row.key} data-status={row.status}>
+                        <span>{row.label}</span>
+                        {Number.isSafeInteger(row.durationMs) && row.durationMs >= 100 ? <small>{(row.durationMs / 1000).toFixed(1)}s</small> : null}
+                      </li>)}</ol>
+                    </details>;
+                  })()}
                   {message.pending&&message.progressText&&<AnswerText text={message.progressText} onOpenUrl={openAnswerUrl}/>}
-                  {(()=>{const rows=toolTimeline(message.pending?runEvents:message.trace);if(!rows.length)return null;return <details className="tool-strip" open><summary>{rows.length} 次工具调用</summary><ol>{rows.map(row=><li key={row.key} data-status={row.status}>{row.label}{Number.isSafeInteger(row.durationMs)&&row.durationMs>=100?<small>{(row.durationMs/1000).toFixed(1)}s</small>:null}</li>)}</ol></details>;})()}
                   {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':runStatusLabel(events,running?.runId)}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl} references={message.deliverables} onOpenFile={openDeliverable}/>}
                   {message.unrestored>0 && <p className="restore-note" role="status">{restoreNotice(message.unrestored)}</p>}
+                  {!message.pending&&message.changes?.length>0&&<ChangedFiles files={message.changes} onOpen={file=>openReview(file?.path)}/>}
+                  {!message.pending&&message.deliverables?.length>0&&<DeliveryCards files={message.deliverables} onOpen={openDeliverable} onAction={deliverableAction} pending={deliverableBusy}/>}
                   {!message.pending&&<details className="run-summary"><summary>详情</summary><dl>{summaryRows(message).map(row => <div className="run-summary-row" key={row.key}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl></details>}
             {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
                   {message.context?.measurement && <p className="context-usage">{contextUsageText(message.context.measurement.totalTokens, contextWindowTokens(runtime, state.settings, message.context.pressure?.contextWindow))} {message === currentContextMessage && <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/compact')}>压缩上下文</button>}</p>}
@@ -1308,10 +1320,11 @@ export function App() {
                     <div className="feedback-actions">
                       <small className={noteBytes(feedbackDraft.note) > FEEDBACK_NOTE_MAX_BYTES ? 'feedback-count over' : 'feedback-count'}>{noteBytes(feedbackDraft.note)} / {FEEDBACK_NOTE_MAX_BYTES} 字节</small>
                       <button type="button" className="secondary-button" onClick={() => setFeedbackDraft(null)}>取消</button>
-                      <button type="button" className="secondary-button" disabled={noteBytes(feedbackDraft.note) > FEEDBACK_NOTE_MAX_BYTES} onClick={() => void clearFeedbackDraft()}>清除</button>
+                      <button type="button" className="secondary-button" onClick={() => void clearFeedbackDraft()}>清除</button>
                       <button type="button" className="primary-button" disabled={noteBytes(feedbackDraft.note) > FEEDBACK_NOTE_MAX_BYTES} onClick={() => void saveFeedbackDraft()}>保存反馈</button>
                     </div>
                   </section>}
+                  </div>
                 </article>)}
                 {transcriptHasNew&&<button className="transcript-new-content" type="button" onClick={returnTranscriptToBottom}>有新内容 · 回到底部</button>}
               </section> : <div className="empty-stage"><section className="welcome" aria-label={project ? '项目交办' : '新建交办'}>

@@ -38,7 +38,6 @@ const unsupported = [
  ['independent-search','独立搜索连接'],
  ['responses-gemini','Responses / Gemini 协议'],
  ['heterogeneous-submodels','异构子模型路由'],
- ['native-files','完整原生文件编辑工具'],
  // Vision is represented by an explicit runtime entry below. Keep the
  // unsupported list for capabilities that still have no implementation.
  ['ner','全面 NER 脱敏引擎'],

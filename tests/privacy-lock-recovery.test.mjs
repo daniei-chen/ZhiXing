@@ -185,6 +185,79 @@ test('R09 live main-lock initializer retains the guard until owner publication',
   assert.deepEqual(await readBridge(f.file, f.key), {count: 1});
 });
 
+for (const code of ['EEXIST', 'ENOTEMPTY']) {
+  test(`R09 ${code}: a rename loser retries after the competing guard has already retired`, {timeout: 10000}, async t => {
+    const f = await fixture(t);
+    const loser = childProcess(t, f, `
+      import fs from 'node:fs/promises';
+      import {updateBridge} from ${JSON.stringify(bridgeUrl)};
+      const target = process.env.ZX_FILE + '.lock.guard.v2';
+      const rename = fs.rename.bind(fs);
+      let injected = false, calls = 0;
+      fs.rename = async (from, to) => {
+        if (to !== target || injected) return rename(from, to);
+        injected = true;
+        process.send('before-rename');
+        await new Promise(resolve => process.once('message', resolve));
+        let collision;
+        try { await rename(from, to); } catch (error) { collision = error; }
+        if (!collision) throw new Error('Expected a collision with the published competing owner');
+        process.send({nativeCode: collision.code});
+        await new Promise(resolve => process.once('message', resolve));
+        // Exercise both portable collision codes, regardless of the host OS.
+        collision.code = process.env.ZX_RENAME_CODE;
+        throw collision;
+      };
+      await updateBridge(process.env.ZX_FILE, process.env.ZX_KEY, state => {
+        calls++;
+        return {state: {count: state.count + 1}};
+      });
+      process.send({calls});
+      process.disconnect();
+    `, {ZX_RENAME_CODE: code});
+    assert.equal(await loser.message(), 'before-rename');
+    const winner = childProcess(t, f, pauseAtPublication, {ZX_LOCK_KIND: 'guard', ZX_PHASE: 'published'});
+    const {target} = await winner.message();
+    loser.child.send('attempt-rename');
+    assert(['EEXIST', 'ENOTEMPTY', 'EPERM', 'EACCES'].includes((await loser.message()).nativeCode));
+    winner.child.send('release');
+    assert.equal((await winner.exited).code, 0);
+    await assert.rejects(fs.lstat(target), {code: 'ENOENT'});
+    assert.deepEqual(await readBridge(f.file, f.key), {count: 1});
+    loser.child.send('observe-error');
+    assert.deepEqual(await loser.message(), {calls: 1});
+    assert.equal((await loser.exited).code, 0);
+    assert.deepEqual(await readBridge(f.file, f.key), {count: 2});
+    assert.deepEqual(await fs.readdir(f.root), ['map.bin']);
+  });
+}
+
+for (const code of ['EPERM', 'EACCES']) {
+  test(`R09 ${code}: publication permission failures without a competing lock are not swallowed`, {timeout: 10000}, async t => {
+    const f = await fixture(t);
+    const worker = childProcess(t, f, `
+      import fs from 'node:fs/promises';
+      import {updateBridge} from ${JSON.stringify(bridgeUrl)};
+      const rename = fs.rename.bind(fs);
+      fs.rename = async (from, to) => {
+        if (to === process.env.ZX_FILE + '.lock')
+          throw Object.assign(new Error('Publication denied'), {code: process.env.ZX_RENAME_CODE});
+        return rename(from, to);
+      };
+      let calls = 0;
+      try {
+        await updateBridge(process.env.ZX_FILE, process.env.ZX_KEY, state => { calls++; return {state}; });
+        process.send({calls, code: null});
+      } catch (error) { process.send({calls, code: error.code}); }
+      process.disconnect();
+    `, {ZX_RENAME_CODE: code});
+    assert.deepEqual(await worker.message(), {calls: 0, code});
+    assert.equal((await worker.exited).code, 0);
+    assert.deepEqual(await readBridge(f.file, f.key), {count: 0});
+    assert.deepEqual(await fs.readdir(f.root), ['map.bin']);
+  });
+}
+
 test('R09 simultaneous real writers preserve all updates and exclusive callback entry', {timeout: 20000}, async t => {
   const f = await fixture(t);
   const source = `

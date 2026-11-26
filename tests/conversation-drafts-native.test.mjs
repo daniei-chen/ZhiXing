@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir, mkdtemp, readFile, writeFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, readFile, realpath, rm, writeFile} from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-import {once} from 'node:events';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {build} from 'esbuild';
@@ -308,9 +308,33 @@ async function nativeJourney() {
 test('Windows Electron真实App/DOM：三份新草稿回切及文件重载、首次失败chat归属、删除项目迟到附件', {timeout: 120000}, async context => {
   assert.equal(process.platform, 'win32', 'This isolated renderer contract requires Windows Electron.');
   const hashes = await sourceHashes();
-  const root = path.join(repository, '.preview/qa-0.12.1-audit/conversation-drafts-native');
-  await mkdir(root, {recursive: true});
-  const directory = await mkdtemp(path.join(root, 'renderer-'));
+  const root = await realpath(os.tmpdir());
+  const directory = await mkdtemp(path.join(root, 'zhixing-drafts-native-'));
+  let child, closed, launchError, output = '';
+  context.after(async () => {
+    if (child && child.exitCode === null && child.signalCode === null) child.kill();
+    if (closed) await closed;
+    try {
+      // Opt-in evidence contains bounded text reports only, never profiles or bundles.
+      if (process.env.ZHIXING_TEST_EVIDENCE_DIR) {
+        const evidence = path.join(path.resolve(process.env.ZHIXING_TEST_EVIDENCE_DIR), path.basename(directory));
+        await mkdir(evidence, {recursive: true});
+        for (const name of ['journey.json', 'summary.json', 'failure.json', 'source-hashes.json']) {
+          const body = await readFile(path.join(directory, name)).catch(error => {
+            if (error.code !== 'ENOENT') throw error;
+          });
+          if (body && body.length <= 64 * 1024) await writeFile(path.join(evidence, name), body);
+        }
+        await writeFile(path.join(evidence, 'electron.log'), Buffer.from(output).subarray(-64 * 1024));
+        console.log(`Text evidence: ${evidence}`);
+      }
+    } finally {
+      const resolved = await realpath(directory);
+      assert.equal(path.dirname(resolved), root);
+      assert(path.basename(resolved).startsWith('zhixing-drafts-native-'));
+      await rm(resolved, {recursive: true, force: true, maxRetries: 6, retryDelay: 150});
+    }
+  });
   const renderer = await build({
     stdin: {resolveDir: repository, loader: 'jsx', contents: `import {createElement} from 'react'; import {createRoot} from 'react-dom/client'; import {App} from './src/App.jsx'; createRoot(document.getElementById('root')).render(createElement(App));`},
     bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', loader: {'.css': 'empty'}, define: {'process.env.NODE_ENV': '"test"'}, logLevel: 'silent',
@@ -332,18 +356,18 @@ test('Windows Electron真实App/DOM：三份新草稿回切及文件重载、首
   await writeFile(path.join(directory, 'main.cjs'), `(${nativeJourney.toString()})().catch(error => { console.error(error.stack); require('electron').app.exit(1); });`);
   await writeFile(path.join(directory, 'source-hashes.json'), JSON.stringify(hashes, null, 2));
   const env = {...process.env}; delete env.ELECTRON_RUN_AS_NODE;
-  const child = spawn(require('electron'), [path.join(directory, 'main.cjs')], {env, signal: context.signal, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
-  const exited = once(child, 'exit');
-  context.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.kill(); await exited.catch(() => {}); } });
-  let output = '';
-  child.stdout.on('data', data => { output += data; }); child.stderr.on('data', data => { output += data; });
-  const [code] = await exited;
-  await writeFile(path.join(directory, 'electron.log'), output);
-  assert.equal(code, 0, `${output}\nEvidence: ${directory}`);
+  child = spawn(require('electron'), [path.join(directory, 'main.cjs')], {env, signal: context.signal, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
+  closed = new Promise(resolve => child.once('close', (code, signal) => resolve([code, signal])));
+  child.on('error', error => { launchError = error; });
+  const collect = data => { output = (output + data).slice(-256 * 1024); };
+  child.stdout.on('data', collect); child.stderr.on('data', collect);
+  const [code] = await closed;
+  if (launchError) throw launchError;
+  assert.equal(code, 0, output);
   const summary = JSON.parse(await readFile(path.join(directory, 'summary.json'), 'utf8'));
   assert.equal(summary.passed, true); assert.equal(summary.records, 5); assert.equal(summary.show, false);
   assert.equal(summary.draftOpens, 7); assert.equal(summary.pageLoads, 4); assert.equal(summary.prepareRunCalls, 2); assert.equal(summary.runPreparedCalls, 2); assert.equal(summary.filePickCalls, 4);
   assert.deepEqual(summary.rendererErrors, []); assert.deepEqual(summary.blockedNetwork, []);
   assert.deepEqual(await sourceHashes(), hashes, 'App/store/conversation-state remain frozen throughout this verification');
-  console.log(`${output.trim()}\nEvidence: ${directory}\nLayer: ${summary.layer}\nCheckpoints: ${summary.records}; draft opens: ${summary.draftOpens}; page loads: ${summary.pageLoads}; model executions: 0; synthetic runPrepared: ${summary.runPreparedCalls}`);
+  console.log(`${output.trim()}\nLayer: ${summary.layer}\nCheckpoints: ${summary.records}; draft opens: ${summary.draftOpens}; page loads: ${summary.pageLoads}; model executions: 0; synthetic runPrepared: ${summary.runPreparedCalls}\nIsolated temporary files are removed after verification.`);
 });

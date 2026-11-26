@@ -418,7 +418,8 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
   return rows.some(row=>row.id===provider.id)?rows.map(row=>row.id===provider.id?provider:row):[...rows,provider];
  }));
  handle('providers:remove',id=>changeProviders(rows=>rows.filter(row=>row.id!==id)));
-handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setModelHidden(rows,options||{})));
+ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setModelHidden(rows,options||{})));
+ handle('providers:restore-models',id=>changeProviders(rows=>providerApi.restoreProviderModels(rows,id)));
  handle('providers:refresh',id=>changeProviders(async rows=>{
   const provider=rows.find(row=>row.id===id);
   if(!provider)throw new Error('所选供应商已移除。');
@@ -625,7 +626,7 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
    const stat=await fs.stat(directory).catch(()=>null);
    if(stat?.isDirectory())defaultPath=directory;
   }
-  const result=await dialog.showOpenDialog(windowRef,{title:'添加工作资料',defaultPath,properties:['openFile','multiSelections'],filters:[{name:'办公文档、文本和图片',extensions:['txt','md','csv','tsv','json','docx','xlsx','pptx','pdf','png','jpg','jpeg','bmp','tif','tiff']}]});
+  const result=await dialog.showOpenDialog(windowRef,{title:'添加工作资料',defaultPath,properties:['openFile','multiSelections'],filters:[{name:'办公文档、文本和图片',extensions:['txt','md','csv','tsv','json','docx','xlsx','pptx','pdf','png','jpg','jpeg','webp','gif','bmp','tif','tiff']}]});
   if(result.canceled)return [];
   const files=[];
   for(const filePath of result.filePaths.slice(0,12)){

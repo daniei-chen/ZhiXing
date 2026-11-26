@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 1,
+  "recordDate": "2026-11-26",
+  "userTimeZone": "Asia/Shanghai",
+  "repository": "https://github.com/daniei-chen/ZhiXing",
+  "baseCommit": "c2f7588d7e158a1e6179f65441e556d37acc2ab8",
+  "candidateBranch": "fix/phase-0a-audit",
+  "appVersion": "0.40.0",
+  "deliveryState": "source candidate; not a versioned or packaged release",
+  "environment": {
+    "platform": "Linux",
+    "machine": "x86_64",
+    "node": "v24.22.3",
+    "dependencySetup": "npm ci --ignore-scripts --no-audit --no-fund; unmodified package-lock.json",
+    "realCloudCredentialsUsed": false
+  },
+  "sourceSnapshot": {
+    "file": "source-fingerprints.json",
+    "files": 287,
+    "aggregateSha256": "cfd60feccde624f37b36eb32509827b52bfd87819dabc527f33ad7ff0d611de1",
+    "aggregateMethod": "SHA256 of UTF-8 JSON with sorted path keys and compact comma/colon separators",
+    "scope": "src, electron, harness, scripts, tests, .github and package/build configuration; docs excluded",
+    "checkedUnchangedAfterFinalRuns": true
+  },
+  "runs": {
+    "pristineBaseline": {
+      "command": "npm test",
+      "layer": "source + real Harness with synthetic local providers, pristine c2f7588 on Linux",
+      "result": "failed",
+      "summary": {
+        "tests": 505,
+        "suites": 0,
+        "pass": 479,
+        "fail": 16,
+        "cancelled": 0,
+        "skipped": 10,
+        "todo": 0,
+        "duration_ms": 276425.729693
+      },
+      "failedCases": [
+        "目录链接重定向后旧引用失效，日志目录链接不能跨应用根读取",
+        "真实 Harness 在完全访问下 present 项目外文件后可用主机引用预览",
+        "真实 Harness 转换并重算 Office 文档，受审批的成果字节留在项目",
+        "真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话",
+        "官方原生文件读写和编辑遵守项目范围、版本检查及脱敏占位符",
+        "同一原生会话降回请求批准后，下一次命令使用同步的工作区沙箱",
+        "官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式",
+        "真实 Windows 沙箱在 ask/auto 拒绝项目外写入，full 明确放行且命令无内核秘密",
+        "R09 simultaneous real writers preserve all updates and exclusive callback entry",
+        "真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原",
+        "simultaneous recording admissions reserve one local recognizer",
+        "cancellation joins inference cleanup, rejects duplicate audio and publishes one terminal event",
+        "prepare waits for initial cache inspection and starts once its upstream slot is released",
+        "cancel during initial inspection never starts a late model preparation",
+        "invalid audio and a failed inference release admission and permit a successful retry",
+        "真实 Harness PTY：输入、屏幕恢复、范围校验与退出"
+      ],
+      "logSha256": "04fd795bc316ecbe880f663c18599788ad8d88c0ee937bda07230697fae0b058"
+    },
+    "candidate": {
+      "command": "npm test",
+      "layer": "source + real Harness with synthetic local providers, frozen candidate on Linux",
+      "result": "failed",
+      "summary": {
+        "tests": 545,
+        "suites": 0,
+        "pass": 520,
+        "fail": 15,
+        "cancelled": 0,
+        "skipped": 10,
+        "todo": 0,
+        "duration_ms": 271802.28246
+      },
+      "failedCases": [
+        "目录链接重定向后旧引用失效，日志目录链接不能跨应用根读取",
+        "真实 Harness 在完全访问下 present 项目外文件后可用主机引用预览",
+        "真实 Harness 转换并重算 Office 文档，受审批的成果字节留在项目",
+        "真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话",
+        "官方原生文件读写和编辑遵守项目范围、版本检查及脱敏占位符",
+        "同一原生会话降回请求批准后，下一次命令使用同步的工作区沙箱",
+        "官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式",
+        "真实 Windows 沙箱在 ask/auto 拒绝项目外写入，full 明确放行且命令无内核秘密",
+        "真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原",
+        "simultaneous recording admissions reserve one local recognizer",
+        "cancellation joins inference cleanup, rejects duplicate audio and publishes one terminal event",
+        "prepare waits for initial cache inspection and starts once its upstream slot is released",
+        "cancel during initial inspection never starts a late model preparation",
+        "invalid audio and a failed inference release admission and permit a successful retry",
+        "真实 Harness PTY：输入、屏幕恢复、范围校验与退出"
+      ],
+      "logSha256": "026ec30fcf3bd80f4ed96eaf979f8c24535a9ff3d957f48c72582c2c1ffa4630"
+    },
+    "components": {
+      "command": "npm run test:components",
+      "layer": "React source/SSR/component contracts; Windows renderer cases were attempted but not validated on Linux",
+      "result": "failed",
+      "summary": {
+        "tests": 18,
+        "suites": 0,
+        "pass": 12,
+        "fail": 5,
+        "cancelled": 0,
+        "skipped": 1,
+        "todo": 0,
+        "duration_ms": 5894.597516
+      },
+      "failedCases": [
+        "Windows 内核设置能力状态：真实层级文案、检查失败清空旧结果、配置变化拒绝迟到目录",
+        "Windows Electron真实App/DOM：三份新草稿回切及文件重载、首次失败chat归属、删除项目迟到附件",
+        "Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试",
+        "R02 真实 Windows renderer：主机快照、四路径文件字节、失效/错误恢复与 demo 范围",
+        "mounted VoiceInput isolates stale microphone callbacks and cleans scope, suspension and unmount"
+      ],
+      "logSha256": "5c02f22e5efe9e7c4a9d8206d02c9ae863fe59b56223d81e136ffd1d9863a811"
+    },
+    "sites": {
+      "command": "npm run test:sites",
+      "layer": "Sites static build and request routing",
+      "result": "passed",
+      "summary": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 203.192151
+      },
+      "failedCases": [],
+      "logSha256": "b1d51f8a74936c63237c751e7b790866a1a5a6030c5009087cf51b27716f4791"
+    },
+    "build": {
+      "command": "npm run build",
+      "layer": "build only",
+      "result": "passed",
+      "viteDurationSeconds": 7.79,
+      "requiredArtifacts": [
+        "dist/client/index.html",
+        "dist/server/index.js",
+        "dist/.openai/hosting.json"
+      ],
+      "warning": "Main JS chunk is 747.29 kB minified (215.68 kB gzip), above Vite 500 kB warning; frontend performance work remains",
+      "logSha256": "856bf6dee0d8aae24952228c0bda0c80ff9304f70ec94bbad657bcdf92f6bd30"
+    }
+  },
+  "baselineComparison": {
+    "newFailedCases": [],
+    "resolvedFailedCases": [
+      "R09 simultaneous real writers preserve all updates and exclusive callback entry"
+    ],
+    "retainedFailedCaseCount": 15,
+    "newTests": 40,
+    "interpretation": "One reproducible lock-publication race fixed. Fifteen existing Linux failures remain; the full suite is not green."
+  },
+  "remainingLinuxFailureGroups": [
+    {
+      "count": 4,
+      "reason": "Windows PowerShell, sandbox or PTY execution unavailable in this Linux test environment"
+    },
+    {
+      "count": 2,
+      "reason": "Windows OCR/image masking platform requirement"
+    },
+    {
+      "count": 5,
+      "reason": "SenseVoice tests require Windows and fail platform guards"
+    },
+    {
+      "count": 1,
+      "reason": "Test removes a Windows junction as a directory; Linux symlink semantics return ENOTDIR"
+    },
+    {
+      "count": 3,
+      "reason": "Fixture paths below /tmp are not covered by current PATH redaction rules; raw fixture path assertions fail. This is a POSIX privacy coverage gap, not a missing dependency."
+    }
+  ],
+  "targetedEvidence": {
+    "nativeEntrypoints": {
+      "testFile": "tests/runtime-native-entrypoints.test.mjs",
+      "passed": 3,
+      "includedInFinalSuite": true,
+      "meaning": "Actual pinned Harness detects an inline skill gesture after existing prompt composition and sends separate child model requests on OpenAI and Anthropic synthetic providers. Does not prove Windows packaged subagent archive or real model quality."
+    },
+    "nestedOfficeWrites": {
+      "testFile": "tests/office-file-policy.test.mjs",
+      "passed": 22,
+      "includedInFinalSuite": true,
+      "meaning": "Approval ordering, canonical scope checks, directory/link replacement, cancellation and exclusive writes on this Linux filesystem. Windows junction/case behavior and atomic directory-handle I/O not proven."
+    },
+    "lockRace": {
+      "testFile": "tests/privacy-lock-recovery.test.mjs",
+      "newTests": 4,
+      "includedInFinalSuite": true,
+      "counterfactual": "The two deterministic race cases also failed against pristine c2f7588 lock code; candidate fixes these cases without suppressing absent-lock permission errors."
+    },
+    "officeKitSupplement": {
+      "result": "1 passed",
+      "fixtureRoot": "temporary directory under /home/agent",
+      "meaning": "Same existing real-Harness OfficeKit conversion/recalculation case passed with a path shape recognized by current PATH rules. The failing default /tmp run remains in the full-suite result."
+    }
+  },
+  "staticChecks": {
+    "undefinedCssVariables": [],
+    "gitDiffCheck": "passed",
+    "sitesIntegrationFilesUnchanged": true,
+    "dependencyManifestVersionUnchanged": true,
+    "packageLockUnchanged": true
+  },
+  "preview": {
+    "server": "Vite loopback server started in this environment",
+    "httpStatus": 200,
+    "htmlRootAndSourceEntryPresent": true,
+    "browserVisualResult": "not covered",
+    "reason": "Connected browser was unavailable; cloud-browser local connection failed and subsequent error-page access was blocked. No screenshot or browser acceptance claimed."
+  },
+  "upstreamAuditCorrections": {
+    "directDeepSeekProductionDependencies": 17,
+    "uniqueDeepSeekPackageNamesInLock": 347,
+    "transitiveDeepSeekPackageNames": 330,
+    "installedInLinux": 339,
+    "platformOptionalNotInstalled": 8,
+    "skillPrefixBreakageReproduced": false,
+    "customProviderChildRoutingBreakageReproduced": false,
+    "providerStreamingUsagePolicyChanged": false
+  },
+  "windowsCi": {
+    "workflow": ".github/workflows/ci.yml",
+    "status": "configured; awaiting first remote execution",
+    "scope": "ephemeral Windows source/build and isolated renderer only; no NSIS installation, upgrade, release or real cloud"
+  },
+  "notCovered": [
+    "Windows packaged UI and native dialogs",
+    "Windows installation and upgrade lifecycle",
+    "Real cloud model and office Eval",
+    "Code signing",
+    "User D drive inventory/cleanup/backup/restore",
+    "Historical screenshot or full installed Harness desktop package review",
+    "Resident Harness Host",
+    "SQLite migration",
+    "Professional Word/Excel/PPT engine",
+    "Full privacy NER or arbitrary concurrent-process TOCTOU resistance"
+  ]
+}

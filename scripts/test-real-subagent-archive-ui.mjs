@@ -19,6 +19,10 @@ const evidence = path.join(root, `.preview/qa-${provenance.version}/real-subagen
 const profile = path.join(evidence, 'profile');
 const archive = path.join(evidence, '子会话-1.md');
 const model = 'qa-real-subagent-model';
+const parentMarker = 'ZHIXING_PARENT_ROUTE_FIXTURE';
+const childMarker = 'ZHIXING_CHILD_ROUTE_FIXTURE';
+const parentPrompt = `${parentMarker} 把上周的销售表汇总成一段结论。`;
+const childPrompt = `${childMarker} 把上周的销售表汇总成一段结论，只回答数字。`;
 const childAnswer = '华东增长 12%，华南持平，北方下滑 3%。';
 const finalAnswer = '汇总完成：华东增长 12%。';
 const report = {
@@ -50,15 +54,18 @@ const server = http.createServer(async (req, res) => {
     const toolMessages = body.messages.filter(message => message.role === 'tool');
     const lastUser = body.messages.filter(message => message.role === 'user').at(-1);
     const number = report.requests.length + 1;
-    const lastMessage = body.messages.at(-1);
-    const lastContent = String(lastMessage?.content ?? '');
-    const childRequest = lastMessage?.role === 'user' && lastContent.includes('只回答数字') && !lastContent.startsWith('Background subagent');
+    // Harness appends context (including the skill catalog) after the user's
+    // input, so the final message is not a reliable way to identify a child.
+    // A spawned child has its own prompt but no parent conversation. The
+    // parent's later tool result / wakeup retains the parent marker.
+    const messageText = JSON.stringify(body.messages);
+    const childRequest = messageText.includes(childMarker) && !messageText.includes(parentMarker);
     report.requests.push({ number, model: body.model, systemHead: String(body.messages.find(m => m.role === 'system')?.content ?? '').replace(/\s+/g, ' ').slice(0, 220), headerKeys: Object.keys(req.headers).filter(k => /session|agent|parent|trace|run/i.test(k)), headers: Object.fromEntries(Object.entries(req.headers).filter(([k]) => /session|agent|parent|trace|run/i.test(k))), messageCount: body.messages.length, tools: tools.slice(0, 40), toolMessages: toolMessages.length, childRequest, prompt: String(lastUser?.content ?? '').slice(0, 120), lastRole: body.messages.at(-1)?.role, lastText: String(body.messages.at(-1)?.content ?? '').slice(0, 160), systemCount: body.messages.filter(m => m.role === 'system').length, toolResult: toolMessages.length ? JSON.stringify(toolMessages.at(-1)).slice(0, 400) : null });
     void persist();
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store' });
     const emit = (delta, finish = null) => `data: ${JSON.stringify({ id: `qa-real-${number}`, object: 'chat.completion.chunk', created: 1, model, choices: [{ index: 0, delta, finish_reason: finish }] })}\n\n`;
     if (number === 1) {
-      const args = { prompt: '把上周的销售表汇总成一段结论，只回答数字。', description: '汇总上周销售表', name: 'qa-sales' };
+      const args = { prompt: childPrompt, description: '汇总上周销售表', name: 'qa-sales' };
       res.end(emit({ role: 'assistant', content: '' }) + emit({ tool_calls: [{ id: 'qa-subagent-1', index: 0, type: 'function', function: { name: 'subagent', arguments: JSON.stringify(args) } }] }) + emit({}, 'tool_calls') + 'data: [DONE]\n\n');
       return;
     }
@@ -143,7 +150,7 @@ await uiRef.send('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'le
 await uiRef.send('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, x: rowRect.x, y: rowRect.y });
 await pause(800);
 
-await uiRef.fill('textarea[aria-label="聊天输入框"]', '把上周的销售表汇总成一段结论。');
+await uiRef.fill('textarea[aria-label="聊天输入框"]', parentPrompt);
 await uiRef.click('发送消息', '.composer button');
 await uiRef.waitFor(`document.querySelector('.transcript')?.textContent.includes(${JSON.stringify(finalAnswer)})&&!document.querySelector('button[aria-label=停止生成]')`, 120000);
 await pause(1200);

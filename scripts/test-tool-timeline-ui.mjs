@@ -1,5 +1,5 @@
 // 工具时间线的实包验收：用本地假服务让模型返回一次 tool_call（todo_write），
-// 内核真的执行这个工具，界面应在消息下方自动列出「调用 · 更新工作计划」。
+// 内核真的执行这个工具，界面应将 call/result 合为一次「更新工作计划 · 完成」。
 // 不依赖真实云端，也不依赖工作区（todo_write 不需要文件系统）。
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -103,18 +103,27 @@ try {
   const deadline = Date.now() + 120000;
   let rows = [];
   let answer = '';
+  let summary = '';
   while (Date.now() < deadline) {
-    const snapshot = await ui.evaluate('(()=>{const strips=[...document.querySelectorAll(".tool-strip")];const last=strips.at(-1);return {rows:last?[...last.querySelectorAll("li")].map(li=>li.textContent.trim()):[],answer:[...document.querySelectorAll(".assistant-message")].at(-1)?.innerText.trim()||"",busy:Boolean(document.querySelector(".thinking-label"))};})()');
-    rows = snapshot.rows; answer = snapshot.answer;
+    const snapshot = await ui.evaluate('(()=>{const strips=[...document.querySelectorAll(".tool-strip")];const last=strips.at(-1);return {rows:last?[...last.querySelectorAll("li")].map(li=>li.textContent.trim()):[],summary:last?.querySelector("summary")?.textContent.trim()||"",answer:[...document.querySelectorAll(".assistant-message")].at(-1)?.innerText.trim()||"",busy:Boolean(document.querySelector("button[aria-label=停止生成]"))};})()');
+    rows = snapshot.rows; answer = snapshot.answer; summary = snapshot.summary;
     if (rows.length && !snapshot.busy) break;
     await pause(300);
   }
   await ui.screenshot(path.join(evidence, 'tool-timeline.png'));
-  report.rows = rows; report.answer = answer.slice(0, 200); report.providerCalls = hits.slice(-6); await persist();
-  assert.ok(rows.length > 0, '消息下方没有工具调用记录');
-  assert.ok(rows.some(label => label.includes('调用 · 更新工作计划')), `没有看到调用行：${rows.join(' | ')}`);
-  assert.ok(rows.some(label => /更新工作计划 · 完成/u.test(label)), `没有看到完成行：${rows.join(' | ')}`);
-  await record('工具调用与结果自动列在消息下方', { rows });
+  report.rows = rows; report.summary = summary; report.answer = answer.slice(0, 200); report.providerCalls = hits.slice(-6); await persist();
+  assert.equal(rows.length, 1, `一次工具调用应只有一行：${rows.join(' | ')}`);
+  assert.match(rows[0], /更新工作计划 · 完成/u, `没有看到完成状态：${rows[0]}`);
+  assert.equal(summary, '1 次工具调用');
+  await record('调用与结果合为一次工具调用，保留完成状态', { rows, summary });
+
+  try { await ui.evaluate('location.reload(); true'); } catch {}
+  await ui.waitFor('document.querySelector(".tool-strip summary")?.textContent.trim()==="1 次工具调用"', 45000);
+  const restored = await ui.evaluate('(()=>{const last=[...document.querySelectorAll(".tool-strip")].at(-1);return {rows:[...last.querySelectorAll("li")].map(li=>li.textContent.trim()),summary:last.querySelector("summary").textContent.trim()};})()');
+  assert.equal(restored.rows.length, 1);
+  assert.match(restored.rows[0], /更新工作计划 · 完成/u);
+  assert.equal(restored.summary, '1 次工具调用');
+  await record('刷新后从保存轨迹恢复一次调用', restored);
 
   report.status = 'passed'; await persist();
   console.log(JSON.stringify({ status: report.status, cases: report.cases.length, rows, evidence }, null, 2));
