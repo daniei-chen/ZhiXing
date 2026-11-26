@@ -134,5 +134,7 @@
     "OCR production files were unchanged by Phase 0A. A pristine c2f7588 Windows runner comparison was not executed; do not claim a Windows before/after regression classification.",
     "execFile and JSON parse errors are currently collapsed; code/signal/killed and the last WinRT stage are unavailable. Cold start, apartment mode, and concurrency are hypotheses requiring a bounded diagnostic probe."
   ],
-  "releaseGate": "blocked: source test gate is not green; no tag or Release created"
+  "releaseGate": "blocked: source test gate is not green; no tag or Release created",
+  "recordScope": "Historical pre-OCR-fix runs on fcba550; retained unchanged as failed evidence.",
+  "followUp": "windows-ci-after-ocr-fix.json"
 }

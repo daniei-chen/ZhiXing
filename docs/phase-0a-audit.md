@@ -10,6 +10,8 @@
 
 用户提供的审计指出了值得优先处理的对话呈现、工具计数、存储与宿主架构问题。但是，技能入口与子 Agent 路由的两项“已定位 P0 根因”不符合本次锁定依赖的源码和运行结果，不能照结论直接打补丁。
 
+当前候选已完成本报告所列的源码修复，并追加定位和修复了 Windows OCR 初始化问题。产品源码 `abac9ba` 在两台 Windows 托管 runner 的原完整门禁中均为源码 **545/545**、组件及隔离 renderer **18/18**、Sites **4/4**，零失败、取消、跳过。该状态属于源码／构建与隔离 renderer 层，正式安装包及用户环境验收仍待完成。
+
 本轮取得并检查了基线仓库，复原锁文件依赖，在 Linux / Node 24.22.3 上运行源码测试、真实 Harness 配本地合成模型服务、React 组件回调和构建。Windows `D:\AI\codex\codex4\office-agent`、`D:\应用\知行`、Harness 桌面安装包、历史实包截图及 87.2 GB 目录均未挂载到本环境。用户提供的 Windows 测试数、磁盘容量、启动耗时和截图观察是外部基线，未作为本轮重新取得的证据。
 
 本轮实测数据及内容指纹见 [证据摘要](evidence/phase-0a/summary.json)，远端 Windows 结果见 [CI 分层记录](evidence/phase-0a/windows-ci.json)。成熟化工作分解见 [后续路线与验收条件](maturity-roadmap.md)。
@@ -76,12 +78,13 @@ Windows CI 使用一次性 runner 和只读仓库权限，分别运行构建、�
 | 证据层 | 本轮方式 | 能证明的范围 |
 | --- | --- | --- |
 | 干净基线源码 | 独立 worktree，精确 `c2f7588`，相同锁文件依赖，完整 `npm test` | Linux 基线 505 项：479 通过、16 失败、10 跳过；不是用户 Windows 500/4/1 的复验 |
-| 修复后源码 | 完整套件与针对性回归 | Linux 最终 545 项：520 通过、15 失败、10 跳过；新增 40 项，基线 R09 竞争失败消失，没有新增失败；全套仍未全绿 |
+| 首批 Linux 修复源码 | `fcba550` 完整套件与针对性回归 | 545 项：520 通过、15 失败、10 跳过；新增 40 项，基线 R09 竞争失败消失，没有新增失败；Linux 全套仍未全绿 |
 | 真实内核＋合成模型 | 现有 Harness、loopback HTTP/SSE、实际工具与子会话 | 技能注入、两种兼容协议子请求及相关隐私边界；不证明真实模型推理质量 |
 | 组件 | 真实 React 回调／SSR 与完整组件命令分列 | 最终 18 项：12 通过、5 失败、1 跳过；失败为 Windows 限定或本环境未安装 Electron 二进制的用例，不标作通过 |
 | 构建与站点 | `npm run build`、`npm run test:sites` | 构建成功，站点 4/4；三个 Sites 入口产物齐全，四个接入文件未改；主 JS chunk 747.29 kB 的体积警告仍在 |
 | 开发预览 | 启动 Vite，HTTP 200，检查 root 与实际源码入口 | 服务入口可响应；浏览器连接未成功，视觉验收未覆盖 |
-| Windows 托管 runner | `fcba550` 的 push 与 PR 两次 CI，Windows Server 2025 | 构建成功、Sites 4/4、组件及隔离 renderer 18/18；源码分别 542 通过／2 失败／1 超时取消，以及 536 通过／9 失败，均未通过总门禁 |
+| 初次 Windows 托管 runner | `fcba550` 的 push 与 PR 两次 CI，Windows Server 2025 | 构建成功、Sites 4/4、组件及隔离 renderer 18/18；源码分别 542 通过／2 失败／1 超时取消，以及 536 通过／9 失败，均未通过总门禁 |
+| 修复后 Windows 原完整门禁 | `abac9ba`，相同镜像的两台新托管 runner，无诊断插桩 | 两次均为源码 545/545、组件及隔离 renderer 18/18、Sites 4/4，构建成功，零失败／取消／跳过；此前九个 OCR 链路失败用例逐项通过 |
 | Windows 实包／安装生命周期 | 本轮未执行 | 未覆盖 |
 | 真实云端 | 未使用真实供应商凭据 | 未覆盖 |
 
@@ -99,10 +102,10 @@ Windows CI 使用一次性 runner 和只读仓库权限，分别运行构建、�
 
 因此只在原 `ocr-worker.ps1` 中增加显式加载内置 Utility manifest 的语句，保持其它产品逻辑。微软文档说明，Windows PowerShell 在缺少 `PSModulePath` 时会构建默认搜索路径，从 PowerShell 7 经中间进程继承该变量反而可能引入不兼容模块，因此没有放宽环境白名单：[官方模块路径说明](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_psmodulepath?view=powershell-5.1)。
 
-这里测得的是首次 Utility 命令发现／自动加载相关的等待；没有采集 PowerShell 内部调用栈，不能进一步宣称具体慢目录或系统扫描器已被确定。这个小改动仍需不带诊断插桩的完整 Windows 门禁。源码增量指纹与后续门禁状态见 [OCR 跟进记录](evidence/phase-0a/ocr-follow-up.json)。
+这里测得的是首次 Utility 命令发现／自动加载相关的等待；没有采集 PowerShell 内部调用栈，不能进一步宣称具体慢目录或系统扫描器已被确定。这个小改动随后在不带插桩的原完整 Windows 门禁中通过两次验证，源码均为 545/545，原 OCR 问题用例逐项通过；没有增大超时、增加重试或跳过用例。源码增量指纹与后续门禁状态见 [OCR 跟进记录](evidence/phase-0a/ocr-follow-up.json)。
 
 ## 四、发布状态与未覆盖范围
 
 这是一批可审查的源码候选。保留 `0.40.0` 版本号，不生成没有验证的安装包，不创建空版本 tag 或 Release。用户规定的正式发布清单、证据分层和 Windows 环境保护纪律继续适用；当前候选不作为已完成发布计数。
 
-本轮未完成：Windows 实包视觉、原生选文件对话框、真实 IPC 批量恢复、原生工具时间线脚本、实际安装升级、真实云端办公评测、代码签名、用户 D 盘恢复、87.2 GB 历史目录清理、常驻 Host、SQLite、专业 Office 引擎、完整 Harness 桌面包逐项 UI 对照。后续应把 Windows runner 结果与本轮源码指纹绑定，再进入实包门禁，不引用旧安装包结果替代新构建。
+本轮未完成：Windows 实包视觉、原生选文件对话框、真实 IPC 批量恢复、原生工具时间线脚本、实际安装升级、真实云端办公评测、代码签名、用户 D 盘恢复、87.2 GB 历史目录清理、常驻 Host、SQLite、专业 Office 引擎、完整 Harness 桌面包逐项 UI 对照。Windows runner 结果现已与实际源码指纹绑定，下一步进入对应的新实包门禁，不引用旧安装包结果替代新构建。

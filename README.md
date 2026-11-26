@@ -28,6 +28,8 @@
 
 > **开发中的 Phase 0A 源码候选：** [审计核实与修复说明](docs/phase-0a-audit.md) · [本轮证据](docs/evidence/phase-0a/summary.json) · [成熟化路线](docs/maturity-roadmap.md)。本分支未升版本、未生成新安装包；源码、合成运行、Windows 实包和真实云端证据分别记录。下方保留 0.14.0 及以前的历史更新，不代表当前候选已通过相应门禁。
 
+当前候选的产品源码 `abac9ba` 已在两台 Windows 托管 runner 上通过原完整门禁：源码 **545/545**、组件及隔离 renderer **18/18**、Sites **4/4**，无失败、取消或跳过；构建成功。[两次运行及源码指纹](docs/evidence/phase-0a/windows-ci-after-ocr-fix.json)。Windows 安装包、用户安装生命周期、签名与真实云端仍未覆盖。
+
 <div align="center">
 
 <img src="docs/assets/readme-workbench-0.11.0.png" alt="知行 0.11.0 Windows 工作台，展示项目侧栏、墨竹欢迎页和交办输入区" width="100%" />
@@ -316,7 +318,7 @@
 
 ## 源码开发
 
-历史桌面验证环境为 **Windows 11 x64 · Node.js 24.19.0 · npm 11**。Phase 0A 的本轮本地证据来自 Linux / Node.js 24.22.3，Windows 专属项保留未覆盖状态，详见 [证据摘要](docs/evidence/phase-0a/summary.json)。
+历史桌面验证环境为 **Windows 11 x64 · Node.js 24.19.0 · npm 11**。Phase 0A 的本地基线及回归来自 Linux / Node.js 24.22.3，随后在 Windows Server 2025 / Node.js 24.22.3 托管 runner 完成两次原源码与隔离 renderer 全套门禁。各平台结果分别记录，不能外推为用户安装包验收，详见 [证据摘要](docs/evidence/phase-0a/summary.json)。
 
 ```powershell
 git clone https://github.com/daniei-chen/ZhiXing.git

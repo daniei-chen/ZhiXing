@@ -47,7 +47,7 @@
 | 后台作业 | `dsh-client-ui-jobs` | 部分：执行面板 | 口径未对齐 |
 | 计划模式 | `dsh-client-ui-plan` | 已对标（`/plan`） | — |
 | 目标 | `dsh-client-ui-goal`、`dsh-command-goal` | 已对标（`/goal`） | — |
-| 技能 | `dsh-skill`、`dsh-tool-skill`、`dsh-skill-office`、`dsh-client-ui-skill` | **部分**：内核技能与办公技能已挂载，UtilityPage 有目录入口；Phase 0A 验证完整 composePrompt 加模式前缀后，用户技能手势仍注入完整技能正文 | 完整桌面技能管理 UI 未核对；本轮 Linux 合成服务结果不等于 Windows 全技能端到端通过 |
+| 技能 | `dsh-skill`、`dsh-tool-skill`、`dsh-skill-office`、`dsh-client-ui-skill` | **部分**：内核技能与办公技能已挂载，UtilityPage 有目录入口；Phase 0A 验证完整 composePrompt 加模式前缀后，用户技能手势仍注入完整技能正文 | 完整桌面技能管理 UI 未核对；本轮 Linux／Windows 源码合成服务结果不等于 Windows 实包全技能端到端通过 |
 | worktree | `dsh-experimental-worktree`、`dsh-experimental-tool-worktree` | **部分**：已有项目工作树服务与入口 | 原生插件机制和桌面完整交互未核对；工作树不等于每轮 Git 快照与回滚 |
 | 定时任务 | `dsh-schedule`、`dsh-tool-schedule`、`dsh-client-ui-schedule` | **部分**：主进程加密调度 + 重审 | 未对照 Harness 的补跑与授权失效规则 |
 | 动作卡片 | `dsh-action-cards`、`dsh-client-ui-action-cards` | **未做** | 知行没有可点动作卡片 |

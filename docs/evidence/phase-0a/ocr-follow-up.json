@@ -24,6 +24,12 @@
     "ocr-initialization-probe.json",
     "ocr-module-loading-probe.json"
   ],
-  "fullWindowsGate": "pending after production worker update",
-  "limitations": "Probe measures synthetic fixtures on Windows hosted runners. Internal PowerShell call stacks and the exact slow search path were not collected. No packaged Windows UI, installer or real cloud proof."
+  "fullWindowsGate": "passed on both original, uninstrumented Windows source/build/Sites/renderer gates",
+  "limitations": "Probe measures synthetic fixtures on Windows hosted runners. Internal PowerShell call stacks and the exact slow search path were not collected. No packaged Windows UI, installer or real cloud proof.",
+  "sourceCommit": "abac9ba18ae4a6e4379e9548f0943b4b27e00b6e",
+  "windowsEvidence": "windows-ci-after-ocr-fix.json",
+  "runs": [
+    45818247128,
+    45818239482
+  ]
 }

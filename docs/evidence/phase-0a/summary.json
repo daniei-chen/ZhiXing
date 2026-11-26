@@ -6,7 +6,7 @@
   "baseCommit": "c2f7588d7e158a1e6179f65441e556d37acc2ab8",
   "candidateBranch": "fix/phase-0a-audit",
   "appVersion": "0.40.0",
-  "deliveryState": "source candidate; not a versioned or packaged release",
+  "deliveryState": "source candidate with both Windows hosted source gates passed; not a versioned or packaged release",
   "environment": {
     "platform": "Linux",
     "machine": "x86_64",
@@ -21,7 +21,8 @@
     "aggregateMethod": "SHA256 of UTF-8 JSON with sorted path keys and compact comma/colon separators",
     "scope": "src, electron, harness, scripts, tests, .github and package/build configuration; docs excluded",
     "checkedUnchangedAfterFinalRuns": true,
-    "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a"
+    "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+    "role": "Initial fcba550 local source snapshot. Latest source is bound by latestSource and the OCR follow-up delta."
   },
   "runs": {
     "pristineBaseline": {
@@ -89,7 +90,8 @@
         "invalid audio and a failed inference release admission and permit a successful retry",
         "真实 Harness PTY：输入、屏幕恢复、范围校验与退出"
       ],
-      "logSha256": "026ec30fcf3bd80f4ed96eaf979f8c24535a9ff3d957f48c72582c2c1ffa4630"
+      "logSha256": "026ec30fcf3bd80f4ed96eaf979f8c24535a9ff3d957f48c72582c2c1ffa4630",
+      "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a"
     },
     "components": {
       "command": "npm run test:components",
@@ -112,7 +114,8 @@
         "R02 真实 Windows renderer：主机快照、四路径文件字节、失效/错误恢复与 demo 范围",
         "mounted VoiceInput isolates stale microphone callbacks and cleans scope, suspension and unmount"
       ],
-      "logSha256": "5c02f22e5efe9e7c4a9d8206d02c9ae863fe59b56223d81e136ffd1d9863a811"
+      "logSha256": "5c02f22e5efe9e7c4a9d8206d02c9ae863fe59b56223d81e136ffd1d9863a811",
+      "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a"
     },
     "sites": {
       "command": "npm run test:sites",
@@ -129,7 +132,8 @@
         "duration_ms": 203.192151
       },
       "failedCases": [],
-      "logSha256": "b1d51f8a74936c63237c751e7b790866a1a5a6030c5009087cf51b27716f4791"
+      "logSha256": "b1d51f8a74936c63237c751e7b790866a1a5a6030c5009087cf51b27716f4791",
+      "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a"
     },
     "build": {
       "command": "npm run build",
@@ -142,7 +146,8 @@
         "dist/.openai/hosting.json"
       ],
       "warning": "Main JS chunk is 747.29 kB minified (215.68 kB gzip), above Vite 500 kB warning; frontend performance work remains",
-      "logSha256": "856bf6dee0d8aae24952228c0bda0c80ff9304f70ec94bbad657bcdf92f6bd30"
+      "logSha256": "856bf6dee0d8aae24952228c0bda0c80ff9304f70ec94bbad657bcdf92f6bd30",
+      "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a"
     }
   },
   "baselineComparison": {
@@ -229,36 +234,21 @@
   },
   "windowsCi": {
     "workflow": ".github/workflows/ci.yml",
-    "status": "executed; failed source gate",
-    "evidence": "windows-ci.json",
-    "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+    "status": "passed on both Windows hosted runner runs after the minimal OCR fix",
+    "sourceCommit": "abac9ba18ae4a6e4379e9548f0943b4b27e00b6e",
+    "evidence": "windows-ci-after-ocr-fix.json",
+    "priorFailureEvidence": "windows-ci.json",
+    "diagnosticAndSourceDelta": "ocr-follow-up.json",
     "runs": [
-      45811169987,
-      45811084825
+      45818247128,
+      45818239482
     ],
-    "components": "18/18 passed in both runs",
-    "sites": "4/4 passed in both runs",
+    "source": "545/545 passed in both runs; fail=cancelled=skipped=0",
+    "components": "18/18 passed in both runs; no skips",
+    "sites": "4/4 passed in both runs; no skips",
     "build": "passed in both runs",
-    "sourceResults": [
-      {
-        "event": "pull_request",
-        "tests": 545,
-        "pass": 536,
-        "fail": 9,
-        "cancelled": 0,
-        "skipped": 0
-      },
-      {
-        "event": "push",
-        "tests": 545,
-        "pass": 542,
-        "fail": 2,
-        "cancelled": 1,
-        "skipped": 0
-      }
-    ],
-    "remainingFailure": "Windows OCR startup/execution timeout; exact stage and cause not yet determined. The push run passes most OCR tests.",
-    "scope": "ephemeral Windows source/build and isolated renderer only; no NSIS installation, upgrade, release or real cloud"
+    "previousOcrFailures": "All nine prior PR OCR-chain failures individually passed in both runs.",
+    "scope": "Windows Server 2025 source/build and isolated renderer only; no NSIS installation, upgrade, packaged visual acceptance, signing or real cloud"
   },
   "notCovered": [
     "Windows packaged UI and native dialogs",
@@ -271,5 +261,13 @@
     "SQLite migration",
     "Professional Word/Excel/PPT engine",
     "Full privacy NER or arbitrary concurrent-process TOCTOU resistance"
-  ]
+  ],
+  "latestSource": {
+    "sourceCommit": "abac9ba18ae4a6e4379e9548f0943b4b27e00b6e",
+    "sourceAggregateSha256": "9bc52cc51d6b053a1a2403e0f97f191d4fa12725e44929a338a129becc503776",
+    "baseManifest": "source-fingerprints.json",
+    "delta": "ocr-follow-up.json",
+    "windowsEvidence": "windows-ci-after-ocr-fix.json",
+    "laterChanges": "Documentation-only evidence updates do not change this source aggregate."
+  }
 }

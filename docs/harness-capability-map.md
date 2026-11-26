@@ -8,7 +8,9 @@
 
 当前源码修复候选及其限制以 [Phase 0A 审计核实](phase-0a-audit.md) 和 [本轮证据摘要](evidence/phase-0a/summary.json) 为准。候选未升版本、未生成安装包，Windows 及真实云端证据不能从历史版本继承。
 
-本轮已核实：工具 call/result 需按调用关联计数；原生技能手势能在用户文本前有模式说明时生效；自定义 OpenAI / Anthropic spawn 子 Agent 能继承父路由并发出独立请求。后两项只有本轮 Linux 真实 Harness＋本地合成服务证据，不代表 Windows 子任务归档 UI 已完成。文件嵌套目录、模型批量恢复、聊天结构与映射锁竞争修复范围见候选报告。
+本轮已核实：工具 call/result 需按调用关联计数；原生技能手势能在用户文本前有模式说明时生效；自定义 OpenAI / Anthropic spawn 子 Agent 能继承父路由并发出独立请求。后两项在 Linux 及 Windows 托管 runner 的真实 Harness＋本地合成服务回归中通过，仍不代表 Windows 实包子任务归档 UI 已完成。文件嵌套目录、模型批量恢复、聊天结构、映射锁竞争及 OCR 系统模块加载修复范围见候选报告。
+
+产品源码 `abac9ba` 的两次 Windows 原完整门禁均为源码 545/545、组件及隔离 renderer 18/18、Sites 4/4，零失败／取消／跳过。对应 [最终 CI 记录](evidence/phase-0a/windows-ci-after-ocr-fix.json)，不替代实包、安装生命周期和真实云端证据。
 
 ## 历史状态总览（0.20.0，当时记录）
 

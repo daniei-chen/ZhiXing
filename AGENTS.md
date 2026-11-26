@@ -21,6 +21,7 @@
 - 侧栏每个聊天只有一个入口；缺失项目归属的旧聊天仍保留最近入口，不重写 projectId。模型全部隐藏后仍可恢复；恢复走一次主机排队写入。
 - 新建办公成果的父目录只在现有主机授权后创建；同名仍编号另存、wx 排他写入。Node 路径复验不等于原子目录句柄沙箱，不宣称防住任意恶意本机进程竞态。
 - 两份原生组件测试的临时 profile 改到系统临时目录并在退出后清理；可选 `ZHIXING_TEST_EVIDENCE_DIR` 仅保留有界小文本证据，不保留编译产物与 profile。
+- Windows OCR 先通过 `$PSHOME` 的完整 manifest 路径加载系统 Utility 模块，避免首次命令隐式加载耗尽 25 秒预算。三组对照与两次无插桩完整 Windows CI 见 `docs/evidence/phase-0a/ocr-follow-up.json`；不以继承父进程 PSModulePath、放宽超时或跳过 OCR 替代此修复。该结果仍不代表用户实包或安装生命周期验收。
 
 ## 用户确定的产品方向
 
