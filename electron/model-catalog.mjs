@@ -7,7 +7,37 @@ export function builtinModels() {
   return resolveAdapterOptions({}).models.map(model => ({ id: model.id, name: model.name || model.id, description: model.description || '', inputModalities: Array.isArray(model.inputModalities) ? [...model.inputModalities] : ['text'], source: 'builtin' }));
 }
 
-export function decodeModels(body) {
+export // 提供方目录里每个模型的上限写法五花八门（OpenAI 兼容的 context_length、Anthropic 的
+// limit.context、以及各类 max_*_tokens）。桌面版按模型定价请求头，所以这些上限必须跟着模型走；
+// 只认可验证的正整数，缺失或越界一律不采信，回落到供应商级设置。
+const WINDOW_MIN = 8192;
+const WINDOW_MAX = 2_000_000;
+const OUTPUT_MIN = 1;
+const OUTPUT_MAX = 262_144;
+
+function positiveInteger(value) {
+  const number = typeof value === 'string' ? Number(value) : value;
+  return Number.isInteger(number) && number > 0 ? number : undefined;
+}
+
+export function modelLimits(item) {
+  if (!item || typeof item !== 'object') return {};
+  const contextWindow = [
+    item.context_length, item.contextLength, item.context_window, item.contextWindow,
+    item.max_input_tokens, item.maxInputTokens, item.limit?.context,
+  ].map(positiveInteger).find(value => value !== undefined && value >= WINDOW_MIN && value <= WINDOW_MAX);
+  const declaredOutput = [
+    item.max_output_tokens, item.maxOutputTokens, item.max_completion_tokens,
+    item.limit?.output, item.top_provider?.max_completion_tokens,
+  ].map(positiveInteger).find(value => value !== undefined && value >= OUTPUT_MIN && value <= OUTPUT_MAX);
+  const limits = {};
+  if (contextWindow !== undefined) limits.contextWindow = contextWindow;
+  // 输出上限必须严格小于窗口，否则内核的压缩策略会判定配置无效；窗口未知时也先不写输出。
+  if (declaredOutput !== undefined && contextWindow !== undefined && declaredOutput < contextWindow) limits.maxTokens = declaredOutput;
+  return limits;
+}
+
+function decodeModels(body) {
   if (!Array.isArray(body?.data)) throw new Error('模型服务没有返回可用的模型列表。');
   const seen = new Set();
   const rows = [];
@@ -16,7 +46,7 @@ export function decodeModels(body) {
     seen.add(item.id);
     const modalities = item.input_modalities ?? item.inputModalities ?? item.architecture?.input_modalities;
     const inputModalities = Array.isArray(modalities) ? ['text', ...(modalities.includes('image') ? ['image'] : [])] : null;
-    rows.push({ id: item.id, name: String(item.name || item.display_name || item.id).slice(0, 100), description: typeof item.description === 'string' ? item.description.slice(0, 180) : '', ...(inputModalities ? { inputModalities } : {}), source: 'provider' });
+    rows.push({ id: item.id, name: String(item.name || item.display_name || item.id).slice(0, 100), description: typeof item.description === 'string' ? item.description.slice(0, 180) : '', ...(inputModalities ? { inputModalities } : {}), ...modelLimits(item), source: 'provider' });
   }
   if (!rows.length) throw new Error('服务返回的模型列表为空，已保留当前配置。');
   return rows;
