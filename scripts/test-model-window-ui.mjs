@@ -1,6 +1,7 @@
-// 按模型取上下文窗口：切到窗口更小的模型后，提交前必须按新窗口压缩，而不是继续用上一个模型的窗口。
-// 桌面版在模型切换时直接给拟用的请求头定价（装不下就压缩，压缩不成才报 MODEL_SWITCH_COMPACTION_FAILED）；
-// 知行原先把提供方目录里的 context_length 丢掉，只按供应商级窗口算阈值，小窗口模型会被超额喂饱。
+// 按模型取上下文窗口：目录里的窗口/输出上限跟着型号进内核，切到窗口更小的型号时不再沿用上一个型号的窗口。
+// 桌面版在模型切换时直接给拟用的请求头定价（装不下就压缩，压缩不成才报 MODEL_SWITCH_COMPACTION_FAILED）。
+// 知行原先把提供方目录里的 context_length 整个丢掉，且运行配置只声明当前模型，于是：小窗口型号被静默
+// 超额喂饱，切换压缩也因「配置里没有原模型」直接失败。本脚本验证修复后的两条行为。
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { once } from 'node:events';
@@ -41,9 +42,11 @@ const server = http.createServer((request, response) => {
     response.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
     const write = object => response.write(`data: ${JSON.stringify(object)}\n\n`);
     write({ ...base, choices: [{ index: 0, delta: { role: 'assistant' }, finish_reason: null }] });
-    const text = compacting ? '摘要：用户连续两轮要求填充内容，随后切换到更小窗口的模型。' : `收到第 ${requests.length} 条。${filler}`;
+    const text = compacting ? '摘要。' : `收到第 ${requests.length} 条。${filler}`;
     write({ ...base, choices: [{ index: 0, delta: { content: text }, finish_reason: null }] });
-    write({ ...base, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] });
+    const promptTokens = Math.round(body.length / 4);
+    const completionTokens = Math.round(text.length / 4);
+    write({ ...base, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], usage: { prompt_tokens: promptTokens, completion_tokens: completionTokens, total_tokens: promptTokens + completionTokens } });
     response.write('data: [DONE]\n\n');
     response.end();
   });
@@ -59,7 +62,7 @@ const persist = () => fs.writeFile(reportFile, JSON.stringify(report, null, 2) +
 async function record(name, details = {}) { report.cases.push({ name, status: 'passed', ...details }); await persist(); console.log(`PASS ${name}`); }
 console.log(`Evidence: ${evidence}`);
 
-const state = () => ui.evaluate(`(()=>{const nodes=[...document.querySelectorAll('.assistant-message')];const usage=[...document.querySelectorAll('.context-usage')].map(node=>node.innerText.trim()).slice(-1)[0]||'';return {answers:nodes.length,trigger:(document.querySelector('.model-trigger')?.innerText||'').trim().slice(0,80),usage,lastAnswer:((nodes.at(-1)?.innerText||'').trim().slice(0,80)),errorText:(document.querySelector('.answer-error, .run-error, [class*=error]')?.innerText||'').trim().slice(0,120)};})()`);
+const state = () => ui.evaluate(`(()=>{const nodes=[...document.querySelectorAll('.assistant-message')];const usage=[...document.querySelectorAll('.context-usage')].map(node=>node.innerText.trim()).slice(-1)[0]||'';const toast=(document.querySelector('.toast')?.innerText||'').trim().slice(0,120);return {answers:nodes.length,trigger:(document.querySelector('.model-trigger')?.innerText||'').trim().slice(0,80),usage,lastAnswer:((nodes.at(-1)?.innerText||'').trim().slice(0,120)),errorText:((document.querySelector('.answer-error, .run-error')?.innerText||'').trim()+toast).slice(0,180)};})()`);
 const send = async (value, waitMs = 12000) => {
   await ui.fill('textarea[aria-label="聊天输入框"]', value);
   await ui.evaluate(`(()=>{const input=document.querySelector('textarea[aria-label="聊天输入框"]');input.focus();input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true,cancelable:true}));return true})()`);
@@ -67,6 +70,16 @@ const send = async (value, waitMs = 12000) => {
   const pending = await ui.evaluate(`(()=>{const input=document.querySelector('textarea[aria-label="聊天输入框"]');return (input?.value||'').trim().length>0})()`);
   if (pending) await ui.evaluate("(()=>{document.querySelector('button.send-button[aria-label=\"发送消息\"]')?.click();return true})()");
   await pause(waitMs);
+};
+const switchModel = async label => {
+  const opened = await ui.evaluate("(()=>{const trigger=document.querySelector('.model-trigger');if(!trigger)return 'no-trigger';trigger.click();return 'reasoning'})()");
+  await pause(2000);
+  const linked = await ui.evaluate("(()=>{const link=document.querySelector('.effort-model-link');if(!link)return 'no-model-link';link.click();return 'models'})()");
+  await pause(2000);
+  const options = await ui.evaluate("(()=>[...document.querySelectorAll('.model-picker-option')].map(item=>item.innerText.trim().slice(0,40)))()");
+  const picked = await ui.evaluate(`(()=>{const items=[...document.querySelectorAll('.model-picker-option')];const target=items.find(item=>item.innerText.includes(${JSON.stringify(label)}));if(!target)return 'no-option';target.click();return 'clicked'})()`);
+  await pause(2000);
+  return { opened, linked, options, picked };
 };
 
 let ui = null, child = null, exit = null, log = null;
@@ -98,7 +111,7 @@ try {
   try { await ui.evaluate('location.reload(); true'); } catch {}
   await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')&&!document.querySelector(\'textarea[aria-label="聊天输入框"]\').disabled', 60000);
 
-  // ① 目录里的窗口必须按模型落到运行时模型表。
+  // ① 目录里的窗口必须按型号落到运行时模型表。
   const models = await ui.evaluate("(async()=>{const status=await window.zhixing.runtimeStatus();return status.models.filter(row=>['qa-big','qa-small'].includes(row.id)).map(row=>({id:row.id,contextWindow:row.contextWindow,maxTokens:row.maxTokens}))})()");
   report.models = models; await persist();
   const big = models.find(row => row.id === 'qa-big');
@@ -106,51 +119,54 @@ try {
   assert.ok(big && small, `运行时模型表应包含两个模型，实际 ${JSON.stringify(models)}`);
   assert.equal(big.contextWindow, 131072, `大窗口模型应带 131072，实际 ${big.contextWindow}`);
   assert.equal(small.contextWindow, 8192, `小窗口模型应带 8192，实际 ${small.contextWindow}`);
-  await record('模型目录里的上下文窗口按型号落到运行时', { big: big.contextWindow, small: small.contextWindow });
+  assert.equal(small.maxTokens, 2048, `小窗口模型的输出上限应带 2048，实际 ${small.maxTokens}`);
+  await record('模型目录里的上下文窗口与输出上限按型号落到运行时', { big: big.contextWindow, small: small.contextWindow, smallOutput: small.maxTokens });
 
-  // ② 大窗口模型下先聊两轮，历史越过小窗口的阈值。
-  await send('第一轮：先在大窗口模型上说一句话。');
-  await send('第二轮：再来一段填充内容。');
+  // ② 在大窗口型号下把历史聊到明显超过小窗口。
+  for (const round of [1, 2, 3, 4]) await send(`第 ${round} 轮：继续给我一段填充内容。`);
   const beforeSwitch = await state();
-  report.beforeSwitch = { requests: requests.map(item => ({ ...item })), ui: beforeSwitch };
-  await persist();
-  assert.equal(beforeSwitch.answers, 2, `切换前应有两轮答复，实际 ${beforeSwitch.answers}`);
+  report.beforeSwitch = { requests: requests.map(item => ({ ...item })), ui: beforeSwitch }; await persist();
+  assert.equal(beforeSwitch.answers, 4, `切换前应有四轮答复，实际 ${beforeSwitch.answers}`);
   assert.equal(requests.filter(item => item.compacting).length, 0, '切换前不应发生压缩');
+  assert.match(beforeSwitch.usage, /131,072/u, `切换前用量应按大窗口显示，实际「${beforeSwitch.usage}」`);
 
-  // ③ 切到小窗口模型（思考强度浮层 → 模型名 → 列表项，三次点击各自等一拍）。
-  const opened = await ui.evaluate("(()=>{const trigger=document.querySelector('.model-trigger');if(!trigger)return 'no-trigger';trigger.click();return 'reasoning'})()");
-  await pause(2000);
-  const linked = await ui.evaluate("(()=>{const link=document.querySelector('.effort-model-link');if(!link)return 'no-model-link';link.click();return 'models'})()");
-  await pause(2000);
-  const options = await ui.evaluate("(()=>[...document.querySelectorAll('.model-picker-option')].map(item=>item.innerText.trim().slice(0,40)))()");
-  const picked = await ui.evaluate("(()=>{const items=[...document.querySelectorAll('.model-picker-option')];const target=items.find(item=>item.innerText.includes('QA 小窗口'));if(!target)return 'no-option';target.click();return 'clicked'})()");
-  await pause(2000);
-  const afterSwitch = await state();
-  report.switch = { opened, linked, options, picked, ui: afterSwitch }; await persist();
-  assert.equal(picked, 'clicked', `没有点到小窗口模型：${JSON.stringify({ opened, linked, options })}`);
-  assert.ok(afterSwitch.trigger.includes('QA 小窗口'), `模型入口应显示小窗口模型，实际「${afterSwitch.trigger}」`);
-  await record('在小窗口模型上继续同一会话', { trigger: afterSwitch.trigger });
-
-  // ④ 切换后的第一次提交：必须按新窗口压缩，再发更短的请求。
-  await send('第三轮：切到小窗口模型之后继续。', 16000);
+  // ③ 切到小窗口型号：历史装不下时不能再按旧窗口直接发送。
+  const switched = await switchModel('QA 小窗口');
+  const afterSwitchUi = await state();
+  report.switch = { ...switched, ui: afterSwitchUi }; await persist();
+  assert.equal(switched.picked, 'clicked', `没有点到小窗口模型：${JSON.stringify(switched)}`);
+  assert.ok(afterSwitchUi.trigger.includes('QA 小窗口'), `模型入口应显示小窗口模型，实际「${afterSwitchUi.trigger}」`);
+  await send('切换到小窗口之后继续。', 20000);
   const after = await state();
-  const afterSwitchRequests = requests.slice(2);
-  report.after = { requests: afterSwitchRequests, ui: after }; await persist();
-  assert.equal(after.errorText, '', `界面不应出现错误提示：${after.errorText}`);
-  assert.equal(after.answers, 3, `应有三轮答复，实际 ${after.answers}`);
-  assert.equal(afterSwitchRequests.length, 2, `切换后应发生「压缩 + 重发」两次请求，实际 ${afterSwitchRequests.length} 次`);
-  assert.equal(afterSwitchRequests[0].compacting, true, '切换后的第一次请求应是摘要请求');
-  assert.equal(afterSwitchRequests[1].compacting, false, '第二次请求才是真正的提交');
-  assert.equal(afterSwitchRequests[1].model, 'qa-small', `提交应使用小窗口模型，实际 ${afterSwitchRequests[1].model}`);
-  assert.ok(afterSwitchRequests[1].messageCount < afterSwitchRequests[0].messageCount, `压缩后的请求应更短：摘要 ${afterSwitchRequests[0].messageCount} 条，提交 ${afterSwitchRequests[1].messageCount} 条`);
-  await record('切到小窗口模型后提交前压缩并重发', {
-    before: afterSwitchRequests[0].messageCount, after: afterSwitchRequests[1].messageCount, model: afterSwitchRequests[1].model,
-  });
+  const postSwitch = requests.slice(4);
+  report.after = { requests: postSwitch, ui: after }; await persist();
+  assert.ok(postSwitch.some(item => item.compacting), `切换后应先压缩，实际请求：${JSON.stringify(postSwitch)}`);
+  assert.equal(postSwitch.filter(item => item.model === 'qa-small' && !item.compacting).length, 0, `历史装不下时不得按新模型直接发送，实际：${JSON.stringify(postSwitch)}`);
+  await record('历史装不下小窗口时，先压缩而不是直接超额发送', { attempts: postSwitch.length, models: [...new Set(postSwitch.map(item => item.model))] });
 
-  // ⑤ 界面上的上下文用量应按新窗口显示。
-  report.usage = after.usage; await persist();
-  assert.match(after.usage, /\/\s*8,?192\s+tokens/iu, `上下文用量应按小窗口显示，实际「${after.usage}」`);
-  await record('上下文用量按新窗口显示', { usage: after.usage });
+  // ④ 压缩失败必须留下桌面版同一条失败码，并让这一轮显示为未完成（不能假装成功）。
+  await pause(1500);
+  const logText = await fs.readFile(path.join(evidence, 'app.log'), 'utf8');
+  report.log = logText.split(/\r?\n/).filter(line => /turn-failed|MODEL_SWITCH_COMPACTION_FAILED/u.test(line)).slice(-2);
+  assert.match(logText, /MODEL_SWITCH_COMPACTION_FAILED/u, '日志里应保留 MODEL_SWITCH_COMPACTION_FAILED');
+  assert.match(after.lastAnswer, /未完成|运行错误/u, `这一轮应显示未完成，实际正文「${after.lastAnswer}」`);
+  await record('压缩失败时保留桌面版失败码且本轮显示未完成', { codes: ['MODEL_SWITCH_COMPACTION_FAILED'] });
+
+  // ⑤ 新会话直接用��窗口型号：请求与用量都应是小窗口。
+  const answered = await ui.evaluate("(()=>{const button=document.querySelector('button[aria-label=\"会话操作\"]');if(!button)return 'no-menu';button.click();return 'menu'})()");
+  await pause(1200);
+  const created = await ui.evaluate("(()=>{const items=[...document.querySelectorAll('button, [role=menuitem]')];const target=items.find(item=>/新建|新会话|新聊天/u.test(item.innerText||''));if(!target)return 'no-new';target.click();return 'clicked'})()");
+  await pause(1500);
+  const fresh = { answered, created }; report.fresh = fresh;
+  await send('新会话：只用小窗口型号说一句。', 14000);
+  const freshState = await state();
+  const freshRequests = requests.slice(requests.findIndex(item => item.model === 'qa-small' && !item.compacting));
+  report.freshState = { ...fresh, ui: freshState, requests: freshRequests }; await persist();
+  assert.equal(created, 'clicked', `没有新建会话：${JSON.stringify(fresh)}`);
+  assert.ok(freshRequests.length > 0, `新会话应按小窗口型号发出请求，实际请求：${JSON.stringify(requests)}`);
+  assert.equal(freshRequests[0].model, 'qa-small', `新会话请求应使用小窗口型号，实际 ${freshRequests[0].model}`);
+  assert.match(freshState.usage, /8,192/u, `新会话用量应按 8,192 显示，实际「${freshState.usage}」`);
+  await record('新会话用小窗口型号时用量按 8,192 显示', { model: freshRequests[0].model, usage: freshState.usage });
 
   await ui.screenshot(path.join(evidence, 'after-switch.png'));
   report.status = 'passed'; await persist();

@@ -7,7 +7,7 @@ export function builtinModels() {
   return resolveAdapterOptions({}).models.map(model => ({ id: model.id, name: model.name || model.id, description: model.description || '', inputModalities: Array.isArray(model.inputModalities) ? [...model.inputModalities] : ['text'], source: 'builtin' }));
 }
 
-export // 提供方目录里每个模型的上限写法五花八门（OpenAI 兼容的 context_length、Anthropic 的
+// 提供方目录里每个模型的上限写法五花八门（OpenAI 兼容的 context_length、Anthropic 的
 // limit.context、以及各类 max_*_tokens）。桌面版按模型定价请求头，所以这些上限必须跟着模型走；
 // 只认可验证的正整数，缺失或越界一律不采信，回落到供应商级设置。
 const WINDOW_MIN = 8192;
@@ -37,7 +37,7 @@ export function modelLimits(item) {
   return limits;
 }
 
-function decodeModels(body) {
+export function decodeModels(body) {
   if (!Array.isArray(body?.data)) throw new Error('模型服务没有返回可用的模型列表。');
   const seen = new Set();
   const rows = [];

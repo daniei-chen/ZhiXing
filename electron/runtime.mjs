@@ -84,7 +84,7 @@ async function waitContext(directory,key,sessionId,{planning}={}){
  error.details={sessionId,reportCount:reports?Object.keys(reports).length:0,sessionPresent:Boolean(reports?.[sessionId]),skillsReady:Array.isArray(reports?.[sessionId]?.skills),readErrorCode:readError?.code};
  throw error;
 }
-export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',protocol='deepseek',reasoningMap=false,compat,inputModalities=['text'],pluginRoot=sourceRoot,workspaceRoot,permission='ask',nodeExecutable,contextWindow=128000,maxTokens=8192,kernel:kernelValue,controls,cancellation,projectWorktree,officeVision}={}){
+export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',protocol='deepseek',reasoningMap=false,compat,inputModalities=['text'],models:modelRows=[],pluginRoot=sourceRoot,workspaceRoot,permission='ask',nodeExecutable,contextWindow=128000,maxTokens=8192,kernel:kernelValue,controls,cancellation,projectWorktree,officeVision}={}){
  const kernel=normaliseKernel(kernelValue);
  const compaction = compactionPolicy({contextWindow,maxTokens});
  const ptcEnabled=kernel.ptcEnabled&&permission==='full'&&Boolean(workspaceRoot);
@@ -169,7 +169,7 @@ export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',p
    retryPolicy:{mode:'normal',maxRetries:3},
    ...(compat?{compat}:{}),
    requestImagePixelBudget:VISUAL_MAX_PIXELS,requestImageMaxBytes:VISUAL_MAX_BYTES,
-   models:[{id:model,input:inputModalities,contextWindow,maxTokens,reasoningEfforts:reasoningMap}],
+   models:Array.isArray(modelRows)&&modelRows.length?modelRows:[{id:model,input:inputModalities,contextWindow,maxTokens,reasoningEfforts:reasoningMap}],
   }}}});
   insertion.insert=insertion.insert.filter(row=>row.id!=='web-search-deepseek');
   const web=insertion.insert.find(row=>row.id==='web');if(web)delete web.config.searchProvider;

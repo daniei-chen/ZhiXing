@@ -113,6 +113,24 @@ export function providerModels(providers) {
   })));
 }
 
+// 桌面版在模型切换时会用「原模型」做一次摘要（dsh-compaction-basic 的 model-switch 压力），
+// 所以运行配置里必须同时声明这条供应商的其它模型；只声明当前模型会让切换压缩直接失败。
+function runtimeModelRows(provider) {
+  const hidden = new Set(provider.hiddenModels || []);
+  return provider.models.filter(row => !hidden.has(row.id)).map(row => {
+    const effort = modelReasoning(provider, row);
+    return {
+      id: row.id,
+      input: modelInputModalities(provider, row),
+      contextWindow: row.contextWindow || provider.contextWindow,
+      maxTokens: row.maxTokens || provider.maxTokens,
+      // 能力未确认的模型不臆断档位：只给 false，它们可以当「上一个模型」参与摘要，
+      // 但不会被界面当成已确认可发的型号。
+      reasoningEfforts: effort.capability === 'unknown' ? false : effort.map,
+    };
+  });
+}
+
 export function resolveProvider(providers, selection = {}) {
   const hasProviderId = Object.hasOwn(selection, 'providerId');
   const hasModelId = Object.hasOwn(selection, 'modelId');
@@ -150,6 +168,7 @@ export function resolveProvider(providers, selection = {}) {
     credentialRevision: provider.credentialRevision,
     contextWindow: selected.contextWindow || provider.contextWindow, maxTokens: selected.maxTokens || provider.maxTokens,
     inputModalities: modelInputModalities(provider, selected),
+    models: runtimeModelRows(provider),
   };
 }
 
