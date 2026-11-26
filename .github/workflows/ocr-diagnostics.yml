@@ -1,0 +1,57 @@
+name: Windows OCR diagnostics
+
+# Separate experiment: never changes the product worker, existing CI, or its
+# 25-second OCR / 90-second vision-test limits. No installer or real-cloud run.
+# Diagnostic completion is not OCR acceptance; all per-sample failures remain
+# in the JSON and cause a nonzero probe exit after the complete schedule.
+on:
+  push:
+    branches: [diagnostics/phase-0a-ocr]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-ocr-diagnostics-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Check out diagnostic source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install locked dependencies
+        timeout-minutes: 5
+        run: |
+          npm.cmd ci --no-audit --no-fund
+          exit $LASTEXITCODE
+
+      - name: Compare default and MTA OCR workers
+        timeout-minutes: 6
+        run: |
+          node scripts/probe-windows-ocr.mjs "$env:RUNNER_TEMP/zhixing-ocr-diagnostics/summary.json"
+          exit $LASTEXITCODE
+
+      - name: Upload bounded diagnostic JSON
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-ocr-diagnostics-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-ocr-diagnostics/summary.json
+          retention-days: 7
+          if-no-files-found: error
+          include-hidden-files: false
