@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-26",
+  "applicationVersion": "0.40.0",
+  "status": "verified-development-candidate-not-released",
+  "repository": "daniei-chen/ZhiXing",
+  "pullRequest": "https://github.com/daniei-chen/ZhiXing/pull/1",
+  "mainBaseline": "c2f7588d7e158a1e6179f65441e556d37acc2ab8",
+  "testedSourceCommit": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "testedSourceTree": "4c52d97b10956a742c41275d45144f54c1d21f60",
+  "sourceCiCheckout": "6fa27fdef890a987af8d5e8a6592b764752b537b",
+  "packedCheckout": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "sourceFingerprint": {
+    "files": 314,
+    "aggregateSha256": "c80e0ca6d5ea919a0c5d05f0d75b6b2c6a27be80be01cc46070cd18f036dbde2",
+    "manifest": "docs/evidence/phase-0b/source-fingerprints.json"
+  },
+  "sourceCi": {
+    "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015257",
+    "conclusion": "success",
+    "counts": {
+      "sites": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 97.3956
+      },
+      "source": {
+        "tests": 560,
+        "suites": 0,
+        "pass": 560,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 300852.994
+      },
+      "components": {
+        "tests": 18,
+        "suites": 0,
+        "pass": 18,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 14632.9905
+      }
+    },
+    "quality": {
+      "status": "success",
+      "scope": "adopted-and-changed-scope",
+      "baseline": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
+      "eslint": {
+        "checked": 30,
+        "total": 284
+      },
+      "stylelint": {
+        "checked": 4,
+        "total": 4
+      },
+      "prettier": {
+        "checked": 15,
+        "total": 513
+      },
+      "legacyFormattingNotAdopted": 21,
+      "reportedErrors": 0,
+      "reportedWarnings": 0,
+      "documentedInlineExceptions": [
+        {
+          "file": "tests/runtime-lifecycle.test.mjs",
+          "line": 130,
+          "rule": "no-unsafe-finally"
+        },
+        {
+          "file": "tests/runtime-lifecycle.test.mjs",
+          "line": 418,
+          "rule": "no-unsafe-finally"
+        }
+      ],
+      "additionalStderr": [
+        "[csstree-match] BREAK after 15000 iterations"
+      ],
+      "generatedExcluded": 9
+    },
+    "report": "docs/evidence/phase-0b/windows-source-final.json"
+  },
+  "packagedCi": {
+    "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245",
+    "conclusion": "success",
+    "counts": {
+      "tests": 383,
+      "suites": 0,
+      "pass": 383,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 464063.5368
+    },
+    "testFileScope": {
+      "packageAware": 37,
+      "mixedSource": 3,
+      "sourceOnly": 1,
+      "unit": "test-files"
+    },
+    "uiCounts": {
+      "errors": {
+        "passed": 7,
+        "failed": 0,
+        "observed": 5,
+        "other": 0
+      },
+      "nativeFiles": {
+        "passed": 5,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      },
+      "toolTimeline": {
+        "passed": 3,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      },
+      "phase0a": {
+        "passed": 9,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      }
+    },
+    "sourceManifestFiles": 100,
+    "sourceFingerprint": "4051ed723b23a15978510e62603f6cb3d4ddf9f1e9dfb7feee2f3fe248ac7469",
+    "report": "docs/evidence/phase-0b/windows-packed-final.json"
+  },
+  "visualReview": {
+    "status": "reviewed-by-assistant",
+    "screenshots": 6,
+    "humanReviewPerformed": false,
+    "rawMetadataPreserved": true,
+    "report": "docs/evidence/phase-0b/windows-packed-visual-review.json"
+  },
+  "candidate": {
+    "artifact": {
+      "id": "15125272481",
+      "name": "windows-unsigned-candidate-3735910a7795b24f282d1f273bcd2841fd685960",
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245/artifacts/15125272481",
+      "bytes": 339031828,
+      "sha256": "714d3a5e158b3397137e09578f5f66fae043bdd76804f41fc45b472cf6e9a7b2",
+      "createdAt": "2026-11-26T14:12:26Z",
+      "expiresAt": "2026-12-03T14:12:24Z",
+      "retentionDays": 7,
+      "digestSource": "GitHub Actions artifact API; independent candidate download verification is separate."
+    },
+    "installer": {
+      "file": "release/ZhiXing-0.40.0-x64.exe",
+      "bytes": 338716357,
+      "sha256": "246db5c988385d6e5a10462265f083ae4795cca205e03829593cc1b7771d5a17"
+    },
+    "blockmap": {
+      "file": "release/ZhiXing-0.40.0-x64.exe.blockmap",
+      "bytes": 314832,
+      "sha256": "370f05ad3208491ed2b09ca76dff6c409b54964be65fffcae4ad18793edea458"
+    },
+    "signature": "NotSigned",
+    "installed": false,
+    "publishedRelease": false,
+    "independentDownloadVerification": "verified_downloaded_bytes_only",
+    "verificationReport": "docs/evidence/phase-0b/candidate-download-verification.json"
+  },
+  "repositoryQualityDebt": {
+    "eslintDiagnostics": 218,
+    "formattingDifferences": 405,
+    "wholeRepositoryScanExitCode": 1,
+    "diagnosticsAreNotConfirmedProductBugCount": true,
+    "report": "docs/evidence/phase-0b/repository-inventory.json"
+  },
+  "preservedFailedAttempts": [
+    {
+      "commit": "069207651c3d779f880c0479dc49217698525c8f",
+      "runId": 45828772595,
+      "failure": "Electron binary was not prepared before independent packaging",
+      "report": "docs/evidence/phase-0b/windows-packed-initial.json"
+    },
+    {
+      "commit": "91307819e1f666c624e2bd66a16741012a9cf601",
+      "runId": 45830590242,
+      "failure": "Two UI test-driver defects; candidate was assembled but required gates failed",
+      "report": "docs/evidence/phase-0b/windows-packed-9130781.json"
+    }
+  ],
+  "completeWithinThisMilestone": [
+    "Incremental lint/format gates and persistent source baseline",
+    "Windows head-bound package workflow, exact provenance check and bounded artifacts",
+    "Targeted real packaged Phase 0A UI verification",
+    "Independent artifact download and checksum verification",
+    "Read-only maintenance inventory and default dry-run entry points"
+  ],
+  "notCovered": [
+    "User Windows D drive or deletion of reported 87 GB historical data",
+    "NSIS execution, installation/upgrade/uninstall, shortcuts or user profile recovery",
+    "Code signing or cross-Windows-account decryption",
+    "Real cloud model task quality and office evaluation suite",
+    "All Harness desktop packages and complete visual/reference parity",
+    "Every historical feature-specific Windows gate, all DPI/accessibility/long-conversation states",
+    "Resident Host, SQLite/Blob migration, structured Office engine, RAG or agent-team UI",
+    "Whole-repository TypeScript migration, lint debt clearance, mass formatting or full historical documentation archive",
+    "Formal version bump, release/tag/update-feed or the 18-asset release procedure"
+  ],
+  "documentationCloseout": "Subsequent commits may add documentation and evidence only; compare the 314-file manifest before treating the tested source as unchanged."
+}

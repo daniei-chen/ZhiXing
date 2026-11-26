@@ -58,11 +58,8 @@ export function ProviderSettings({ runtime, setRuntime, desktop, settings, setSe
     setAction('restore');
     setNotice(null);
     try {
-      let next = null;
-      for (const modelId of draft.hiddenModels || []) {
-        next = await desktop.hideProviderModel({ providerId: draft.id, modelId, hidden: false });
-      }
-      if (next) setRuntime(next);
+      const next = await desktop.restoreProviderModels(draft.id);
+      setRuntime(next);
       const provider = (next?.providers || []).find(row => row.id === draft.id);
       setDraft(current => ({ ...current, models: provider?.models || current.models, hiddenModels: provider?.hiddenModels || [] }));
       setNotice({ text: '已恢复全部模型' });
@@ -138,7 +135,7 @@ export function ProviderSettings({ runtime, setRuntime, desktop, settings, setSe
             </select></label>}
             <label className="form-label provider-wide">手动添加模型 ID<textarea rows={3} maxLength={8050} value={draft.manualModels} onChange={event => update('manualModels', event.target.value)} placeholder="服务没有模型列表时，每行填写一个 ID"/></label>
           </div>}
-          {draft.models?.length > 0 && <details className="provider-catalog" open><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}><span>{model.name || model.id}</span><span className="model-actions">{setSetting && draft.id ? (currentModel === model.id && currentProvider === draft.id ? <span className="model-current"><Check size={13}/>当前</span> : <button type="button" className="plain-button model-pick" onClick={() => { setSetting('modelSelection', { id: model.id, providerId: draft.id }); setNotice({ text: `已把「${model.name || model.id}」设为当前模型` }); }}>设为当前</button>) : null}{desktop && draft.id ? <button type="button" className="plain-button model-hide" title="从列表里移除这个模型" aria-label={`移除 ${model.name || model.id}`} disabled={!!action} onClick={() => hideModel(model)}><Trash size={13}/></button> : null}</span></li>)}</ul>{(() => {
+          {(draft.models?.length > 0 || draft.hiddenModels?.length > 0) && <details className="provider-catalog" open><summary>已保存的模型（{draft.models.length}）</summary><ul>{draft.models.map(model => <li key={model.id}><span className="provider-model-name">{model.name || model.id}<small>{model.id}</small></span><span className="model-actions">{setSetting && draft.id ? (currentModel === model.id && currentProvider === draft.id ? <span className="model-current"><Check size={13}/>当前</span> : <button type="button" className="plain-button model-pick" onClick={() => { setSetting('modelSelection', { id: model.id, providerId: draft.id }); setNotice({ text: `已把「${model.name || model.id}」设为当前模型` }); }}>设为当前</button>) : null}{desktop && draft.id ? <button type="button" className="plain-button model-hide" title="从列表里移除这个模型" aria-label={`移除 ${model.name || model.id}`} disabled={!!action} onClick={() => hideModel(model)}><Trash size={13}/></button> : null}</span></li>)}</ul>{(() => {
     const state = reasoningState({ current: resolveCurrentModel(runtime, settings || {}), settings: settings || {} });
     const mine = state.choices.length && (resolveCurrentModel(runtime, settings || {})?.provider?.id === draft.id);
     return <section className="provider-effort" aria-label="当前模型的思考强度">

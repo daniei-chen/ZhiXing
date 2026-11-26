@@ -94,6 +94,12 @@ export function setModelHidden(providers, { providerId, modelId, hidden = true }
   return providers.map(row => row.id === providerId ? { ...row, hiddenModels: [...hiddenModels] } : row);
 }
 
+export function restoreProviderModels(providers, providerId) {
+  if (!providers.some(row => row.id === providerId)) throw new Error('供应商已移除。');
+  // One provider mutation also removes stale IDs from an older model catalog.
+  return providers.map(row => row.id === providerId ? { ...row, hiddenModels: [] } : row);
+}
+
 export function publicProviders(providers) {
   return providers.map(({ key, ...provider }) => {
     let credentialReentryRequired=false;

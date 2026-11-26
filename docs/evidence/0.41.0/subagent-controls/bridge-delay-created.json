@@ -1,0 +1,82 @@
+{
+  "variant": "bridge-delay",
+  "mode": "created",
+  "rows": [
+    {
+      "ms": 4863,
+      "event": "parent-delegate-request"
+    },
+    {
+      "ms": 4909,
+      "event": "sdk-child-created"
+    },
+    {
+      "ms": 4909,
+      "event": "runtime-child-event",
+      "status": "starting"
+    },
+    {
+      "ms": 4914,
+      "event": "sdk-child-status",
+      "status": "running"
+    },
+    {
+      "ms": 4914,
+      "event": "runtime-child-event",
+      "status": "running"
+    },
+    {
+      "ms": 4914,
+      "event": "control-start",
+      "rawStatus": "running",
+      "childRequests": 0
+    },
+    {
+      "ms": 4915,
+      "event": "control-file",
+      "exists": true
+    },
+    {
+      "ms": 4936,
+      "event": "control-resolved",
+      "requested": true
+    },
+    {
+      "ms": 4939,
+      "event": "sdk-child-status",
+      "status": "idle"
+    },
+    {
+      "ms": 4939,
+      "event": "runtime-child-event",
+      "status": "idle"
+    },
+    {
+      "ms": 5005,
+      "event": "sdk-child-finished",
+      "status": "aborted"
+    },
+    {
+      "ms": 5006,
+      "event": "runtime-child-event",
+      "status": "aborted"
+    },
+    {
+      "ms": 5034,
+      "event": "parent-result-request"
+    },
+    {
+      "ms": 5106,
+      "event": "parent-result-request"
+    },
+    {
+      "ms": 5180,
+      "event": "run-resolved",
+      "children": [
+        {
+          "status": "aborted"
+        }
+      ]
+    }
+  ]
+}

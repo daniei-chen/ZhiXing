@@ -34,8 +34,9 @@ export function Sidebar({ state, workspace, projects, chats, activeChat, activeP
   const [chatFilter, setChatFilter] = useState('all');
   const recentId = useId();
   const pinned = chats.filter(chat => chat.pinned);
-  const recent = chats.filter(chat => !chat.pinned);
-  const visibleRecent = recent.filter(chat => chatFilter === 'project' ? !!chat.projectId : chatFilter === 'running' ? runningChatId === chat.id : true);
+  const visibleProjectIds = new Set(projects.map(project => project.id));
+  const recent = chats.filter(chat => !chat.pinned && !visibleProjectIds.has(chat.projectId));
+  const visibleRecent = recent.filter(chat => chatFilter === 'running' ? runningChatId === chat.id : true);
 
   function chatRow(chat, group) {
     const id = `chat-${group}-${chat.id}`;
@@ -64,7 +65,7 @@ export function Sidebar({ state, workspace, projects, chats, activeChat, activeP
       {menu?.name === 'workspaces' && <div className="dropdown mode-dropdown" role="menu" aria-label="工作模式">
         {[['office','办公','文稿、会议、表格与日常协作'],['government','政务','来文、拟办、督办与汇报材料']].map(([type,label,description])=><button type="button" className="mode-option" role="menuitemradio" aria-checked={workspace.type===type} key={type} onClick={()=>{const target=state.workspaces.find(space=>space.type===type);if(target)changeWorkspace(target.id);closeMenu();}}><WorkspaceIcon type={type} size={20}/><span><strong>{label}</strong><small>{description}</small></span>{workspace.type===type&&<Check size={15}/>}</button>)}
       </div>}
-      <div className="sidebar-heading-actions"><IconButton icon={BellSimple} label="任务活动" className={unread?'has-unread':''} onClick={()=>openModal({type:'notifications'})}/><div className="menu-anchor"><IconButton icon={FunnelSimple} label="筛选最近聊天" aria-expanded={menu?.name==='chat-filter'} onClick={event=>toggleMenu('chat-filter',event)}/>{menu?.name==='chat-filter'&&<div className="dropdown chat-filter-dropdown" role="menu" aria-label="最近聊天筛选">{[['all','全部聊天'],['project','项目聊天'],['running','正在运行']].map(([id,label])=><button type="button" role="menuitemradio" aria-checked={chatFilter===id} className="menu-item" key={id} onClick={()=>{setChatFilter(id);closeMenu();}}><span>{label}</span>{chatFilter===id&&<Check size={15}/>}</button>)}</div>}</div><IconButton icon={MagnifyingGlass} label="搜索聊天" onClick={()=>openModal({type:'search'})}/></div>
+      <div className="sidebar-heading-actions"><IconButton icon={BellSimple} label="任务活动" className={unread?'has-unread':''} onClick={()=>openModal({type:'notifications'})}/><div className="menu-anchor"><IconButton icon={FunnelSimple} label="筛选最近聊天" aria-expanded={menu?.name==='chat-filter'} onClick={event=>toggleMenu('chat-filter',event)}/>{menu?.name==='chat-filter'&&<div className="dropdown chat-filter-dropdown" role="menu" aria-label="最近聊天筛选">{[['all','全部独立聊天'],['running','正在运行']].map(([id,label])=><button type="button" role="menuitemradio" aria-checked={chatFilter===id} className="menu-item" key={id} onClick={()=>{setChatFilter(id);closeMenu();}}><span>{label}</span>{chatFilter===id&&<Check size={15}/>}</button>)}</div>}</div><IconButton icon={MagnifyingGlass} label="搜索聊天" onClick={()=>openModal({type:'search'})}/></div>
     </div>
 
     <nav className="workspace-nav chat-navigation" aria-label="工作台导航">
@@ -77,7 +78,7 @@ export function Sidebar({ state, workspace, projects, chats, activeChat, activeP
       <div className="sidebar-projects">
         <div className="section-label"><span>项目</span><IconButton icon={Plus} label="新建项目" onClick={() => openModal({ type: 'new-project' })}/></div>
         {projects.map(project => {
-          const id = `project-${project.id}`, children = chats.filter(chat => chat.projectId === project.id);
+          const id = `project-${project.id}`, children = chats.filter(chat => chat.projectId === project.id && !chat.pinned);
           return <div className="project-group" key={project.id}>
             <div className={`project-row ${section === 'project' && activeProject?.id === project.id ? 'selected' : ''}`}>
               <button className="project-expand" aria-label={`${project.expanded ? '收起' : '展开'} ${project.name}`} aria-expanded={project.expanded} onClick={() => expandProject(project.id)}><CaretRight size={11}/></button>

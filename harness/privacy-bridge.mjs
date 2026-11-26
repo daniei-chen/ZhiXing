@@ -91,7 +91,11 @@ async function publishLock(lock,owner,entry) {
     await fs.writeFile(`${pending}/${entry}`,JSON.stringify(owner),{flag:'wx',mode:0o600});
     try { await fs.rename(pending,lock); published=true; return true; }
     catch(error) {
-      if(['EEXIST','ENOTEMPTY','EPERM','EACCES'].includes(error.code)&&await lockStat(lock))return false;
+      // A competing owner may release the directory before this catch runs.
+      // The atomic rename already established contention; a later stat cannot
+      // undo it. Permission errors still require an existing competing lock.
+      if(['EEXIST','ENOTEMPTY'].includes(error.code))return false;
+      if(['EPERM','EACCES'].includes(error.code)&&await lockStat(lock))return false;
       throw error;
     }
   } finally {

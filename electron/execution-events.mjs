@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 const toolLabels = new Map(Object.entries({
  office_calculate:'数字计算', office_calendar:'日期计算', office_table_check:'表格检查',
  office_read_file:'读取办公文件', office_write_file:'生成办公文件', office_list_files:'列出目录',
@@ -28,25 +30,35 @@ export const executionStatus = value => statuses.has(value) ? value : undefined;
 export function projectExecutionEvent(event, childSessionId, calls) {
  const {type, data} = event;
  const base = {type, childSessionId:id(childSessionId), time:number(event.time), sequence:number(event.seq), turn:number(data?.turn), step:number(data?.step)};
- const call = raw => id(raw) && `${childSessionId || 'root'}:${raw}`;
+ // The native tool/result cites its tool/call through sourceEventSeqs. Export
+ // only that event coordinate (or a local opaque id), never the model-supplied
+ // call id, arguments, paths or result body. Scope the private lookup by child,
+ // turn and step so parallel agents and reused provider ids cannot collide.
+ const call = raw => id(raw) && (childSessionId === undefined || base.childSessionId)
+  ? JSON.stringify([childSessionId ?? null, base.turn ?? null, base.step ?? null, raw])
+  : undefined;
+ const eventCallId = sequence => (childSessionId !== undefined && !base.childSessionId) || number(sequence) === undefined ? undefined : `event-${sequence}`;
  switch(type) {
   case 'tool/call': {
    const reference = call(data.callId);
    const tool = toolLabels.get(data.name) ?? (data.name?.startsWith('mcp__') ? 'MCP 工具' : '内核工具');
+   const callId = eventCallId(base.sequence) || `live-${randomUUID()}`;
    if (reference) {
     if (calls.size >= 512) calls.delete(calls.keys().next().value);
-    calls.set(reference, {name:data.name,tool,time:base.time});
+    calls.set(reference, {name:data.name,tool,time:base.time,callId});
    }
-   return {...base, label:`调用 · ${tool}`, category:'tools', status:'running'};
+   return {...base, callId, label:`调用 · ${tool}`, category:'tools', status:'running'};
   }
   case 'tool/result': {
    const reference = call(data.message?.toolCallId);
    const started = calls.get(reference);
    calls.delete(reference);
+   const sourceSequence = Array.isArray(event.sourceEventSeqs) && event.sourceEventSeqs.length === 1 ? event.sourceEventSeqs[0] : undefined;
+   const callId = eventCallId(sourceSequence) || started?.callId;
    const stoppedPatch = started?.name === 'apply_patch' && data.meta?.stopped === true;
    const status = data.message?.isError ? 'failed' : stoppedPatch ? 'interrupted' : 'completed';
    const suffix = {failed:'失败',interrupted:'未完成',completed:'完成'}[status];
-   return {...base, label:started ? `${started.tool} · ${suffix}` : `工具${suffix}`,
+   return {...base, callId, label:started ? `${started.tool} · ${suffix}` : `工具${suffix}`,
     category:'tools', status,
     durationMs:base.time >= started?.time ? base.time - started.time : undefined};
   }

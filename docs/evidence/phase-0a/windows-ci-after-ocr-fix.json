@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "abac9ba18ae4a6e4379e9548f0943b4b27e00b6e",
+  "gitTree": "f3894ce72f4ccfe17c6a3f782b3818e879a5e947",
+  "sourceAggregateSha256": "9bc52cc51d6b053a1a2403e0f97f191d4fa12725e44929a338a129becc503776",
+  "layer": "Windows hosted runner source/build/Sites and isolated renderer. No packaged installer, installation lifecycle, signing, or real cloud.",
+  "runner": {
+    "os": "Windows Server 2025",
+    "image": "windows-2025-vs2026",
+    "imageVersion": "20261116.315.1",
+    "node": "v24.22.3"
+  },
+  "runs": [
+    {
+      "runId": 45818247128,
+      "event": "pull_request",
+      "jobId": 139903453390,
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45818247128",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Check out source",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Set up Node.js 24",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Prepare text evidence directory",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Sites source tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Source tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Component and isolated Windows renderer tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Collect bounded text evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Upload text evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Require every gate to pass",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post Set up Node.js 24",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Post Check out source",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ],
+      "sites": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 105.4002
+      },
+      "source": {
+        "tests": 545,
+        "suites": 0,
+        "pass": 545,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 307540.8043
+      },
+      "components": {
+        "tests": 18,
+        "suites": 0,
+        "pass": 18,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 14614.0176
+      },
+      "previouslyFailingOcrCases": [
+        {
+          "name": "Windows 图片 OCR 返回本机文字覆盖范围，不返回原始图片字节",
+          "passed": true,
+          "testDurationMs": 6876.1027
+        },
+        {
+          "name": "真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话",
+          "passed": true,
+          "testDurationMs": 12961.577
+        },
+        {
+          "name": "官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式",
+          "passed": true,
+          "testDurationMs": 10417.6111
+        },
+        {
+          "name": "Windows OCR image is read by office_read_file, protected before wire, and restored locally",
+          "passed": true,
+          "testDurationMs": 3529.1604
+        },
+        {
+          "name": "Windows image privacy masks the actual pixels, removes metadata with zero hits, and handles no-text images",
+          "passed": true,
+          "testDurationMs": 4085.0059
+        },
+        {
+          "name": "Windows WebP 和单帧 GIF 复用同一遮罩链，动图与伪装扩展名被拒绝",
+          "passed": true,
+          "testDurationMs": 3011.3123
+        },
+        {
+          "name": "Windows 项目图片路径接受 WebP 与单帧 GIF，副本仍统一为 PNG",
+          "passed": true,
+          "testDurationMs": 1093.9505
+        },
+        {
+          "name": "Windows real Harness sends only approved pixels and retains approved visual history on reopen",
+          "passed": true,
+          "testDurationMs": 12457.275
+        },
+        {
+          "name": "真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原",
+          "passed": true,
+          "testDurationMs": 102686.618
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 15116613974,
+          "bytes": 33457,
+          "digest": "sha256:c10637d207bece2d4775e917d36d0e2b8eba0b5e5dc640667962b4a8cc3f1e41",
+          "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45818247128/artifacts/15116613974",
+          "expiresAt": "2026-12-03T12:24:25Z"
+        }
+      ]
+    },
+    {
+      "runId": 45818239482,
+      "event": "push",
+      "jobId": 139903427041,
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45818239482",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Check out source",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Set up Node.js 24",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Prepare text evidence directory",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Sites source tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Source tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Component and isolated Windows renderer tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Collect bounded text evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Upload text evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Require every gate to pass",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post Set up Node.js 24",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Post Check out source",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ],
+      "sites": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 132.068
+      },
+      "source": {
+        "tests": 545,
+        "suites": 0,
+        "pass": 545,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 383176.1645
+      },
+      "components": {
+        "tests": 18,
+        "suites": 0,
+        "pass": 18,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 16955.4063
+      },
+      "previouslyFailingOcrCases": [
+        {
+          "name": "Windows 图片 OCR 返回本机文字覆盖范围，不返回原始图片字节",
+          "passed": true,
+          "testDurationMs": 3800.0331
+        },
+        {
+          "name": "真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话",
+          "passed": true,
+          "testDurationMs": 16863.7942
+        },
+        {
+          "name": "官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式",
+          "passed": true,
+          "testDurationMs": 10580.7695
+        },
+        {
+          "name": "Windows OCR image is read by office_read_file, protected before wire, and restored locally",
+          "passed": true,
+          "testDurationMs": 4552.4033
+        },
+        {
+          "name": "Windows image privacy masks the actual pixels, removes metadata with zero hits, and handles no-text images",
+          "passed": true,
+          "testDurationMs": 5056.9282
+        },
+        {
+          "name": "Windows WebP 和单帧 GIF 复用同一遮罩链，动图与伪装扩展名被拒绝",
+          "passed": true,
+          "testDurationMs": 3621.109
+        },
+        {
+          "name": "Windows 项目图片路径接受 WebP 与单帧 GIF，副本仍统一为 PNG",
+          "passed": true,
+          "testDurationMs": 1271.1088
+        },
+        {
+          "name": "Windows real Harness sends only approved pixels and retains approved visual history on reopen",
+          "passed": true,
+          "testDurationMs": 15926.8271
+        },
+        {
+          "name": "真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原",
+          "passed": true,
+          "testDurationMs": 132236.519
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 15117361195,
+          "bytes": 33476,
+          "digest": "sha256:fcfe0b693c9d7dccccedfd96f1b165ebbd8af5b5d26b8d4caa693d0e7d684b0a",
+          "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45818239482/artifacts/15117361195",
+          "expiresAt": "2026-12-03T12:25:56Z"
+        }
+      ]
+    }
+  ],
+  "interpretation": "Both full uninstrumented Windows source gates pass with all prior OCR cases confirmed. Timing fields above are entire test durations, not isolated OCR latency. No claim of a universal speedup, pristine Windows baseline, packaged application acceptance or real cloud."
+}

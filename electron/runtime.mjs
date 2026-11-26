@@ -20,6 +20,7 @@ import {applyRuntimeExtensions} from './plugin-profile.mjs';
 import {diffEntries, mergeEntries} from './change-summary.mjs';
 import {mergeDiffs, unifiedRows} from './review-diff.mjs';
 import {executionStatus, projectExecutionEvent} from './execution-events.mjs';
+import {waitExecutionControlBridge} from './execution-control-bridge.mjs';
 import {failureHint, turnFailureMessage} from './run-failure.mjs';
 import {AssistantTextStream} from './assistant-stream.mjs';
 import { VISUAL_MAX_BYTES, VISUAL_MAX_PER_REQUEST, VISUAL_MAX_PIXELS, readVisualAttachment } from './visual-attachments.mjs';
@@ -297,7 +298,7 @@ export async function waitForStoppedJobs(jobs,timeoutMs,onTimeout){
 
 export class RuntimeManager{
  constructor({root,readVault,writeVault,onEvent,onApproval,createHarness=makeHarness,createGateway=startPrivacyGateway,cleanupTimeoutMs=10000,cleanupRetryDelays=[1000,3000,10000]}){this.root=root;this.readVault=readVault;this.writeVault=writeVault;this.onEvent=onEvent;this.onApproval=onApproval;this.createHarness=createHarness;this.createGateway=createGateway;this.cleanupTimeoutMs=Math.min(30000,Math.max(20,cleanupTimeoutMs));this.cleanupRetryDelays=cleanupRetryDelays.slice(0,3);this.runs=new Map();this.runSettlements=new Map();this.runSettlementSessions=new Map();this.sessionStateVersions=new Map();this.busy=new Set();this.prepared=new Map();this.cancelled=new Map();this.questions=new Map();this.volatileVaults=new Map();}
- emitEvent(event){const active=this.runs.get(event.runId);if(active){active.eventWatermark=(active.eventWatermark||0)+1;if(event.finalization)event.finalization.eventWatermark=active.eventWatermark;}try{this.onEvent?.(event);}catch{}}
+ emitEvent(event){const active=this.runs.get(event.runId);if(active){active.eventWatermark=(active.eventWatermark||0)+1;if(event.finalization)event.finalization.eventWatermark=active.eventWatermark;}try{this.onEvent?.(event);}catch{/* A detached UI observer must not interrupt runtime settlement. */}}
  resultFields(active){
   if(!active.output)return {};
   active.output.finalization=active.finalization;
@@ -332,7 +333,7 @@ export class RuntimeManager{
   if(!active){const settled=await this.runSettlements.get(runId);if(settled?.finalization)return {...settled,status:'exited'};throw new Error('没有对应的内核收尾记录。');}
   if(active.cleanupPromise)return active.cleanupPromise;
   if(active.shutdownPending&&!active.finalization){
-   try{await bounded(()=>active.settled,this.cleanupTimeoutMs);}catch{}
+   try{await bounded(()=>active.settled,this.cleanupTimeoutMs);}catch{/* Preserve quarantine below when settlement still cannot be confirmed. */}
    if(!active.finalization)return {...this.getCleanupStatus().find(item=>item.runId===runId),status:'cleanup_pending'};
    if(!this.runs.has(runId))return {...active.settlement,status:'exited'};
   }
@@ -391,12 +392,17 @@ export class RuntimeManager{
     active.settlement={runId:active.runId,sessionId:active.sessionId,status:'failed',finalization:active.finalization};resolveSettled(active.settlement);
     active.finishCleanup=async()=>{await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});return {persistenceStatus:'saved'};};
     this.emitEvent({runId:active.runId,sessionId:active.sessionId,type:'run/terminal',status:'failed',finalization:active.finalization});this.scheduleCleanup(active);
-    const exposed=failure&&failure!==error?new AggregateError([failure,error],'内核检查与关闭均失败。',{cause:failure}):error;exposed.finalization=active.finalization;exposed.code=active.finalization.error.code;exposed.stage=active.finalization.error.stage;throw exposed;
+    const exposed=failure&&failure!==error?new AggregateError([failure,error],'内核检查与关闭均失败。',{cause:failure}):error;exposed.finalization=active.finalization;exposed.code=active.finalization.error.code;exposed.stage=active.finalization.error.stage;
+    // eslint-disable-next-line no-unsafe-finally -- Unconfirmed kernel exit must reject even after a successful catalog result.
+    throw exposed;
    }
    let removeError;try{await fs.rm(directory,{recursive:true,force:true,maxRetries:6,retryDelay:150});}catch(error){removeError=error;}
    active.finalization={runId:active.runId,executionStatus:failure?'failed':'completed',persistenceStatus:'saved',processStatus:'exited',eventWatermark:active.eventWatermark};
    active.settlement={runId:active.runId,sessionId:active.sessionId,status:failure?'failed':'succeeded',finalization:active.finalization};resolveSettled(active.settlement);this.releaseRun(active);
-   if(removeError){removeError.finalization=active.finalization;throw removeError;}
+   if(removeError){removeError.finalization=active.finalization;
+    // eslint-disable-next-line no-unsafe-finally -- Surface failed fixture removal instead of falsely completing diagnostic cleanup.
+    throw removeError;
+   }
   }
  }
  async prepare(options,config){
@@ -550,6 +556,7 @@ export class RuntimeManager{
       gateway.approveVisualAttachments(next.images);
       return value;
      }catch(error){
+      // eslint-disable-next-line preserve-caught-error -- Office filesystem causes can contain private paths and must not cross the public tool boundary.
       if(/^E[A-Z0-9]+$/.test(error?.code))throw new Error('无法读取办公页面或记录视觉副本，请检查文件和本机存储。');
       throw error;
      }finally{rendering=false;}
@@ -575,7 +582,18 @@ export class RuntimeManager{
     }).catch(()=>{});
    };
    try{
-    await h.start();active.status='running';
+    await h.start();
+    if(active.controls){
+     try{
+      await waitExecutionControlBridge(active.controls.file,active.controls.key,AbortSignal.any([active.controller.signal,AbortSignal.timeout(4000)]));
+     }catch{
+      active.controller.signal.throwIfAborted();
+      // This local startup failure must not expose filesystem paths or be
+      // translated into an upstream API authentication/network failure.
+      throw Object.assign(new Error('执行控制桥尚未就绪，本次交办尚未发送。请重试；若仍失败，请重启应用。'),{code:'RUNTIME_CONTROL_BRIDGE_UNAVAILABLE',stage:'startup'});
+     }
+    }
+    active.status='running';
     await checkMcpReady(mcpFile,bridgeKey,config.mcpServers);
     const session = resume ? await h.resumeSession(sessionId) : h.session(sessionId);
     active.controller.signal.throwIfAborted();
@@ -594,15 +612,17 @@ export class RuntimeManager{
      const {childSessionId:id,parentSessionId:parentId}=n.params;
      if(SAFE_ID.test(id)&&SAFE_ID.test(parentId)){
       const started=n.method==='subagent.started',previous=children.get(id),time=Date.now();
-      const status=started?'running':executionStatus(n.params.stopReason)||executionStatus(n.params.status)||'completed';
-      if(started)active.controls?.targets.set(`interrupt-agent:${id}`,sessionId);
-      else active.controls?.targets.delete(`interrupt-agent:${id}`);
+      // rc.5 announces subagent.started at session creation, before the child
+      // is resident or owns a turn AbortController. Interrupt is only eligible
+      // after the native agent/status transition below.
+      const status=started?'starting':executionStatus(n.params.stopReason)||executionStatus(n.params.status)||'completed';
+      active.controls?.targets.delete(`interrupt-agent:${id}`);
       if(active.controls?.targets.size<250){
        active.controls.targets.set(`read-agent:${id}`,sessionId);
        active.controls.targets.set(`send-agent:${id}`,sessionId);
       }
       children.set(id,{id,parentId,status,startedAt:previous?.startedAt||time,finishedAt:started?undefined:time});
-      this.emitEvent({runId,sessionId,type:'subagents',category:'agents',label:started?'子任务已启动':'子任务已结束',status,childSessionId:id,children:[...children.values()]});
+      this.emitEvent({runId,sessionId,type:'subagents',category:'agents',label:started?'子任务正在启动':'子任务已结束',status,childSessionId:id,children:[...children.values()]});
      }
     }
     if(n.method==='session.event'){
@@ -618,7 +638,7 @@ export class RuntimeManager{
        transcripts.set(eventSession,rows);
       }
      }
-     if(e?.type==='tool/call'&&(e.data?.name==='write'||e.data?.name==='edit')&&typeof e.data?.arguments==='string'){try{const parsed=JSON.parse(e.data.arguments);const target=parsed?.file_path;if(typeof target==='string'&&target.trim()){writes.set(e.data.callId,{name:e.data.name,file:target.trim(),content:typeof parsed.content==='string'?parsed.content:undefined});if(writes.size>256)writes.delete(writes.keys().next().value);}}catch{}}
+     if(e?.type==='tool/call'&&(e.data?.name==='write'||e.data?.name==='edit')&&typeof e.data?.arguments==='string'){try{const parsed=JSON.parse(e.data.arguments);const target=parsed?.file_path;if(typeof target==='string'&&target.trim()){writes.set(e.data.callId,{name:e.data.name,file:target.trim(),content:typeof parsed.content==='string'?parsed.content:undefined});if(writes.size>256)writes.delete(writes.keys().next().value);}}catch{/* Invalid tool arguments cannot contribute a file-diff fallback. */}}
       if(e?.type==='tool/result'&&(Array.isArray(e.data?.meta?.diffs)||e.data?.meta?.operation==='create')){const call=writes.get(e.data?.message?.toolCallId);writes.delete(e.data?.message?.toolCallId);const entries=diffEntries(e.data?.meta);if(!entries.length&&e.data?.meta?.operation==='create'&&call?.name==='write'&&call.content!==undefined){const lines=call.content===''?0:call.content.replace(/\n$/,'').split('\n').length;entries.push({path:call.file,added:lines,deleted:0,estimated:false});if(rawDiffs.length<200&&call.content.length<=131072)rawDiffs.push({path:call.file,oldText:'',newText:call.content});}for(const entry of entries)changes.push(entry);for(const diff of Array.isArray(e.data?.meta?.diffs)?e.data.meta.diffs:[]){if(rawDiffs.length>=200)break;const oldText=String(diff?.oldText??''),newText=String(diff?.newText??'');if(oldText.length+newText.length>131072)continue;rawDiffs.push({path:String(diff?.path??''),oldText,newText});}if(changes.length>500)changes.splice(0,changes.length-500);}
       if(e?.type==='deliverables/presented'&&Array.isArray(e.data?.files)){for(const file of e.data.files)if(typeof file.path==='string')deliverables.push({path:file.path,description:String(file.description||'').slice(0,300)});this.emitEvent({runId,sessionId,type:'deliverables',label:'成果文件已准备',files:e.data.files.map(file=>({name:path.basename(file.path)}))});}
      if(n.params.sessionId===sessionId&&e?.type==='assistant/message'){
@@ -645,7 +665,21 @@ export class RuntimeManager{
    if(trace)this.emitEvent({runId,sessionId,...trace});
      if(n.params.sessionId===sessionId&&e?.type!=='assistant/message')emitStats();
     }
-    if(n.method==='session.status'&&n.params.sessionId===sessionId)this.emitEvent({runId,sessionId,type:'status',label:n.params.status==='idle'?'内核空闲':'内核运行中'});
+    if(n.method==='session.status'){
+     const {sessionId:id,status}=n.params;
+     if(id===sessionId)this.emitEvent({runId,sessionId,type:'status',label:status==='idle'?'内核空闲':'内核运行中'});
+     else if(children.has(id)&&['running','idle'].includes(status)){
+      const previous=children.get(id);
+      // A late idle cannot overwrite a recorded terminal outcome. A subsequent
+      // running event may represent a native continuation of the same child.
+      if(status==='running'||!previous.finishedAt){
+       if(status==='running')active.controls?.targets.set(`interrupt-agent:${id}`,sessionId);
+       else active.controls?.targets.delete(`interrupt-agent:${id}`);
+       children.set(id,{...previous,status,finishedAt:undefined});
+       this.emitEvent({runId,sessionId,type:'subagents',category:'agents',label:status==='running'?'子任务正在执行':'子任务空闲',status,childSessionId:id,children:[...children.values()]});
+      }
+     }
+    }
     };
     // The SDK query resolves at root idle. Keep observing independently until
     // the native host also joins managed descendants and their final events.
@@ -672,7 +706,13 @@ export class RuntimeManager{
      }
     }
     if(observerError)throw observerError;
-   }catch(e){if(active.timedOut)throw new Error(`任务超过 ${kernel.taskTimeoutSeconds} 秒，内核已停止。`);if(active.cancelled)throw new Error('任务已停止。');throw e;}finally{clearTimeout(timeout);}
+   }catch(e){
+    // eslint-disable-next-line preserve-caught-error -- Timeout output excludes raw Harness errors that may contain inputs or credentials.
+    if(active.timedOut)throw new Error(`任务超过 ${kernel.taskTimeoutSeconds} 秒，内核已停止。`);
+    // eslint-disable-next-line preserve-caught-error -- Cancellation exposes only the stable safe message, not private in-flight transport details.
+    if(active.cancelled)throw new Error('任务已停止。');
+    throw e;
+   }finally{clearTimeout(timeout);}
    if(active.cancelled)throw new Error('任务已停止。');
    if(['error','blocked','aborted','interrupted'].includes(result.finishReason)){
     const failureEvent=request.commandName&&result.events?.find(event=>event.type==='command/done'&&event.data.kind==='error');
@@ -691,7 +731,7 @@ export class RuntimeManager{
    await waitContext(directory,bridgeKey,sessionId,{planning:request.expectedPlanning});
    await active.draftTail;
    vault=new PrivacySession(sessionId,await readBridge(bridgeFile,bridgeKey));
-   let context;try{const reports=await readBridge(path.join(directory,'context.bin'),bridgeKey);context=protectTeamContext(reports[sessionId],key);}catch{}
+   let context;try{const reports=await readBridge(path.join(directory,'context.bin'),bridgeKey);context=protectTeamContext(reports[sessionId],key);}catch{/* Optional context statistics may be unavailable; the protected answer remains deliverable. */}
    const response=result.finalResponse||'';
    const originalTokens=new Set(vault.entries().map(entry=>entry.token));
    const final=(privacyMode==='redact'?vault:new PrivacySession(sessionId)).protect(response,customTerms,effectivePolicy);
@@ -747,7 +787,10 @@ const restoredChanges=mergeEntries((privacyMode==='redact'?changes.map(entry=>{c
    this.emitEvent(terminal);if(active.output)active.output.finalization=active.finalization;
    if(failure){failure.finalization=active.finalization;if(active.output)failure.result=active.output;failure.code=active.finalization.error?.code;failure.stage=active.finalization.error?.stage;if(active.safeContext)failure.message=this.executionDisplay(failure.message,active.safeContext).slice(0,400);}
    active.resolveSettled(active.settlement);if(harnessClosed)this.releaseRun(active);
-   if(cleanupError&&!active.cancelled){const exposed=failure&&failure!==cleanupError?new AggregateError([failure,cleanupError],'交办执行与收尾均失败。',{cause:failure}):cleanupError;exposed.finalization=active.finalization;if(active.output)exposed.result=active.output;exposed.code=active.finalization.error?.code;exposed.stage=active.finalization.error?.stage;throw exposed;}
+   if(cleanupError&&!active.cancelled){const exposed=failure&&failure!==cleanupError?new AggregateError([failure,cleanupError],'交办执行与收尾均失败。',{cause:failure}):cleanupError;exposed.finalization=active.finalization;if(active.output)exposed.result=active.output;exposed.code=active.finalization.error?.code;exposed.stage=active.finalization.error?.stage;
+    // eslint-disable-next-line no-unsafe-finally -- Preserve both execution and cleanup failures; an unconfirmed process exit cannot report success.
+    throw exposed;
+   }
   }
  }
  executionDisplay(text,controls){
@@ -775,9 +818,9 @@ const restoredChanges=mergeEntries((privacyMode==='redact'?changes.map(entry=>{c
    },{signal:active.controller.signal});
   }
   try{
-   const {url,token}=await readBridge(controls.file,controls.key);
-   if(!/^http:\/\/127\.0\.0\.1:\d{1,5}\/execution$/.test(url))throw new Error();
    const signal=AbortSignal.any([active.controller.signal,AbortSignal.timeout(4000)]);
+   const {url,token}=await waitExecutionControlBridge(controls.file,controls.key,signal);
+   if(!/^http:\/\/127\.0\.0\.1:\d{1,5}\/execution$/.test(url))throw new Error();
    const response=await fetch(url,{method:'POST',headers:{authorization:`Bearer ${token}`,'content-type':'application/json'},body:JSON.stringify({action,target,owner,text,offset}),signal,redirect:'error'});
    if(!response.ok)throw new Error();
    const {value}=await response.json();

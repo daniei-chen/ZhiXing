@@ -1,0 +1,8 @@
+
+> office-agent@0.40.0 test:tools-ui
+> node scripts/test-tool-timeline-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\ZhiXing\ZhiXing\.preview\qa-0.40.0\tool-timeline\run-mwxlvsvo
+PASS 假服务已保存，工作区指向它
+PASS 调用与结果合为一次工具调用，保留完成状态
+FAIL UI condition not reached: document.querySelector(".tool-strip summary")?.textContent.trim()==="1 次工具调用"

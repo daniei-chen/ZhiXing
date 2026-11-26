@@ -1,0 +1,609 @@
+{
+  "schemaVersion": 1,
+  "layer": "Windows hosted runner: directory package, packaged module checks and targeted real Electron UI with deterministic model fixtures",
+  "runId": "45834015245",
+  "jobId": "139957944652",
+  "runUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245",
+  "jobUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245/job/139957944652",
+  "conclusion": "success",
+  "checkoutCommit": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "workflowSha": "6fa27fdef890a987af8d5e8a6592b764752b537b",
+  "provenance": {
+    "schemaVersion": 1,
+    "version": "0.40.0",
+    "sourceCommit": "3735910a7795b24f282d1f273bcd2841fd685960",
+    "sourceDirty": false,
+    "builtAt": "2026-11-26T13:59:59.274Z",
+    "nodeVersion": "v24.19.0",
+    "lockSha256": "910b7d23d8f512c88b476fa5b1a6c2bc68672be3a3fe71806ba9c8ffe7f0dd3a"
+  },
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "electronRuntimeVersions": {
+    "electron": "44.11.5",
+    "chrome": "152.0.7977.169",
+    "node": "24.22.3"
+  },
+  "steps": {
+    "install": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "electron": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "package": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "verify": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "packed": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "errors": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "native": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "tools": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "phase0a": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "nsis": {
+      "outcome": "success",
+      "conclusion": "success"
+    }
+  },
+  "coverage": {
+    "directoryPackageBuilt": true,
+    "packagedSourceMatched": true,
+    "packagedRegressionPassed": true,
+    "networkErrorUiPassed": true,
+    "nativeFilesUiPassed": true,
+    "toolTimelineUiPassed": true,
+    "phase0aUiPassed": true,
+    "uninstalledNsisBuilt": true
+  },
+  "packagedRegression": {
+    "status": "passed",
+    "counts": {
+      "tests": 383,
+      "suites": 0,
+      "pass": 383,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 464063.5368
+    },
+    "scope": {
+      "type": "packed-test-scope",
+      "unit": "test-files",
+      "package-aware": [
+        "privacy.test.mjs",
+        "credential-boundary.test.mjs",
+        "privacy-dynamic-keys.test.mjs",
+        "privacy-mcp-native.test.mjs",
+        "privacy-gateway.test.mjs",
+        "delivery-review.test.mjs",
+        "conversation-state.test.mjs",
+        "kernel-native.test.mjs",
+        "capability-manifest.test.mjs",
+        "capability-runtime.test.mjs",
+        "office-directory.test.mjs",
+        "office-file-policy.test.mjs",
+        "privacy-lock-recovery.test.mjs",
+        "automation.test.mjs",
+        "automation-persistence.test.mjs",
+        "runtime.test.mjs",
+        "runtime-native-entrypoints.test.mjs",
+        "runtime-image-ocr.test.mjs",
+        "runtime-vision.test.mjs",
+        "runtime-cleanup.test.mjs",
+        "runtime-finalization.test.mjs",
+        "runtime-context.test.mjs",
+        "runtime-launch.test.mjs",
+        "runtime-lifecycle.test.mjs",
+        "document-text.test.mjs",
+        "workbench.test.mjs",
+        "deliverable-access.test.mjs",
+        "assistant-stream.test.mjs",
+        "providers.test.mjs",
+        "mcp-identity.test.mjs",
+        "mcp-destination.test.mjs",
+        "workspace-save-queue.test.mjs",
+        "plugins.test.mjs",
+        "updater-cache.test.mjs",
+        "temp-hygiene.test.mjs",
+        "zip-writer.test.mjs",
+        "archive-name.test.mjs"
+      ],
+      "mixed-source": [
+        "composer-runtime.test.mjs",
+        "speech-audio.test.mjs",
+        "speech-service.test.mjs"
+      ],
+      "source-only": [
+        "subagent-archive.test.mjs"
+      ],
+      "sourceHelpers": {
+        "composer-runtime.test.mjs": [
+          "src/model-options.js"
+        ],
+        "speech-audio.test.mjs": [
+          "src/speech-audio.js"
+        ],
+        "speech-service.test.mjs": [
+          "src/speech-audio.js",
+          "source Electron fixture launcher"
+        ],
+        "subagent-archive.test.mjs": [
+          "src/subagent-archive.js"
+        ]
+      },
+      "boundary": "Packaged EXE runs source test files; fixture generators and test dependencies may come from the checkout. Mixed/source-only helpers do not verify the renderer bundle."
+    },
+    "rawLog": "docs/evidence/phase-0b/final/windows-packed-log.txt"
+  },
+  "uiResults": {
+    "errors": {
+      "status": "passed",
+      "caseCounts": {
+        "passed": 7,
+        "failed": 0,
+        "observed": 5,
+        "other": 0
+      },
+      "countingRule": "Only status=passed records count as assertion passes; five observed records are separate.",
+      "observedCodes": [
+        "HTTP_401",
+        "ENOTFOUND",
+        "ENOTFOUND",
+        "ECONNREFUSED",
+        "TIMEOUT"
+      ],
+      "cases": [
+        {
+          "name": "实包运行时报告 0.40.0",
+          "status": "passed"
+        },
+        {
+          "name": "真实 401 的 API Key 被换成可行动的文案",
+          "status": "observed",
+          "cause": "HTTP_401"
+        },
+        {
+          "name": "真实 401 的 API Key 被换成可行动的文案（HTTP_401）显示「API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。」",
+          "status": "passed",
+          "cause": "HTTP_401"
+        },
+        {
+          "name": "解析不到的主机显示「解析不到服务地址」",
+          "status": "observed",
+          "cause": "ENOTFOUND"
+        },
+        {
+          "name": "解析不到的主机显示「解析不到服务地址」（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」",
+          "status": "passed",
+          "cause": "ENOTFOUND"
+        },
+        {
+          "name": "被本机网络接住时按实际错误码 ENOTFOUND 给文案",
+          "status": "observed",
+          "cause": "ENOTFOUND"
+        },
+        {
+          "name": "被本机网络接住时按实际错误码 ENOTFOUND 给文案（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」",
+          "status": "passed",
+          "cause": "ENOTFOUND"
+        },
+        {
+          "name": "拒绝连接的端口显示连接被拒绝",
+          "status": "observed",
+          "cause": "ECONNREFUSED"
+        },
+        {
+          "name": "拒绝连接的端口显示连接被拒绝（ECONNREFUSED）显示「服务地址拒绝连接，请确认地址和端口是否正确。」",
+          "status": "passed",
+          "cause": "ECONNREFUSED"
+        },
+        {
+          "name": "无响应的服务地址按 12 秒超时给出超时文案",
+          "status": "observed",
+          "cause": "TIMEOUT"
+        },
+        {
+          "name": "无响应的服务地址按 12 秒超时给出超时文案（TIMEOUT）显示「请求超时，请检查网络后重试。」",
+          "status": "passed",
+          "cause": "TIMEOUT"
+        },
+        {
+          "name": "主进程保留真实错误码，每条界面文案都与技术原文不同",
+          "status": "passed"
+        }
+      ],
+      "rawResult": "docs/evidence/phase-0b/final/errors-result.json"
+    },
+    "nativeFiles": {
+      "status": "passed",
+      "caseCounts": {
+        "passed": 5,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      },
+      "recordField": "records",
+      "dialogSelection": "synthetic approval and save selection only",
+      "cases": [
+        {
+          "name": "Windows 当前执行权限触发原生 write 审批，拒绝后未写入",
+          "status": "passed"
+        },
+        {
+          "name": "实际批准的多文件补丁停在第 1/3 步，已写文件保留、后续文件不变",
+          "status": "passed"
+        },
+        {
+          "name": "Office 转换的真实桌面审批可批准，源文件保持原字节",
+          "status": "passed"
+        },
+        {
+          "name": "重启后保留补丁终态；Markdown 按所选历史和已审阅快照保存准确字节，零新增出站",
+          "status": "passed"
+        },
+        {
+          "name": "保存对话框打开期间移动会话，旧快照不再允许写盘",
+          "status": "passed"
+        }
+      ],
+      "rawResult": "docs/evidence/phase-0b/final/native-files-result.json"
+    },
+    "toolTimeline": {
+      "status": "passed",
+      "caseCounts": {
+        "passed": 3,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      },
+      "cases": [
+        {
+          "name": "假服务已保存，工作区指向它",
+          "status": "passed"
+        },
+        {
+          "name": "调用与结果合为一次工具调用，保留完成状态",
+          "status": "passed"
+        },
+        {
+          "name": "刷新后从保存轨迹恢复一次调用",
+          "status": "passed"
+        }
+      ],
+      "rawResult": "docs/evidence/phase-0b/final/tool-timeline-result.json"
+    },
+    "phase0a": {
+      "status": "passed",
+      "caseCounts": {
+        "passed": 9,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      },
+      "cases": [
+        {
+          "name": "packaged EXE uses only the isolated QA profile",
+          "status": "passed"
+        },
+        {
+          "name": "project, pinned, independent and orphan chats each have one selectable entry",
+          "status": "passed"
+        },
+        {
+          "name": "real Harness writes and presents both files and retains three linked calls",
+          "status": "passed"
+        },
+        {
+          "name": "body precedes changes and deliverables; all assistant sections share a baseline",
+          "status": "passed"
+        },
+        {
+          "name": "tool steps expand as three completed styled rows",
+          "status": "passed"
+        },
+        {
+          "name": "reload preserves real message order, linked tool count and sidebar ownership",
+          "status": "passed"
+        },
+        {
+          "name": "feedback over 8192 bytes disables save while Clear remains usable",
+          "status": "passed"
+        },
+        {
+          "name": "failed file action shows a persistent top toast without covering long input controls",
+          "status": "passed"
+        },
+        {
+          "name": "actual dark appearance keeps the assistant baseline at a narrower window",
+          "status": "passed"
+        }
+      ],
+      "rawResult": "docs/evidence/phase-0b/final/phase0a-result.json",
+      "screenshots": [
+        {
+          "file": "docs/evidence/phase-0b/final/01-message-light.png",
+          "bytes": 65277,
+          "sha256": "0ad7c14e700469a4cf6589873848526ff646661ac3c694d256d0d36eb1716473",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "docs/evidence/phase-0b/final/02-tools-expanded.png",
+          "bytes": 70424,
+          "sha256": "a090ae6747f66108a9ae28806e18b2e43e679efabef3437a40e7e7d08cf1e04b",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "docs/evidence/phase-0b/final/03-feedback-over-limit.png",
+          "bytes": 85032,
+          "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "docs/evidence/phase-0b/final/04-error-toast-long-input.png",
+          "bytes": 102965,
+          "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "docs/evidence/phase-0b/final/05-error-toast-short-input.png",
+          "bytes": 69091,
+          "sha256": "56367f47a106b18c9f8f084471023cdcae94e6e130a10ffda4930299d80813cc",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "docs/evidence/phase-0b/final/06-message-dark-narrow.png",
+          "bytes": 55793,
+          "sha256": "9621f17b1f5efb05c26ead14f82e0037894a09c32420f69cb1df6fd37be3e943",
+          "width": 950,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        }
+      ],
+      "rawVisualReview": "pending-human-review",
+      "aiVisualReviewFile": "docs/evidence/phase-0b/windows-packed-visual-review.json",
+      "processExit": {
+        "code": 0,
+        "signal": null
+      },
+      "cleanup": {
+        "processExited": true,
+        "temporaryRemoved": true
+      },
+      "providerRequests": [
+        {
+          "step": 0,
+          "toolResults": 0,
+          "nextTool": "write"
+        },
+        {
+          "step": 1,
+          "toolResults": 1,
+          "nextTool": "write"
+        },
+        {
+          "step": 2,
+          "toolResults": 2,
+          "nextTool": "present"
+        },
+        {
+          "step": 3,
+          "toolResults": 3,
+          "nextTool": null
+        }
+      ]
+    }
+  },
+  "candidate": {
+    "status": "assembled, unsigned, not installed",
+    "installationLifecycle": "not run",
+    "publication": "No release, tag or update-feed publication was performed by this workflow.",
+    "signatureStatus": {
+      "executable": "NotSigned",
+      "installationLifecycle": "not run",
+      "realCloud": "not run",
+      "installer": "NotSigned"
+    },
+    "binaries": [
+      {
+        "file": "release/ZhiXing-0.40.0-x64.exe",
+        "bytes": 338716357,
+        "sha256": "246db5c988385d6e5a10462265f083ae4795cca205e03829593cc1b7771d5a17"
+      },
+      {
+        "file": "release/ZhiXing-0.40.0-x64.exe.blockmap",
+        "bytes": 314832,
+        "sha256": "370f05ad3208491ed2b09ca76dff6c409b54964be65fffcae4ad18793edea458"
+      },
+      {
+        "file": "release/win-unpacked/知行.exe",
+        "bytes": 246511104,
+        "sha256": "cf428b2bd5fe57944ebb57ac57128a46734faaa16e81d3b06f263732d493f4af"
+      },
+      {
+        "file": "release/win-unpacked/resources/app/runtime/node.exe",
+        "bytes": 92825416,
+        "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+      }
+    ],
+    "packedDirectory": {
+      "files": 48966,
+      "directories": 8237,
+      "symbolicLinks": 0,
+      "bytes": 1244559468
+    },
+    "artifact": {
+      "id": "15125272481",
+      "name": "windows-unsigned-candidate-3735910a7795b24f282d1f273bcd2841fd685960",
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245/artifacts/15125272481",
+      "bytes": 339031828,
+      "sha256": "714d3a5e158b3397137e09578f5f66fae043bdd76804f41fc45b472cf6e9a7b2",
+      "createdAt": "2026-11-26T14:12:26Z",
+      "expiresAt": "2026-12-03T14:12:24Z",
+      "retentionDays": 7,
+      "digestSource": "GitHub Actions artifact API; independent candidate download verification is separate."
+    }
+  },
+  "rawEvidenceArtifact": {
+    "id": "15126490567",
+    "name": "windows-packed-evidence-1",
+    "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245/artifacts/15126490567",
+    "bytes": 767831,
+    "sha256": "a8a598320ee1bd51a915f91238c02c641e44c3f3c64b17ee80890f432fad46b4",
+    "createdAt": "2026-11-26T14:12:23Z",
+    "expiresAt": "2026-12-10T14:12:23Z",
+    "retentionDays": 14,
+    "downloadSha256MatchedGitHubDigest": true,
+    "manifestFilesVerified": 29,
+    "manifestMismatches": 0,
+    "profileProjectOrNodeModulesIncluded": false
+  },
+  "rawArchivedFiles": [
+    {
+      "file": "docs/evidence/phase-0b/final/checks.json",
+      "bytes": 9383,
+      "sha256": "c2523d287bf43ff89c2b2cefcf8c37c6416f79ee64b40f51f40f20f259996a6a",
+      "artifactPath": "checks.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/build-provenance.json",
+      "bytes": 287,
+      "sha256": "6df5b09ce74b3bb5508e1582db8ed2f1a6f7a42ec0ba9de0c2dca471a7006904",
+      "artifactPath": "build-provenance.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/packed-source-manifest.json",
+      "bytes": 14374,
+      "sha256": "b0ba3a9fdc18c5768910743981fba6121d22369af2f4281accc4762a8b08f9cb",
+      "artifactPath": "packed-source-manifest.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/signature-status.json",
+      "bytes": 130,
+      "sha256": "490e73e9ba4d383048266834a1ac4ea8af5ece26f0eef3e2df5e03b938ae0c10",
+      "artifactPath": "signature-status.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/SHA256SUMS-candidate.txt",
+      "bytes": 187,
+      "sha256": "91d0e5b9def6313c63a369b1916f2c1d5c868a3e5bbc0e8946fb8711c6a5b1a3",
+      "artifactPath": "SHA256SUMS-candidate.txt"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/errors-result.json",
+      "bytes": 4805,
+      "sha256": "6830a7cad33b7f0b843788443191c1506260d5d0fb54f71dde3a7c19768e2f84",
+      "artifactPath": "journeys/errors/run-eHUOuE/result.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/native-files-result.json",
+      "bytes": 2357,
+      "sha256": "eb94a320093b18c077cf72ea4bbef857c63d900d039418500b5ecf7b85c99d8a",
+      "artifactPath": "journeys/native/run-z2cIyR/result.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/tool-timeline-result.json",
+      "bytes": 1636,
+      "sha256": "2e2860bd805d0859dcdff0984d94bbd33736ee6df25eb6ad324dabe9ff10544d",
+      "artifactPath": "tool-timeline/run-mwxmox18/result.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/phase0a-result.json",
+      "bytes": 10833,
+      "sha256": "b4424043447de4a247eeabcebdb9dc5ae784a8db2b6f19ff9eb3fe211b18d526",
+      "artifactPath": "journeys/phase0a/phase0a-ui-RTRhbX/result.json"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/01-message-light.png",
+      "bytes": 65277,
+      "sha256": "0ad7c14e700469a4cf6589873848526ff646661ac3c694d256d0d36eb1716473",
+      "artifactPath": "journeys/phase0a/phase0a-ui-RTRhbX/01-message-light.png"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/02-tools-expanded.png",
+      "bytes": 70424,
+      "sha256": "a090ae6747f66108a9ae28806e18b2e43e679efabef3437a40e7e7d08cf1e04b",
+      "artifactPath": "journeys/phase0a/phase0a-ui-RTRhbX/02-tools-expanded.png"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/03-feedback-over-limit.png",
+      "bytes": 85032,
+      "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf",
+      "artifactPath": "journeys/phase0a/phase0a-ui-RTRhbX/03-feedback-over-limit.png"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/04-error-toast-long-input.png",
+      "bytes": 102965,
+      "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a",
+      "artifactPath": "journeys/phase0a/phase0a-ui-RTRhbX/04-error-toast-long-input.png"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/05-error-toast-short-input.png",
+      "bytes": 69091,
+      "sha256": "56367f47a106b18c9f8f084471023cdcae94e6e130a10ffda4930299d80813cc",
+      "artifactPath": "journeys/phase0a/phase0a-ui-RTRhbX/05-error-toast-short-input.png"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/06-message-dark-narrow.png",
+      "bytes": 55793,
+      "sha256": "9621f17b1f5efb05c26ead14f82e0037894a09c32420f69cb1df6fd37be3e943",
+      "artifactPath": "journeys/phase0a/phase0a-ui-RTRhbX/06-message-dark-narrow.png"
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/windows-packed-log.txt",
+      "bytes": 177084,
+      "sha256": "14debca7e95dcd36a1db28e45c8cb30f14d38fc6d639dc8582a91c4126a72d6e",
+      "source": "Decoded GitHub job log; UTF-8 encoding only, newline characters retained."
+    }
+  ],
+  "previousAttempt": {
+    "runId": "45830590242",
+    "checkoutCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+    "conclusion": "failure",
+    "report": "docs/evidence/phase-0b/windows-packed-9130781.json",
+    "changeBeforeThisRun": "Only the two UI test drivers changed: reselect the persisted conversation after reload, and correctly escape the inner split newline in the CDP expression. Product code, timeouts and asserted behavior were not relaxed."
+  },
+  "boundaries": [
+    "This is a targeted Windows directory-package gate; it does not establish every feature or a production readiness milestone.",
+    "The packaged regression aggregate includes the declared 37 package-aware, 3 mixed-source and 1 source-only test files. Supplemental source helpers do not verify the renderer bundle.",
+    "UI task responses come from a loopback model fixture; no real cloud model task-quality evaluation was performed.",
+    "The errors journey used a deliberately invalid key to observe real provider HTTP 401; this is not a successful cloud-model evaluation.",
+    "Raw screenshot metadata remains pending-human-review. Separate AI visual review is not human approval, a full UI audit, pixel parity or coverage of all DPI/display configurations.",
+    "The uninstalled candidate is NotSigned. Installation, upgrades, user D drive, shortcuts and cross-account data migration were not exercised."
+  ]
+}

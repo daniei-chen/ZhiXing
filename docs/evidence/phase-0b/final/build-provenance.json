@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "version": "0.40.0",
+  "sourceCommit": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "sourceDirty": false,
+  "builtAt": "2026-11-26T13:59:59.274Z",
+  "nodeVersion": "v24.19.0",
+  "lockSha256": "910b7d23d8f512c88b476fa5b1a6c2bc68672be3a3fe71806ba9c8ffe7f0dd3a"
+}

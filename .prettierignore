@@ -1,0 +1,9 @@
+node_modules/
+dist/
+release/
+runtime/
+.preview/
+.agents/
+coverage/
+package-lock.json
+docs/evidence/

@@ -1,0 +1,5779 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
+  "mode": "repository-inventory",
+  "checks": "all",
+  "passed": false,
+  "scope": {
+    "eslint": [
+      "electron/app-log.mjs",
+      "electron/archive-name.mjs",
+      "electron/assistant-stream.mjs",
+      "electron/automation-service.mjs",
+      "electron/automation-tools.mjs",
+      "electron/browser-policy.mjs",
+      "electron/browser-service.mjs",
+      "electron/change-summary.mjs",
+      "electron/chat-import-worker.mjs",
+      "electron/chat-import.mjs",
+      "electron/compaction-policy.mjs",
+      "electron/deliverable-access.mjs",
+      "electron/delivery-service.mjs",
+      "electron/desktop-release.mjs",
+      "electron/document-service.mjs",
+      "electron/document-text.mjs",
+      "electron/document-worker.mjs",
+      "electron/execution-events.mjs",
+      "electron/file-watcher.mjs",
+      "electron/goal-wire.mjs",
+      "electron/kernel-version.mjs",
+      "electron/main.cjs",
+      "electron/mcp-config.mjs",
+      "electron/message-feedback.mjs",
+      "electron/model-catalog.mjs",
+      "electron/native-session-export.mjs",
+      "electron/ocr-service.mjs",
+      "electron/office-files.mjs",
+      "electron/office-formats.mjs",
+      "electron/office-layout-worker.mjs",
+      "electron/office-layout.mjs",
+      "electron/office-visual.mjs",
+      "electron/plugin-profile.mjs",
+      "electron/plugin-service.mjs",
+      "electron/plugin-worker.mjs",
+      "electron/preload.cjs",
+      "electron/privacy-gateway.mjs",
+      "electron/project-worktree.mjs",
+      "electron/providers.mjs",
+      "electron/review-diff.mjs",
+      "electron/run-failure.mjs",
+      "electron/runtime-cancellation.mjs",
+      "electron/runtime.mjs",
+      "electron/schedule-rules.mjs",
+      "electron/session-history-record.mjs",
+      "electron/speech-policy.mjs",
+      "electron/speech-service.mjs",
+      "electron/temp-hygiene.mjs",
+      "electron/terminal-service.mjs",
+      "electron/terminal-worker.mjs",
+      "electron/tool-bridge.mjs",
+      "electron/updater-cache.mjs",
+      "electron/visual-attachments.mjs",
+      "electron/workspace-files.mjs",
+      "electron/workspace-save-queue.mjs",
+      "electron/zip-writer.mjs",
+      "eslint.config.mjs",
+      "harness/capability-manifest.mjs",
+      "harness/encrypted-history.mjs",
+      "harness/execution-controls.mjs",
+      "harness/file-policy.mjs",
+      "harness/mcp-host.mjs",
+      "harness/native-project-fs.mjs",
+      "harness/native-project-tools.mjs",
+      "harness/office-context.mjs",
+      "harness/office-document-tools.mjs",
+      "harness/office-skills.mjs",
+      "harness/office-tools.mjs",
+      "harness/permission-sync.mjs",
+      "harness/privacy-bridge.mjs",
+      "harness/project-worktree.mjs",
+      "harness/secure-web.mjs",
+      "harness/shell-policy.mjs",
+      "scripts/audit-kernel-version.mjs",
+      "scripts/audit-production-dependencies.mjs",
+      "scripts/check-quality.mjs",
+      "scripts/clean-dev-updater-cache.mjs",
+      "scripts/clean-preview-evidence.mjs",
+      "scripts/collect-packed-evidence.mjs",
+      "scripts/generate-installer-path-policy.mjs",
+      "scripts/maintenance-inventory.mjs",
+      "scripts/pack-runtime.cjs",
+      "scripts/prepare-sites-build.mjs",
+      "scripts/probe-compact-command.mjs",
+      "scripts/probe-startup.mjs",
+      "scripts/qa-cdp.mjs",
+      "scripts/qa-local-services.mjs",
+      "scripts/run-desktop.mjs",
+      "scripts/test-audit-conversation-ui.mjs",
+      "scripts/test-browser.mjs",
+      "scripts/test-changed-files-ui.mjs",
+      "scripts/test-chat-send-errors.mjs",
+      "scripts/test-compact-command-ui.mjs",
+      "scripts/test-compaction-ui.mjs",
+      "scripts/test-conversation-ui.mjs",
+      "scripts/test-deliverable-actions-ui.mjs",
+      "scripts/test-deliverable-cards-ui.mjs",
+      "scripts/test-delivery-boundaries-ui.mjs",
+      "scripts/test-error-copy-ui.mjs",
+      "scripts/test-execution-search-ui.mjs",
+      "scripts/test-feedback-ui.mjs",
+      "scripts/test-inline-references-ui.mjs",
+      "scripts/test-kernel-privacy-ui.mjs",
+      "scripts/test-model-switch-ui.mjs",
+      "scripts/test-model-window-ui.mjs",
+      "scripts/test-native-files-export-ui.mjs",
+      "scripts/test-office-agent-ui.mjs",
+      "scripts/test-overflow-recovery-ui.mjs",
+      "scripts/test-packed.mjs",
+      "scripts/test-phase0a-ui.mjs",
+      "scripts/test-real-cloud-chat.mjs",
+      "scripts/test-real-cloud-privacy.mjs",
+      "scripts/test-real-cloud-tool-redaction.mjs",
+      "scripts/test-real-cloud-workspace-tools.mjs",
+      "scripts/test-real-subagent-archive-ui.mjs",
+      "scripts/test-restore-gap-ui.mjs",
+      "scripts/test-review-ui.mjs",
+      "scripts/test-run-status-ui.mjs",
+      "scripts/test-runtime-recovery-ui.mjs",
+      "scripts/test-speech-ui.mjs",
+      "scripts/test-subagent-archive-ui.mjs",
+      "scripts/test-temp-hygiene.mjs",
+      "scripts/test-tool-timeline-ui.mjs",
+      "scripts/test-ui.mjs",
+      "scripts/test-updater-cache.mjs",
+      "scripts/test-vision-ui.mjs",
+      "scripts/test-zip-export-ui.mjs",
+      "scripts/verify-brand.mjs",
+      "scripts/verify-packed-sources.mjs",
+      "scripts/write-update-config.mjs",
+      "src/AgentQuestion.jsx",
+      "src/AnswerText.jsx",
+      "src/App.jsx",
+      "src/AutomationDialog.jsx",
+      "src/ChangedFiles.jsx",
+      "src/Composer.jsx",
+      "src/ConnectionsPage.jsx",
+      "src/ConversationResources.jsx",
+      "src/DeliveryCards.jsx",
+      "src/Dialogs.jsx",
+      "src/ExecutionPanel.jsx",
+      "src/FileCoverage.jsx",
+      "src/FileLayout.jsx",
+      "src/HarnessPlugins.jsx",
+      "src/ImportedChat.jsx",
+      "src/KernelSettings.jsx",
+      "src/McpSettings.jsx",
+      "src/ModelControls.jsx",
+      "src/PluginBuildApproval.jsx",
+      "src/PluginMarket.jsx",
+      "src/PrivacyTest.jsx",
+      "src/ProviderSettings.jsx",
+      "src/Review.jsx",
+      "src/ReviewPanel.jsx",
+      "src/Settings.jsx",
+      "src/Sidebar.jsx",
+      "src/UtilityPage.jsx",
+      "src/VoiceInput.jsx",
+      "src/Workbench.jsx",
+      "src/automation-core.js",
+      "src/changed-files.js",
+      "src/context-window.js",
+      "src/conversation-resources.js",
+      "src/conversation-state.js",
+      "src/deliverable-cards.js",
+      "src/error-copy.js",
+      "src/file-actions.js",
+      "src/inline-references.js",
+      "src/kernel-config.js",
+      "src/main.jsx",
+      "src/message-feedback.js",
+      "src/model-options.js",
+      "src/office-workflows.js",
+      "src/permissions.js",
+      "src/privacy-core.js",
+      "src/privacy-policy.js",
+      "src/privacy-recognizers.js",
+      "src/privacy-warning.js",
+      "src/project-core.js",
+      "src/provider-options.js",
+      "src/provider-reasoning.js",
+      "src/review-view.js",
+      "src/run-status.js",
+      "src/run-summary.js",
+      "src/scheduler.js",
+      "src/session-commands.js",
+      "src/speech-audio.js",
+      "src/store.js",
+      "src/subagent-archive.js",
+      "src/team-board.js",
+      "src/trace-filter.js",
+      "src/ui.jsx",
+      "stylelint.config.mjs",
+      "tests/app-log.test.mjs",
+      "tests/archive-name.test.mjs",
+      "tests/assistant-stream.test.mjs",
+      "tests/automation-persistence.test.mjs",
+      "tests/automation.test.mjs",
+      "tests/browser-desktop.cjs",
+      "tests/capability-manifest.test.mjs",
+      "tests/capability-runtime.test.mjs",
+      "tests/capability-ui.test.mjs",
+      "tests/change-summary.test.mjs",
+      "tests/changed-files.test.mjs",
+      "tests/compaction-policy.test.mjs",
+      "tests/composer-runtime.test.mjs",
+      "tests/context-window.test.mjs",
+      "tests/conversation-drafts-native.test.mjs",
+      "tests/conversation-drafts-ui.test.mjs",
+      "tests/conversation-recovery-ui.test.mjs",
+      "tests/conversation-resources-ui.test.mjs",
+      "tests/conversation-resources.test.mjs",
+      "tests/conversation-state.test.mjs",
+      "tests/credential-boundary.test.mjs",
+      "tests/deliverable-access.test.mjs",
+      "tests/deliverable-cards.test.mjs",
+      "tests/delivery-review-ui.test.mjs",
+      "tests/delivery-review.test.mjs",
+      "tests/desktop-release.test.mjs",
+      "tests/document-text.test.mjs",
+      "tests/error-copy.test.mjs",
+      "tests/file-actions.test.mjs",
+      "tests/fixtures/documents.mjs",
+      "tests/fixtures/mcp-server.mjs",
+      "tests/fixtures/messages-server.mjs",
+      "tests/fixtures/plugin-bundles.mjs",
+      "tests/fixtures/runtime-process-diagnostics.mjs",
+      "tests/fixtures/speech-electron.cjs",
+      "tests/fixtures/speech-input.cjs",
+      "tests/fixtures/speech-input.jsx",
+      "tests/inline-references.test.mjs",
+      "tests/kernel-native.test.mjs",
+      "tests/kernel.test.mjs",
+      "tests/maintenance-inventory.test.mjs",
+      "tests/mcp-destination.test.mjs",
+      "tests/mcp-identity.test.mjs",
+      "tests/message-feedback.test.mjs",
+      "tests/model-catalog-limits.test.mjs",
+      "tests/office-directory.test.mjs",
+      "tests/office-file-policy.test.mjs",
+      "tests/office.test.mjs",
+      "tests/packed-provenance.test.mjs",
+      "tests/plugins.test.mjs",
+      "tests/privacy-dynamic-keys.test.mjs",
+      "tests/privacy-gateway.test.mjs",
+      "tests/privacy-lock-recovery.test.mjs",
+      "tests/privacy-mcp-native.test.mjs",
+      "tests/privacy-warning.test.mjs",
+      "tests/privacy.test.mjs",
+      "tests/provider-reasoning.test.mjs",
+      "tests/provider-settings-ui.test.mjs",
+      "tests/providers-hidden-model.test.mjs",
+      "tests/providers.test.mjs",
+      "tests/quality-gate.test.mjs",
+      "tests/review-diff.test.mjs",
+      "tests/review-view.test.mjs",
+      "tests/run-status.test.mjs",
+      "tests/run-summary.test.mjs",
+      "tests/runtime-cleanup.test.mjs",
+      "tests/runtime-context.test.mjs",
+      "tests/runtime-finalization.test.mjs",
+      "tests/runtime-image-ocr.test.mjs",
+      "tests/runtime-launch.test.mjs",
+      "tests/runtime-lifecycle.test.mjs",
+      "tests/runtime-native-entrypoints.test.mjs",
+      "tests/runtime-patch.test.mjs",
+      "tests/runtime-policy.test.mjs",
+      "tests/runtime-vision.test.mjs",
+      "tests/runtime.test.mjs",
+      "tests/sidebar-ui.test.mjs",
+      "tests/sites-worker.test.mjs",
+      "tests/speech-audio.test.mjs",
+      "tests/speech-input.test.mjs",
+      "tests/speech-service.test.mjs",
+      "tests/store.test.mjs",
+      "tests/subagent-archive.test.mjs",
+      "tests/temp-hygiene.test.mjs",
+      "tests/trace-filter.test.mjs",
+      "tests/updater-cache.test.mjs",
+      "tests/workbench.test.mjs",
+      "tests/workspace-save-queue.test.mjs",
+      "tests/zip-writer.test.mjs",
+      "vite.config.mjs",
+      "worker/index.js"
+    ],
+    "stylelint": [
+      "quality/runtime-properties.css",
+      "src/desktop-ui.css",
+      "src/model-controls.css",
+      "src/styles.css"
+    ],
+    "prettier": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/packed.yml",
+      ".openai/hosting.json",
+      ".prettierrc.json",
+      ".quality-scope.json",
+      "AGENTS.md",
+      "README.md",
+      "design-qa.md",
+      "docs/acceptance-summary-0.12.2.json",
+      "docs/audit-remediation-0.12.1.md",
+      "docs/audit-request-0.12.10.md",
+      "docs/audit-request-0.12.11.md",
+      "docs/audit-request-0.12.12.md",
+      "docs/audit-request-0.12.4.md",
+      "docs/audit-request-0.12.5.md",
+      "docs/audit-request-0.12.6.md",
+      "docs/audit-request-0.12.7.md",
+      "docs/audit-request-0.12.8.md",
+      "docs/audit-request-0.12.9.md",
+      "docs/audit-request-0.13.0.md",
+      "docs/audit-request-0.13.1.md",
+      "docs/audit-request-0.13.2.md",
+      "docs/audit-request-0.13.3.md",
+      "docs/audit-request-0.13.4.md",
+      "docs/audit-request-0.13.5.md",
+      "docs/audit-request-0.13.6.md",
+      "docs/audit-request-0.13.7.md",
+      "docs/audit-request-0.13.8.md",
+      "docs/audit-request-0.13.9.md",
+      "docs/audit-request-0.14.0.md",
+      "docs/audit-request-0.14.1.md",
+      "docs/audit-request-0.14.10.md",
+      "docs/audit-request-0.14.11.md",
+      "docs/audit-request-0.14.12.md",
+      "docs/audit-request-0.14.13.md",
+      "docs/audit-request-0.14.2.md",
+      "docs/audit-request-0.14.3.md",
+      "docs/audit-request-0.14.4.md",
+      "docs/audit-request-0.14.5.md",
+      "docs/audit-request-0.14.6.md",
+      "docs/audit-request-0.14.7.md",
+      "docs/audit-request-0.14.8.md",
+      "docs/audit-request-0.14.9.md",
+      "docs/audit-request-0.15.0.md",
+      "docs/audit-request-0.15.1.md",
+      "docs/audit-request-0.15.2.md",
+      "docs/audit-request-0.16.0.md",
+      "docs/audit-request-0.17.0.md",
+      "docs/audit-request-0.18.0.md",
+      "docs/audit-request-0.19.0.md",
+      "docs/audit-request-0.20.0.md",
+      "docs/audit-request-0.21.0.md",
+      "docs/audit-request-0.22.0.md",
+      "docs/audit-request-0.22.1.md",
+      "docs/audit-request-0.23.0.md",
+      "docs/audit-request-0.24.0.md",
+      "docs/audit-request-0.25.0.md",
+      "docs/audit-request-0.26.0.md",
+      "docs/audit-request-0.27.0.md",
+      "docs/audit-request-0.28.0.md",
+      "docs/audit-request-0.29.0.md",
+      "docs/audit-request-0.30.0.md",
+      "docs/audit-request-0.31.0.md",
+      "docs/audit-request-0.32.0.md",
+      "docs/audit-request-0.33.0.md",
+      "docs/audit-request-0.34.0.md",
+      "docs/audit-request-0.35.0.md",
+      "docs/audit-request-0.36.0.md",
+      "docs/audit-request-0.37.0.md",
+      "docs/audit-request-0.38.0.md",
+      "docs/audit-request-0.39.0.md",
+      "docs/audit-request-0.40.0.md",
+      "docs/audit-request.md",
+      "docs/code-quality.md",
+      "docs/goal-spec.md",
+      "docs/harness-capability-map.md",
+      "docs/harness-default.yml",
+      "docs/harness-parity.md",
+      "docs/install-lifecycle-0.24.0.md",
+      "docs/interaction-audit.md",
+      "docs/iteration-0.11.0.md",
+      "docs/iteration-0.12.0.md",
+      "docs/iteration-0.12.1.md",
+      "docs/iteration-0.12.10.md",
+      "docs/iteration-0.12.11.md",
+      "docs/iteration-0.12.12.md",
+      "docs/iteration-0.12.2.md",
+      "docs/iteration-0.12.3.md",
+      "docs/iteration-0.12.4.md",
+      "docs/iteration-0.12.5.md",
+      "docs/iteration-0.12.6.md",
+      "docs/iteration-0.12.7.md",
+      "docs/iteration-0.12.8.md",
+      "docs/iteration-0.12.9.md",
+      "docs/iteration-0.13.0.md",
+      "docs/iteration-0.13.1.md",
+      "docs/iteration-0.13.2.md",
+      "docs/iteration-0.13.3.md",
+      "docs/iteration-0.13.4.md",
+      "docs/iteration-0.13.5.md",
+      "docs/iteration-0.13.6.md",
+      "docs/iteration-0.13.7.md",
+      "docs/iteration-0.13.8.md",
+      "docs/iteration-0.13.9.md",
+      "docs/iteration-0.14.0.md",
+      "docs/iteration-0.14.1.md",
+      "docs/iteration-0.14.10.md",
+      "docs/iteration-0.14.11.md",
+      "docs/iteration-0.14.12.md",
+      "docs/iteration-0.14.13.md",
+      "docs/iteration-0.14.2.md",
+      "docs/iteration-0.14.3.md",
+      "docs/iteration-0.14.4.md",
+      "docs/iteration-0.14.5.md",
+      "docs/iteration-0.14.6.md",
+      "docs/iteration-0.14.7.md",
+      "docs/iteration-0.14.8.md",
+      "docs/iteration-0.14.9.md",
+      "docs/iteration-0.15.0.md",
+      "docs/iteration-0.15.1.md",
+      "docs/iteration-0.15.2.md",
+      "docs/iteration-0.16.0.md",
+      "docs/iteration-0.17.0.md",
+      "docs/iteration-0.18.0.md",
+      "docs/iteration-0.19.0.md",
+      "docs/iteration-0.20.0.md",
+      "docs/iteration-0.21.0.md",
+      "docs/iteration-0.22.0.md",
+      "docs/iteration-0.22.1.md",
+      "docs/iteration-0.23.0.md",
+      "docs/iteration-0.24.0.md",
+      "docs/iteration-0.25.0.md",
+      "docs/iteration-0.26.0.md",
+      "docs/iteration-0.27.0.md",
+      "docs/iteration-0.28.0.md",
+      "docs/iteration-0.29.0.md",
+      "docs/iteration-0.30.0.md",
+      "docs/iteration-0.31.0.md",
+      "docs/iteration-0.32.0.md",
+      "docs/iteration-0.33.0.md",
+      "docs/iteration-0.34.0.md",
+      "docs/iteration-0.35.0.md",
+      "docs/iteration-0.36.0.md",
+      "docs/iteration-0.37.0.md",
+      "docs/iteration-0.38.0.md",
+      "docs/iteration-0.39.0.md",
+      "docs/iteration-0.40.0.md",
+      "docs/kernel-version-audit.json",
+      "docs/lifecycle-acceptance-0.17.0.md",
+      "docs/lifecycle-acceptance-0.19.0.md",
+      "docs/maintenance-preview-cleanup.md",
+      "docs/maturity-roadmap.md",
+      "docs/phase-0a-audit.md",
+      "docs/process-count-investigation.md",
+      "docs/signing.md",
+      "docs/windows-acceptance-0.11.0.md",
+      "docs/windows-acceptance-0.12.0.md",
+      "docs/windows-acceptance-0.12.1.md",
+      "docs/windows-acceptance-0.12.10.md",
+      "docs/windows-acceptance-0.12.11.md",
+      "docs/windows-acceptance-0.12.12.md",
+      "docs/windows-acceptance-0.12.2.md",
+      "docs/windows-acceptance-0.12.3.md",
+      "docs/windows-acceptance-0.12.4.md",
+      "docs/windows-acceptance-0.12.5.md",
+      "docs/windows-acceptance-0.12.6.md",
+      "docs/windows-acceptance-0.12.7.md",
+      "docs/windows-acceptance-0.12.8.md",
+      "docs/windows-acceptance-0.12.9.md",
+      "docs/windows-acceptance-0.13.0.md",
+      "docs/windows-acceptance-0.13.1.md",
+      "docs/windows-acceptance-0.13.2.md",
+      "docs/windows-acceptance-0.13.3.md",
+      "docs/windows-acceptance-0.13.4.md",
+      "docs/windows-acceptance-0.13.5.md",
+      "docs/windows-acceptance-0.13.6.md",
+      "docs/windows-acceptance-0.13.7.md",
+      "docs/windows-acceptance-0.13.8.md",
+      "docs/windows-acceptance-0.13.9.md",
+      "docs/windows-acceptance-0.14.0.md",
+      "docs/windows-acceptance-0.14.1.md",
+      "docs/windows-acceptance-0.14.10.md",
+      "docs/windows-acceptance-0.14.11.md",
+      "docs/windows-acceptance-0.14.12.md",
+      "docs/windows-acceptance-0.14.13.md",
+      "docs/windows-acceptance-0.14.2.md",
+      "docs/windows-acceptance-0.14.3.md",
+      "docs/windows-acceptance-0.14.4.md",
+      "docs/windows-acceptance-0.14.5.md",
+      "docs/windows-acceptance-0.14.6.md",
+      "docs/windows-acceptance-0.14.7.md",
+      "docs/windows-acceptance-0.14.8.md",
+      "docs/windows-acceptance-0.14.9.md",
+      "docs/windows-acceptance-0.15.0.md",
+      "docs/windows-acceptance-0.15.1.md",
+      "docs/windows-acceptance-0.15.2.md",
+      "docs/windows-acceptance-0.16.0.md",
+      "docs/windows-acceptance-0.17.0.md",
+      "docs/windows-acceptance-0.18.0.md",
+      "docs/windows-acceptance-0.19.0.md",
+      "docs/windows-acceptance-0.20.0.md",
+      "docs/windows-acceptance-0.21.0.md",
+      "docs/windows-acceptance-0.22.0.md",
+      "docs/windows-acceptance-0.22.1.md",
+      "docs/windows-acceptance-0.23.0.md",
+      "docs/windows-acceptance-0.24.0.md",
+      "docs/windows-acceptance-0.25.0.md",
+      "docs/windows-acceptance-0.26.0.md",
+      "docs/windows-acceptance-0.27.0.md",
+      "docs/windows-acceptance-0.28.0.md",
+      "docs/windows-acceptance-0.29.0.md",
+      "docs/windows-acceptance-0.30.0.md",
+      "docs/windows-acceptance-0.31.0.md",
+      "docs/windows-acceptance-0.32.0.md",
+      "docs/windows-acceptance-0.33.0.md",
+      "docs/windows-acceptance-0.34.0.md",
+      "docs/windows-acceptance-0.35.0.md",
+      "docs/windows-acceptance-0.36.0.md",
+      "docs/windows-acceptance-0.37.0.md",
+      "docs/windows-acceptance-0.38.0.md",
+      "docs/windows-acceptance-0.39.0.md",
+      "docs/windows-acceptance-0.40.0.md",
+      "electron-builder.yml",
+      "electron/app-log.mjs",
+      "electron/archive-name.mjs",
+      "electron/assistant-stream.mjs",
+      "electron/automation-service.mjs",
+      "electron/automation-tools.mjs",
+      "electron/browser-policy.mjs",
+      "electron/browser-service.mjs",
+      "electron/change-summary.mjs",
+      "electron/chat-import-worker.mjs",
+      "electron/chat-import.mjs",
+      "electron/compaction-policy.mjs",
+      "electron/deliverable-access.mjs",
+      "electron/delivery-service.mjs",
+      "electron/desktop-release.mjs",
+      "electron/document-service.mjs",
+      "electron/document-text.mjs",
+      "electron/document-worker.mjs",
+      "electron/execution-events.mjs",
+      "electron/file-watcher.mjs",
+      "electron/goal-wire.mjs",
+      "electron/kernel-version.mjs",
+      "electron/main.cjs",
+      "electron/mcp-config.mjs",
+      "electron/message-feedback.mjs",
+      "electron/model-catalog.mjs",
+      "electron/native-session-export.mjs",
+      "electron/ocr-service.mjs",
+      "electron/office-files.mjs",
+      "electron/office-formats.mjs",
+      "electron/office-layout-worker.mjs",
+      "electron/office-layout.mjs",
+      "electron/office-visual.mjs",
+      "electron/plugin-profile.mjs",
+      "electron/plugin-service.mjs",
+      "electron/plugin-worker.mjs",
+      "electron/preload.cjs",
+      "electron/privacy-gateway.mjs",
+      "electron/project-worktree.mjs",
+      "electron/providers.mjs",
+      "electron/review-diff.mjs",
+      "electron/run-failure.mjs",
+      "electron/runtime-cancellation.mjs",
+      "electron/runtime.mjs",
+      "electron/schedule-rules.mjs",
+      "electron/session-history-record.mjs",
+      "electron/speech-policy.mjs",
+      "electron/speech-service.mjs",
+      "electron/temp-hygiene.mjs",
+      "electron/terminal-service.mjs",
+      "electron/terminal-worker.mjs",
+      "electron/tool-bridge.mjs",
+      "electron/updater-cache.mjs",
+      "electron/visual-attachments.mjs",
+      "electron/workspace-files.mjs",
+      "electron/workspace-save-queue.mjs",
+      "electron/zip-writer.mjs",
+      "eslint.config.mjs",
+      "harness/capability-manifest.mjs",
+      "harness/encrypted-history.mjs",
+      "harness/execution-controls.mjs",
+      "harness/file-policy.mjs",
+      "harness/mcp-host.mjs",
+      "harness/native-project-fs.mjs",
+      "harness/native-project-tools.mjs",
+      "harness/office-context.mjs",
+      "harness/office-document-tools.mjs",
+      "harness/office-skills.mjs",
+      "harness/office-tools.mjs",
+      "harness/permission-sync.mjs",
+      "harness/privacy-bridge.mjs",
+      "harness/project-worktree.mjs",
+      "harness/secure-web.mjs",
+      "harness/shell-policy.mjs",
+      "index.html",
+      "package.json",
+      "quality/baseline-718cb62.json",
+      "quality/runtime-properties.css",
+      "scripts/audit-kernel-version.mjs",
+      "scripts/audit-production-dependencies.mjs",
+      "scripts/check-quality.mjs",
+      "scripts/clean-dev-updater-cache.mjs",
+      "scripts/clean-preview-evidence.mjs",
+      "scripts/collect-packed-evidence.mjs",
+      "scripts/generate-installer-path-policy.mjs",
+      "scripts/maintenance-inventory.mjs",
+      "scripts/pack-runtime.cjs",
+      "scripts/prepare-sites-build.mjs",
+      "scripts/probe-compact-command.mjs",
+      "scripts/probe-startup.mjs",
+      "scripts/qa-cdp.mjs",
+      "scripts/qa-local-services.mjs",
+      "scripts/run-desktop.mjs",
+      "scripts/test-audit-conversation-ui.mjs",
+      "scripts/test-browser.mjs",
+      "scripts/test-changed-files-ui.mjs",
+      "scripts/test-chat-send-errors.mjs",
+      "scripts/test-compact-command-ui.mjs",
+      "scripts/test-compaction-ui.mjs",
+      "scripts/test-conversation-ui.mjs",
+      "scripts/test-deliverable-actions-ui.mjs",
+      "scripts/test-deliverable-cards-ui.mjs",
+      "scripts/test-delivery-boundaries-ui.mjs",
+      "scripts/test-error-copy-ui.mjs",
+      "scripts/test-execution-search-ui.mjs",
+      "scripts/test-feedback-ui.mjs",
+      "scripts/test-inline-references-ui.mjs",
+      "scripts/test-kernel-privacy-ui.mjs",
+      "scripts/test-model-switch-ui.mjs",
+      "scripts/test-model-window-ui.mjs",
+      "scripts/test-native-files-export-ui.mjs",
+      "scripts/test-office-agent-ui.mjs",
+      "scripts/test-overflow-recovery-ui.mjs",
+      "scripts/test-packed.mjs",
+      "scripts/test-phase0a-ui.mjs",
+      "scripts/test-real-cloud-chat.mjs",
+      "scripts/test-real-cloud-privacy.mjs",
+      "scripts/test-real-cloud-tool-redaction.mjs",
+      "scripts/test-real-cloud-workspace-tools.mjs",
+      "scripts/test-real-subagent-archive-ui.mjs",
+      "scripts/test-restore-gap-ui.mjs",
+      "scripts/test-review-ui.mjs",
+      "scripts/test-run-status-ui.mjs",
+      "scripts/test-runtime-recovery-ui.mjs",
+      "scripts/test-speech-ui.mjs",
+      "scripts/test-subagent-archive-ui.mjs",
+      "scripts/test-temp-hygiene.mjs",
+      "scripts/test-tool-timeline-ui.mjs",
+      "scripts/test-ui.mjs",
+      "scripts/test-updater-cache.mjs",
+      "scripts/test-vision-ui.mjs",
+      "scripts/test-zip-export-ui.mjs",
+      "scripts/verify-brand.mjs",
+      "scripts/verify-packed-sources.mjs",
+      "scripts/write-update-config.mjs",
+      "src/AgentQuestion.jsx",
+      "src/AnswerText.jsx",
+      "src/App.jsx",
+      "src/AutomationDialog.jsx",
+      "src/ChangedFiles.jsx",
+      "src/Composer.jsx",
+      "src/ConnectionsPage.jsx",
+      "src/ConversationResources.jsx",
+      "src/DeliveryCards.jsx",
+      "src/Dialogs.jsx",
+      "src/ExecutionPanel.jsx",
+      "src/FileCoverage.jsx",
+      "src/FileLayout.jsx",
+      "src/HarnessPlugins.jsx",
+      "src/ImportedChat.jsx",
+      "src/KernelSettings.jsx",
+      "src/McpSettings.jsx",
+      "src/ModelControls.jsx",
+      "src/PluginBuildApproval.jsx",
+      "src/PluginMarket.jsx",
+      "src/PrivacyTest.jsx",
+      "src/ProviderSettings.jsx",
+      "src/Review.jsx",
+      "src/ReviewPanel.jsx",
+      "src/Settings.jsx",
+      "src/Sidebar.jsx",
+      "src/UtilityPage.jsx",
+      "src/VoiceInput.jsx",
+      "src/Workbench.jsx",
+      "src/automation-core.js",
+      "src/changed-files.js",
+      "src/context-window.js",
+      "src/conversation-resources.js",
+      "src/conversation-state.js",
+      "src/deliverable-cards.js",
+      "src/desktop-ui.css",
+      "src/error-copy.js",
+      "src/file-actions.js",
+      "src/inline-references.js",
+      "src/kernel-config.js",
+      "src/main.jsx",
+      "src/message-feedback.js",
+      "src/model-controls.css",
+      "src/model-options.js",
+      "src/office-workflows.js",
+      "src/permissions.js",
+      "src/privacy-core.js",
+      "src/privacy-policy.js",
+      "src/privacy-recognizers.js",
+      "src/privacy-warning.js",
+      "src/project-core.js",
+      "src/provider-options.js",
+      "src/provider-reasoning.js",
+      "src/review-view.js",
+      "src/run-status.js",
+      "src/run-summary.js",
+      "src/scheduler.js",
+      "src/session-commands.js",
+      "src/speech-audio.js",
+      "src/store.js",
+      "src/styles.css",
+      "src/subagent-archive.js",
+      "src/team-board.js",
+      "src/trace-filter.js",
+      "src/ui.jsx",
+      "stylelint.config.mjs",
+      "tests/app-log.test.mjs",
+      "tests/archive-name.test.mjs",
+      "tests/assistant-stream.test.mjs",
+      "tests/automation-persistence.test.mjs",
+      "tests/automation.test.mjs",
+      "tests/browser-desktop.cjs",
+      "tests/capability-manifest.test.mjs",
+      "tests/capability-runtime.test.mjs",
+      "tests/capability-ui.test.mjs",
+      "tests/change-summary.test.mjs",
+      "tests/changed-files.test.mjs",
+      "tests/compaction-policy.test.mjs",
+      "tests/composer-runtime.test.mjs",
+      "tests/context-window.test.mjs",
+      "tests/conversation-drafts-native.test.mjs",
+      "tests/conversation-drafts-ui.test.mjs",
+      "tests/conversation-recovery-ui.test.mjs",
+      "tests/conversation-resources-ui.test.mjs",
+      "tests/conversation-resources.test.mjs",
+      "tests/conversation-state.test.mjs",
+      "tests/credential-boundary.test.mjs",
+      "tests/deliverable-access.test.mjs",
+      "tests/deliverable-cards.test.mjs",
+      "tests/delivery-review-ui.test.mjs",
+      "tests/delivery-review.test.mjs",
+      "tests/desktop-release.test.mjs",
+      "tests/document-text.test.mjs",
+      "tests/error-copy.test.mjs",
+      "tests/file-actions.test.mjs",
+      "tests/fixtures/documents.mjs",
+      "tests/fixtures/mcp-server.mjs",
+      "tests/fixtures/messages-server.mjs",
+      "tests/fixtures/plugin-bundles.mjs",
+      "tests/fixtures/runtime-process-diagnostics.mjs",
+      "tests/fixtures/speech-electron.cjs",
+      "tests/fixtures/speech-input.cjs",
+      "tests/fixtures/speech-input.jsx",
+      "tests/inline-references.test.mjs",
+      "tests/kernel-native.test.mjs",
+      "tests/kernel.test.mjs",
+      "tests/maintenance-inventory.test.mjs",
+      "tests/mcp-destination.test.mjs",
+      "tests/mcp-identity.test.mjs",
+      "tests/message-feedback.test.mjs",
+      "tests/model-catalog-limits.test.mjs",
+      "tests/office-directory.test.mjs",
+      "tests/office-file-policy.test.mjs",
+      "tests/office.test.mjs",
+      "tests/packed-provenance.test.mjs",
+      "tests/plugins.test.mjs",
+      "tests/privacy-dynamic-keys.test.mjs",
+      "tests/privacy-gateway.test.mjs",
+      "tests/privacy-lock-recovery.test.mjs",
+      "tests/privacy-mcp-native.test.mjs",
+      "tests/privacy-warning.test.mjs",
+      "tests/privacy.test.mjs",
+      "tests/provider-reasoning.test.mjs",
+      "tests/provider-settings-ui.test.mjs",
+      "tests/providers-hidden-model.test.mjs",
+      "tests/providers.test.mjs",
+      "tests/quality-gate.test.mjs",
+      "tests/review-diff.test.mjs",
+      "tests/review-view.test.mjs",
+      "tests/run-status.test.mjs",
+      "tests/run-summary.test.mjs",
+      "tests/runtime-cleanup.test.mjs",
+      "tests/runtime-context.test.mjs",
+      "tests/runtime-finalization.test.mjs",
+      "tests/runtime-image-ocr.test.mjs",
+      "tests/runtime-launch.test.mjs",
+      "tests/runtime-lifecycle.test.mjs",
+      "tests/runtime-native-entrypoints.test.mjs",
+      "tests/runtime-patch.test.mjs",
+      "tests/runtime-policy.test.mjs",
+      "tests/runtime-vision.test.mjs",
+      "tests/runtime.test.mjs",
+      "tests/sidebar-ui.test.mjs",
+      "tests/sites-worker.test.mjs",
+      "tests/speech-audio.test.mjs",
+      "tests/speech-input.test.mjs",
+      "tests/speech-service.test.mjs",
+      "tests/store.test.mjs",
+      "tests/subagent-archive.test.mjs",
+      "tests/temp-hygiene.test.mjs",
+      "tests/trace-filter.test.mjs",
+      "tests/updater-cache.test.mjs",
+      "tests/workbench.test.mjs",
+      "tests/workspace-save-queue.test.mjs",
+      "tests/zip-writer.test.mjs",
+      "vite.config.mjs",
+      "worker/index.js"
+    ],
+    "legacyFormatting": [
+      ".github/workflows/ci.yml",
+      "scripts/pack-runtime.cjs",
+      "scripts/test-packed.mjs",
+      "scripts/verify-packed-sources.mjs",
+      "src/styles.css",
+      "tests/archive-name.test.mjs",
+      "tests/assistant-stream.test.mjs",
+      "tests/automation.test.mjs",
+      "tests/composer-runtime.test.mjs",
+      "tests/document-text.test.mjs",
+      "tests/mcp-identity.test.mjs",
+      "tests/providers.test.mjs",
+      "tests/runtime-cleanup.test.mjs",
+      "tests/runtime-lifecycle.test.mjs",
+      "tests/runtime-native-entrypoints.test.mjs",
+      "tests/temp-hygiene.test.mjs",
+      "tests/updater-cache.test.mjs",
+      "tests/workbench.test.mjs",
+      "tests/workspace-save-queue.test.mjs",
+      "tests/zip-writer.test.mjs"
+    ],
+    "generated": [
+      "docs/evidence/phase-0a/ocr-follow-up.json",
+      "docs/evidence/phase-0a/ocr-initialization-probe.json",
+      "docs/evidence/phase-0a/ocr-module-loading-probe.json",
+      "docs/evidence/phase-0a/ocr-startup-probe.json",
+      "docs/evidence/phase-0a/source-fingerprints.json",
+      "docs/evidence/phase-0a/summary.json",
+      "docs/evidence/phase-0a/windows-ci-after-ocr-fix.json",
+      "docs/evidence/phase-0a/windows-ci.json",
+      "docs/evidence/phase-0b/collector-smoke.json",
+      "docs/evidence/phase-0b/current-scope.json",
+      "docs/evidence/phase-0b/maintenance-inventory.json",
+      "docs/evidence/phase-0b/repository-inventory-initial.json",
+      "docs/evidence/phase-0b/repository-inventory.json",
+      "docs/evidence/phase-0b/runtime-cleanup-negative.txt",
+      "docs/evidence/phase-0b/windows-packed-initial.json",
+      "docs/evidence/phase-0b/windows-source-initial.json",
+      "package-lock.json"
+    ],
+    "inventory": {
+      "javascript": 284,
+      "css": 4,
+      "formattable": 514
+    }
+  },
+  "counts": {
+    "errors": 631,
+    "warnings": 0,
+    "byRule": {
+      "eslint/no-empty": 151,
+      "eslint/no-control-regex": 4,
+      "eslint/preserve-caught-error": 20,
+      "eslint/no-unused-vars": 22,
+      "eslint/no-useless-assignment": 8,
+      "eslint/no-useless-escape": 9,
+      "eslint/no-unsafe-finally": 3,
+      "eslint/react-hooks/rules-of-hooks": 4,
+      "eslint/no-misleading-character-class": 2,
+      "eslint/require-yield": 3,
+      "prettier/format": 405
+    }
+  },
+  "diagnostics": [
+    {
+      "tool": "eslint",
+      "file": "electron/browser-service.mjs",
+      "line": 21,
+      "column": 90,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/browser-service.mjs",
+      "line": 51,
+      "column": 100,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/chat-import-worker.mjs",
+      "line": 22,
+      "column": 59,
+      "rule": "no-control-regex",
+      "severity": "error",
+      "message": "Unexpected control character(s) in regular expression: \\x00, \\x1f."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/document-text.mjs",
+      "line": 59,
+      "column": 52,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/document-text.mjs",
+      "line": 59,
+      "column": 139,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/document-text.mjs",
+      "line": 63,
+      "column": 561,
+      "rule": "no-control-regex",
+      "severity": "error",
+      "message": "Unexpected control character(s) in regular expression: \\x01, \\x08, \\x0b, \\x0c, \\x0e, \\x1f."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/file-watcher.mjs",
+      "line": 56,
+      "column": 42,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/goal-wire.mjs",
+      "line": 21,
+      "column": 9,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 39,
+      "column": 109,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 69,
+      "column": 572,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 259,
+      "column": 67,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 260,
+      "column": 2,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 364,
+      "column": 41,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 396,
+      "column": 140,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'error' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 406,
+      "column": 21,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/main.cjs",
+      "line": 504,
+      "column": 7,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'entries' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/mcp-config.mjs",
+      "line": 31,
+      "column": 8,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'hasNewSecrets' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/model-catalog.mjs",
+      "line": 45,
+      "column": 104,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\/."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/model-catalog.mjs",
+      "line": 78,
+      "column": 5,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/model-catalog.mjs",
+      "line": 90,
+      "column": 64,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/ocr-service.mjs",
+      "line": 34,
+      "column": 61,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/ocr-service.mjs",
+      "line": 35,
+      "column": 4,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/plugin-service.mjs",
+      "line": 141,
+      "column": 97,
+      "rule": "no-control-regex",
+      "severity": "error",
+      "message": "Unexpected control character(s) in regular expression: \\x00, \\x1f."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/privacy-gateway.mjs",
+      "line": 117,
+      "column": 74,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/providers.mjs",
+      "line": 49,
+      "column": 44,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\-."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 300,
+      "column": 232,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 335,
+      "column": 70,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 394,
+      "column": 247,
+      "rule": "no-unsafe-finally",
+      "severity": "error",
+      "message": "Unsafe usage of ThrowStatement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 399,
+      "column": 65,
+      "rule": "no-unsafe-finally",
+      "severity": "error",
+      "message": "Unsafe usage of ThrowStatement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 553,
+      "column": 43,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 621,
+      "column": 437,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 675,
+      "column": 33,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 675,
+      "column": 115,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 694,
+      "column": 154,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/runtime.mjs",
+      "line": 750,
+      "column": 351,
+      "rule": "no-unsafe-finally",
+      "severity": "error",
+      "message": "Unsafe usage of ThrowStatement."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/speech-service.mjs",
+      "line": 216,
+      "column": 9,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/temp-hygiene.mjs",
+      "line": 15,
+      "column": 7,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'STUCK' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/workspace-files.mjs",
+      "line": 29,
+      "column": 39,
+      "rule": "no-control-regex",
+      "severity": "error",
+      "message": "Unexpected control character(s) in regular expression: \\x00, \\x1f."
+    },
+    {
+      "tool": "eslint",
+      "file": "electron/workspace-save-queue.mjs",
+      "line": 25,
+      "column": 49,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "harness/file-policy.mjs",
+      "line": 138,
+      "column": 34,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "harness/mcp-host.mjs",
+      "line": 13,
+      "column": 10,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'enabled' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "harness/native-project-fs.mjs",
+      "line": 145,
+      "column": 40,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "harness/office-document-tools.mjs",
+      "line": 60,
+      "column": 43,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "harness/office-tools.mjs",
+      "line": 9,
+      "column": 10,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'parseOfficeFile' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "harness/office-tools.mjs",
+      "line": 141,
+      "column": 41,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "harness/office-tools.mjs",
+      "line": 167,
+      "column": 41,
+      "rule": "preserve-caught-error",
+      "severity": "error",
+      "message": "There is no `cause` attached to the symptom error being thrown."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/probe-compact-command.mjs",
+      "line": 76,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/probe-compact-command.mjs",
+      "line": 96,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/probe-compact-command.mjs",
+      "line": 97,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/probe-compact-command.mjs",
+      "line": 98,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/probe-compact-command.mjs",
+      "line": 99,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/probe-compact-command.mjs",
+      "line": 100,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-audit-conversation-ui.mjs",
+      "line": 74,
+      "column": 144,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "line": 115,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "line": 167,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "line": 168,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "line": 169,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "line": 170,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "line": 171,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "line": 172,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-chat-send-errors.mjs",
+      "line": 66,
+      "column": 7,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'errorLine' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 108,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 134,
+      "column": 9,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'beforeCount' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 164,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 165,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 166,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 167,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 168,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "line": 169,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compaction-ui.mjs",
+      "line": 55,
+      "column": 43,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compaction-ui.mjs",
+      "line": 118,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compaction-ui.mjs",
+      "line": 194,
+      "column": 32,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compaction-ui.mjs",
+      "line": 195,
+      "column": 32,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compaction-ui.mjs",
+      "line": 196,
+      "column": 29,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-compaction-ui.mjs",
+      "line": 198,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-conversation-ui.mjs",
+      "line": 13,
+      "column": 7,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'resourceTrigger' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-conversation-ui.mjs",
+      "line": 538,
+      "column": 13,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'searched' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "line": 131,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "line": 216,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "line": 217,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "line": 218,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "line": 219,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "line": 220,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "line": 221,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "line": 110,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "line": 167,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "line": 168,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "line": 169,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "line": 170,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "line": 171,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "line": 172,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "line": 98,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "line": 165,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "line": 166,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "line": 167,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "line": 168,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "line": 169,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "line": 170,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-feedback-ui.mjs",
+      "line": 38,
+      "column": 20,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'_' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-feedback-ui.mjs",
+      "line": 79,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-feedback-ui.mjs",
+      "line": 156,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-feedback-ui.mjs",
+      "line": 173,
+      "column": 32,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-feedback-ui.mjs",
+      "line": 174,
+      "column": 32,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-feedback-ui.mjs",
+      "line": 175,
+      "column": 29,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-feedback-ui.mjs",
+      "line": 177,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "line": 115,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "line": 164,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "line": 165,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "line": 166,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "line": 167,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "line": 168,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "line": 169,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-kernel-privacy-ui.mjs",
+      "line": 9,
+      "column": 144,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "line": 127,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "line": 216,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "line": 217,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "line": 218,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "line": 219,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "line": 220,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "line": 221,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-window-ui.mjs",
+      "line": 111,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-window-ui.mjs",
+      "line": 182,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-window-ui.mjs",
+      "line": 183,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-window-ui.mjs",
+      "line": 184,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-window-ui.mjs",
+      "line": 185,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-window-ui.mjs",
+      "line": 186,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-model-window-ui.mjs",
+      "line": 187,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "line": 114,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "line": 157,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "line": 158,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "line": 159,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "line": 160,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "line": 161,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "line": 162,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "line": 74,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "line": 98,
+      "column": 67,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\s."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "line": 138,
+      "column": 11,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "line": 139,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "line": 140,
+      "column": 125,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "line": 141,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "line": 142,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-privacy.mjs",
+      "line": 77,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-privacy.mjs",
+      "line": 147,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-privacy.mjs",
+      "line": 148,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-privacy.mjs",
+      "line": 149,
+      "column": 125,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-privacy.mjs",
+      "line": 150,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-privacy.mjs",
+      "line": 151,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "line": 58,
+      "column": 7,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'answer' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "line": 97,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "line": 143,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "line": 144,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "line": 145,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "line": 146,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "line": 147,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-workspace-tools.mjs",
+      "line": 83,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-workspace-tools.mjs",
+      "line": 131,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-workspace-tools.mjs",
+      "line": 132,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-workspace-tools.mjs",
+      "line": 133,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-workspace-tools.mjs",
+      "line": 134,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-cloud-workspace-tools.mjs",
+      "line": 135,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-subagent-archive-ui.mjs",
+      "line": 89,
+      "column": 5,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'proc' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-real-subagent-archive-ui.mjs",
+      "line": 89,
+      "column": 31,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'log' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "line": 87,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "line": 175,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "line": 176,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "line": 177,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "line": 178,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "line": 179,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "line": 180,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 119,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 170,
+      "column": 9,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'switched' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 190,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 191,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 192,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 193,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 194,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-review-ui.mjs",
+      "line": 195,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-run-status-ui.mjs",
+      "line": 75,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-run-status-ui.mjs",
+      "line": 187,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-run-status-ui.mjs",
+      "line": 188,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-run-status-ui.mjs",
+      "line": 189,
+      "column": 125,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-run-status-ui.mjs",
+      "line": 190,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-run-status-ui.mjs",
+      "line": 191,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-subagent-archive-ui.mjs",
+      "line": 63,
+      "column": 5,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'child_' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-subagent-archive-ui.mjs",
+      "line": 63,
+      "column": 33,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'log' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 96,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 120,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 135,
+      "column": 63,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 136,
+      "column": 101,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 137,
+      "column": 37,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 138,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 139,
+      "column": 45,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "line": 140,
+      "column": 73,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-zip-export-ui.mjs",
+      "line": 45,
+      "column": 5,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'child' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "scripts/test-zip-export-ui.mjs",
+      "line": 45,
+      "column": 32,
+      "rule": "no-useless-assignment",
+      "severity": "error",
+      "message": "The value assigned to 'log' is not used in subsequent statements."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/App.jsx",
+      "line": 2,
+      "column": 148,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'Plus' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/App.jsx",
+      "line": 17,
+      "column": 9,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'ReviewPanel' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/App.jsx",
+      "line": 1334,
+      "column": 139,
+      "rule": "react-hooks/rules-of-hooks",
+      "severity": "error",
+      "message": "React Hook \"useTemplate\" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/AutomationDialog.jsx",
+      "line": 68,
+      "column": 100,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/Dialogs.jsx",
+      "line": 11,
+      "column": 28,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'state' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/Dialogs.jsx",
+      "line": 69,
+      "column": 146,
+      "rule": "react-hooks/rules-of-hooks",
+      "severity": "error",
+      "message": "React Hook \"useTemplate\" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/Settings.jsx",
+      "line": 4,
+      "column": 10,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'WorkspaceIcon' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/Settings.jsx",
+      "line": 17,
+      "column": 99,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'changeWorkspace' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/Settings.jsx",
+      "line": 17,
+      "column": 116,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'notify' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/UtilityPage.jsx",
+      "line": 85,
+      "column": 221,
+      "rule": "react-hooks/rules-of-hooks",
+      "severity": "error",
+      "message": "React Hook \"useTemplate\" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/UtilityPage.jsx",
+      "line": 87,
+      "column": 129,
+      "rule": "react-hooks/rules-of-hooks",
+      "severity": "error",
+      "message": "React Hook \"useTemplate\" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/Workbench.jsx",
+      "line": 36,
+      "column": 38,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'project' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/Workbench.jsx",
+      "line": 182,
+      "column": 160,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/privacy-core.js",
+      "line": 7,
+      "column": 68,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\/."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/privacy-core.js",
+      "line": 13,
+      "column": 116,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\/."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/privacy-recognizers.js",
+      "line": 3,
+      "column": 21,
+      "rule": "no-misleading-character-class",
+      "severity": "error",
+      "message": "Unexpected combined character in character class."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/privacy-recognizers.js",
+      "line": 5,
+      "column": 56,
+      "rule": "no-misleading-character-class",
+      "severity": "error",
+      "message": "Unexpected combined character in character class."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/provider-options.js",
+      "line": 24,
+      "column": 9,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'providerId' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "src/store.js",
+      "line": 193,
+      "column": 21,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'_memoryDrafts' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/automation-persistence.test.mjs",
+      "line": 26,
+      "column": 62,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/fixtures/documents.mjs",
+      "line": 11,
+      "column": 97,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\(."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/fixtures/documents.mjs",
+      "line": 11,
+      "column": 99,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\\"."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/fixtures/documents.mjs",
+      "line": 11,
+      "column": 107,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\\"."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/fixtures/documents.mjs",
+      "line": 11,
+      "column": 109,
+      "rule": "no-useless-escape",
+      "severity": "error",
+      "message": "Unnecessary escape character: \\)."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/fixtures/speech-input.jsx",
+      "line": 1,
+      "column": 8,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'React' is defined but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/kernel-native.test.mjs",
+      "line": 34,
+      "column": 124,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/mcp-destination.test.mjs",
+      "line": 85,
+      "column": 11,
+      "rule": "no-unused-vars",
+      "severity": "error",
+      "message": "'headers' is assigned a value but never used."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/runtime-finalization.test.mjs",
+      "line": 28,
+      "column": 160,
+      "rule": "require-yield",
+      "severity": "error",
+      "message": "This generator function does not have 'yield'."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/runtime-policy.test.mjs",
+      "line": 81,
+      "column": 572,
+      "rule": "require-yield",
+      "severity": "error",
+      "message": "This generator function does not have 'yield'."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/runtime.test.mjs",
+      "line": 44,
+      "column": 295,
+      "rule": "no-empty",
+      "severity": "error",
+      "message": "Empty block statement."
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/speech-service.test.mjs",
+      "line": 162,
+      "column": 5,
+      "rule": "require-yield",
+      "severity": "error",
+      "message": "This generator function does not have 'yield'."
+    },
+    {
+      "tool": "prettier",
+      "file": "AGENTS.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "README.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "design-qa.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/audit-remediation-0.12.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/audit-request-0.14.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/audit-request-0.14.3.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/audit-request-0.14.4.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/audit-request-0.14.5.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/goal-spec.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/harness-capability-map.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/harness-default.yml",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/harness-parity.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.11.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.12.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.12.10.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.12.11.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.12.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.12.3.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.13.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.13.3.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.13.4.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.13.5.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.13.6.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.13.7.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.13.9.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.10.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.11.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.12.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.13.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.3.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.4.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.5.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.6.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.7.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.8.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.14.9.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.15.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.15.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.15.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.16.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.17.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.18.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.19.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.20.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.21.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.22.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.22.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.23.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.31.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.36.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.39.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/iteration-0.40.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/kernel-version-audit.json",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/lifecycle-acceptance-0.17.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/lifecycle-acceptance-0.19.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/maintenance-preview-cleanup.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/maturity-roadmap.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/phase-0a-audit.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/process-count-investigation.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/signing.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.11.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.10.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.11.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.12.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.3.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.4.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.5.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.6.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.7.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.8.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.12.9.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.3.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.4.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.5.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.6.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.7.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.8.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.13.9.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.10.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.11.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.12.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.13.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.3.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.4.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.5.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.6.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.7.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.8.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.14.9.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.15.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.15.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.15.2.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.16.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.17.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.18.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.19.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.20.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.21.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.22.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.22.1.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.23.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.24.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.25.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.26.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.27.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.28.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.29.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.30.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.31.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.32.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.33.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.34.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.35.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.36.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.37.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.38.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.39.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "docs/windows-acceptance-0.40.0.md",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron-builder.yml",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/app-log.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/archive-name.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/assistant-stream.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/automation-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/automation-tools.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/browser-policy.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/browser-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/change-summary.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/chat-import-worker.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/chat-import.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/compaction-policy.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/deliverable-access.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/delivery-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/desktop-release.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/document-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/document-text.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/document-worker.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/execution-events.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/file-watcher.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/goal-wire.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/kernel-version.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/main.cjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/mcp-config.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/message-feedback.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/model-catalog.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/native-session-export.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/ocr-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/office-files.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/office-formats.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/office-layout-worker.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/office-layout.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/office-visual.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/plugin-profile.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/plugin-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/plugin-worker.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/preload.cjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/privacy-gateway.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/project-worktree.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/providers.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/review-diff.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/run-failure.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/runtime-cancellation.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/runtime.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/schedule-rules.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/session-history-record.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/speech-policy.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/speech-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/temp-hygiene.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/terminal-service.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/terminal-worker.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/tool-bridge.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/updater-cache.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/visual-attachments.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/workspace-files.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/workspace-save-queue.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "electron/zip-writer.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/capability-manifest.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/encrypted-history.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/execution-controls.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/file-policy.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/mcp-host.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/native-project-fs.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/native-project-tools.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/office-context.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/office-document-tools.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/office-skills.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/office-tools.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/permission-sync.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/privacy-bridge.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/project-worktree.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/secure-web.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "harness/shell-policy.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/audit-kernel-version.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/audit-production-dependencies.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/clean-dev-updater-cache.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/clean-preview-evidence.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/generate-installer-path-policy.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/pack-runtime.cjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/prepare-sites-build.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/probe-compact-command.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/probe-startup.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/qa-cdp.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/qa-local-services.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/run-desktop.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-audit-conversation-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-browser.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-changed-files-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-chat-send-errors.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-compact-command-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-compaction-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-conversation-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-deliverable-actions-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-deliverable-cards-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-delivery-boundaries-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-error-copy-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-execution-search-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-feedback-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-inline-references-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-kernel-privacy-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-model-switch-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-model-window-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-native-files-export-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-office-agent-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-overflow-recovery-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-packed.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-real-cloud-chat.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-real-cloud-privacy.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-real-cloud-tool-redaction.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-real-cloud-workspace-tools.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-real-subagent-archive-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-restore-gap-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-review-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-run-status-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-runtime-recovery-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-speech-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-subagent-archive-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-temp-hygiene.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-tool-timeline-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-updater-cache.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-vision-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/test-zip-export-ui.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/verify-brand.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/verify-packed-sources.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "scripts/write-update-config.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/AgentQuestion.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/AnswerText.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/App.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/AutomationDialog.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ChangedFiles.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/Composer.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ConnectionsPage.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ConversationResources.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/DeliveryCards.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/Dialogs.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ExecutionPanel.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/FileCoverage.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/FileLayout.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/HarnessPlugins.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ImportedChat.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/KernelSettings.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/McpSettings.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ModelControls.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/PluginBuildApproval.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/PluginMarket.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/PrivacyTest.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ProviderSettings.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/Review.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ReviewPanel.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/Settings.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/Sidebar.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/UtilityPage.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/VoiceInput.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/Workbench.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/automation-core.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/changed-files.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/context-window.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/conversation-resources.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/conversation-state.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/desktop-ui.css",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/error-copy.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/file-actions.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/inline-references.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/kernel-config.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/main.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/model-controls.css",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/model-options.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/office-workflows.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/permissions.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/privacy-core.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/privacy-policy.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/privacy-recognizers.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/project-core.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/provider-options.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/provider-reasoning.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/review-view.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/run-status.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/run-summary.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/scheduler.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/session-commands.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/speech-audio.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/store.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/styles.css",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/subagent-archive.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/team-board.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/trace-filter.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "src/ui.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/app-log.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/archive-name.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/assistant-stream.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/automation-persistence.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/automation.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/browser-desktop.cjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/capability-manifest.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/capability-runtime.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/capability-ui.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/change-summary.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/changed-files.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/compaction-policy.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/composer-runtime.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/context-window.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/conversation-drafts-native.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/conversation-drafts-ui.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/conversation-recovery-ui.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/conversation-resources-ui.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/conversation-resources.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/conversation-state.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/credential-boundary.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/deliverable-access.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/delivery-review-ui.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/delivery-review.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/desktop-release.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/document-text.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/error-copy.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/file-actions.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/documents.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/mcp-server.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/messages-server.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/plugin-bundles.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/runtime-process-diagnostics.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/speech-electron.cjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/speech-input.cjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/fixtures/speech-input.jsx",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/inline-references.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/kernel-native.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/kernel.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/mcp-destination.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/mcp-identity.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/message-feedback.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/model-catalog-limits.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/office-directory.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/office-file-policy.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/office.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/plugins.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/privacy-dynamic-keys.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/privacy-gateway.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/privacy-lock-recovery.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/privacy-mcp-native.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/privacy-warning.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/privacy.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/provider-reasoning.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/provider-settings-ui.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/providers-hidden-model.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/providers.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/review-diff.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/review-view.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/run-status.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/run-summary.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-cleanup.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-context.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-finalization.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-image-ocr.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-launch.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-lifecycle.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-native-entrypoints.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-patch.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-policy.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime-vision.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/runtime.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/sidebar-ui.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/sites-worker.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/speech-audio.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/speech-input.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/speech-service.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/store.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/subagent-archive.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/temp-hygiene.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/trace-filter.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/updater-cache.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/workbench.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/workspace-save-queue.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "tests/zip-writer.test.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "vite.config.mjs",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    },
+    {
+      "tool": "prettier",
+      "file": "worker/index.js",
+      "severity": "error",
+      "rule": "format",
+      "message": "Not formatted. Run prettier --write on this file explicitly."
+    }
+  ],
+  "suppressed": [
+    {
+      "tool": "eslint",
+      "file": "tests/runtime-lifecycle.test.mjs",
+      "line": 130,
+      "rule": "no-unsafe-finally",
+      "reasons": [
+        {
+          "kind": "directive",
+          "justification": "Cleanup scope protection intentionally aborts deletion outside this fixture."
+        }
+      ]
+    },
+    {
+      "tool": "eslint",
+      "file": "tests/runtime-lifecycle.test.mjs",
+      "line": 418,
+      "rule": "no-unsafe-finally",
+      "reasons": [
+        {
+          "kind": "directive",
+          "justification": "Cleanup scope protection intentionally aborts deletion outside this fixture."
+        }
+      ]
+    }
+  ],
+  "limitation": "Scoped success is not whole-repository quality, runtime behavior, or Windows package acceptance.",
+  "recordedAgainstCommit": "91307819e1f666c624e2bd66a16741012a9cf601"
+}

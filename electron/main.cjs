@@ -22,6 +22,7 @@ const STARTUP_TRACE=process.env.ZHIXING_STARTUP_TRACE==='1';
 const startupMark=label=>{if(STARTUP_TRACE)process.stderr.write(`[startup] ${label} +${Math.round(process.uptime()*1000)}ms\n`);};
 startupMark('main:module');
 const WORKSPACE_FILE=path.join(ROOT,'workspace.bin');
+const DRAFTS_FILE=path.join(ROOT,'drafts.bin');
 const FEEDBACK_FILE=path.join(ROOT,'feedback.bin');
 // 反馈失败码沿用桌面版词汇，界面按这里的中文句子显示，不把码直接丢给用户。
 const FEEDBACK_ERRORS={'rating-invalid':'请先选择赞或踩。','category-invalid':'分类不在可选范围内。','note-blank':'备注只有空格，请填写内容或留空。','note-too-large':'备注超过 8192 字节，请精简后重试。','message-missing':'这条消息还没有可用的定位，无法记录反馈。'};
@@ -36,7 +37,15 @@ async function writeEncrypted(target,text){
  try{await fs.writeFile(temp,safeStorage.encryptString(text));await fs.rename(temp,target);}finally{await fs.unlink(temp).catch(()=>{});}
 }
 async function readEncrypted(target){
- try{return safeStorage.decryptString(await fs.readFile(target));}catch(e){if(e.code==='ENOENT')return null;throw new Error('本机加密文件无法读取。');}
+ try{return safeStorage.decryptString(await fs.readFile(target));}catch(e){
+  if(e.code==='ENOENT')return null;
+  // eslint-disable-next-line preserve-caught-error -- Keep private file paths and crypto internals out of the public IPC error.
+  throw new Error('本机加密文件无法读取。');
+ }
+}
+async function readWorkspaceState(){
+ const {loadWorkspacePersistence}=await import('./workspace-persistence.mjs');
+ return loadWorkspacePersistence({readWorkspace:()=>readEncrypted(WORKSPACE_FILE),readDrafts:()=>readEncrypted(DRAFTS_FILE)});
 }
 function visualReferences(state){
  const records=[...(state.documents||[]),...Object.values(state.drafts||{}).flatMap(draft=>draft?.files||[]),
@@ -66,7 +75,7 @@ async function initialise(){
  ({normaliseKernel,validateKernel}=await import('../src/kernel-config.js'));
  ({containsCredential}=await import('../src/privacy-recognizers.js'));
  configuration.kernel=normaliseKernel();
- try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));for(const key of ['model','reasoning'])if(typeof saved[key]==='string')configuration[key]=saved[key];for(const key of ['contextWindow','maxTokens'])if(Number.isSafeInteger(saved[key])&&saved[key]>=1024&&saved[key]<=2000000)configuration[key]=saved[key];if(saved.baseUrl)configuration.baseUrl=validEndpoint(saved.baseUrl);if(Number.isSafeInteger(saved.credentialRevision))configuration.credentialRevision=saved.credentialRevision;configuration.kernel=normaliseKernel(saved.kernel);}catch{}
+ try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));for(const key of ['model','reasoning'])if(typeof saved[key]==='string')configuration[key]=saved[key];for(const key of ['contextWindow','maxTokens'])if(Number.isSafeInteger(saved[key])&&saved[key]>=1024&&saved[key]<=2000000)configuration[key]=saved[key];if(saved.baseUrl)configuration.baseUrl=validEndpoint(saved.baseUrl);if(Number.isSafeInteger(saved.credentialRevision))configuration.credentialRevision=saved.credentialRevision;configuration.kernel=normaliseKernel(saved.kernel);}catch{/* Keep the existing defaults when optional configuration cannot be read. */}
  providerApi=await import('./providers.mjs');
  const {PluginService}=await import('./plugin-service.mjs');
  pluginService=new PluginService({directory:path.join(ROOT,'extensions')});
@@ -84,16 +93,16 @@ async function initialise(){
  const {mergeState}=await import('../src/store.js');
  projectCoreApi=await import('../src/project-core.js');
  resolveProjectContext=projectCoreApi.projectContext;
- workspaceContext=mergeState(JSON.parse(await readEncrypted(WORKSPACE_FILE)));
+ const persistedWorkspace=await readWorkspaceState();
+ workspaceContext=mergeState(persistedWorkspace.state);
  startupMark('init:state');
  const {DeliveryService}=await import('./delivery-service.mjs');
  deliveryService=new DeliveryService({getSettings:()=>workspaceContext.settings,getSecrets:deliverySecrets});
- const {WorkspaceSaveQueue}=await import('./workspace-save-queue.mjs');
- workspaceSaveQueue=new WorkspaceSaveQueue({
-  write:async state=>{
+ const {WorkspacePersistence}=await import('./workspace-persistence.mjs');
+ workspaceSaveQueue=new WorkspacePersistence({
+  initialState:workspaceContext,initialEpoch:persistedWorkspace.epoch,
+  write:async({kind,state,body,revision})=>{
    if(!state.settings?.persist&&manager.runs.size)throw Object.assign(new Error('请先停止正在运行的任务，再关闭本地保存。'),{code:'WORKSPACE_BUSY'});
-   const body=JSON.stringify(state);
-   if(Buffer.byteLength(body,'utf8')>12*1024*1024)throw Object.assign(new Error('本地工作空间超过 12 MiB，请先导出部分资料后再保存。'),{code:'WORKSPACE_LIMIT'});
    const previousVisuals=visualReferences(workspaceContext);
    const nextVisuals=state.settings?.persist?visualReferences(state):new Set();
    if(workspaceContext.settings.persist!==false&&state.settings?.persist===false){
@@ -108,11 +117,15 @@ async function initialise(){
     await fs.mkdir(VISUAL_ROOT,{recursive:true});
     await writeEncrypted(visualFile(id),JSON.stringify(record));
    }
-   await writeEncrypted(WORKSPACE_FILE,body);
-   workspaceContext=JSON.parse(body);
+   await writeEncrypted(kind==='workspace'?WORKSPACE_FILE:DRAFTS_FILE,body);
+   workspaceContext=kind==='workspace'?JSON.parse(body):{...workspaceContext,drafts:JSON.parse(body).drafts};
+   delete workspaceContext.draftEpoch;
    volatileTerms=state.settings?.persist?[]:state[VOLATILE_TERMS]??volatileTerms;
    for(const id of previousVisuals)if(!nextVisuals.has(id))pendingVisualDeletes.add(id);
    for(const id of nextVisuals){stagedVisuals.delete(id);pendingVisualDeletes.delete(id);}
+   // The new baseline already invalidates the old epoch. Remove obsolete
+   // encrypted content too; a failed cleanup remains visible and retryable.
+   if(kind==='workspace')await fs.unlink(DRAFTS_FILE).catch(error=>{if(error.code!=='ENOENT')throw error;});
    for(const id of pendingVisualDeletes){
     await fs.unlink(visualFile(id)).catch(error=>{if(error.code!=='ENOENT')throw error;});
     pendingVisualDeletes.delete(id);
@@ -122,6 +135,7 @@ async function initialise(){
     await manager.clearSavedHistory();
     for(const file of await fs.readdir(VAULTS))if(/^[\w-]+\.bin$/.test(file)&&!manager.busy.has(file.slice(0,-4)))await fs.unlink(path.join(VAULTS,file));
    }
+   logEvent('info','workspace.persisted',{kind,bytes:Buffer.byteLength(body,'utf8'),revision});
   },
   onState:state=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('workspace:save-state',state);},
  });
@@ -256,7 +270,11 @@ function handle(channel,fn,ready){
  const gate=ready||(/^(?:browser|terminal|speech):/.test(channel)?ensureServices:/^automation:/.test(channel)?()=>automationsReady:null);
  ipcMain.handle(channel,async(event,...args)=>{trusted(event);try{if(gate)await gate();return await fn(...args);}catch(e){
  const message=String(e.message||'操作未完成');
- if(/dsh profile|ERR_MODULE_NOT_FOUND|stderr tail/i.test(message))throw new Error('DeepSeek 内核启动失败。请打开设置检查内核，或使用最新安装包重新安装。');
+ if(/dsh profile|ERR_MODULE_NOT_FOUND|stderr tail/i.test(message)){
+  // eslint-disable-next-line preserve-caught-error -- Harness stderr and startup internals must not cross the renderer boundary through cause.
+  throw new Error('DeepSeek 内核启动失败。请打开设置检查内核，或使用最新安装包重新安装。');
+ }
+ // eslint-disable-next-line preserve-caught-error -- The original cause could contain credentials removed from this bounded public message.
  throw new Error(message.replace(/sk-[A-Za-z0-9_-]{12,}/g,'[已隐藏凭据]').slice(0,600));
 }});}
 function requestRendererFlush(){
@@ -361,7 +379,13 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
   if(selected.canceled||!selected.filePath)return {saved:false};
   if(path.extname(selected.filePath).toLowerCase()!==`.${format}`)throw new Error('保存文件的扩展名必须与所选格式一致。');
   try {await fs.writeFile(selected.filePath,Buffer.from(result.bytes,'base64'),{flag:'wx'});}
-  catch(error){if(error.code==='EEXIST')throw new Error('已有同名文件，请另选文件名。');throw error;}
+  catch(error){
+   if(error.code==='EEXIST'){
+    // eslint-disable-next-line preserve-caught-error -- The user-facing conflict message intentionally omits the private native target path.
+    throw new Error('已有同名文件，请另选文件名。');
+   }
+   throw error;
+  }
   return {saved:true,name:path.basename(selected.filePath),missingFonts:result.missingFonts};
  });
  handle('workspace:reveal-file',async options=>{const {workspaceTarget}=await import('./workspace-files.mjs');const {target}=await workspaceTarget(workScope(options).workspaceRoot,options.path||'');require('electron').shell.showItemInFolder(target);return true;});
@@ -393,7 +417,7 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
   if(bytes>2*1024*1024)throw new Error('子会话内容超过 2 MB，无法归档。');
  const {archiveFileName,numberedName}=await import('./archive-name.mjs');
   let folder;
-  try{const scope=workScope(options);folder=scope.workspaceRoot&&path.isAbsolute(scope.workspaceRoot)?scope.workspaceRoot:undefined;}catch(error){folder=undefined;}
+  try{const scope=workScope(options);folder=scope.workspaceRoot&&path.isAbsolute(scope.workspaceRoot)?scope.workspaceRoot:undefined;}catch{folder=undefined;}
   const filename=archiveFileName({title:options.name,index:Number.isInteger(options.index)?options.index:undefined});
   const result=await dialog.showSaveDialog(windowRef,{title:'归档子会话',defaultPath:folder?path.join(folder,filename):filename,filters:[{name:'Markdown',extensions:['md']}]});
   if(result.canceled||!result.filePath)return {cancelled:true};
@@ -403,7 +427,10 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
    try{await fs.writeFile(target,text,{encoding:'utf8',flag:'wx'});break;}
    catch(error){
     if(error.code!=='EEXIST')throw error;
-    if(attempt===20)throw new Error('同名归档已存在，且无法再命名，请换一个文件名。');
+    if(attempt===20){
+     // eslint-disable-next-line preserve-caught-error -- Report the exhausted safe-name choice without returning the private archive path via cause.
+     throw new Error('同名归档已存在，且无法再命名，请换一个文件名。');
+    }
     target=path.join(path.dirname(chosen),numberedName(path.basename(chosen),attempt+1));
    }
   }
@@ -418,7 +445,8 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
   return rows.some(row=>row.id===provider.id)?rows.map(row=>row.id===provider.id?provider:row):[...rows,provider];
  }));
  handle('providers:remove',id=>changeProviders(rows=>rows.filter(row=>row.id!==id)));
-handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setModelHidden(rows,options||{})));
+ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setModelHidden(rows,options||{})));
+ handle('providers:restore-models',id=>changeProviders(rows=>providerApi.restoreProviderModels(rows,id)));
  handle('providers:refresh',id=>changeProviders(async rows=>{
   const provider=rows.find(row=>row.id===id);
   if(!provider)throw new Error('所选供应商已移除。');
@@ -456,7 +484,10 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
   await writeEncrypted(path.join(ROOT,'mcp.bin'),JSON.stringify(next));mcpServers=next;return publicMcpServers(next);
  });
  handle('mcp:check',async()=>{if(mcpServers.some(server=>server.enabled&&server.credentialReentryRequired))throw new Error('有 MCP 服务的目标已变化，请在连接设置中重新填写凭据。');try{return await manager.check({...configuration,mcpServers},'zhixing-startup-check');}catch{throw new Error('MCP 连接失败，请检查程序路径、地址、凭据和服务状态。');}});
- handle('data:load',async()=>JSON.parse(await readEncrypted(WORKSPACE_FILE)));
+ handle('data:load',async()=>{
+  await workspaceSaveQueue.flush();
+  return (await readWorkspaceState()).state;
+ });
  handle('data:import-deepseek',async options=>{
   await workspaceSaveQueue.flush();
   resolveProjectContext(workspaceContext,options);
@@ -473,9 +504,13 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
  handle('data:save',async (state,terms)=>{
   if(![1,2].includes(state?.version)||!Array.isArray(state.projects)||!Array.isArray(state.chats)||!Array.isArray(state.automations))throw new Error('本地工作空间格式不正确。');
   if(state.settings?.persist===false&&Array.isArray(terms))state[VOLATILE_TERMS]=terms.filter(term=>typeof term==='string'&&term.length<=120).slice(0,100);
-  const result=workspaceSaveQueue.save(workspaceSaveQueue.requestedRevision+1,state);
+  const result=workspaceSaveQueue.saveWorkspace(state);
   await result;
   void automationsReady.then(()=>automations.tick()).catch(()=>{});
+  return true;
+ });
+ handle('data:save-drafts',async drafts=>{
+  await workspaceSaveQueue.saveDrafts(drafts);
   return true;
  });
  // 消息反馈：与 Harness 桌面版 dsh-message-feedback 同口径——只写本机 Session 之外的独立文件，
@@ -500,7 +535,7 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
   const {removeFeedback}=await import('./message-feedback.mjs');
   const current=await readEncrypted(FEEDBACK_FILE);
   if(!current)return true;
-  let entries=[];
+  let entries;
   try{const data=JSON.parse(current);entries=Array.isArray(data?.entries)?data.entries:[];}catch{throw new Error('本机反馈记录无法读取。');}
   await writeEncrypted(FEEDBACK_FILE,JSON.stringify({version:1,entries:removeFeedback(entries,String(conversationId||''),String(messageId||''))}));
   return true;
@@ -522,7 +557,8 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
  handle('update:install',async()=>{
   if(updateState.status!=='downloaded')throw new Error('更新尚未下载完成。');
   await ensureUpdater();
-  await workspaceSaveQueue.flush().catch(()=>{});
+  await requestRendererFlush();
+  await workspaceSaveQueue.flush();
   installingUpdate=true;
   logEvent('info','update.install',{version:updateState.version,from:app.getVersion()});
   setImmediate(()=>autoUpdater.quitAndInstall(true,true));
@@ -625,7 +661,7 @@ handle('providers:hidden-model',options=>changeProviders(rows=>providerApi.setMo
    const stat=await fs.stat(directory).catch(()=>null);
    if(stat?.isDirectory())defaultPath=directory;
   }
-  const result=await dialog.showOpenDialog(windowRef,{title:'添加工作资料',defaultPath,properties:['openFile','multiSelections'],filters:[{name:'办公文档、文本和图片',extensions:['txt','md','csv','tsv','json','docx','xlsx','pptx','pdf','png','jpg','jpeg','bmp','tif','tiff']}]});
+  const result=await dialog.showOpenDialog(windowRef,{title:'添加工作资料',defaultPath,properties:['openFile','multiSelections'],filters:[{name:'办公文档、文本和图片',extensions:['txt','md','csv','tsv','json','docx','xlsx','pptx','pdf','png','jpg','jpeg','webp','gif','bmp','tif','tiff']}]});
   if(result.canceled)return [];
   const files=[];
   for(const filePath of result.filePaths.slice(0,12)){

@@ -6,10 +6,11 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import ExcelJS from 'exceljs';
 import {officeZip,makePdf,makeUnicodePdf} from './fixtures/documents.mjs';
-const {parseOfficeFile}=await import(process.env.ZHIXING_TEST_PACKED_APP?pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP,'electron','office-files.mjs')).href:'../electron/office-files.mjs');
-import {PrivacySession} from '../src/privacy-core.js';
-import {composePrompt} from '../src/office-workflows.js';
-import {recognizeImage} from '../electron/ocr-service.mjs';
+const moduleUrl = name => process.env.ZHIXING_TEST_PACKED_APP ? pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP, name)).href : new URL(`../${name}`, import.meta.url).href;
+const {parseOfficeFile}=await import(moduleUrl('electron/office-files.mjs'));
+const {PrivacySession}=await import(moduleUrl('src/privacy-core.js'));
+const {composePrompt}=await import(moduleUrl('src/office-workflows.js'));
+const {recognizeImage}=await import(moduleUrl('electron/ocr-service.mjs'));
 const W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 test('Word 提取正文、页眉页脚、修订和批注，图片只记录范围',async()=>{
  const file=officeZip({'word/document.xml':`<w:document xmlns:w="${W}"><w:body><w:p><w:r><w:t>正文电话 13800000000</w:t></w:r><w:del><w:r><w:delText>已删除内容</w:delText></w:r></w:del><w:ins><w:r><w:t>新内容</w:t></w:r></w:ins></w:p></w:body></w:document>`,'word/header1.xml':`<w:hdr xmlns:w="${W}"><w:p><w:r><w:t>页眉电话 13911112222</w:t></w:r></w:p></w:hdr>`,'word/comments.xml':`<w:comments xmlns:w="${W}"><w:comment><w:p><w:r><w:t>批注电话 13611112222</w:t></w:r></w:p></w:comment></w:comments>`,'word/media/image1.png':new Uint8Array([0,1,2,3])});

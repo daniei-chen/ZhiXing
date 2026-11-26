@@ -1,0 +1,297 @@
+{
+  "layer": "windows-packaged-app + real-harness + loopback model fixture",
+  "version": "0.40.0",
+  "sourceCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+  "sourceDirty": false,
+  "startedAt": "2026-11-26T13:47:21.969Z",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "status": "failed",
+  "cases": [
+    {
+      "name": "packaged EXE uses only the isolated QA profile",
+      "status": "passed",
+      "version": "0.40.0",
+      "packaged": true,
+      "isolatedProfile": true,
+      "versions": {
+        "electron": "44.11.5",
+        "chrome": "152.0.7977.169",
+        "node": "24.22.3"
+      },
+      "viewport": {
+        "size": [
+          1255,
+          912
+        ],
+        "zoom": 1
+      }
+    },
+    {
+      "name": "project, pinned, independent and orphan chats each have one selectable entry",
+      "status": "passed",
+      "rows": [
+        {
+          "id": "qa-phase0a-chat",
+          "count": 1,
+          "group": "project"
+        },
+        {
+          "id": "qa-phase0a-pinned",
+          "count": 1,
+          "group": "pinned"
+        },
+        {
+          "id": "qa-phase0a-independent",
+          "count": 1,
+          "group": "recent"
+        },
+        {
+          "id": "qa-phase0a-orphan",
+          "count": 1,
+          "group": "recent"
+        }
+      ]
+    },
+    {
+      "name": "real Harness writes and presents both files and retains three linked calls",
+      "status": "passed",
+      "files": [
+        {
+          "name": "工作记录甲.md",
+          "sha256": "4a8bd9b32ba5116195f24ed27bd2a99fb4f0f6934c728498317417afa001ed33"
+        },
+        {
+          "name": "工作记录乙.md",
+          "sha256": "cf7150ec6c131ab7d21c35c16008557b58a32ce014b192ad50262f8c55696083"
+        }
+      ],
+      "calls": 3,
+      "results": 3,
+      "linkedCalls": 3
+    },
+    {
+      "name": "body precedes changes and deliverables; all assistant sections share a baseline",
+      "status": "passed",
+      "layout": {
+        "ordered": true,
+        "rows": [
+          {
+            "selector": ".tool-strip",
+            "rect": {
+              "left": 445,
+              "top": 222.796875,
+              "right": 1145,
+              "bottom": 240.796875,
+              "width": 700,
+              "height": 18
+            }
+          },
+          {
+            "selector": ".answer-text",
+            "rect": {
+              "left": 445,
+              "top": 242.796875,
+              "right": 1145,
+              "bottom": 305.609375,
+              "width": 700,
+              "height": 62.8125
+            }
+          },
+          {
+            "selector": ".change-files",
+            "rect": {
+              "left": 445,
+              "top": 314.609375,
+              "right": 1145,
+              "bottom": 409.609375,
+              "width": 700,
+              "height": 95
+            }
+          },
+          {
+            "selector": ".deliverable-files",
+            "rect": {
+              "left": 445,
+              "top": 418.609375,
+              "right": 1145,
+              "bottom": 471.609375,
+              "width": 700,
+              "height": 53
+            }
+          },
+          {
+            "selector": ".run-summary",
+            "rect": {
+              "left": 445,
+              "top": 477.609375,
+              "right": 1145,
+              "bottom": 497.109375,
+              "width": 700,
+              "height": 19.5
+            }
+          },
+          {
+            "selector": ".answer-actions",
+            "rect": {
+              "left": 445,
+              "top": 532.609375,
+              "right": 1145,
+              "bottom": 565.609375,
+              "width": 700,
+              "height": 33
+            }
+          }
+        ],
+        "summary": "3 次工具调用",
+        "toolRows": [
+          {
+            "label": "写入项目文本 · 完成",
+            "status": "completed"
+          },
+          {
+            "label": "写入项目文本 · 完成",
+            "status": "completed"
+          },
+          {
+            "label": "交付成果文件 · 完成",
+            "status": "completed"
+          }
+        ],
+        "changes": 2,
+        "deliverables": 2,
+        "body": "两份工作记录已写入项目目录。\n\n请查看下方的改动摘要和交付文件。",
+        "icon": {
+          "src": "./brand/zhixing-bamboo.png",
+          "loaded": true
+        }
+      }
+    },
+    {
+      "name": "tool steps expand as three completed styled rows",
+      "status": "passed",
+      "open": true,
+      "rows": [
+        {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "background": "rgb(255, 255, 255)",
+          "height": 26
+        },
+        {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "background": "rgb(255, 255, 255)",
+          "height": 26
+        },
+        {
+          "borderStyle": "solid",
+          "borderWidth": "1px",
+          "background": "rgb(255, 255, 255)",
+          "height": 26
+        }
+      ]
+    },
+    {
+      "name": "reload preserves real message order, linked tool count and sidebar ownership",
+      "status": "passed",
+      "summary": "3 次工具调用",
+      "toolRows": 3
+    },
+    {
+      "name": "feedback over 8192 bytes disables save while Clear remains usable",
+      "status": "passed",
+      "counter": "9000 / 8192 字节",
+      "over": true,
+      "saveDisabled": true,
+      "clearDisabled": false
+    },
+    {
+      "name": "failed file action shows a persistent top toast without covering long input controls",
+      "status": "failed",
+      "error": "SyntaxError: Invalid or unexpected token"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "01-message-light.png",
+      "bytes": 65277,
+      "sha256": "0ad7c14e700469a4cf6589873848526ff646661ac3c694d256d0d36eb1716473",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "02-tools-expanded.png",
+      "bytes": 70424,
+      "sha256": "a090ae6747f66108a9ae28806e18b2e43e679efabef3437a40e7e7d08cf1e04b",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "03-feedback-over-limit.png",
+      "bytes": 85032,
+      "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "failure.png",
+      "bytes": 102965,
+      "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    }
+  ],
+  "providerRequests": [
+    {
+      "step": 0,
+      "toolResults": 0,
+      "nextTool": "write"
+    },
+    {
+      "step": 1,
+      "toolResults": 1,
+      "nextTool": "write"
+    },
+    {
+      "step": 2,
+      "toolResults": 2,
+      "nextTool": "present"
+    },
+    {
+      "step": 3,
+      "toolResults": 3,
+      "nextTool": null
+    }
+  ],
+  "visualReview": "pending-human-review",
+  "boundaries": [
+    "Model responses are deterministic fixtures, not a real cloud/model-quality evaluation.",
+    "Project and empty-chat metadata are seeded through the real desktop IPC in an isolated profile.",
+    "Files, tool events, assistant text, change summaries and delivery references come from the real Harness run.",
+    "Full workspace permission is selected; native approval dialogs are not exercised or replaced.",
+    "DOM order, geometry, computed styles and controls are asserted; screenshots still require human visual review.",
+    "No installer, upgrade, user installation, Windows shortcut or cross-account migration is exercised.",
+    "No legacy trace, >400-event truncation, long conversation or production provider coverage is claimed."
+  ],
+  "exeSha256": "cf428b2bd5fe57944ebb57ac57128a46734faaa16e81d3b06f263732d493f4af",
+  "error": "Error: SyntaxError: Invalid or unexpected token\n    at Object.evaluate (file:///D:/a/ZhiXing/ZhiXing/scripts/qa-cdp.mjs:34:42)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase0a-ui.mjs:590:24\n    at async check (file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase0a-ui.mjs:113:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase0a-ui.mjs:574:3",
+  "processExit": {
+    "code": 0,
+    "signal": null
+  },
+  "cleanup": {
+    "processExited": true,
+    "temporaryRemoved": true
+  },
+  "fixtureError": null,
+  "finishedAt": "2026-11-26T13:47:28.926Z"
+}

@@ -1,0 +1,111 @@
+{
+  "layer": "windows-packaged-app",
+  "version": "0.40.0",
+  "sourceCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+  "sourceDirty": false,
+  "exeSha256": "cf428b2bd5fe57944ebb57ac57128a46734faaa16e81d3b06f263732d493f4af",
+  "status": "passed",
+  "cases": [
+    {
+      "name": "实包运行时报告 0.40.0",
+      "status": "passed",
+      "sourceCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+      "sourceDirty": false
+    },
+    {
+      "name": "真实 401 的 API Key 被换成可行动的文案",
+      "status": "observed",
+      "cause": "HTTP_401",
+      "expected": "API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。",
+      "shown": "API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。",
+      "savedProviders": 0
+    },
+    {
+      "name": "真实 401 的 API Key 被换成可行动的文案（HTTP_401）显示「API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。」",
+      "status": "passed",
+      "expected": "API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。",
+      "cause": "HTTP_401"
+    },
+    {
+      "name": "解析不到的主机显示「解析不到服务地址」",
+      "status": "observed",
+      "cause": "ENOTFOUND",
+      "expected": "解析不到服务地址，请检查网络连接或代理设置。",
+      "shown": "解析不到服务地址，请检查网络连接或代理设置。",
+      "savedProviders": 0
+    },
+    {
+      "name": "解析不到的主机显示「解析不到服务地址」（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」",
+      "status": "passed",
+      "expected": "解析不到服务地址，请检查网络连接或代理设置。",
+      "cause": "ENOTFOUND"
+    },
+    {
+      "name": "被本机网络接住时按实际错误码 ENOTFOUND 给文案",
+      "status": "observed",
+      "cause": "ENOTFOUND",
+      "expected": "解析不到服务地址，请检查网络连接或代理设置。",
+      "shown": "解析不到服务地址，请检查网络连接或代理设置。",
+      "savedProviders": 0
+    },
+    {
+      "name": "被本机网络接住时按实际错误码 ENOTFOUND 给文案（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」",
+      "status": "passed",
+      "expected": "解析不到服务地址，请检查网络连接或代理设置。",
+      "cause": "ENOTFOUND"
+    },
+    {
+      "name": "拒绝连接的端口显示连接被拒绝",
+      "status": "observed",
+      "cause": "ECONNREFUSED",
+      "expected": "服务地址拒绝连接，请确认地址和端口是否正确。",
+      "shown": "服务地址拒绝连接，请确认地址和端口是否正确。",
+      "savedProviders": 0
+    },
+    {
+      "name": "拒绝连接的端口显示连接被拒绝（ECONNREFUSED）显示「服务地址拒绝连接，请确认地址和端口是否正确。」",
+      "status": "passed",
+      "expected": "服务地址拒绝连接，请确认地址和端口是否正确。",
+      "cause": "ECONNREFUSED"
+    },
+    {
+      "name": "无响应的服务地址按 12 秒超时给出超时文案",
+      "status": "observed",
+      "cause": "TIMEOUT",
+      "expected": "请求超时，请检查网络后重试。",
+      "shown": "请求超时，请检查网络后重试。",
+      "savedProviders": 0
+    },
+    {
+      "name": "无响应的服务地址按 12 秒超时给出超时文案（TIMEOUT）显示「请求超时，请检查网络后重试。」",
+      "status": "passed",
+      "expected": "请求超时，请检查网络后重试。",
+      "cause": "TIMEOUT"
+    },
+    {
+      "name": "主进程保留真实错误码，每条界面文案都与技术原文不同",
+      "status": "passed",
+      "raw": [
+        "读取模型列表失败（HTTP 401），已保留当前配置。",
+        "无法读取模型列表（ENOTFOUND），请检查网络和 API 地址。",
+        "无法读取模型列表（ENOTFOUND），请检查网络和 API 地址。",
+        "无法读取模型列表（ECONNREFUSED），请检查网络和 API 地址。",
+        "无法读取模型列表（TIMEOUT），请检查网络和 API 地址。"
+      ]
+    }
+  ],
+  "exits": [
+    {
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "appVersion": "0.40.0",
+  "mainProcessErrors": [
+    "读取模型列表失败（HTTP 401），已保留当前配置。",
+    "无法读取模型列表（ENOTFOUND），请检查网络和 API 地址。",
+    "无法读取模型列表（ENOTFOUND），请检查网络和 API 地址。",
+    "无法读取模型列表（ECONNREFUSED），请检查网络和 API 地址。",
+    "无法读取模型列表（TIMEOUT），请检查网络和 API 地址。"
+  ]
+}

@@ -5,10 +5,12 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {once} from 'node:events';
-import {AssistantTextStream, createAssistantStreamDecoder} from '../electron/assistant-stream.mjs';
-import {startPrivacyGateway} from '../electron/privacy-gateway.mjs';
-import {createBridgeKey, writeBridge} from '../harness/privacy-bridge.mjs';
-import {PrivacySession} from '../src/privacy-core.js';
+import {pathToFileURL} from 'node:url';
+const moduleUrl = name => process.env.ZHIXING_TEST_PACKED_APP ? pathToFileURL(path.join(process.env.ZHIXING_TEST_PACKED_APP, name)).href : new URL(`../${name}`, import.meta.url).href;
+const {AssistantTextStream, createAssistantStreamDecoder}=await import(moduleUrl('electron/assistant-stream.mjs'));
+const {startPrivacyGateway}=await import(moduleUrl('electron/privacy-gateway.mjs'));
+const {createBridgeKey, writeBridge}=await import(moduleUrl('harness/privacy-bridge.mjs'));
+const {PrivacySession}=await import(moduleUrl('src/privacy-core.js'));
 
 function frame(type, attemptId, index, text = '') {
   return type === 'chunk'
@@ -150,7 +152,7 @@ test('the local privacy gateway forwards live provider text while preserving the
     '[DONE]',
   ];
   const server = http.createServer(async (req, res) => {
-    for await (const _chunk of req) {}
+    for await (const chunk of req) { void chunk; } // Drain the synthetic request before sending SSE.
     requests.push(req.url);
     res.writeHead(200, {'content-type': 'text/event-stream'});
     for (const frame of frames) {

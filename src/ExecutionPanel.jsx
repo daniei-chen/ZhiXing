@@ -8,7 +8,7 @@ const categories = [
  ['jobs','后台作业'], ['team','共享任务'], ['session','会话'],
 ];
 const statusLabels = {
- running:'运行中', completed:'已完成', cancelled:'已取消', interrupted:'已中断',
+ starting:'启动中', running:'运行中', idle:'空闲', completed:'已完成', cancelled:'已取消', interrupted:'已中断',
  failed:'失败', error:'失败', killed:'已停止', blocked:'被阻止', aborted:'已中断',
  'max-tokens':'达到输出上限', stop:'已结束',
 };
@@ -111,7 +111,7 @@ export function ExecutionPanel({messages, liveTrace, liveRun, traceTruncated, se
    <h4>协作子任务{visibleChildren.filter(child=>child.messages?.length).length>1&&!live&&<button className="text-button" disabled={!!archiving} onClick={()=>archiveAll(visibleChildren)}>全部归档</button>}</h4>
    {visibleChildren.map(child=><div key={child.id}>
     <span>子任务 {childRows.get(child.id)}{childRows.has(child.parentId) && <small>由子任务 {childRows.get(child.parentId)} 委派</small>}</span>
-    <span>{!live&&child.status==='running' ? '已中断' : statusLabels[child.status] || '已结束'}
+    <span>{!live&&['starting','running'].includes(child.status) ? '已中断' : statusLabels[child.status] || '已结束'}
      {(live||child.messages?.length>0)&&<button className="text-button" onClick={()=>setSelectedItem({type:'agent',id:child.id})}>查看对话</button>}
      {!live&&!!child.messages?.length&&<button className="text-button" disabled={!!archiving} onClick={()=>archiveChild(child)}>{archiving===child.id?'归档中…':'归档'}</button>}{stopButton('interrupt-agent',child.id,child.status,'停止子任务')}</span>
    </div>)}

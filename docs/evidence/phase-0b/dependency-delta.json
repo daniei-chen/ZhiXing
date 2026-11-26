@@ -1,0 +1,15 @@
+{
+  "baseCommit": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
+  "sourceCommit": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "changedExistingProductionVersionsOrIntegrity": [],
+  "productionDeclarationsEqual": true,
+  "newDirectDevelopmentDependencies": [
+    "@eslint/js",
+    "eslint",
+    "eslint-plugin-react-hooks",
+    "globals",
+    "prettier",
+    "stylelint"
+  ],
+  "lockSha256": "910b7d23d8f512c88b476fa5b1a6c2bc68672be3a3fe71806ba9c8ffe7f0dd3a"
+}

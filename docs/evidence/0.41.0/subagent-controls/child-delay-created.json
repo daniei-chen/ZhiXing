@@ -1,0 +1,82 @@
+{
+  "variant": "child-delay",
+  "mode": "created",
+  "rows": [
+    {
+      "ms": 3622,
+      "event": "parent-delegate-request"
+    },
+    {
+      "ms": 3674,
+      "event": "sdk-child-created"
+    },
+    {
+      "ms": 3674,
+      "event": "runtime-child-event",
+      "status": "starting"
+    },
+    {
+      "ms": 4482,
+      "event": "sdk-child-status",
+      "status": "running"
+    },
+    {
+      "ms": 4483,
+      "event": "runtime-child-event",
+      "status": "running"
+    },
+    {
+      "ms": 4483,
+      "event": "control-start",
+      "rawStatus": "running",
+      "childRequests": 0
+    },
+    {
+      "ms": 4485,
+      "event": "control-file",
+      "exists": true
+    },
+    {
+      "ms": 4507,
+      "event": "control-resolved",
+      "requested": true
+    },
+    {
+      "ms": 4512,
+      "event": "sdk-child-status",
+      "status": "idle"
+    },
+    {
+      "ms": 4512,
+      "event": "runtime-child-event",
+      "status": "idle"
+    },
+    {
+      "ms": 4538,
+      "event": "sdk-child-finished",
+      "status": "aborted"
+    },
+    {
+      "ms": 4538,
+      "event": "runtime-child-event",
+      "status": "aborted"
+    },
+    {
+      "ms": 4576,
+      "event": "parent-result-request"
+    },
+    {
+      "ms": 4651,
+      "event": "parent-result-request"
+    },
+    {
+      "ms": 4749,
+      "event": "run-resolved",
+      "children": [
+        {
+          "status": "aborted"
+        }
+      ]
+    }
+  ]
+}

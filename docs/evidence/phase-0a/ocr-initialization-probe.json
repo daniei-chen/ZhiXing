@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Second diagnostic: locate slow initialization in default PowerShell. This is not product acceptance or the existing source gate. All samples are retained; any unsuccessful attempt still exits nonzero.",
+  "baseCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+  "commit": "7ac085fdee7088c1e6ec9a26308b76140697788e",
+  "runId": "45815929178",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.22.3",
+    "image": "win25-vs2026",
+    "imageVersion": "20261116.315.1",
+    "availableParallelism": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "timeoutMs": 25000,
+  "samplePlan": "Default PowerShell only: two sequential attempts, then one pair with concurrency two. Four samples, three waves, at most 75 seconds of child-process waiting; no retries.",
+  "environment": "Same eight-variable allowlist and PowerShell executable as electron/ocr-service.mjs",
+  "stages": [
+    "initialize",
+    "consoleEncoding",
+    "runtimeAssembly",
+    "storageFileType",
+    "randomAccessStreamType",
+    "bitmapDecoderType",
+    "softwareBitmapType",
+    "ocrResultType",
+    "ocrEngineType",
+    "asTaskReflection",
+    "engine",
+    "file",
+    "open",
+    "decode",
+    "bitmap",
+    "recognize",
+    "serialize"
+  ],
+  "scope": "Each attempt starts a new PowerShell process. First/repeat describe job order; Windows caches are not reset. Only synthetic fixture data is used; text and pixels are never saved in this report.",
+  "diagnosticCompleted": true,
+  "productAcceptance": "not assessed",
+  "runs": [
+    {
+      "sequence": 1,
+      "mode": "default",
+      "group": "sequential-1",
+      "concurrency": 1,
+      "modeLaunch": 1,
+      "firstInJob": true,
+      "firstForMode": true,
+      "elapsedMs": 25039,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "STA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 2448
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 2452
+        }
+      ],
+      "lastStage": "consoleEncoding",
+      "lastStagePhase": "before",
+      "waitingStage": "consoleEncoding",
+      "stdoutBytes": 0,
+      "stderrBytes": 91,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    },
+    {
+      "sequence": 2,
+      "mode": "default",
+      "group": "sequential-2",
+      "concurrency": 1,
+      "modeLaunch": 2,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 25026,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "STA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 220
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 224
+        }
+      ],
+      "lastStage": "consoleEncoding",
+      "lastStagePhase": "before",
+      "waitingStage": "consoleEncoding",
+      "stdoutBytes": 0,
+      "stderrBytes": 91,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    },
+    {
+      "sequence": 3,
+      "mode": "default",
+      "group": "pair-1",
+      "concurrency": 2,
+      "modeLaunch": 3,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 25028,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "STA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 287
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 291
+        }
+      ],
+      "lastStage": "consoleEncoding",
+      "lastStagePhase": "before",
+      "waitingStage": "consoleEncoding",
+      "stdoutBytes": 0,
+      "stderrBytes": 91,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    },
+    {
+      "sequence": 4,
+      "mode": "default",
+      "group": "pair-1",
+      "concurrency": 2,
+      "modeLaunch": 4,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 25030,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "STA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 284
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 288
+        }
+      ],
+      "lastStage": "consoleEncoding",
+      "lastStagePhase": "before",
+      "waitingStage": "consoleEncoding",
+      "stdoutBytes": 0,
+      "stderrBytes": 91,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    }
+  ],
+  "workerSha256": "a912b02ec2403802aa99e345eb34b8bbcfa7b5281d3eb5a82eceb64507520d7e",
+  "instrumentedWorkerSha256": "402bcf399be9d52b3018a69e48e0adcf0b679da6cd1f3233bb51014963aa4112",
+  "fixtureSha256": "3f43e6fbc83b1a9fccdcc73533466110098d9ef1f30dd8b39f16170b029a9fc0",
+  "probeSha256": "745b697a5d3d8187202ff7ccbc825dbaa54d1e94efa0b45ac3daed44e7a31aaf",
+  "successfulAttempts": 0,
+  "unsuccessfulAttempts": 4,
+  "evidence": {
+    "runUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45815929178",
+    "jobId": 139895528266,
+    "artifacts": [
+      {
+        "id": 15115587290,
+        "digest": "sha256:06e1356b1a0b5f42a346c3bc460c3e3de02e8f835e6cf07d86f2a41d51d416a0",
+        "bytes": 1599,
+        "expiresAt": "2026-12-03T12:05:25Z"
+      }
+    ]
+  },
+  "interpretation": "All four attempts receive consoleEncoding:before but never consoleEncoding:after; later assembly, WinRT and OCR stages are not entered. The New-Object encoding assignment is the measured boundary. Command discovery, constructor and Console assignment still need distinction."
+}

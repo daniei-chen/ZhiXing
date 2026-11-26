@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "repository": "daniei-chen/ZhiXing",
+  "evidenceLayer": "Windows hosted runner: source/build and isolated renderer; no packaged installer or real-cloud acceptance",
+  "sourceHead": "91307819e1f666c624e2bd66a16741012a9cf601",
+  "runId": 45830590269,
+  "jobId": 139946000233,
+  "event": "pull_request",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45830590269/job/139946000233",
+  "checkedOutCommit": "4ce70de7911b9969103e73415da683179e9f5a60",
+  "mergeHead": "91307819e1f666c624e2bd66a16741012a9cf601",
+  "mergeBase": "c2f7588d7e158a1e6179f65441e556d37acc2ab8",
+  "runner": {
+    "os": "Microsoft Windows Server 2025",
+    "image": "windows-2025-vs2026",
+    "imageVersion": "20261116.315.1",
+    "runnerVersion": "2.338.2",
+    "node": "v24.22.3",
+    "npm": "11.19.1"
+  },
+  "quality": {
+    "status": "success",
+    "scope": "adopted-and-changed-scope",
+    "baseline": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
+    "eslint": {
+      "checked": 29,
+      "total": 284
+    },
+    "stylelint": {
+      "checked": 4,
+      "total": 4
+    },
+    "prettier": {
+      "checked": 15,
+      "total": 513
+    },
+    "legacyFormattingNotAdopted": 20,
+    "reportedErrors": 0,
+    "reportedWarnings": 0,
+    "documentedInlineExceptions": [
+      {
+        "file": "tests/runtime-lifecycle.test.mjs",
+        "line": 130,
+        "rule": "no-unsafe-finally"
+      },
+      {
+        "file": "tests/runtime-lifecycle.test.mjs",
+        "line": 418,
+        "rule": "no-unsafe-finally"
+      }
+    ],
+    "additionalStderr": [
+      "[csstree-match] BREAK after 15000 iterations"
+    ],
+    "generatedExcluded": 9
+  },
+  "checks": {
+    "sites": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 127.4831
+    },
+    "source": {
+      "tests": 560,
+      "pass": 560,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 389533.7398
+    },
+    "components": {
+      "tests": 18,
+      "pass": 18,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 31248.1232
+    }
+  },
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Set up Node.js 24",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Prepare text evidence directory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Install locked dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Incremental code quality",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Sites source tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Source tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Component and isolated Windows renderer tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10
+    },
+    {
+      "name": "Collect bounded text evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11
+    },
+    {
+      "name": "Upload text evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12
+    },
+    {
+      "name": "Require every gate to pass",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13
+    },
+    {
+      "name": "Post Set up Node.js 24",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25
+    },
+    {
+      "name": "Post Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27
+    }
+  ],
+  "decodedJobLog": {
+    "path": "/tmp/zhixing-source-91307819-pr-vnmcmt39.log",
+    "encoding": "UTF-8",
+    "bytes": 120259,
+    "sha256": "bb099f3f163c7fa1a9513f923248acf9ad001704d5da12c0cc26acbebe0f4c44",
+    "apiUrl": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/jobs/139946000233/logs",
+    "jobUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45830590269/job/139946000233",
+    "localPathIsTemporary": true
+  },
+  "artifact": {
+    "id": 15121769462,
+    "name": "windows-source-evidence-1",
+    "size_in_bytes": 35023,
+    "url": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/artifacts/15121769462",
+    "archive_download_url": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/artifacts/15121769462/zip",
+    "expired": false,
+    "created_at": "2026-11-26T13:44:23Z",
+    "expires_at": "2026-12-03T13:44:22Z",
+    "updated_at": "2026-11-26T13:44:23Z",
+    "digest": "sha256:0d9d7a7baa1b40aa9767e58bfde3aca43b07e0e7bd58189ada3cad97012c513d",
+    "workflow_run": {
+      "id": 45830590269,
+      "repository_id": 1464334214,
+      "head_repository_id": 1464334214,
+      "head_branch": "fix/phase-0a-audit",
+      "head_sha": "91307819e1f666c624e2bd66a16741012a9cf601"
+    },
+    "browserUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45830590269/artifacts/15121769462",
+    "digestVerifiedAgainstUploadLog": true,
+    "zipLocallyDownloadedAndHashed": false
+  },
+  "boundaries": [
+    "Only this PR source run was monitored; no repeat run was triggered.",
+    "Source quality is scoped, not whole-repository quality.",
+    "Source/renderer results do not cover packaged EXE, NSIS installation, user profile lifecycle, signing or real-cloud task evaluation.",
+    "PR evidence belongs to its actual merge checkout, not an assumed head checkout.",
+    "Artifact digest was cross-checked against upload log, not against a locally downloaded ZIP.",
+    "This file records source head 91307819 only; the separately running packaged workflow and later source heads are not covered."
+  ],
+  "sourceTree": "a998e439d9108f7a30ba0cf8d72468b4ca36fe92",
+  "checkedOutTree": "a998e439d9108f7a30ba0cf8d72468b4ca36fe92",
+  "sourceAndCheckoutTreesMatch": true,
+  "treeEvidence": "git rev-parse of both exact commit objects; merge object fetched without writing FETCH_HEAD or checking out files",
+  "applicationVersion": "0.40.0",
+  "sourceCommitUrl": "https://github.com/daniei-chen/ZhiXing/commit/91307819e1f666c624e2bd66a16741012a9cf601",
+  "checkedOutCommitUrl": "https://github.com/daniei-chen/ZhiXing/commit/4ce70de7911b9969103e73415da683179e9f5a60",
+  "recordedAgainstCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+  "workflowRunUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45830590269",
+  "keyObservedCases": [
+    {
+      "name": "SDK close resolution records process termination even when the exit status is nonzero",
+      "status": "passed",
+      "layer": "source test using a synthetic child-process event fixture",
+      "logLine": "2026-11-26T13:41:00.9747741Z ✔ SDK close resolution records process termination even when the exit status is nonzero (8.9866ms)"
+    }
+  ]
+}

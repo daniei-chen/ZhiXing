@@ -51,4 +51,7 @@ export function apply(ctx) {
   const handle = await server.catch(()=>null);
   await handle?.close();
  });
+ // Cordis tracks this plugin's readiness. The SDK may initialize concurrently,
+ // so RuntimeManager also waits for this record before admitting any turn.
+ return ready;
 }

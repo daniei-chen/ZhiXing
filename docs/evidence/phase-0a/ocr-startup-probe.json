@@ -1,0 +1,1095 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Diagnostic collection only, not product acceptance or the existing source gate. All samples are retained; any unsuccessful attempt still exits nonzero.",
+  "baseCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+  "commit": "2dd798c23e081068f5160b541dfa383f7d006f43",
+  "runId": "45814169567",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.22.3",
+    "image": "win25-vs2026",
+    "imageVersion": "20261116.315.1",
+    "availableParallelism": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "timeoutMs": 25000,
+  "environment": "Same eight-variable allowlist and PowerShell executable as electron/ocr-service.mjs",
+  "stages": [
+    "initialize",
+    "engine",
+    "file",
+    "open",
+    "decode",
+    "bitmap",
+    "recognize",
+    "serialize"
+  ],
+  "scope": "Each attempt starts a new PowerShell process. First/repeat describe job order; Windows caches are not reset. Only synthetic fixture data is used; text and pixels are never saved in this report.",
+  "diagnosticCompleted": true,
+  "productAcceptance": "not assessed",
+  "runs": [
+    {
+      "sequence": 1,
+      "mode": "default",
+      "group": "sequential-1",
+      "concurrency": 1,
+      "modeLaunch": 1,
+      "firstInJob": true,
+      "firstForMode": true,
+      "elapsedMs": 25036,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "STA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 1976
+        }
+      ],
+      "lastStage": "initialize",
+      "lastStagePhase": "before",
+      "waitingStage": "initialize",
+      "stdoutBytes": 0,
+      "stderrBytes": 54,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    },
+    {
+      "sequence": 2,
+      "mode": "mta",
+      "group": "sequential-2",
+      "concurrency": 1,
+      "modeLaunch": 1,
+      "firstInJob": false,
+      "firstForMode": true,
+      "elapsedMs": 25023,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "MTA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 204
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 24504
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 24504
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 24587
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 24589
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 24647
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 24647
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 24658
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 24658
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 24668
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 24678
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 24687
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 24687
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 24833
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 24861
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "before",
+      "waitingStage": "serialize",
+      "stdoutBytes": 0,
+      "stderrBytes": 444,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    },
+    {
+      "sequence": 3,
+      "mode": "default",
+      "group": "sequential-3",
+      "concurrency": 1,
+      "modeLaunch": 2,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 22904,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 212
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 22157
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 22157
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 22162
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 22163
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 22195
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 22195
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 22205
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 22205
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 22214
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 22223
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 22231
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 22231
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 22243
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 22265
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 22848
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 4,
+      "mode": "mta",
+      "group": "sequential-4",
+      "concurrency": 1,
+      "modeLaunch": 2,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 22384,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "MTA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 207
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 22225
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 22225
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 22229
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 22230
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 22260
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 22260
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 22270
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 22270
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 22277
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 22286
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 22295
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 22295
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 22306
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 22329
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 22351
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 5,
+      "mode": "mta",
+      "group": "sequential-5",
+      "concurrency": 1,
+      "modeLaunch": 3,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 22468,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "MTA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 193
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 22277
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 22277
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 22282
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 22282
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 22342
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 22342
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 22352
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 22352
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 22360
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 22370
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 22378
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 22378
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 22390
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 22412
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 22435
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 6,
+      "mode": "default",
+      "group": "sequential-6",
+      "concurrency": 1,
+      "modeLaunch": 3,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 22330,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 209
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 22154
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 22154
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 22170
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 22171
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 22201
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 22201
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 22210
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 22210
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 22218
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 22227
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 22235
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 22235
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 22247
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 22272
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 22297
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 7,
+      "mode": "mta",
+      "group": "sequential-7",
+      "concurrency": 1,
+      "modeLaunch": 4,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 22291,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "MTA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 197
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 22129
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 22129
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 22133
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 22134
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 22166
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 22166
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 22175
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 22175
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 22183
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 22192
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 22200
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 22200
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 22212
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 22235
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 22257
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 8,
+      "mode": "default",
+      "group": "sequential-8",
+      "concurrency": 1,
+      "modeLaunch": 4,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 22394,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 202
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 22235
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 22235
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 22239
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 22240
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 22270
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 22270
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 22279
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 22279
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 22287
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 22296
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 22304
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 22304
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 22316
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 22339
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 22361
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 9,
+      "mode": "default",
+      "group": "pair-1",
+      "concurrency": 2,
+      "modeLaunch": 5,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 25028,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "STA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 275
+        }
+      ],
+      "lastStage": "initialize",
+      "lastStagePhase": "before",
+      "waitingStage": "initialize",
+      "stdoutBytes": 0,
+      "stderrBytes": 54,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    },
+    {
+      "sequence": 10,
+      "mode": "default",
+      "group": "pair-1",
+      "concurrency": 2,
+      "modeLaunch": 6,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 25021,
+      "code": null,
+      "signal": "SIGTERM",
+      "killed": true,
+      "apartment": "STA",
+      "hresult": null,
+      "success": false,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 265
+        }
+      ],
+      "lastStage": "initialize",
+      "lastStagePhase": "before",
+      "waitingStage": "initialize",
+      "stdoutBytes": 0,
+      "stderrBytes": 54,
+      "jsonParsed": false,
+      "workerError": null,
+      "expectedTextMatch": false
+    },
+    {
+      "sequence": 11,
+      "mode": "mta",
+      "group": "pair-2",
+      "concurrency": 2,
+      "modeLaunch": 5,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 24686,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "MTA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 272
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 24514
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 24514
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 24520
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 24521
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 24554
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 24554
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 24564
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 24564
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 24571
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 24583
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 24595
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 24595
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 24607
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 24630
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 24653
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 12,
+      "mode": "mta",
+      "group": "pair-2",
+      "concurrency": 2,
+      "modeLaunch": 6,
+      "firstInJob": false,
+      "firstForMode": false,
+      "elapsedMs": 24538,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "MTA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 260
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 24348
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 24348
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 24353
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 24354
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 24391
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 24391
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 24401
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 24401
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 24413
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 24423
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 24432
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 24432
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 24445
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 24469
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 24500
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 474,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    }
+  ],
+  "workerSha256": "a912b02ec2403802aa99e345eb34b8bbcfa7b5281d3eb5a82eceb64507520d7e",
+  "instrumentedWorkerSha256": "ba89399e192f7201f7ad01307e4fcf6de762ed92bf879a5efd4287b311d54f96",
+  "fixtureSha256": "3f43e6fbc83b1a9fccdcc73533466110098d9ef1f30dd8b39f16170b029a9fc0",
+  "probeSha256": "78dd86498feb266ffafa59928f13e844736a64614478db994350a0d1941853ab",
+  "successfulAttempts": 8,
+  "unsuccessfulAttempts": 4,
+  "evidence": {
+    "runUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45814169567",
+    "jobId": 139889456511,
+    "artifacts": [
+      {
+        "id": 15115505753,
+        "digest": "sha256:da524c9160bb3e86f48e9ac5cfc8d83fa9983e0c46412b39bcd7d63b2d106dbd",
+        "bytes": 2454,
+        "expiresAt": "2026-12-03T11:56:06Z"
+      }
+    ]
+  },
+  "interpretation": "Default and MTA sequential samples both succeed 3/4. Successful initialization takes around 22 seconds; failures approach the existing 25 second budget. This does not establish MTA as a fix. Initialization substeps are the next unresolved diagnostic boundary."
+}

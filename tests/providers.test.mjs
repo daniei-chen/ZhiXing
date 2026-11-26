@@ -6,9 +6,9 @@ import { mkdtemp, realpath, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { selectedModel } from '../src/provider-options.js';
 
 const packed=process.env.ZHIXING_TEST_PACKED_APP;
+const { selectedModel } = await import(packed ? pathToFileURL(path.join(packed, 'src/provider-options.js')).href : '../src/provider-options.js');
 const load=name=>import(packed?pathToFileURL(path.join(packed,'electron',name)).href:`../electron/${name}`);
 const { modelReasoning, ProviderSelectionError, publicProviders, resolveProvider, saveProvider } = await load('providers.mjs');
 const { RuntimeManager } = await load('runtime.mjs');

@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,mkdtemp,readFile,writeFile} from 'node:fs/promises';
+import {mkdir,mkdtemp,readFile,realpath,rm,writeFile} from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-import {once} from 'node:events';
 import {createRequire} from 'node:module';
 import {build} from 'esbuild';
 
@@ -12,13 +12,37 @@ const repository=path.resolve(import.meta.dirname,'..');
 
 test('Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试', {timeout:120000}, async context=>{
   assert.equal(process.platform,'win32','This targeted renderer journey requires Windows Electron.');
-  const root=path.resolve(repository,'.preview/qa-0.12.1-audit/agent-c');
-  await mkdir(root,{recursive:true});
-  const directory=await mkdtemp(path.join(root,'renderer-'));
+  const root = await realpath(os.tmpdir());
+  const directory = await mkdtemp(path.join(root, 'zhixing-recovery-ui-'));
+  let child, closed, launchError, output = '';
+  context.after(async () => {
+    if (child && child.exitCode === null && child.signalCode === null) child.kill();
+    if (closed) await closed;
+    try {
+      // Opt-in evidence contains bounded text reports only, never profiles or bundles.
+      if (process.env.ZHIXING_TEST_EVIDENCE_DIR) {
+        const evidence = path.join(path.resolve(process.env.ZHIXING_TEST_EVIDENCE_DIR), path.basename(directory));
+        await mkdir(evidence, {recursive: true});
+        for (const name of ['journey.json', 'summary.json', 'failure.json']) {
+          const body = await readFile(path.join(directory, name)).catch(error => {
+            if (error.code !== 'ENOENT') throw error;
+          });
+          if (body && body.length <= 64 * 1024) await writeFile(path.join(evidence, name), body);
+        }
+        await writeFile(path.join(evidence, 'electron.log'), Buffer.from(output).subarray(-64 * 1024));
+        console.log(`Text evidence: ${evidence}`);
+      }
+    } finally {
+      const resolved = await realpath(directory);
+      assert.equal(path.dirname(resolved), root);
+      assert(path.basename(resolved).startsWith('zhixing-recovery-ui-'));
+      await rm(resolved, {recursive: true, force: true, maxRetries: 6, retryDelay: 150});
+    }
+  });
   // Observation only, in this isolated test bundle: retain the real App/event
   // implementation while exposing snapshots of otherwise private memory refs.
   const observeConversationMemory={name:'observe-conversation-memory',setup(builder){builder.onLoad({filter:/[\\/]src[\\/]App\.jsx$/},async({path:filename})=>{const source=await readFile(filename,'utf8'),anchor='  latest.current = state;';assert.equal(source.split(anchor).length,2);return {loader:'jsx',resolveDir:path.dirname(filename),contents:source.replace(anchor,`  window.__qaConversationMemory = () => ({ jobs: [...runJobs.current], positions: [...transcriptPositions.current], transcriptChatId: transcriptChatId.current, draftScopes: draftScopes.current, events, liveStats, question, active: active.current?.runId || null });\n${anchor}`)};});}};
-  const renderer=await build({stdin:{resolveDir:repository,loader:'jsx',contents:`import{createElement}from'react';import{createRoot}from'react-dom/client';import{App}from'./src/App.jsx';createRoot(document.getElementById('root')).render(createElement(App));`},plugins:[observeConversationMemory],bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'},logLevel:'silent'});
+  const renderer=await build({stdin:{resolveDir:repository,loader:'jsx',contents:`import{createElement}from'react';import{createRoot}from'react-dom/client';import{App}from'./src/App.jsx';import{flushRendererDurability}from'./src/renderer-durability.js';window.__qaFlushWorkspace=flushRendererDurability;createRoot(document.getElementById('root')).render(createElement(App));`},plugins:[observeConversationMemory],bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'},logLevel:'silent'});
   await writeFile(path.join(directory,'renderer.js'),renderer.outputFiles[0].text);
   await writeFile(path.join(directory,'index.html'),'<!doctype html><html><body><div id="root"></div></body></html>');
   await writeFile(path.join(directory,'preload.cjs'),`
@@ -34,6 +58,7 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
     const fs=require('node:fs/promises');
     const path=require('node:path');
     app.setPath('userData',path.join(__dirname,'profile'));
+    let loadedOnce=false;
     let window,stored,saveFailure=false,forgetFailure=false,forgetRelease,preparedSessionId,pendingRun,runs=0,saveRetries=0,cleanupRetries=0,pickResolve,pickPending=false;
     const forgotten=[],records=[],errors=[];
     let automation={revision:0,tasks:[],runs:[],pendingOutcomes:[],persistenceError:null};
@@ -68,7 +93,10 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
     const record=async(name,details={})=>{records.push({name,status:'passed',details});console.log('PASS '+name);await fs.writeFile(path.join(__dirname,'journey.json'),JSON.stringify({layer:'Windows Electron renderer with synthetic IPC/fault injection; not final installer or cloud',records},null,2));};
     const file=(id,text=id)=>({id,name:id+'.txt',status:'ready',size:10,text,workspaceId:'office-home'});
     function seed(){return {version:2,workspaceId:'office-home',workspaces:[{id:'office-home',name:'合成办公',type:'office'}],projects:[{id:'project',workspaceId:'office-home',name:'合成项目',expanded:true}],chats:[{id:'chat',title:'合成聊天',workspaceId:'office-home',projectId:null,messages:[]}],drafts:{'chat:chat':{kind:'chat',draftId:'chat',chatId:'chat',workspaceId:'office-home',revision:3,text:'FAIL_BODY_MARKER',files:[file('first'),file('second')],updatedAt:5}},documents:[file('third')],automations:[],settings:{persist:true,modelProviderId:'synthetic-provider',model:'synthetic-model',reasoning:'high',privacyMode:'redact',permission:'ask'},appliedAutomationRuns:[]};}
-    async function load(value){stored=value;await fs.writeFile(workspaceFile,JSON.stringify(value));await window.loadFile(path.join(__dirname,'index.html'));await run(await fs.readFile(path.join(__dirname,'renderer.js'),'utf8'));await waitUI('!!document.querySelector('+JSON.stringify(field)+')&&!document.querySelector('+JSON.stringify(field)+').disabled');await waitUI('document.querySelector(".workspace-save-banner")?.dataset.saveStatus==="saved"');}
+    // Fixture replacement is outside the app's persistence protocol. Settle the old
+    // renderer before overwriting its backing file, or beforeunload can legitimately
+    // flush a pending draft over the next synthetic seed. Assertions remain unchanged.
+    async function load(value){if(loadedOnce)await run('window.__qaFlushWorkspace()');stored=value;await fs.writeFile(workspaceFile,JSON.stringify(value));await window.loadFile(path.join(__dirname,'index.html'));await run(await fs.readFile(path.join(__dirname,'renderer.js'),'utf8'));await waitUI('!!document.querySelector('+JSON.stringify(field)+')&&!document.querySelector('+JSON.stringify(field)+').disabled');await waitUI('document.querySelector(".workspace-save-banner")?.dataset.saveStatus==="saved"');loadedOnce=true;}
     async function emitFailure(status='failed',executionStatus=status){const item=pendingRun;assert(item);const finalization={runId:item.runId,executionStatus,persistenceStatus:'saved',processStatus:'cleanup_pending',eventWatermark:8,error:{code:status==='cancelled'?'RUNTIME_CANCELLED':'SYNTHETIC_NETWORK_FAILURE',stage:'query',message:'保护后的失败原因'},deliverables:[{id:'verified',path:'D:/synthetic/verified.txt'}],children:[{id:'child',status:'completed'}]};window.webContents.send('RuntimeEvent',{type:'tool/call',runId:item.runId,sessionId:'chat',label:'合成工具调用',category:'tools',time:1});window.webContents.send('RuntimeEvent',{type:'tool/result',runId:item.runId,sessionId:'chat',label:'合成工具完成',category:'tools',time:2});window.webContents.send('RuntimeEvent',{type:'draft',runId:item.runId,text:'SAFE_PARTIAL_MARKER'});window.webContents.send('RuntimeEvent',{type:'run/terminal',runId:item.runId,sessionId:'chat',status,finalization});await waitUI('!!document.querySelector(".runtime-cleanup-pending")');item.reject(new Error('protected synthetic IPC rejection'));pendingRun=null;await waitUI('!document.querySelector("button[aria-label=停止生成]")');return item.runId;}
     app.whenReady().then(async()=>{
       window=new BrowserWindow({show:false,width:1255,height:912,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,preload:path.join(__dirname,'preload.cjs')}});
@@ -222,12 +250,15 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
     }).catch(error=>{console.error(error.stack);app.exit(1);});
   `);
   const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;
-  const child=spawn(require('electron'),[path.join(directory,'main.cjs')],{env,signal:context.signal,windowsHide:true,stdio:['ignore','pipe','pipe']});
-  let output='';child.stdout.on('data',data=>{output+=data;});child.stderr.on('data',data=>{output+=data;});
-  const [code]=await once(child,'exit');
-  await writeFile(path.join(directory,'electron.log'),output);
-  assert.equal(code,0,output+`\nEvidence: ${directory}`);
+  child=spawn(require('electron'),[path.join(directory,'main.cjs')],{env,signal:context.signal,windowsHide:true,stdio:['ignore','pipe','pipe']});
+  closed = new Promise(resolve => child.once('close', (code, signal) => resolve([code, signal])));
+  child.on('error', error => { launchError = error; });
+  const collect = data => { output = (output + data).slice(-256 * 1024); };
+  child.stdout.on('data', collect); child.stderr.on('data', collect);
+  const [code] = await closed;
+  if (launchError) throw launchError;
+  assert.equal(code,0,output);
   const summary=JSON.parse(await readFile(path.join(directory,'summary.json'),'utf8'));
   assert.equal(summary.passed,true);assert.equal(summary.records,11);assert.equal(summary.rendererErrors.length,0);
-  console.log(`Evidence: ${directory}; ${summary.records} business checkpoints passed.`);
+  console.log(`${summary.records} business checkpoints passed; isolated temporary files are removed after verification.`);
 });

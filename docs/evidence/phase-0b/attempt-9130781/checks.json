@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "layer": "Windows hosted packaging workflow; only successful steps below establish their respective coverage",
+  "notCovered": [
+    "installer execution and upgrade lifecycle",
+    "user installation or D drive",
+    "real cloud model tasks",
+    "code signing",
+    "manual visual review unless separately recorded"
+  ],
+  "sourceRef": "refs/pull/1/merge",
+  "checkoutCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+  "workflowSha": "4ce70de7911b9969103e73415da683179e9f5a60",
+  "runId": "45830590242",
+  "node": "v24.19.0",
+  "version": "0.40.0",
+  "steps": {
+    "install": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "electron": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "package": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "verify": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "packed": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "errors": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "native": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "tools": {
+      "outputs": {},
+      "outcome": "failure",
+      "conclusion": "failure"
+    },
+    "phase0a": {
+      "outputs": {},
+      "outcome": "failure",
+      "conclusion": "failure"
+    },
+    "nsis": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    }
+  },
+  "coverage": {
+    "directoryPackageBuilt": true,
+    "packagedSourceMatched": true,
+    "packagedRegressionPassed": true,
+    "networkErrorUiPassed": true,
+    "nativeFilesUiPassed": true,
+    "toolTimelineUiPassed": false,
+    "phase0aUiPassed": false,
+    "uninstalledNsisBuilt": true
+  },
+  "packedDirectory": {
+    "files": 48966,
+    "directories": 8237,
+    "symbolicLinks": 0,
+    "bytes": 1244559468
+  },
+  "binaries": [
+    {
+      "file": "release/ZhiXing-0.40.0-x64.exe",
+      "bytes": 338716410,
+      "sha256": "a59e518062aff23605b423254e74f95384fb1ae34ba95bcb2ab4d5fbc095f7ad"
+    },
+    {
+      "file": "release/ZhiXing-0.40.0-x64.exe.blockmap",
+      "bytes": 314795,
+      "sha256": "5210c14bd2c8cf91b569ea5c5559cca7fde89ac5cd73f8b6e6c69dfda2821795"
+    },
+    {
+      "file": "release/win-unpacked/知行.exe",
+      "bytes": 246511104,
+      "sha256": "cf428b2bd5fe57944ebb57ac57128a46734faaa16e81d3b06f263732d493f4af"
+    },
+    {
+      "file": "release/win-unpacked/resources/app/runtime/node.exe",
+      "bytes": 92825416,
+      "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+    }
+  ],
+  "files": [
+    {
+      "file": "logs/install.log",
+      "originalBytes": 2010,
+      "bytes": 2010,
+      "truncated": false,
+      "sha256": "322baf528a93e4a62ed36239608f299e8207c2f50669c1e494d59f81ebc0e72a"
+    },
+    {
+      "file": "logs/package.log",
+      "originalBytes": 68582,
+      "bytes": 68582,
+      "truncated": false,
+      "sha256": "e20bb18248044aea1765d540269bd2b3ccebdb69ff17ec3d9578d4201a15cec8"
+    },
+    {
+      "file": "logs/verify.log",
+      "originalBytes": 186,
+      "bytes": 186,
+      "truncated": false,
+      "sha256": "db53a2fe7e3ca2fb2fa30d73db2788752b5a76906f2b9002279f20f8417d9a57"
+    },
+    {
+      "file": "logs/packed.log",
+      "originalBytes": 40384,
+      "bytes": 40384,
+      "truncated": false,
+      "sha256": "b8c854310151e64a6c019ebf2f6baad33da6419f32b62081b110449f74607be5"
+    },
+    {
+      "file": "logs/errors.log",
+      "originalBytes": 1051,
+      "bytes": 1051,
+      "truncated": false,
+      "sha256": "b68164124b3eaeada5a8bcb9838c1f69fc5cb16ce2522e050750b11187b70060"
+    },
+    {
+      "file": "logs/native.log",
+      "originalBytes": 507,
+      "bytes": 507,
+      "truncated": false,
+      "sha256": "ed796740e0e8e5425862dffcafc6e60350d2d965c3c0e5549fa9c0fc024d6a49"
+    },
+    {
+      "file": "logs/tools.log",
+      "originalBytes": 426,
+      "bytes": 426,
+      "truncated": false,
+      "sha256": "14737a187d8c87a7711edb00ca9341c0464334219b90e22b6cd622fb3f15f034"
+    },
+    {
+      "file": "logs/phase0a.log",
+      "originalBytes": 1002,
+      "bytes": 1002,
+      "truncated": false,
+      "sha256": "3cb50a227f42e845b84b4833fe55a59fc7f127c1e4751ea108cbaa3730764b09"
+    },
+    {
+      "file": "logs/nsis.log",
+      "originalBytes": 885,
+      "bytes": 885,
+      "truncated": false,
+      "sha256": "ee6d48549295d6e57a1ae43dda4e0f7353540231db8bcbd5cbedc4e3edcd4fcd"
+    },
+    {
+      "file": "journeys\\errors\\run-BQ3HJi\\connection-refused.png",
+      "originalBytes": 54249,
+      "bytes": 54249,
+      "truncated": false,
+      "sha256": "eda2a4f2e45e79fb0fe05832baa643d77304822212974a2f37b6c65818c2ba6a"
+    },
+    {
+      "file": "journeys\\errors\\run-BQ3HJi\\dns-enotfound.png",
+      "originalBytes": 54764,
+      "bytes": 54764,
+      "truncated": false,
+      "sha256": "dd95804bd209566796219efe28df5f0ddddf8be9012734fca3f9b1c108af6d0e"
+    },
+    {
+      "file": "journeys\\errors\\run-BQ3HJi\\http-401.png",
+      "originalBytes": 54614,
+      "bytes": 54614,
+      "truncated": false,
+      "sha256": "b5b46afda51bfdc1aca5f9efbfc801c27bc54c0535bc5c9c432b92f7b3fb9db3"
+    },
+    {
+      "file": "journeys\\errors\\run-BQ3HJi\\intercepted-host.png",
+      "originalBytes": 56267,
+      "bytes": 56267,
+      "truncated": false,
+      "sha256": "2381660f18c7389662ca5441130984dbe8b1f7d4bc556181534316e250cddeea"
+    },
+    {
+      "file": "journeys\\errors\\run-BQ3HJi\\result.json",
+      "originalBytes": 4805,
+      "bytes": 4805,
+      "truncated": false,
+      "sha256": "9e8d0f7ec4b19029c9e1f8bf15f52a2ce85d7edb8882a7b3de2294ca358d5514"
+    },
+    {
+      "file": "journeys\\errors\\run-BQ3HJi\\timeout.png",
+      "originalBytes": 53712,
+      "bytes": 53712,
+      "truncated": false,
+      "sha256": "92d01efb7811fdd54cfcea75d5de42729149a769fa01d396553ee9289af87f8e"
+    },
+    {
+      "file": "journeys\\native\\run-HCa2iI\\result.json",
+      "originalBytes": 2357,
+      "bytes": 2357,
+      "truncated": false,
+      "sha256": "68de182fd57196bcbf7ee2edcbc7ca9da2bf996a3e9c6bee4ce45555e246b717"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-IYTdbK\\01-message-light.png",
+      "originalBytes": 65277,
+      "bytes": 65277,
+      "truncated": false,
+      "sha256": "0ad7c14e700469a4cf6589873848526ff646661ac3c694d256d0d36eb1716473"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-IYTdbK\\02-tools-expanded.png",
+      "originalBytes": 70424,
+      "bytes": 70424,
+      "truncated": false,
+      "sha256": "a090ae6747f66108a9ae28806e18b2e43e679efabef3437a40e7e7d08cf1e04b"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-IYTdbK\\03-feedback-over-limit.png",
+      "originalBytes": 85032,
+      "bytes": 85032,
+      "truncated": false,
+      "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-IYTdbK\\app-log-tail.txt",
+      "originalBytes": 1518,
+      "bytes": 1518,
+      "truncated": false,
+      "sha256": "4dfbf41dffa06d79dae9722c33bfa87bfa43a16b55668801b482aad323dfeb61"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-IYTdbK\\failure.png",
+      "originalBytes": 102965,
+      "bytes": 102965,
+      "truncated": false,
+      "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-IYTdbK\\result.json",
+      "originalBytes": 8558,
+      "bytes": 8558,
+      "truncated": false,
+      "sha256": "07246e2bd95f3d65550e4c8f72f11453a4856f7a902be2d207400143c166da88"
+    },
+    {
+      "file": "tool-timeline\\run-mwxlvsvo\\result.json",
+      "originalBytes": 1306,
+      "bytes": 1306,
+      "truncated": false,
+      "sha256": "d3fd0392d0dee16458b1fd52d402dff13714e5ffccf6a2bb399ab3dc9f5442c5"
+    },
+    {
+      "file": "tool-timeline\\run-mwxlvsvo\\tool-timeline.png",
+      "originalBytes": 46557,
+      "bytes": 46557,
+      "truncated": false,
+      "sha256": "9ec70acf134e67ff602150dffb09a446191e8ed58c53c54fd714703978912289"
+    },
+    {
+      "file": "build-provenance.json",
+      "originalBytes": 287,
+      "bytes": 287,
+      "truncated": false,
+      "sha256": "2d8e8376636daee3702ad4a4a2219f29b8ec7773fa2555de82ffb288ac59a84d"
+    },
+    {
+      "file": "app-update.yml",
+      "originalBytes": 111,
+      "bytes": 111,
+      "truncated": false,
+      "sha256": "4f1b8da276060c800e09d2c87b550511fe48afb1ff3480bdde14af876862ec30"
+    },
+    {
+      "file": "SHA256SUMS-candidate.txt",
+      "originalBytes": 187,
+      "bytes": 187,
+      "truncated": false,
+      "sha256": "a8099dfe959d4fa3b51d64dbbcfb7ded56e694ec7c0af6c60a4274d11ea18896"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "variant": "child-delay",
+  "mode": "created",
+  "rows": [
+    {
+      "ms": 3962,
+      "event": "parent-delegate-request"
+    },
+    {
+      "ms": 4024,
+      "event": "sdk-child-created"
+    },
+    {
+      "ms": 4024,
+      "event": "runtime-child-event",
+      "status": "running"
+    },
+    {
+      "ms": 4025,
+      "event": "control-start",
+      "rawStatus": "unknown",
+      "childRequests": 0
+    },
+    {
+      "ms": 4032,
+      "event": "control-file",
+      "exists": true
+    },
+    {
+      "ms": 4040,
+      "event": "control-resolved",
+      "requested": true
+    },
+    {
+      "ms": 4830,
+      "event": "sdk-child-status",
+      "status": "running"
+    },
+    {
+      "ms": 4958,
+      "event": "child-request-stalled"
+    },
+    {
+      "ms": 4995,
+      "event": "parent-result-request"
+    },
+    {
+      "ms": 8013,
+      "event": "probe-bound-reached"
+    },
+    {
+      "ms": 8029,
+      "event": "sdk-child-status",
+      "status": "idle"
+    },
+    {
+      "ms": 8037,
+      "event": "sdk-child-finished",
+      "status": "aborted"
+    },
+    {
+      "ms": 8086,
+      "event": "run-rejected",
+      "code": "RUNTIME_CANCELLED"
+    }
+  ]
+}

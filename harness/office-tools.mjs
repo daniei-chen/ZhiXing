@@ -5,7 +5,7 @@ import {privacyPolicyForMode} from '../src/privacy-policy.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readBridge, updateBridge } from './privacy-bridge.mjs';
-import { resolveOfficePath, needsApproval, writeOfficeFile, nextOfficePath } from './file-policy.mjs';
+import { resolveOfficePath, sameOfficeWritePath, prepareOfficeWrite, needsApproval, writeOfficeFile, nextOfficePath } from './file-policy.mjs';
 import { parseOfficeFile, parseLocalMaterial, exportOfficeFile } from '../electron/office-files.mjs';
 import {normaliseKernel} from '../src/kernel-config.js';
 import {shellEnvironment, planningAllows} from './shell-policy.mjs';
@@ -142,22 +142,31 @@ export function apply(ctx){
     throw error;
    }
   }}));
-  ctx.tools.register(defineTool({name:'office_write_file',description:'创建或覆盖TXT、Markdown、CSV、DOCX、XLSX办公成果。仅写入用户交办的成果；敏感占位符由本机还原。覆盖或外部路径可能需要用户批准。',parameters:{file_path:{type:'string',required:true},content:{type:'string',required:true}},output,async execute({file_path,content},exec){
+  ctx.tools.register(defineTool({name:'office_write_file',description:'创建TXT、Markdown、CSV、DOCX、XLSX办公成果，已有同名文件时自动编号另存并保留原件。仅写入用户交办的成果；敏感占位符由本机还原。缺少的上级目录在主机授权后创建，外部路径可能需要用户批准。',parameters:{file_path:{type:'string',required:true},content:{type:'string',required:true}},output,async execute({file_path,content},exec){
+   exec.signal.throwIfAborted();
+   try {
    if(typeof content!=='string'||content.length>200000)throw new Error('成果内容超过20万字符。');
    const info=await localPath(file_path,true),extension=path.extname(info.target).slice(1).toLowerCase();
    if(!['txt','md','csv','tsv','docx','xlsx'].includes(extension))throw new Error('此工具只生成办公文稿或表格。');
    const v=await getVault(),restored=v.restore(content);if(restored.unknown.length)throw new Error('成果包含未知占位符，已停止写入。');
    if(v.protect(restored.text,terms,privacyPolicy).blocked)throw new Error('成果包含疑似凭证，已停止写入。');
    const requestedPath=info.exists?await nextOfficePath(info.target):info.target;
-   const output=await resolveOfficePath(path.relative(root,requestedPath),root,{write:true});
-   if(output.inside!==info.inside||forbidden(output.target))throw new Error('新成果路径无法沿用原文件的安全范围。');
+   // Preserve the caller's directory alias so a retargeted link cannot silently
+   // inherit an approval for the previous canonical destination.
+   const outputPath=path.join(path.dirname(info.scope.requested),path.basename(requestedPath));
+   const output=await resolveOfficePath(outputPath,root,{write:true});
+   if(output.target!==requestedPath||output.inside!==info.inside||forbidden(output.target))throw new Error('新成果路径无法沿用原文件的安全范围。');
    await permit(exec,{...output,write:true,exists:false},'保存办公成果');exec.signal.throwIfAborted();
-   const checked=await localPath(file_path,true);if(checked.target!==info.target||checked.exists!==info.exists)throw new Error('目标文件已变化，请重新操作。');
-   const destination=await resolveOfficePath(path.relative(root,requestedPath),root,{write:true});
-   if(destination.target!==output.target||destination.exists)throw new Error('FILE_CHANGED: 保存位置已变化，请重新审批。');
+   const checked=await localPath(file_path,true);if(!sameOfficeWritePath(info,checked))throw new Error('FILE_CHANGED: 目标文件已变化，请重新操作。');
    const buffer=await exportOfficeFile(restored.text,['docx','xlsx'].includes(extension)?extension:'txt');
-   const writtenPath=await writeOfficeFile(destination.target,buffer);
+   const destination=await prepareOfficeWrite(output,{signal:exec.signal});
+   const writtenPath=await writeOfficeFile(destination.target,buffer,{signal:exec.signal,verify:destination.verify});
    return protectedValue({path:writtenPath,bytes:buffer.length,written:true});
+   } catch(error) {
+    exec.signal.throwIfAborted();
+    if(/^E[A-Z0-9]+$/.test(error?.code))throw new Error(`OFFICE_WRITE_FAILED (${error.code}): 无法保存办公成果，请检查位置和访问权限。`);
+    throw error;
+   }
   }}));
  }
  ctx.tools.register(defineTool({name:'office_calculate',description:'对用户提供的数字做确定性求和、均值、最大最小值或计数。金额单位由用户提供，不猜测。',parameters:{numbers:{type:'array',items:{type:'number'},required:true},operation:{type:'string',enum:['sum','average','min','max','count'],required:true}},output,async execute({numbers,operation},exec){exec.signal.throwIfAborted();return calculate(numbers,operation);}}));

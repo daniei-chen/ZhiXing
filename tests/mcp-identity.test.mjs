@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mcpServerIdentity, publicMcpServers, updateMcpServer, validateMcpServers } from '../electron/mcp-config.mjs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+const packed = process.env.ZHIXING_TEST_PACKED_APP;
+const { mcpServerIdentity, publicMcpServers, updateMcpServer, validateMcpServers } = await import(packed ? pathToFileURL(path.join(packed, 'electron/mcp-config.mjs')).href : '../electron/mcp-config.mjs');
 
 test('HTTP MCP 身份规范化并绑定 scheme、host、port 和 path',()=>{
  const canonical={serverName:'files',transport:'streamable-http',url:'HTTPS://Example.COM:443/mcp/'};

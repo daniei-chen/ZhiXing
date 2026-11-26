@@ -1,0 +1,1706 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Third diagnostic: compare predeclared initialization changes in temporary workers only. Production is unchanged; this is not product acceptance or the existing source gate. All samples are retained; any unsuccessful attempt still exits nonzero.",
+  "baseCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+  "commit": "2bd50488ee361708f7831b8b53e4bfcfd43ff286",
+  "runId": "45817149489",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.22.3",
+    "image": "win25-vs2026",
+    "imageVersion": "20261116.315.1",
+    "availableParallelism": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "timeoutMs": 25000,
+  "samplePlan": "Default PowerShell only: baseline, directEncoding, trustedUtility, trustedUtility, directEncoding, baseline sequentially, then a trustedUtility pair. Eight samples, seven waves, at most 175 seconds of child-process waiting; no retries.",
+  "variants": {
+    "baseline": "Original worker plus stage diagnostics only.",
+    "directEncoding": "Only the encoding constructor command is replaced with a direct .NET constructor.",
+    "trustedUtility": "Only an explicit Utility import from the PowerShell-owned PSHOME path is inserted after ErrorActionPreference and before encoding; no environment expansion."
+  },
+  "environment": "Same eight-variable allowlist and PowerShell executable as electron/ocr-service.mjs",
+  "stages": [
+    "initialize",
+    "trustedUtilityImport",
+    "consoleEncoding",
+    "runtimeAssembly",
+    "storageFileType",
+    "randomAccessStreamType",
+    "bitmapDecoderType",
+    "softwareBitmapType",
+    "ocrResultType",
+    "ocrEngineType",
+    "asTaskReflection",
+    "engine",
+    "file",
+    "open",
+    "decode",
+    "bitmap",
+    "recognize",
+    "serialize"
+  ],
+  "scope": "Each attempt starts a new PowerShell process. First/repeat describe job order; Windows caches are not reset. Only synthetic fixture data is used; text and pixels are never saved in this report.",
+  "diagnosticCompleted": true,
+  "productAcceptance": "not assessed",
+  "runs": [
+    {
+      "sequence": 1,
+      "mode": "default",
+      "variant": "baseline",
+      "group": "sequential-1",
+      "concurrency": 1,
+      "modeLaunch": 1,
+      "variantLaunch": 1,
+      "firstInJob": true,
+      "firstForMode": true,
+      "firstForVariant": true,
+      "elapsedMs": 20521,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 1735
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 1738
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 19230
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 19230
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 19372
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 19480
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 19480
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 19480
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 19545
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 19546
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 19591
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 19591
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 19604
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 19604
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 19616
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 19625
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 19652
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 19652
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 19785
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 19806
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 20473
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1149,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 2,
+      "mode": "default",
+      "variant": "directEncoding",
+      "group": "sequential-2",
+      "concurrency": 1,
+      "modeLaunch": 2,
+      "variantLaunch": 1,
+      "firstInJob": false,
+      "firstForMode": false,
+      "firstForVariant": true,
+      "elapsedMs": 12196,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 136
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 138
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 142
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 142
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 12038
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 12059
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 12059
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 12059
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 12063
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 12064
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 12089
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 12089
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 12096
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 12096
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 12103
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 12110
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 12117
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 12117
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 12125
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 12144
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 12161
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1149,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 3,
+      "mode": "default",
+      "variant": "trustedUtility",
+      "group": "sequential-3",
+      "concurrency": 1,
+      "modeLaunch": 3,
+      "variantLaunch": 1,
+      "firstInJob": false,
+      "firstForMode": false,
+      "firstForVariant": true,
+      "elapsedMs": 356,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 146
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "before",
+          "elapsedMs": 149
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "after",
+          "elapsedMs": 181
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 181
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 184
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 185
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 189
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 189
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 189
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 189
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 189
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 189
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 189
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 189
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 189
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 189
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 189
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 189
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 189
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 189
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 209
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 209
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 209
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 213
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 258
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 258
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 265
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 265
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 272
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 279
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 286
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 286
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 294
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 311
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 329
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1232,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 4,
+      "mode": "default",
+      "variant": "trustedUtility",
+      "group": "sequential-4",
+      "concurrency": 1,
+      "modeLaunch": 4,
+      "variantLaunch": 2,
+      "firstInJob": false,
+      "firstForMode": false,
+      "firstForVariant": false,
+      "elapsedMs": 322,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 141
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "before",
+          "elapsedMs": 143
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "after",
+          "elapsedMs": 172
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 172
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 174
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 174
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 178
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 178
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 178
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 178
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 178
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 178
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 178
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 196
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 196
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 196
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 200
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 200
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 235
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 235
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 242
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 242
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 248
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 254
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 260
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 260
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 268
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 285
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 300
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1232,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 5,
+      "mode": "default",
+      "variant": "directEncoding",
+      "group": "sequential-5",
+      "concurrency": 1,
+      "modeLaunch": 5,
+      "variantLaunch": 2,
+      "firstInJob": false,
+      "firstForMode": false,
+      "firstForVariant": false,
+      "elapsedMs": 12107,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 137
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 140
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 144
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 144
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 11956
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 11957
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 11957
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 11957
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 11957
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 11957
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 11976
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 11976
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 11976
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 11980
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 11980
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 12005
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 12005
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 12012
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 12012
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 12018
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 12025
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 12032
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 12032
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 12040
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 12058
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 12074
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1149,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 6,
+      "mode": "default",
+      "variant": "baseline",
+      "group": "sequential-6",
+      "concurrency": 1,
+      "modeLaunch": 6,
+      "variantLaunch": 2,
+      "firstInJob": false,
+      "firstForMode": false,
+      "firstForVariant": false,
+      "elapsedMs": 12290,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 149
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 151
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 12128
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 12128
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 12133
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 12153
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 12153
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 12153
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 12156
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 12157
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 12182
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 12182
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 12190
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 12190
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 12196
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 12203
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 12210
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 12210
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 12218
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 12238
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 12255
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1149,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 7,
+      "mode": "default",
+      "variant": "trustedUtility",
+      "group": "pair-1",
+      "concurrency": 2,
+      "modeLaunch": 7,
+      "variantLaunch": 3,
+      "firstInJob": false,
+      "firstForMode": false,
+      "firstForVariant": false,
+      "elapsedMs": 375,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 179
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "before",
+          "elapsedMs": 182
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "after",
+          "elapsedMs": 212
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 212
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 218
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 218
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 218
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 218
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 218
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 218
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 218
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 218
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 218
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 218
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 218
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 218
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 218
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 218
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 237
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 237
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 237
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 240
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 241
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 284
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 284
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 291
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 291
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 298
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 305
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 312
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 312
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 321
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 339
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 354
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1232,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    },
+    {
+      "sequence": 8,
+      "mode": "default",
+      "variant": "trustedUtility",
+      "group": "pair-1",
+      "concurrency": 2,
+      "modeLaunch": 8,
+      "variantLaunch": 4,
+      "firstInJob": false,
+      "firstForMode": false,
+      "firstForVariant": false,
+      "elapsedMs": 376,
+      "code": 0,
+      "signal": null,
+      "killed": false,
+      "apartment": "STA",
+      "hresult": null,
+      "success": true,
+      "stages": [
+        {
+          "name": "initialize",
+          "phase": "before",
+          "elapsedMs": 174
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "before",
+          "elapsedMs": 178
+        },
+        {
+          "name": "trustedUtilityImport",
+          "phase": "after",
+          "elapsedMs": 207
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "before",
+          "elapsedMs": 207
+        },
+        {
+          "name": "consoleEncoding",
+          "phase": "after",
+          "elapsedMs": 210
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "before",
+          "elapsedMs": 210
+        },
+        {
+          "name": "runtimeAssembly",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "storageFileType",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "storageFileType",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "randomAccessStreamType",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "bitmapDecoderType",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "softwareBitmapType",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "ocrResultType",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "ocrEngineType",
+          "phase": "after",
+          "elapsedMs": 214
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "before",
+          "elapsedMs": 214
+        },
+        {
+          "name": "asTaskReflection",
+          "phase": "after",
+          "elapsedMs": 233
+        },
+        {
+          "name": "initialize",
+          "phase": "after",
+          "elapsedMs": 233
+        },
+        {
+          "name": "engine",
+          "phase": "before",
+          "elapsedMs": 233
+        },
+        {
+          "name": "engine",
+          "phase": "after",
+          "elapsedMs": 237
+        },
+        {
+          "name": "file",
+          "phase": "before",
+          "elapsedMs": 238
+        },
+        {
+          "name": "file",
+          "phase": "after",
+          "elapsedMs": 282
+        },
+        {
+          "name": "open",
+          "phase": "before",
+          "elapsedMs": 282
+        },
+        {
+          "name": "open",
+          "phase": "after",
+          "elapsedMs": 290
+        },
+        {
+          "name": "decode",
+          "phase": "before",
+          "elapsedMs": 290
+        },
+        {
+          "name": "decode",
+          "phase": "after",
+          "elapsedMs": 297
+        },
+        {
+          "name": "bitmap",
+          "phase": "before",
+          "elapsedMs": 304
+        },
+        {
+          "name": "bitmap",
+          "phase": "after",
+          "elapsedMs": 311
+        },
+        {
+          "name": "recognize",
+          "phase": "before",
+          "elapsedMs": 311
+        },
+        {
+          "name": "recognize",
+          "phase": "after",
+          "elapsedMs": 320
+        },
+        {
+          "name": "serialize",
+          "phase": "before",
+          "elapsedMs": 338
+        },
+        {
+          "name": "serialize",
+          "phase": "after",
+          "elapsedMs": 354
+        }
+      ],
+      "lastStage": "serialize",
+      "lastStagePhase": "after",
+      "waitingStage": null,
+      "stdoutBytes": 250,
+      "stderrBytes": 1232,
+      "jsonParsed": true,
+      "workerError": null,
+      "expectedTextMatch": true
+    }
+  ],
+  "workerSha256": "a912b02ec2403802aa99e345eb34b8bbcfa7b5281d3eb5a82eceb64507520d7e",
+  "instrumentedWorkerSha256": "402bcf399be9d52b3018a69e48e0adcf0b679da6cd1f3233bb51014963aa4112",
+  "variantWorkerSha256": {
+    "baseline": "402bcf399be9d52b3018a69e48e0adcf0b679da6cd1f3233bb51014963aa4112",
+    "directEncoding": "e8b6b9e8445172ea2cc4dcf778596b0fa108e994ae075167f8468dac10fa3959",
+    "trustedUtility": "b26e13059f532de21fb4215c941779d192f6d1fe765ef2a3e5110df9abf2fe34"
+  },
+  "fixtureSha256": "3f43e6fbc83b1a9fccdcc73533466110098d9ef1f30dd8b39f16170b029a9fc0",
+  "probeSha256": "eab8c69f5edd441227a4b26aa526e67952a80bb663edd54678108db41ed32e72",
+  "successfulAttempts": 8,
+  "unsuccessfulAttempts": 0,
+  "evidence": {
+    "runUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45817149489",
+    "jobId": 139899713267,
+    "artifacts": [
+      {
+        "id": 15115458428,
+        "digest": "sha256:b4c11693d98d21e0f60df9592c541d132ecda68b13f23735edf5ad2802f4b245",
+        "bytes": 3534,
+        "expiresAt": "2026-12-03T12:12:19Z"
+      }
+    ]
+  },
+  "interpretation": "Direct encoding construction moves the observed delay to the next Utility cmdlet (Add-Type). Explicit import of the built-in Utility manifest succeeds in 322–376 ms end to end for four attempts, while subsequent controls remain around 12 seconds. Supports the minimal explicit built-in import candidate; a full uninstrumented Windows source gate is still required."
+}

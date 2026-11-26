@@ -1,0 +1,166 @@
+name: Windows source checks
+
+# Verified 2026-11-26 against official tags and each pinned action.yml:
+# https://github.com/actions/checkout/tree/v7.0.1
+# https://github.com/actions/setup-node/tree/v7.1.0
+# https://github.com/actions/upload-artifact/tree/v7.0.2
+# This is source/renderer evidence on an ephemeral hosted runner, not an
+# installer, upgrade lifecycle, signed release, or real-cloud acceptance run.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'docs/**']
+  pull_request:
+    paths-ignore: ['**/*.md', 'docs/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-source:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        id: node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Prepare text evidence directory
+        run: New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-ci-logs" | Out-Null
+
+      - name: Install locked dependencies
+        id: install
+        timeout-minutes: 12
+        run: |
+          npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/install.log"
+          exit $LASTEXITCODE
+
+      - name: Incremental code quality
+        id: quality
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          npm.cmd run quality 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/quality.log"
+          exit $LASTEXITCODE
+
+      # A failed check remains failed while the other independent checks run.
+      # !cancelled() replaces the implicit success() guard; no continue-on-error.
+      - name: Build
+        id: build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          npm.cmd run build 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/build.log"
+          exit $LASTEXITCODE
+
+      - name: Sites source tests
+        id: sites
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 3
+        run: |
+          npm.cmd run test:sites 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/sites.log"
+          exit $LASTEXITCODE
+
+      - name: Source tests
+        id: unit
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 10
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd test 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/unit.log"
+          exit $LASTEXITCODE
+
+      - name: Component and isolated Windows renderer tests
+        id: components
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 5
+        env:
+          ZHIXING_TEST_EVIDENCE_DIR: ${{ runner.temp }}/zhixing-ci-native
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:components 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/components.log"
+          exit $LASTEXITCODE
+
+      - name: Collect bounded text evidence
+        if: ${{ always() }}
+        env:
+          CI_STEP_RESULTS: ${{ toJSON(steps) }}
+          CI_NODE_VERSION: ${{ steps.node.outputs.node-version }}
+        run: |
+          @'
+          import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+          import path from 'node:path';
+          const target = path.join(process.env.RUNNER_TEMP, 'zhixing-ci-artifact');
+          const logs = path.join(process.env.RUNNER_TEMP, 'zhixing-ci-logs');
+          const native = path.join(process.env.RUNNER_TEMP, 'zhixing-ci-native');
+          await mkdir(target, { recursive: true });
+          const copies = [];
+          async function copy(source, destination, limit, allowTruncate = false) {
+            const data = await readFile(source).catch(error => {
+              if (error.code !== 'ENOENT') throw error;
+            });
+            if (!data) return;
+            if (data.length > limit && !allowTruncate) {
+              copies.push({ file: destination, omitted: 'size-limit', originalBytes: data.length });
+              return;
+            }
+            await writeFile(path.join(target, destination), data.subarray(-limit));
+            copies.push({ file: destination, originalBytes: data.length, truncated: data.length > limit });
+          }
+          for (const name of ['install.log', 'quality.log', 'build.log', 'sites.log', 'unit.log', 'components.log']) {
+            await copy(path.join(logs, name), name, 256 * 1024, true);
+          }
+          const fixtures = await readdir(native, { withFileTypes: true }).catch(error => {
+            if (error.code !== 'ENOENT') throw error;
+            return [];
+          });
+          for (const fixture of fixtures.filter(row => row.isDirectory() && /^zhixing-(recovery-ui|drafts-native)-/.test(row.name)).slice(0, 8)) {
+            for (const name of ['journey.json', 'summary.json', 'failure.json', 'source-hashes.json', 'electron.log']) {
+              await copy(path.join(native, fixture.name, name), `${fixture.name}-${name}`, 64 * 1024);
+            }
+          }
+          await writeFile(path.join(target, 'checks.json'), JSON.stringify({
+            layer: 'Windows hosted runner: source/build and isolated renderer; no installer or real cloud',
+            commit: process.env.GITHUB_SHA, ref: process.env.GITHUB_REF,
+            runId: process.env.GITHUB_RUN_ID, node: process.env.CI_NODE_VERSION,
+            steps: JSON.parse(process.env.CI_STEP_RESULTS || '{}'), files: copies,
+          }, null, 2));
+          '@ | node --input-type=module
+          exit $LASTEXITCODE
+
+      - name: Upload text evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-source-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-ci-artifact/
+          retention-days: 7
+          if-no-files-found: error
+          include-hidden-files: false
+
+      - name: Require every gate to pass
+        if: ${{ always() }}
+        env:
+          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.quality.outcome }} ${{ steps.build.outcome }} ${{ steps.sites.outcome }} ${{ steps.unit.outcome }} ${{ steps.components.outcome }}
+        run: |
+          if (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {
+            Write-Error "At least one required check failed or did not run: $env:CI_REQUIRED_OUTCOMES"
+            exit 1
+          }

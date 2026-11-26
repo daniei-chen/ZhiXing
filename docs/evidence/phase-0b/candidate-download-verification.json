@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "repository": "daniei-chen/ZhiXing",
+  "sourceHead": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "sourceTree": "4c52d97b10956a742c41275d45144f54c1d21f60",
+  "runId": 45834015245,
+  "jobId": 139957944652,
+  "workflowRunUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245",
+  "jobUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245/job/139957944652",
+  "evidenceLayer": "independently downloaded Windows candidate bytes; no execution or installation",
+  "verifiedAtUtc": "2026-11-26T14:20:06.851590+00:00",
+  "status": "verified_downloaded_bytes_only",
+  "artifact": {
+    "id": 15125272481,
+    "name": "windows-unsigned-candidate-3735910a7795b24f282d1f273bcd2841fd685960",
+    "size_in_bytes": 339031828,
+    "url": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/artifacts/15125272481",
+    "archive_download_url": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/artifacts/15125272481/zip",
+    "expired": false,
+    "created_at": "2026-11-26T14:12:26Z",
+    "expires_at": "2026-12-03T14:12:24Z",
+    "updated_at": "2026-11-26T14:12:26Z",
+    "digest": "sha256:714d3a5e158b3397137e09578f5f66fae043bdd76804f41fc45b472cf6e9a7b2",
+    "workflow_run": {
+      "id": 45834015245,
+      "repository_id": 1464334214,
+      "head_repository_id": 1464334214,
+      "head_branch": "fix/phase-0a-audit",
+      "head_sha": "3735910a7795b24f282d1f273bcd2841fd685960"
+    },
+    "browserUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015245/artifacts/15125272481"
+  },
+  "zip": {
+    "bytes": 339031828,
+    "sha256": "714d3a5e158b3397137e09578f5f66fae043bdd76804f41fc45b472cf6e9a7b2",
+    "expectedApiBytes": 339031828,
+    "expectedApiSha256": "714d3a5e158b3397137e09578f5f66fae043bdd76804f41fc45b472cf6e9a7b2",
+    "sizeMatchesApi": true,
+    "digestMatchesApi": true,
+    "locallyDownloadedAndHashed": true,
+    "downloadDurationSeconds": 23.233
+  },
+  "expectedManifest": {
+    "repositoryPath": "docs/evidence/phase-0b/final/SHA256SUMS-candidate.txt",
+    "bytes": 187,
+    "sha256": "91d0e5b9def6313c63a369b1916f2c1d5c868a3e5bbc0e8946fb8711c6a5b1a3",
+    "source": "packed evidence artifact checksum manifest; read independently from extracted evidence"
+  },
+  "files": [
+    {
+      "name": "ZhiXing-0.40.0-x64.exe",
+      "bytes": 338716357,
+      "sha256": "246db5c988385d6e5a10462265f083ae4795cca205e03829593cc1b7771d5a17",
+      "expectedSha256": "246db5c988385d6e5a10462265f083ae4795cca205e03829593cc1b7771d5a17",
+      "matchesManifest": true,
+      "zipCrc32": "e19465ea",
+      "readMode": "extracted ordinary file, streamed SHA256; not executed"
+    },
+    {
+      "name": "ZhiXing-0.40.0-x64.exe.blockmap",
+      "bytes": 314832,
+      "sha256": "370f05ad3208491ed2b09ca76dff6c409b54964be65fffcae4ad18793edea458",
+      "expectedSha256": "370f05ad3208491ed2b09ca76dff6c409b54964be65fffcae4ad18793edea458",
+      "matchesManifest": true,
+      "zipCrc32": "b4bb6fc7",
+      "readMode": "extracted ordinary file, streamed SHA256; not executed"
+    }
+  ],
+  "allFilesMatchManifest": true,
+  "unexpectedEntries": [],
+  "missingEntries": [],
+  "executionPerformed": false,
+  "installationPerformed": false,
+  "largeBinaryFilesAddedToGit": false,
+  "boundaries": [
+    "This check verifies the downloaded ZIP digest against GitHub artifact metadata and extracted file digests against the candidate checksum manifest.",
+    "Only ordinary top-level ZIP files were extracted after path, entry-count, type and byte-limit checks; no installer was launched.",
+    "Matching hashes establish byte integrity for this artifact, not a code-signing identity or independent review of executable behavior.",
+    "NSIS installation, upgrade, user profile lifecycle, SmartScreen/signing, and real-cloud tasks were not tested by this verification.",
+    "The large ZIP and extracted binaries remain outside the Git repository in temporary scratch storage; only this verification JSON is recorded in Git."
+  ],
+  "includedManifest": {
+    "name": "SHA256SUMS-candidate.txt",
+    "bytes": 187,
+    "sha256": "91d0e5b9def6313c63a369b1916f2c1d5c868a3e5bbc0e8946fb8711c6a5b1a3",
+    "matchesSeparatePackedEvidenceByteForByte": true
+  },
+  "archiveEntryCount": 3,
+  "inspectionNote": "The ZIP contains two candidate binaries and their checksum manifest. The included manifest was compared byte for byte with separately archived packed evidence, rather than expected to list its own hash."
+}

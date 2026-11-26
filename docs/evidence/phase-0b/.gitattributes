@@ -1,0 +1,5 @@
+# Preserve downloaded evidence bytes, including Windows CRLF and UTF-8 BOMs.
+# These paths are audit records, not source formatting inputs.
+attempt-9130781/** -text -whitespace
+final/** -text -whitespace
+runtime-cleanup-negative.txt -text -whitespace

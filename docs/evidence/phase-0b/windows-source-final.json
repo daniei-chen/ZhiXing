@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "repository": "daniei-chen/ZhiXing",
+  "evidenceLayer": "Windows hosted runner: source/build and isolated renderer; no packaged installer or real-cloud acceptance",
+  "sourceHead": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "runId": 45834015257,
+  "jobId": 139957944819,
+  "event": "pull_request",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015257/job/139957944819",
+  "checkedOutCommit": "6fa27fdef890a987af8d5e8a6592b764752b537b",
+  "mergeHead": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "mergeBase": "c2f7588d7e158a1e6179f65441e556d37acc2ab8",
+  "runner": {
+    "os": "Microsoft Windows Server 2025",
+    "image": "windows-2025-vs2026",
+    "imageVersion": "20261116.315.1",
+    "runnerVersion": "2.338.2",
+    "node": "v24.22.3",
+    "npm": "11.19.1"
+  },
+  "quality": {
+    "status": "success",
+    "scope": "adopted-and-changed-scope",
+    "baseline": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
+    "eslint": {
+      "checked": 30,
+      "total": 284
+    },
+    "stylelint": {
+      "checked": 4,
+      "total": 4
+    },
+    "prettier": {
+      "checked": 15,
+      "total": 513
+    },
+    "legacyFormattingNotAdopted": 21,
+    "reportedErrors": 0,
+    "reportedWarnings": 0,
+    "documentedInlineExceptions": [
+      {
+        "file": "tests/runtime-lifecycle.test.mjs",
+        "line": 130,
+        "rule": "no-unsafe-finally"
+      },
+      {
+        "file": "tests/runtime-lifecycle.test.mjs",
+        "line": 418,
+        "rule": "no-unsafe-finally"
+      }
+    ],
+    "additionalStderr": [
+      "[csstree-match] BREAK after 15000 iterations"
+    ],
+    "generatedExcluded": 9
+  },
+  "checks": {
+    "sites": {
+      "tests": 4,
+      "suites": 0,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 97.3956
+    },
+    "source": {
+      "tests": 560,
+      "suites": 0,
+      "pass": 560,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 300852.994
+    },
+    "components": {
+      "tests": 18,
+      "suites": 0,
+      "pass": 18,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 14632.9905
+    }
+  },
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Set up Node.js 24",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Prepare text evidence directory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Install locked dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Incremental code quality",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Sites source tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Source tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Component and isolated Windows renderer tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10
+    },
+    {
+      "name": "Collect bounded text evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11
+    },
+    {
+      "name": "Upload text evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12
+    },
+    {
+      "name": "Require every gate to pass",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13
+    },
+    {
+      "name": "Post Set up Node.js 24",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25
+    },
+    {
+      "name": "Post Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27
+    }
+  ],
+  "decodedJobLog": {
+    "path": "docs/evidence/phase-0b/final/windows-source-log.txt",
+    "encoding": "UTF-8",
+    "apiUrl": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/jobs/139957944819/logs",
+    "jobUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015257/job/139957944819",
+    "localPathIsTemporary": false,
+    "bytes": 120245,
+    "sha256": "d240c2f96a8e947280a8c0e45d841b1fcb3f1533b582fc0347d3069bb437251e",
+    "relativeTo": "repository-root"
+  },
+  "artifact": {
+    "id": 15125710258,
+    "name": "windows-source-evidence-1",
+    "size_in_bytes": 34982,
+    "url": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/artifacts/15125710258",
+    "archive_download_url": "https://api.github.com/repos/daniei-chen/ZhiXing/actions/artifacts/15125710258/zip",
+    "expired": false,
+    "created_at": "2026-11-26T14:03:22Z",
+    "expires_at": "2026-12-03T14:03:21Z",
+    "updated_at": "2026-11-26T14:03:22Z",
+    "digest": "sha256:694e9d78076f450afdb40bc86866e16254cd058ac8c863515efaf0fcb4f4f4ca",
+    "workflow_run": {
+      "id": 45834015257,
+      "repository_id": 1464334214,
+      "head_repository_id": 1464334214,
+      "head_branch": "fix/phase-0a-audit",
+      "head_sha": "3735910a7795b24f282d1f273bcd2841fd685960"
+    },
+    "browserUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015257/artifacts/15125710258",
+    "digestVerifiedAgainstUploadLog": true,
+    "zipLocallyDownloadedAndHashed": false
+  },
+  "boundaries": [
+    "Only this PR source run was monitored; no repeat run was triggered.",
+    "Source quality is scoped, not whole-repository quality.",
+    "Source/renderer results do not cover packaged EXE, NSIS installation, user profile lifecycle, signing or real-cloud task evaluation.",
+    "PR evidence belongs to its actual merge checkout, not an assumed head checkout.",
+    "Artifact digest was cross-checked against upload log, not against a locally downloaded ZIP.",
+    "This file records source head 3735910a only; the separately running packaged workflow and later source heads are not covered.",
+    "The complete decoded UTF-8 job log is retained in the repository for verification after the hosted artifact expires; no artifact ZIP was downloaded or locally hashed."
+  ],
+  "sourceTree": "4c52d97b10956a742c41275d45144f54c1d21f60",
+  "checkedOutTree": "4c52d97b10956a742c41275d45144f54c1d21f60",
+  "sourceAndCheckoutTreesMatch": true,
+  "treeEvidence": "git rev-parse of both exact commit objects; merge object fetched without writing FETCH_HEAD or checking out files",
+  "applicationVersion": "0.40.0",
+  "sourceCommitUrl": "https://github.com/daniei-chen/ZhiXing/commit/3735910a7795b24f282d1f273bcd2841fd685960",
+  "checkedOutCommitUrl": "https://github.com/daniei-chen/ZhiXing/commit/6fa27fdef890a987af8d5e8a6592b764752b537b",
+  "recordedAgainstCommit": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "workflowRunUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45834015257",
+  "keyObservedCases": [
+    {
+      "name": "SDK close resolution records process termination even when the exit status is nonzero",
+      "status": "passed",
+      "layer": "source test using a synthetic child-process event fixture",
+      "logLine": "2026-11-26T14:00:57.1889549Z ✔ SDK close resolution records process termination even when the exit status is nonzero (6.4642ms)"
+    }
+  ],
+  "previousEvidence": {
+    "path": "windows-source-9130781.json",
+    "sourceHead": "91307819e1f666c624e2bd66a16741012a9cf601",
+    "bytes": 7485,
+    "sha256": "4940e44531dcbf6de51401033b2dab88bd7ab08f28b02d3116c3f910758d7ea3",
+    "preservedByteForByte": true
+  }
+}
