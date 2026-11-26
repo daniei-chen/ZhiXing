@@ -6,9 +6,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {composePrompt} from '../src/office-workflows.js';
 
 const packedRoot = process.env.ZHIXING_TEST_PACKED_APP;
+const {composePrompt} = await import(packedRoot ? pathToFileURL(path.join(packedRoot, 'src/office-workflows.js')).href : '../src/office-workflows.js');
 const {RuntimeManager} = await import(packedRoot
  ? pathToFileURL(path.join(packedRoot, 'electron', 'runtime.mjs')).href
  : '../electron/runtime.mjs');
@@ -126,6 +126,7 @@ async function createFixture({respond, onEvent, writeVault} = {}) {
     await new Promise(resolve => server.close(resolve));
     const resolved = await fs.realpath(root);
     if (path.dirname(resolved) !== parent || !path.basename(resolved).startsWith('zhixing-lifecycle-test-')) {
+     // eslint-disable-next-line no-unsafe-finally -- Cleanup scope protection intentionally aborts deletion outside this fixture.
      throw new Error('Refusing to remove a directory outside this synthetic runtime fixture.');
     }
     await fs.rm(resolved, {recursive: true, force: true, maxRetries: 6, retryDelay: 150});
@@ -413,6 +414,7 @@ for (const protocol of ['openai', 'deepseek']) {
    await new Promise(resolve => server.close(resolve));
    const resolved = await fs.realpath(root);
    if (path.dirname(resolved) !== parent || !path.basename(resolved).startsWith('zhixing-stream-cancel-')) {
+    // eslint-disable-next-line no-unsafe-finally -- Cleanup scope protection intentionally aborts deletion outside this fixture.
     throw new Error('Refusing to remove a directory outside the synthetic streaming fixture.');
    }
    await fs.rm(resolved, {recursive: true, force: true, maxRetries: 6, retryDelay: 150});

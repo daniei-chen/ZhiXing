@@ -6,9 +6,11 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { composePrompt, workflows } from '../src/office-workflows.js';
 
 const packedRoot = process.env.ZHIXING_TEST_PACKED_APP;
+const { composePrompt, workflows } = await import(packedRoot
+  ? pathToFileURL(path.join(packedRoot, 'src/office-workflows.js')).href
+  : '../src/office-workflows.js');
 const { RuntimeManager } = await import(packedRoot
   ? pathToFileURL(path.join(packedRoot, 'electron/runtime.mjs')).href
   : '../electron/runtime.mjs');

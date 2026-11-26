@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const { archiveFileName, numberedName } = await import('../electron/archive-name.mjs');
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+const packed = process.env.ZHIXING_TEST_PACKED_APP;
+const { archiveFileName, numberedName } = await import(packed ? pathToFileURL(path.join(packed, 'electron/archive-name.mjs')).href : '../electron/archive-name.mjs');
 
 test('默认文件名带会话名与日期，扩展名固定为 .md', () => {
   const name = archiveFileName({ title: '周报整理', date: new Date('2026-11-25T10:00:00').getTime(), index: 1 });

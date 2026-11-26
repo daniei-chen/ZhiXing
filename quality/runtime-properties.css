@@ -1,0 +1,7 @@
+/* Static-analysis reference only: never imported by the application.
+ * src/ModelControls.jsx sets --effort-position through React's inline style.
+ * check-quality verifies that the declared binding remains in that source.
+ */
+:root {
+  --effort-position: 0;
+}

@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { nextOccurrence, localDate } from '../src/scheduler.js';
-import { applyAutomationResults, automationInput } from '../src/automation-core.js';
 
 const packaged = process.env.ZHIXING_TEST_PACKED_APP;
+const { nextOccurrence, localDate } = await import(packaged ? pathToFileURL(path.join(packaged, 'src/scheduler.js')).href : '../src/scheduler.js');
+const { applyAutomationResults, automationInput } = await import(packaged ? pathToFileURL(path.join(packaged, 'src/automation-core.js')).href : '../src/automation-core.js');
 const loadElectron = name => import(packaged ? pathToFileURL(path.join(packaged, 'electron', name)).href : `../electron/${name}`);
 const { AutomationService } = await loadElectron('automation-service.mjs');
 const { automationTool } = await loadElectron('automation-tools.mjs');

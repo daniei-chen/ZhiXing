@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 
 const repository=path.resolve(import.meta.dirname,'..');
 const application=path.resolve(process.argv[2]||'release/win-unpacked/resources/app');
@@ -35,6 +36,8 @@ const provenance=JSON.parse(await fs.readFile(path.join(application,'build-prove
 assert.equal(provenance.version,packedPackage.version,'Build provenance version differs');
 assert.equal(provenance.sourceDirty,false,'Release build contains uncommitted source or packaging changes');
 assert.match(provenance.sourceCommit,/^[a-f0-9]{40}$/,'Release build has no source commit');
+const checkedCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:repository,encoding:'utf8',windowsHide:true}).trim();
+assert.equal(provenance.sourceCommit,checkedCommit,'Build provenance commit differs from the checked-out source');
 assert.equal(provenance.lockSha256,digest(await fs.readFile(path.join(repository,'package-lock.json'))),'Build provenance lock differs');
 const result={version:packedPackage.version,sourceCommit:provenance.sourceCommit,lockSha256:provenance.lockSha256,matchedFiles:manifest.length,sourceFingerprint:digest(JSON.stringify(manifest)),files:manifest};
 await fs.mkdir(path.dirname(output),{recursive:true});await fs.writeFile(output,JSON.stringify(result,null,2));

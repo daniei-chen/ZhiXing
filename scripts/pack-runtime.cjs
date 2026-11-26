@@ -92,7 +92,7 @@ module.exports = async function packRuntime(context) {
   let sourceCommit = null, sourceDirty = null;
   try {
     sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: source, encoding: 'utf8', windowsHide: true}).trim();
-    sourceDirty = Boolean(execFileSync('git', ['status', '--porcelain', '--untracked-files=normal', '--', 'src', 'electron', 'harness', 'scripts', 'package.json', 'package-lock.json', 'electron-builder.yml', 'installer.nsh', 'public', 'resources'], {cwd: source, encoding: 'utf8', windowsHide: true}).trim());
+    sourceDirty = Boolean(execFileSync('git', ['status', '--porcelain', '--untracked-files=normal', '--', 'src', 'electron', 'harness', 'scripts', 'package.json', 'package-lock.json', '.npmrc', 'electron-builder.yml', 'build/installer.nsh', 'vite.config.mjs', 'index.html', 'worker', '.openai/hosting.json', 'public', 'resources'], {cwd: source, encoding: 'utf8', windowsHide: true}).trim());
   } catch { /* A source archive can build, but cannot claim a Git commit. */ }
   const provenance = {schemaVersion: 1, version: JSON.parse(await fs.readFile(path.join(source,'package.json'),'utf8')).version,
     sourceCommit, sourceDirty, builtAt: new Date().toISOString(), nodeVersion: process.version,

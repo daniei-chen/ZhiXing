@@ -5,7 +5,9 @@ import os from 'node:os';
 import path from 'node:path';
 import yauzl from 'yauzl';
 
-const {buildZip, collectDirectory, crc32, normalizeEntryName} = await import('../electron/zip-writer.mjs');
+import {pathToFileURL} from 'node:url';
+const packed = process.env.ZHIXING_TEST_PACKED_APP;
+const {buildZip, collectDirectory, crc32, normalizeEntryName} = await import(packed ? pathToFileURL(path.join(packed, 'electron/zip-writer.mjs')).href : '../electron/zip-writer.mjs');
 
 const readZip = buffer => new Promise((resolve, reject) => {
   const files = new Map();

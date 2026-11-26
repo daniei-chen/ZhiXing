@@ -1,0 +1,28 @@
+export default {
+  defaultSeverity: 'error',
+  referenceFiles: [
+    'src/styles.css',
+    'src/model-controls.css',
+    'src/desktop-ui.css',
+    'quality/runtime-properties.css',
+  ],
+  reportNeedlessDisables: true,
+  reportInvalidScopeDisables: true,
+  rules: {
+    'annotation-no-unknown': true,
+    'at-rule-no-unknown': true,
+    'block-no-empty': true,
+    'color-no-invalid-hex': true,
+    'custom-property-no-missing-var-function': true,
+    'declaration-block-no-duplicate-custom-properties': true,
+    'declaration-block-no-duplicate-properties': true,
+    'declaration-property-value-no-unknown': true,
+    'function-calc-no-unspaced-operator': true,
+    'no-invalid-double-slash-comments': true,
+    'no-unknown-custom-properties': true,
+    'property-no-unknown': true,
+    'selector-pseudo-class-no-unknown': true,
+    'selector-pseudo-element-no-unknown': true,
+    'unit-no-unknown': true,
+  },
+};

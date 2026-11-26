@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {WorkspaceSaveQueue} from '../electron/workspace-save-queue.mjs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const packed = process.env.ZHIXING_TEST_PACKED_APP;
+const {WorkspaceSaveQueue}=await import(packed ? pathToFileURL(path.join(packed, 'electron/workspace-save-queue.mjs')).href : '../electron/workspace-save-queue.mjs');
 
 const deferred=()=>{
  let resolve,reject;

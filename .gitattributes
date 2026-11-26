@@ -1,0 +1,12 @@
+# Source text is already stored as LF. Keep fresh Windows checkouts identical
+# for formatting checks and source provenance; do not renormalize historical files.
+*.js text eol=lf
+*.jsx text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.html text eol=lf

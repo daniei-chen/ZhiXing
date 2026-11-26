@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
+  "baselineSnapshot": "quality/baseline-718cb62.json",
+  "eslintFiles": ["src/run-status.js", "src/run-summary.js"],
+  "stylelintFiles": ["src/styles.css", "src/model-controls.css", "src/desktop-ui.css"],
+  "formatFiles": ["package.json"],
+  "generatedFiles": ["package-lock.json"],
+  "generatedDirectories": ["docs/evidence/"],
+  "runtimeCustomProperties": [
+    {
+      "name": "--effort-position",
+      "source": "src/ModelControls.jsx",
+      "reference": "quality/runtime-properties.css"
+    }
+  ]
+}

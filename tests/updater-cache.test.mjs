@@ -4,7 +4,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-const load = async file => import(new URL(`../electron/${file}`, import.meta.url));
+import { pathToFileURL } from 'node:url';
+const packed = process.env.ZHIXING_TEST_PACKED_APP;
+const load = async file => import(packed ? pathToFileURL(path.join(packed, 'electron', file)).href : new URL(`../electron/${file}`, import.meta.url));
 const { compareVersions, versionInName, planCachePrune, pruneUpdateCache, updaterCacheDir } = await load('updater-cache.mjs');
 
 const DAY = 24 * 60 * 60 * 1000;

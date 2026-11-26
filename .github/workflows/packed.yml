@@ -1,0 +1,192 @@
+name: Windows packaged checks
+
+# Build and exercise a candidate in an ephemeral runner. This workflow never
+# installs the product, modifies a user's installation, or publishes a release.
+on:
+  pull_request:
+    paths-ignore: ['**/*.md', 'docs/**']
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'docs/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-packed:
+    runs-on: windows-latest
+    timeout-minutes: 95
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - name: Check out candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # pack-runtime bundles the executing Node binary and its exact license.
+      # Keep the existing runtime until a separate runtime upgrade is verified.
+      - name: Set up the licensed packaging runtime
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.19.0'
+          package-manager-cache: false
+
+      - name: Prepare evidence directories
+        run: |
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-packed-logs" | Out-Null
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-packed-artifact" | Out-Null
+
+      - name: Install locked dependencies
+        id: install
+        timeout-minutes: 12
+        run: |
+          npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/install.log"
+          exit $LASTEXITCODE
+
+      - name: Build Windows directory package
+        id: package
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 12
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run electron:dist 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/package.log"
+          exit $LASTEXITCODE
+
+      - name: Verify packaged source and provenance
+        id: verify
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
+        timeout-minutes: 3
+        run: |
+          node scripts/verify-packed-sources.mjs "release/win-unpacked/resources/app" "$env:RUNNER_TEMP/zhixing-packed-artifact/packed-source-manifest.json" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/verify.log"
+          exit $LASTEXITCODE
+
+      - name: Isolate packaged test caches and temporary files
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        run: |
+          $qaLocalData = "$env:RUNNER_TEMP/zhixing-packed-local-data"
+          $qaTemporary = "$env:RUNNER_TEMP/zhixing-packed-temp"
+          New-Item -ItemType Directory -Force $qaLocalData, $qaTemporary | Out-Null
+          "LOCALAPPDATA=$qaLocalData" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEMP=$qaTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$qaTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Packaged module and real kernel tests
+        id: packed
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 18
+        run: |
+          npm.cmd run test:packed -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/packed.log"
+          exit $LASTEXITCODE
+
+      - name: Packaged network error messages
+        id: errors
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 7
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-packed-journeys/errors
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:errors -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/errors.log"
+          exit $LASTEXITCODE
+
+      - name: Packaged file approvals and export
+        id: native
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 7
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-packed-journeys/native
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          node scripts/test-native-files-export-ui.mjs "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/native.log"
+          exit $LASTEXITCODE
+
+      - name: Packaged tool timeline
+        id: tools
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:tools-ui -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/tools.log"
+          exit $LASTEXITCODE
+
+      - name: Packaged Phase 0A chat regressions
+        id: phase0a
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 8
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-packed-journeys/phase0a
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:phase0a -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/phase0a.log"
+          exit $LASTEXITCODE
+
+      - name: Build uninstalled NSIS candidate
+        id: nsis
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 10
+        run: |
+          npx.cmd --no-install electron-builder --win nsis --x64 --prepackaged release/win-unpacked --publish never 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/nsis.log"
+          exit $LASTEXITCODE
+
+      - name: Record candidate signature status
+        if: ${{ !cancelled() && steps.nsis.outcome == 'success' }}
+        run: |
+          $candidateVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $candidateInstaller = "release/ZhiXing-$candidateVersion-x64.exe"
+          @{
+            installer = (Get-AuthenticodeSignature $candidateInstaller).Status.ToString()
+            executable = (Get-AuthenticodeSignature 'release/win-unpacked/知行.exe').Status.ToString()
+            installationLifecycle = 'not run'
+            realCloud = 'not run'
+          } | ConvertTo-Json | Set-Content -Encoding utf8 "$env:RUNNER_TEMP/zhixing-packed-artifact/signature-status.json"
+
+      - name: Collect bounded package evidence
+        if: ${{ always() }}
+        env:
+          CI_STEP_RESULTS: ${{ toJSON(steps) }}
+        run: node scripts/collect-packed-evidence.mjs
+
+      - name: Upload package evidence and screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-packed-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-packed-artifact/
+          retention-days: 14
+          if-no-files-found: error
+          include-hidden-files: false
+
+      - name: Upload uninstalled candidate
+        if: ${{ !cancelled() && steps.nsis.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-unsigned-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            release/ZhiXing-*-x64.exe
+            release/ZhiXing-*-x64.exe.blockmap
+            release/SHA256SUMS-candidate.txt
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+          include-hidden-files: false
+
+      - name: Require every package gate to pass
+        if: ${{ always() }}
+        env:
+          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.package.outcome }} ${{ steps.verify.outcome }} ${{ steps.packed.outcome }} ${{ steps.errors.outcome }} ${{ steps.native.outcome }} ${{ steps.tools.outcome }} ${{ steps.phase0a.outcome }} ${{ steps.nsis.outcome }}
+        run: |
+          if (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {
+            Write-Error "A packaged check failed or did not run: $env:CI_REQUIRED_OUTCOMES"
+            exit 1
+          }

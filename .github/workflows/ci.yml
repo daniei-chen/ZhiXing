@@ -32,6 +32,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Node.js 24
@@ -49,6 +50,14 @@ jobs:
         timeout-minutes: 12
         run: |
           npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/install.log"
+          exit $LASTEXITCODE
+
+      - name: Incremental code quality
+        id: quality
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          npm.cmd run quality 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/quality.log"
           exit $LASTEXITCODE
 
       # A failed check remains failed while the other independent checks run.
@@ -115,7 +124,7 @@ jobs:
             await writeFile(path.join(target, destination), data.subarray(-limit));
             copies.push({ file: destination, originalBytes: data.length, truncated: data.length > limit });
           }
-          for (const name of ['install.log', 'build.log', 'sites.log', 'unit.log', 'components.log']) {
+          for (const name of ['install.log', 'quality.log', 'build.log', 'sites.log', 'unit.log', 'components.log']) {
             await copy(path.join(logs, name), name, 256 * 1024, true);
           }
           const fixtures = await readdir(native, { withFileTypes: true }).catch(error => {
@@ -149,7 +158,7 @@ jobs:
       - name: Require every gate to pass
         if: ${{ always() }}
         env:
-          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.build.outcome }} ${{ steps.sites.outcome }} ${{ steps.unit.outcome }} ${{ steps.components.outcome }}
+          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.quality.outcome }} ${{ steps.build.outcome }} ${{ steps.sites.outcome }} ${{ steps.unit.outcome }} ${{ steps.components.outcome }}
         run: |
           if (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {
             Write-Error "At least one required check failed or did not run: $env:CI_REQUIRED_OUTCOMES"

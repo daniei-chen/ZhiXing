@@ -4,7 +4,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-const { containsMarker, isNsisTempName, judgeStuckUninstaller, pruneStuckUninstaller } = await import('../electron/temp-hygiene.mjs');
+import { pathToFileURL } from 'node:url';
+const packed = process.env.ZHIXING_TEST_PACKED_APP;
+const { containsMarker, isNsisTempName, judgeStuckUninstaller, pruneStuckUninstaller } = await import(packed ? pathToFileURL(path.join(packed, 'electron/temp-hygiene.mjs')).href : '../electron/temp-hygiene.mjs');
 
 const NOW = Date.parse('2026-11-25T06:00:00Z');
 const MINUTE = 60 * 1000;

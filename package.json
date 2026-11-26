@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "electron": "node scripts/run-desktop.mjs",
-    "test": "node --test --test-concurrency=2 tests/context-window.test.mjs tests/model-catalog-limits.test.mjs tests/privacy.test.mjs tests/credential-boundary.test.mjs tests/delivery-review.test.mjs tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/privacy-gateway.test.mjs tests/kernel-native.test.mjs tests/capability-manifest.test.mjs tests/capability-runtime.test.mjs tests/office-directory.test.mjs tests/office.test.mjs tests/store.test.mjs tests/conversation-state.test.mjs tests/conversation-resources.test.mjs tests/deliverable-access.test.mjs tests/assistant-stream.test.mjs tests/automation.test.mjs tests/automation-persistence.test.mjs tests/runtime.test.mjs tests/runtime-image-ocr.test.mjs tests/runtime-vision.test.mjs tests/runtime-cleanup.test.mjs tests/runtime-finalization.test.mjs tests/runtime-context.test.mjs tests/privacy-lock-recovery.test.mjs tests/runtime-launch.test.mjs tests/runtime-policy.test.mjs tests/runtime-lifecycle.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/desktop-release.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/speech-audio.test.mjs tests/speech-service.test.mjs tests/providers.test.mjs tests/error-copy.test.mjs tests/mcp-identity.test.mjs tests/mcp-destination.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs tests/app-log.test.mjs tests/updater-cache.test.mjs tests/temp-hygiene.test.mjs tests/zip-writer.test.mjs tests/change-summary.test.mjs tests/inline-references.test.mjs tests/review-diff.test.mjs tests/review-view.test.mjs tests/file-actions.test.mjs tests/changed-files.test.mjs tests/deliverable-cards.test.mjs tests/trace-filter.test.mjs tests/run-status.test.mjs tests/providers-hidden-model.test.mjs tests/privacy-warning.test.mjs tests/provider-reasoning.test.mjs tests/message-feedback.test.mjs tests/compaction-policy.test.mjs tests/runtime-patch.test.mjs tests/run-summary.test.mjs tests/subagent-archive.test.mjs tests/archive-name.test.mjs tests/runtime-native-entrypoints.test.mjs tests/office-file-policy.test.mjs",
+    "test": "node --test --test-concurrency=2 tests/context-window.test.mjs tests/model-catalog-limits.test.mjs tests/privacy.test.mjs tests/credential-boundary.test.mjs tests/delivery-review.test.mjs tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/privacy-gateway.test.mjs tests/kernel-native.test.mjs tests/capability-manifest.test.mjs tests/capability-runtime.test.mjs tests/office-directory.test.mjs tests/office.test.mjs tests/store.test.mjs tests/conversation-state.test.mjs tests/conversation-resources.test.mjs tests/deliverable-access.test.mjs tests/assistant-stream.test.mjs tests/automation.test.mjs tests/automation-persistence.test.mjs tests/runtime.test.mjs tests/runtime-image-ocr.test.mjs tests/runtime-vision.test.mjs tests/runtime-cleanup.test.mjs tests/runtime-finalization.test.mjs tests/runtime-context.test.mjs tests/privacy-lock-recovery.test.mjs tests/runtime-launch.test.mjs tests/runtime-policy.test.mjs tests/runtime-lifecycle.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/desktop-release.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/speech-audio.test.mjs tests/speech-service.test.mjs tests/providers.test.mjs tests/error-copy.test.mjs tests/mcp-identity.test.mjs tests/mcp-destination.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs tests/app-log.test.mjs tests/updater-cache.test.mjs tests/temp-hygiene.test.mjs tests/zip-writer.test.mjs tests/change-summary.test.mjs tests/inline-references.test.mjs tests/review-diff.test.mjs tests/review-view.test.mjs tests/file-actions.test.mjs tests/changed-files.test.mjs tests/deliverable-cards.test.mjs tests/trace-filter.test.mjs tests/run-status.test.mjs tests/providers-hidden-model.test.mjs tests/privacy-warning.test.mjs tests/provider-reasoning.test.mjs tests/message-feedback.test.mjs tests/compaction-policy.test.mjs tests/runtime-patch.test.mjs tests/run-summary.test.mjs tests/subagent-archive.test.mjs tests/archive-name.test.mjs tests/runtime-native-entrypoints.test.mjs tests/office-file-policy.test.mjs tests/quality-gate.test.mjs tests/maintenance-inventory.test.mjs tests/packed-provenance.test.mjs",
     "test:packed": "node scripts/test-packed.mjs",
     "electron:dist": "npm run build && electron-builder --win --x64 --dir && node scripts/generate-installer-path-policy.mjs && node scripts/write-update-config.mjs",
     "electron:install": "npm run electron:dist && electron-builder --win nsis --x64",
@@ -36,8 +36,8 @@
     "test:workspace-tools": "node scripts/test-real-cloud-workspace-tools.mjs",
     "test:tool-redaction": "node scripts/test-real-cloud-tool-redaction.mjs",
     "test:restore-gap": "node scripts/test-restore-gap-ui.mjs",
-    "maintenance:preview": "node scripts/clean-preview-evidence.mjs --keep-release-assets",
-    "maintenance:updater-cache": "node scripts/clean-dev-updater-cache.mjs",
+    "maintenance:preview": "node scripts/clean-preview-evidence.mjs --keep-release-assets --dry-run",
+    "maintenance:updater-cache": "node scripts/clean-dev-updater-cache.mjs --dry-run",
     "test:compaction": "node scripts/test-compaction-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:feedback": "node scripts/test-feedback-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:execution-search": "node scripts/test-execution-search-ui.mjs \"release/win-unpacked/知行.exe\"",
@@ -49,7 +49,15 @@
     "test:compact-command": "node scripts/test-compact-command-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:overflow-recovery": "node scripts/test-overflow-recovery-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:model-window": "node scripts/test-model-window-ui.mjs \"release/win-unpacked/知行.exe\"",
-    "test:model-switch": "node scripts/test-model-switch-ui.mjs \"release/win-unpacked/知行.exe\""
+    "test:model-switch": "node scripts/test-model-switch-ui.mjs \"release/win-unpacked/知行.exe\"",
+    "quality": "node scripts/check-quality.mjs",
+    "quality:changed": "node scripts/check-quality.mjs --changed",
+    "quality:all": "node scripts/check-quality.mjs --all",
+    "lint": "node scripts/check-quality.mjs --only lint",
+    "format:check": "node scripts/check-quality.mjs --only format",
+    "test:quality": "node --test tests/quality-gate.test.mjs",
+    "test:phase0a": "node scripts/test-phase0a-ui.mjs",
+    "maintenance:inventory": "node scripts/maintenance-inventory.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {
@@ -95,8 +103,14 @@
     "yauzl": "3.4.0"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "electron": "^44.11.5",
-    "electron-builder": "^26.18.0"
+    "electron-builder": "^26.18.0",
+    "eslint": "10.15.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "prettier": "3.10.1",
+    "stylelint": "18.1.0"
   },
   "overrides": {
     "undici@^8.0.0": "8.12.2",

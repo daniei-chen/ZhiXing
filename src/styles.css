@@ -752,7 +752,7 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width
 .agent-children p {display:flex;align-items:center;gap:8px;margin:10px 0}
 .agent-children small {margin-left:auto}
 .child-pulse {animation:child-pulse 1.4s ease-in-out infinite}
-.question-detail {max-height:38vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:var(--hover);border:1px solid var(--line);border-radius:12px;font:13px/1.75 inherit}
+.question-detail {max-height:38vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:var(--hover);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.75;font-family:inherit}
 @keyframes child-pulse {50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.child-pulse{animation:none}}
 
