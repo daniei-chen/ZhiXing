@@ -71,7 +71,7 @@
 | 崩溃与异常记录点 | 四点全部真实触发：`uncaughtException`、`unhandledRejection`、`render-process-gone`、`child-process-gone` |
 | 诊断导出 | 端到端：`app.log` + `diagnostics.json`，扫描无凭据泄漏 |
 | 跨版本存档兼容 | 4 项单元用例 + 真实降级/升级后解密核对内容 |
-| 供应商目录拉取失败文案（401／拒连／重置／超时） | Windows 实包 4 场景 + 主进程日志配对（`scripts/test-error-copy-ui.mjs`）；`ENOTFOUND`／`EAI_AGAIN` 仅源码层 |
+| 供应商目录拉取失败文案（401／ENOTFOUND／拒连／重置／超时） | Windows 实包 6 例 + 主进程日志配对（`scripts/test-error-copy-ui.mjs`，0.32.0 起含真实 `ENOTFOUND`）：真实 401（`api.deepseek.com` + 假 Key）、真实解析失败（主机名标签超 63 字符，`getaddrinfo` 返回 `ENOTFOUND`）、被本机 DNS／代理接住的 `ECONNRESET`（对照，按实际码断言）、`ECONNREFUSED`、12 秒 `TIMEOUT`，界面文案与技术原文不同、技术原文留在主进程日志。未覆盖：NXDOMAIN 成因（本机 DNS 被代理接管）、真实云端下的失败路径 |
 | 聊天发送失败文案（401／断连） | Windows 实包 2 场景 + 主进程日志配对（`scripts/test-chat-send-errors.mjs`）；403／429／证书／上下文超长／未知模型仅映射层 |
 | 自动更新下载缓存的清理 | Windows 实包 3 场景（`scripts/test-updater-cache.mjs`）+ 真实安装一次 `updater.cache-pruned`；7 天保留期与「下载中启动」仅源码层 |
 | 项目文件夹打包成 ZIP | Windows 实包 4 项（`npm run test:zip`：入口、写盘、读回内容与排除项、取消）；多选、ZIP64、内容级密钥识别未覆盖 |
@@ -92,6 +92,7 @@
 | 交付文件动作（0.29.0） | `npm run test:actions`：真实 `present` 交付两份文件，卡片「⋯」菜单三项与桌面版一致，Escape 关闭，点「在文件管理器中显示」出现「已在文件管理器中显示。」，删掉文件后给「找不到这个文件的位置」，伪造 `zx-delivery-v1` 引用被拒绝（主进程核验 HMAC 与文件身份）。未覆盖：默认应用打开的成功路径未点击；无 `skipped`／`nativeUnavailable` 状态；入口是「⋯」菜单而非右键菜单 |
 | 改动对比视图（0.30.0） | `npm run test:review`：真实内核写四次文件，点改动卡片一行进入「改动」视图；新增／删除／折叠行判定正确（保留行不被标成删除）；切文件后标题与内容随之变化；对比与真实写盘一致。边界：无 git 快照、无并排视图与换行开关、无独立 review tab、review 内打开／定位未接、超大文件只给行数 |
 | 手动压缩命令（0.31.0） | `npm run test:compact-command`：打包 EXE 上按 `/compact`——空会话零请求、带参数给中文提示、两轮对话后恰好一次摘要请求并显示「压缩 N 条历史（约 M tokens）」（内核英文原文）、压缩后请求带检查点且消息数 7→6。未覆盖：图像卸载触发、溢出恢复、切换小窗口模型的压缩 |
+| 错误文案端到端（0.32.0） | `npm run test:errors` 6/6：真实 401、真实 `ENOTFOUND`（标签超 63 字符导致 `getaddrinfo` 失败）、被本机网络接住的 `ECONNRESET`（对照）、`ECONNREFUSED`、12 秒 `TIMEOUT`；界面文案与技术原文不同，技术原文留在主进程日志。未覆盖：NXDOMAIN 成因、真实云端下的失败路径 |
 | 安装生命周期（0.24.0 复跑） | `scripts/qa-install-lifecycle.ps1 -Mode Run`：53 步 / 38 通过 / 15 观察 / 0 失败，首次安装、同版本覆盖、0.14.0 → 0.24.0 升级、卸载保留、重装保留、目录外启动、项目/会话/草稿/加密配置哈希均通过；逐像素与跨 Windows 用户解密仍 `outside_scope` |
 | 压缩事件实包验收（0.23.0） | `npm run test:compaction`：本地假服务把请求推到 216,056 字符（≈54,000 tokens，越过 54,272 阈值），第 8 轮出现摘要请求，第 9 轮请求降到 122,222 字符并带检查点前言（消息 17→10）；界面无错误、详情正常、不显示压缩提示（与桌面版一致） | 实包 + 本地假服务，可重复 | 摘要质量未评估；真实云端长会话未跑；`image-offload` 真实卸载仍未观察 |
 | 压缩口径对齐（0.22.0／0.22.1） | 阈值与桌面版一致：`compaction-basic` 写 `{headroomTokens:65536,maxTokens:65536,thresholdRatio:0.8,retainRatio:0.16}`，128k 窗口阈值 54,272；`tool-result-pruner` 8192／4096／1024 未改；`image-offload` 自 0.22.1 起真正启用（0.22.0 因 `disabled` 清单同 id 禁用优先而未生效，已更正） | 源码 439（438 通过／1 跳过／0 失败）、`runtime-patch` 2/2 读落盘补丁、实包链路与真实云端全绿 | 真实压缩事件与真实图像卸载均未触发；压缩后提示文案未逐字对照 |
