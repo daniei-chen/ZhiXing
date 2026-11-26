@@ -1,0 +1,72 @@
+{
+  "variant": "baseline",
+  "mode": "created",
+  "rows": [
+    {
+      "ms": 4809,
+      "event": "parent-delegate-request"
+    },
+    {
+      "ms": 4861,
+      "event": "sdk-child-created"
+    },
+    {
+      "ms": 4861,
+      "event": "runtime-child-event",
+      "status": "running"
+    },
+    {
+      "ms": 4861,
+      "event": "control-start",
+      "rawStatus": "unknown",
+      "childRequests": 0
+    },
+    {
+      "ms": 4862,
+      "event": "control-file",
+      "exists": true
+    },
+    {
+      "ms": 4866,
+      "event": "sdk-child-status",
+      "status": "running"
+    },
+    {
+      "ms": 4896,
+      "event": "control-resolved",
+      "requested": true
+    },
+    {
+      "ms": 4902,
+      "event": "sdk-child-status",
+      "status": "idle"
+    },
+    {
+      "ms": 4925,
+      "event": "sdk-child-finished",
+      "status": "aborted"
+    },
+    {
+      "ms": 4925,
+      "event": "runtime-child-event",
+      "status": "aborted"
+    },
+    {
+      "ms": 4998,
+      "event": "parent-result-request"
+    },
+    {
+      "ms": 5056,
+      "event": "parent-result-request"
+    },
+    {
+      "ms": 5138,
+      "event": "run-resolved",
+      "children": [
+        {
+          "status": "aborted"
+        }
+      ]
+    }
+  ]
+}

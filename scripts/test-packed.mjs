@@ -32,6 +32,7 @@ const tests = [
   'automation-persistence.test.mjs',
   'runtime.test.mjs',
   'runtime-native-entrypoints.test.mjs',
+  'runtime-execution-controls.test.mjs',
   'runtime-image-ocr.test.mjs',
   'runtime-vision.test.mjs',
   'runtime-cleanup.test.mjs',

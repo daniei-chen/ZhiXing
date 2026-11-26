@@ -152,19 +152,24 @@ test('真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本�
   stallChild=true;
   stage('subagent-interrupt');
   let control;
+  const controlOutcome=Promise.withResolvers();
   manager.onEvent=event=>{
    unsubscribeQuestion(event);
    if(!control&&event.runId==='manual-interrupt'&&event.type==='subagents'&&event.status==='running'){
     const request={runId:event.runId,sessionId:event.sessionId,action:'interrupt-agent',target:event.childSessionId};
     control=(async()=>{
      await assert.rejects(manager.controlExecution({...request,sessionId:'another-chat'}),/当前交办/);
+     diagnostic('subagent-control-request');
      return manager.controlExecution(request);
     })();
-    control.catch(()=>{});
+    control.then(value=>{diagnostic('subagent-control-accepted');controlOutcome.resolve(value);},error=>{diagnostic('subagent-control-rejected');controlOutcome.reject(error);});
    }
   };
-  const interrupted=await manager.run({runId:'manual-interrupt',sessionId:'manual-interrupt',prompt:'parent-subagent-fixture 委派合成测试。',privacyMode:'redact'},{...config,manualControls:true},fixtureKey);
-  assert.deepEqual(await control,{requested:true});
+  // Observe control failure while the deliberately stalled child is running.
+  // Waiting for run() first would hide a rejected control until the test timeout.
+  const interruptRun=manager.run({runId:'manual-interrupt',sessionId:'manual-interrupt',prompt:'parent-subagent-fixture 委派合成测试。',privacyMode:'redact'},{...config,manualControls:true},fixtureKey).then(result=>{assert(control,'Native child never became eligible for interruption');return result;});
+  const [interrupted,controlled]=await Promise.all([interruptRun,controlOutcome.promise]);
+  assert.deepEqual(controlled,{requested:true});
   assert(interrupted.children.some(child=>['aborted','cancelled','interrupted'].includes(child.status)));
   manager.onEvent=unsubscribeQuestion;
   stallChild=false;

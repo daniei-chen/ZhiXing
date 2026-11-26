@@ -328,14 +328,15 @@ async function launch() {
     async () => {
       if (instance.error) throw instance.error;
       assert.equal(instance.closed, false, 'Application exited before CDP attachment');
+      // Read only this child's fresh log. A reused profile can retain an old
+      // DevToolsActivePort, or Chromium can fail to replace it on Windows.
+      // Log read failures propagate; only endpoint readiness is retried.
+      const output = await fs.readFile(appLog, 'utf8');
       if (!instance.ui) {
-        const ports = await fs
-          .readFile(path.join(profile, 'DevToolsActivePort'), 'utf8')
-          .catch(() => '');
-        if (ports) instance.ui = await connectUi(Number(ports.split('\n')[0])).catch(() => null);
+        const port = output.match(/DevTools listening on ws:\/\/127\.0\.0\.1:(\d+)\//)?.[1];
+        if (port) instance.ui = await connectUi(Number(port)).catch(() => null);
       }
       if (!instance.main) {
-        const output = await fs.readFile(appLog, 'utf8');
         const port = output.match(/Debugger listening on ws:\/\/127\.0\.0\.1:(\d+)/)?.[1];
         if (port) instance.main = await connectUi(Number(port), true).catch(() => null);
       }
@@ -362,8 +363,10 @@ async function launch() {
     return {
       version: app.getVersion(),
       packaged: app.isPackaged,
+      pid: process.pid,
       profile: app.getPath('userData'),
       exe: process.execPath,
+      url: window.webContents.getURL(),
       versions: {
         electron: process.versions.electron,
         chrome: process.versions.chrome,
@@ -373,8 +376,11 @@ async function launch() {
   });
   assert.equal(identity.packaged, true);
   assert.equal(identity.version, provenance.version);
+  assert.equal(identity.pid, child.pid, 'Inspector must belong to this launch');
   assert.equal(path.resolve(identity.profile), profile);
   assert.equal(path.resolve(identity.exe), exe);
+  assert.equal(identity.url, 'zhixing://app/index.html');
+  assert.equal(await evaluate(() => location.href), identity.url);
   return identity;
 }
 async function observeQuit() {

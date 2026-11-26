@@ -15,6 +15,7 @@
 5. 阅读 `tests/workspace-persistence.test.mjs`、`renderer-slices.test.mjs`、`conversation-drafts-ui.test.mjs`、`error-boundary-ui.test.mjs` 和 `scripts/test-phase1-ui.mjs`。源码 mock 调用次数不等于 Windows 写盘次数；后者应有实际文件采样及真实内核的慢 SSE 旅程。
 6. 审查错误边界：工作面板异常不能卸载聊天；固定提示不得泄露错误对象，重试和重新载入必须真实执行。边界本身不应改动持久记录。
 7. 核对发布工作流：构建使用精确源码和锁文件；失败门禁不能发布；公开前先建 draft、上传固定 18 资产并逐个校验。高写权限仅分配最终发布 job，不能由外部 PR 触发。
+8. 核对子任务控制：上游会话创建事件不得提前开放中断；真正运行、空闲和终态跟随原生事件。检查 `runtime-execution-controls.test.mjs` 与控制桥的共享超时、取消和损坏文件处理；确定性延迟复现与失败候选说明见 [候选验收记录](evidence/0.41.0/candidate-validation.md)。
 
 ## 明确边界
 

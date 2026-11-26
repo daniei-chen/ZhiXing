@@ -2,9 +2,19 @@
   "schemaVersion": 1,
   "baselineCommit": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
   "baselineSnapshot": "quality/baseline-718cb62.json",
-  "eslintFiles": ["src/run-status.js", "src/run-summary.js"],
+  "eslintFiles": [
+    "src/run-status.js",
+    "src/run-summary.js",
+    "electron/runtime.mjs",
+    "electron/execution-control-bridge.mjs",
+    "harness/execution-controls.mjs"
+  ],
   "stylelintFiles": ["src/styles.css", "src/model-controls.css", "src/desktop-ui.css"],
-  "formatFiles": ["package.json"],
+  "formatFiles": [
+    "package.json",
+    "electron/execution-control-bridge.mjs",
+    "tests/runtime-execution-controls.test.mjs"
+  ],
   "generatedFiles": ["package-lock.json"],
   "generatedDirectories": ["docs/evidence/"],
   "runtimeCustomProperties": [

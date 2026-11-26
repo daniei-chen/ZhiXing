@@ -54,4 +54,10 @@ export default [
     files: ['electron/main.cjs'],
     linterOptions: { noInlineConfig: false, reportUnusedDisableDirectives: 'error' },
   },
+  {
+    // Three cleanup rejection boundaries and three safe error translations
+    // retain their existing semantics. Only the marked statements opt out.
+    files: ['electron/runtime.mjs'],
+    linterOptions: { noInlineConfig: false, reportUnusedDisableDirectives: 'error' },
+  },
 ];
