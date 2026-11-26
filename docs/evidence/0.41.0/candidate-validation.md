@@ -33,6 +33,14 @@
 
 有界事件记录保存在 [subagent-controls](subagent-controls/)：`before-*` 是旧实现的创建延迟 800 ms、控制桥延迟 5 秒及对照；`after-ready-only-*` 记录仅返回插件 Promise 尚不足的中间实现；无前缀的两个文件是最终修复后的创建延迟 800 ms 和控制桥延迟 2 秒对照。仅记录事件、相对毫秒、状态和计数，没有模型请求正文、凭据或用户文件。
 
+## 第三候选与正式发布
+
+第三候选 `54f7113d721bdd81f244951a425753009ac19174` 的 Windows 源码检查为 605/605、组件与隔离 renderer 27/27、Sites 4/4；目录包回归为 406/406，Phase 0A 界面 9/9、Phase 1 界面 7/7，失败、取消和跳过均为 0。该候选随后通过 [PR #1](https://github.com/daniei-chen/ZhiXing/pull/1) 合入 main。
+
+正式发布没有复用候选安装器。[main 发布工作流 45864550645](https://github.com/daniei-chen/ZhiXing/actions/runs/45864550645) 在 `7ef24667ab8d546b94234a21706dffa2c8bae9d6` 上重新构建，再次取得源码 605/605、组件 27/27、Sites 4/4、目录包 406/406、Phase 0A 9/9 和 Phase 1 7/7。原始日志及截图保存在 [final](final/)，分层结论见 [本轮 Windows 验收](../../windows-acceptance-0.41.0.md)。
+
+首次 publish 作业创建精确标签和草稿后，立即回读未找到草稿而停止。后续只读 API 确认同一草稿已存在，仅重跑失败的发布作业，复用同一份已经验收的 bundle；没有改源码、移动标签或重新打包。2026-11-27 01:29:06（北京时间）[v0.41.0 预发行版](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.41.0) 正式公开，18 件资产的名称、大小及远端 SHA256 全部匹配。原始失败与成功 receipt 均保留，详见 [发布过程](final/publication.md)。
+
 ## 证据边界
 
-失败候选没有发布为正式版本。所有 Windows 检查使用托管 runner、临时档案和本地合成模型服务；没有安装到用户的 `D:\应用\知行`，也没有使用真实云端 Key。源码作业的 PR 合并提交与目录包作业的 PR head 各自保留在 Actions 记录中；真正发布将在 main 的同一提交上重新构建和验收，不复用候选安装器。
+失败候选没有发布为正式版本。Windows 界面和内核任务使用托管 runner、临时档案与本地合成模型服务，错误文案用例另含真实网络探测；没有安装到用户的 `D:\应用\知行`，也没有使用真实云端 Key。源码作业的 PR 合并提交与目录包作业的 PR head 各自保留在 Actions 记录中；正式发布使用 main 的同一提交重新构建和验收，不复用候选安装器。

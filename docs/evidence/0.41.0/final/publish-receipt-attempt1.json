@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "status": "failed_or_incomplete",
+  "sourceCommit": "7ef24667ab8d546b94234a21706dffa2c8bae9d6",
+  "error": "The newly created draft was not found by its real release ID",
+  "boundary": "Inspect the exact release/tag state before retrying; a failed network response does not prove that no remote object was created."
+}

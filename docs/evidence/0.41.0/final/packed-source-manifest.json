@@ -1,0 +1,417 @@
+{
+  "version": "0.41.0",
+  "sourceCommit": "7ef24667ab8d546b94234a21706dffa2c8bae9d6",
+  "lockSha256": "0a87ad1dc899eae089cb8a134af6aa75edb561cc22190ad9a81b6630fecc6c93",
+  "matchedFiles": 102,
+  "sourceFingerprint": "78f1ea4dfa7ef2b91db8f8dad3115678414a4de2cca268d307acfda42a9cdcc3",
+  "files": [
+    {
+      "file": "dist/client/assets/addon-fit-BEYchpMh.js",
+      "sha256": "dbd508b661dce12776e17e6399116ff1e6a22cfd5a9e900cca7e2412f998ab70"
+    },
+    {
+      "file": "dist/client/assets/capybara.png",
+      "sha256": "5afaea982fe2c5cb0dfa260b258c90ef04deaf1dc0c1751e6c9935652a2ed2d5"
+    },
+    {
+      "file": "dist/client/assets/index-fM6i6gdD.css",
+      "sha256": "4a8703435fd055487a972e87ae611f48540de09eacc2bf90cc23cd10a7013278"
+    },
+    {
+      "file": "dist/client/assets/index-vTBcZSsr.js",
+      "sha256": "bade2d5314b6a2c7173d4bfe91fb5a05cbd9ed3096b3042c1473c6edbacc9b45"
+    },
+    {
+      "file": "dist/client/assets/markdown-BOhPJHrX.js",
+      "sha256": "48a8134a531f160d8ca0a18f679a5a6186f297c808cb521d24180014dc7874bd"
+    },
+    {
+      "file": "dist/client/assets/profile-pet.png",
+      "sha256": "1f12f10e63b0873e3a1b4e7928820ba966ecc4e2d8c911ab176a070005b4d5c7"
+    },
+    {
+      "file": "dist/client/assets/welcome-mark.png",
+      "sha256": "f848659a1c00860eec5a55b38e9ed14225aa9f3f37351115161778bc40d4f479"
+    },
+    {
+      "file": "dist/client/assets/xterm-DYP7pi_n.css",
+      "sha256": "7c5a01f382f76539fc9b4db6b18e18a7035741845fd14968c5cdc0a7e373d817"
+    },
+    {
+      "file": "dist/client/assets/xterm-DoU7rZf7.js",
+      "sha256": "763611d3fcf9f045a5d77df6f8cb25a1736018627072cfd79fa29f386bb0c2c5"
+    },
+    {
+      "file": "dist/client/brand/zhixing-bamboo.png",
+      "sha256": "c123f438263f01d27d61c0f354e4ff377b9ce985e292ecfac7ab00bf6d529daa"
+    },
+    {
+      "file": "dist/client/brand/zhixing.ico",
+      "sha256": "ac5845b9006255f944e576b61d30df4e53aa9874fe26c1131b4facd89d3753f3"
+    },
+    {
+      "file": "dist/client/index.html",
+      "sha256": "11e847dcc27f2855e04de53feeceecfc7ebd00b7c367474ff219782f00edc287"
+    },
+    {
+      "file": "electron/app-log.mjs",
+      "sha256": "d90507d9762ad2fbf056c23c2ac70df0871a2a985caa9d255d428e1677bc7c73"
+    },
+    {
+      "file": "electron/archive-name.mjs",
+      "sha256": "8a0c9f7302bb754d60b362f82a57128f21d8e9a73a3c90a6d5625ebf27186c2b"
+    },
+    {
+      "file": "electron/assistant-stream.mjs",
+      "sha256": "3faf01b3bc43e8e9f0f1a5adc36ba8fa93375ca622c760e70d7c149b6e27cd12"
+    },
+    {
+      "file": "electron/automation-service.mjs",
+      "sha256": "899dab44a19420734e381d4ccc8ac45432d09d1500732fa6c60faefcf91e5d30"
+    },
+    {
+      "file": "electron/automation-tools.mjs",
+      "sha256": "11e84cd5f2ef7cafd517c78ed385d17e7861fccc0fe138b850c0f5c82bf30148"
+    },
+    {
+      "file": "electron/browser-policy.mjs",
+      "sha256": "bc68c70b3bfb56448cc341e259fd12697acd5451096e8a1af7220e3e103c983a"
+    },
+    {
+      "file": "electron/browser-service.mjs",
+      "sha256": "3be163a76c966a62a7fbd908f1f6618614e0c1c4f1aa3a7424fc1b7183db8d8c"
+    },
+    {
+      "file": "electron/change-summary.mjs",
+      "sha256": "08e7425cd8b8b49a9b811aaaf14c907fc9372cdd399a8d94021092a6e2127bb9"
+    },
+    {
+      "file": "electron/chat-import-worker.mjs",
+      "sha256": "e345ca5975e5239992300e7994d4ed79fb9e3996f3abb1338036cc3262e242fe"
+    },
+    {
+      "file": "electron/chat-import.mjs",
+      "sha256": "9e6f51b36778fce4601ee54a95acacaf5647d44bce401eb9c9bc3e119be0bd8f"
+    },
+    {
+      "file": "electron/compaction-policy.mjs",
+      "sha256": "0ffc46e9c8385152e87c44e5bf7aff37701c221a32f87ea3b9a0b7c4bbd5ffb2"
+    },
+    {
+      "file": "electron/deliverable-access.mjs",
+      "sha256": "fecd5a9f227362998ca96c76a46b82cdb83f3c191d6d854a61b69390b00ef1fd"
+    },
+    {
+      "file": "electron/delivery-service.mjs",
+      "sha256": "0ec2b2ba621fa81b1b5c7d5a831aeae7f26c96de8c4b559650ed1fb3f6ad3e0f"
+    },
+    {
+      "file": "electron/desktop-release.mjs",
+      "sha256": "6fd5577319d2d387fe891b12d08ebce790ddfab05985d4a6191cf11b57d8033c"
+    },
+    {
+      "file": "electron/document-service.mjs",
+      "sha256": "46ae5354c41e46c7db843e3f07e5ca67479550be1e310c8c71407916fabfd795"
+    },
+    {
+      "file": "electron/document-text.mjs",
+      "sha256": "0c316468bf622f31defa183ebb530e96ecf46f94acbfdb5cfd861c0d6cd87851"
+    },
+    {
+      "file": "electron/document-worker.mjs",
+      "sha256": "2c2f7c536c7357877d8e7988031a333e2c22a96fb113dbb198f4bd7c1864dd1e"
+    },
+    {
+      "file": "electron/execution-control-bridge.mjs",
+      "sha256": "71cdec3bc652c62ec984ab2477940813d4588001ce70f0aba519141e284971b5"
+    },
+    {
+      "file": "electron/execution-events.mjs",
+      "sha256": "810acd8515b40357cd1395097e70d732238c39a0a1e4e03fe304198382bfff21"
+    },
+    {
+      "file": "electron/file-watcher.mjs",
+      "sha256": "c3db9d5ccdbf2fbb9ed6e7496fb060e5c990993e3273c9a1c0a9a512f1196624"
+    },
+    {
+      "file": "electron/goal-wire.mjs",
+      "sha256": "b2c6fd0b844c4d5cd709e13e9e8e64d348e31704e6d1fd48c79c4d3f2145d7b3"
+    },
+    {
+      "file": "electron/kernel-version.mjs",
+      "sha256": "c0a655a345fbab2c5047378c53579eb51e05023022c6c6710a5e66f31a47c462"
+    },
+    {
+      "file": "electron/main.cjs",
+      "sha256": "2bb04a7415b72dfe2ea3f700fb393f132c8bd87fe56923485fc2b1be985faa54"
+    },
+    {
+      "file": "electron/mcp-config.mjs",
+      "sha256": "caef4556d6b83c11d30c281ad66afe70f763d996ad311a679708656ccf2652f1"
+    },
+    {
+      "file": "electron/message-feedback.mjs",
+      "sha256": "b00956bb3a1700f7631ea726c1c4a24a8005db625e390cf2d58e6015d05f1d45"
+    },
+    {
+      "file": "electron/model-catalog.mjs",
+      "sha256": "f8e40f4c2c7f8f1e65e34d980d860752c2307de07373ea87b6a0375ed153d602"
+    },
+    {
+      "file": "electron/native-session-export.mjs",
+      "sha256": "a9a87207f9ff326302055d4b6449434de7b2259adcc75f0826651fc21b384a5d"
+    },
+    {
+      "file": "electron/ocr-service.mjs",
+      "sha256": "866f57f65ad7c34d890c1490b3f3597706ef2729780c317597841f6e69026cd4"
+    },
+    {
+      "file": "electron/ocr-worker.ps1",
+      "sha256": "9d749065ab64e59e5c943f4584f0d28fd8401a2e7ad52734d318b616acbec4b4"
+    },
+    {
+      "file": "electron/office-files.mjs",
+      "sha256": "87e5ece7f4fb2ce42142d30606d0c79a1b3df797907cdeaafb863a0365f73e17"
+    },
+    {
+      "file": "electron/office-formats.mjs",
+      "sha256": "b7c61436a42d2f7ef3e7a811434b6ca22d45685c1525ee8d58f6087f293e855e"
+    },
+    {
+      "file": "electron/office-layout-worker.mjs",
+      "sha256": "6a2f16ce8212c4ce3190f5a95c7ca802b2539f28784a32e9486cf3f0c62f62f8"
+    },
+    {
+      "file": "electron/office-layout.mjs",
+      "sha256": "d13b4fc50899a56255449d6b5b01a37ec717a24be4044b4d7537882191422707"
+    },
+    {
+      "file": "electron/office-visual.mjs",
+      "sha256": "f13cdfa8f1ba9b9262f3c79ce027298958216dcfb7d4c9368fb31528c6e11b09"
+    },
+    {
+      "file": "electron/plugin-profile.mjs",
+      "sha256": "caa26e2cc55021353d9852c7dfb0f0d37618b73be8bcc476e6e4fbba48c61524"
+    },
+    {
+      "file": "electron/plugin-service.mjs",
+      "sha256": "a3bbab6f97435741640545494995a00fbbd6f33b3e24c42207ed0c455d067d8a"
+    },
+    {
+      "file": "electron/plugin-worker.mjs",
+      "sha256": "8555babfadea675e537ef02dde565f67512f49f104dbec0b9d13057268703ef7"
+    },
+    {
+      "file": "electron/preload.cjs",
+      "sha256": "7db73cd8bc88446dd9aa73a74dfca8ac2557b9c27c25a00b0148a0946b7bbf3a"
+    },
+    {
+      "file": "electron/privacy-gateway.mjs",
+      "sha256": "c69b55ad7b1dbeb3e7ceb7bd95d7468e469536661db62ea5724f2692ae5a96c6"
+    },
+    {
+      "file": "electron/project-worktree.mjs",
+      "sha256": "1a9d04c6536cc9b060254e2c6faaee3332ef04de70669340b50a6083966762c6"
+    },
+    {
+      "file": "electron/providers.mjs",
+      "sha256": "13944a1f2a9d146eb35b9b01b262b8a5a32bbffba8e9e822e50fe7726cd86939"
+    },
+    {
+      "file": "electron/review-diff.mjs",
+      "sha256": "9f1e919221e4464d5aa05d7e99fa447cbdf1fcc37f7d1acc1cf4e5ee150daab7"
+    },
+    {
+      "file": "electron/run-failure.mjs",
+      "sha256": "79634dec3c854a1498dcc0f06f491bf2454b190eaf8f1934288ad7f4861c01ca"
+    },
+    {
+      "file": "electron/runtime-cancellation.mjs",
+      "sha256": "b029ef3fd273f08016f32b79fac574637f917e7c5f21ad1d4bbcfdd4aca74426"
+    },
+    {
+      "file": "electron/runtime.mjs",
+      "sha256": "6c3adb3062e849ac9562a3e69b544c9e5c52cc9b22595049bfbd6280f1d6b5f8"
+    },
+    {
+      "file": "electron/schedule-rules.mjs",
+      "sha256": "4ff7c4f08897491d526f7cccbb706ec5071075f5ee151e791b90b61c11e8e735"
+    },
+    {
+      "file": "electron/session-history-record.mjs",
+      "sha256": "8e6a72bed4abf7c957792a6b3f3b0a0300f120b051e0084b3c36d3063abd4a1a"
+    },
+    {
+      "file": "electron/speech-policy.mjs",
+      "sha256": "c1f712a5ce8e77bf2b75d3f90f8bacde2ce00b5db52e6b7cac8e9d750b878543"
+    },
+    {
+      "file": "electron/speech-service.mjs",
+      "sha256": "0103b8b68205fcc8c558c36bf21a8ecc53a4b7ba2f631ab1bc368b3a3679f6a5"
+    },
+    {
+      "file": "electron/temp-hygiene.mjs",
+      "sha256": "5f5b5133cd9d75fb82550b303a252cdafb56a66f55224066823bc9ac2fde197d"
+    },
+    {
+      "file": "electron/terminal-service.mjs",
+      "sha256": "a92cf674a6e2325d6b064ca92e5208af0f38d9589d164f7403c026cf2535ba33"
+    },
+    {
+      "file": "electron/terminal-worker.mjs",
+      "sha256": "8cdcc0c6350217c2257403c42bf84f1262d3729ceb7ad368b3318ddaa7d24904"
+    },
+    {
+      "file": "electron/tool-bridge.mjs",
+      "sha256": "0b125bdd1f255f42477a3989ccd2748364b834f8840f2bc60f09c9f2a3cc96a5"
+    },
+    {
+      "file": "electron/updater-cache.mjs",
+      "sha256": "fb5c064b202d1534dc9c18d5fbcf6c9e8d2aca3e6c4b81778f06550248bb8696"
+    },
+    {
+      "file": "electron/visual-attachments.mjs",
+      "sha256": "86b5006c5ffbbd40bbdca282873e13c2557c65ea74c39b2095bdad324cbaf10f"
+    },
+    {
+      "file": "electron/workspace-files.mjs",
+      "sha256": "172bf4f0e2463589d0992f287fde98ecb3dd7800875bd207034da3de3604f2b9"
+    },
+    {
+      "file": "electron/workspace-persistence.mjs",
+      "sha256": "6927fcbee7f9c803c4516ed94d269779c1b4236952a4eefb4be450244cc06705"
+    },
+    {
+      "file": "electron/workspace-save-queue.mjs",
+      "sha256": "8e6c5ed12ebfbc26b567d6aedd8db808ecc4496e1eef4a610727c84ba805276c"
+    },
+    {
+      "file": "electron/zip-writer.mjs",
+      "sha256": "6858241c9899256ade52b8d81b923a49fb012ecd13d36500f482b7bb688374f4"
+    },
+    {
+      "file": "harness/capability-manifest.mjs",
+      "sha256": "2f3e0eb603bbe60568f727577065689dbac08686cfd09bafddbc3913aaf9ff6c"
+    },
+    {
+      "file": "harness/encrypted-history.mjs",
+      "sha256": "6683140c699fcb9e07aa9647f14fff45e2b016fcdeb76e84994df8ea14fdfc55"
+    },
+    {
+      "file": "harness/execution-controls.mjs",
+      "sha256": "52bc0118fed6c9fe5fbc6ed5cacfc0abbb2ef3ca9a0ad6eb902f08812c92fbc7"
+    },
+    {
+      "file": "harness/file-policy.mjs",
+      "sha256": "248a80d0375aa94a3614209c1221762dbe37de22f1f31b6533c5425c549e269e"
+    },
+    {
+      "file": "harness/mcp-host.mjs",
+      "sha256": "39721773b1e528c7fe8eb1da6b67e573b3ac4bdadf2f84fc01a0e056d733a8d8"
+    },
+    {
+      "file": "harness/native-project-fs.mjs",
+      "sha256": "817e7ea7077ce2f06bd6dcdaa72785ccf72f9d213dc606c2518c538f5a1383bd"
+    },
+    {
+      "file": "harness/native-project-tools.mjs",
+      "sha256": "b82b80835b54ceb322f76af34602dcf9c71295918f2073182ce2a137b22c89d3"
+    },
+    {
+      "file": "harness/office-context.mjs",
+      "sha256": "26c82c40a4774a4a182d8724f5c24e3b83d517bd6c9a5b1aca346c42ca3b2d5d"
+    },
+    {
+      "file": "harness/office-document-tools.mjs",
+      "sha256": "e90cc459f28cbdd663ac2752aa3c3fee9f993d8f0a580f06764a914467c44542"
+    },
+    {
+      "file": "harness/office-skills.mjs",
+      "sha256": "ffde6e7b2e0d6a24b184733adb7423b12fc8eb77bff52069d524faf88df95ed0"
+    },
+    {
+      "file": "harness/office-tools.mjs",
+      "sha256": "d7d20428dfda4db3d31e7db8d3c259ab8606d4ba003ca639fd72b0141bdb3d7e"
+    },
+    {
+      "file": "harness/permission-sync.mjs",
+      "sha256": "5d00677d83974c6850256fa0dbd63b1c50f5304869eb78534c6ab0b136be93fe"
+    },
+    {
+      "file": "harness/privacy-bridge.mjs",
+      "sha256": "69b3cf26cd855f9531463316490b57bee64a16c99b5ecd839e1671ff98ac95d5"
+    },
+    {
+      "file": "harness/project-worktree.mjs",
+      "sha256": "f9ca5c3cc578c54710479bdbb9299eb6af18aee53ed9f8e277b38b24605ccf0b"
+    },
+    {
+      "file": "harness/secure-web.mjs",
+      "sha256": "8164bddce62ad78210b42fd56682d4a84676bc06288a8b2bb75b291bfe0ff0aa"
+    },
+    {
+      "file": "harness/shell-policy.mjs",
+      "sha256": "b05257205c2af4d2ab211ff997298f120b9c42fe9fe4d2dcb23c557e673f5885"
+    },
+    {
+      "file": "src/automation-core.js",
+      "sha256": "b2905afb9abdbfef1f3a9b1f03aadb8b72d774418a91b4ebe5f5d3a3a3c844b6"
+    },
+    {
+      "file": "src/conversation-state.js",
+      "sha256": "c40adb022ae01c31a1d0f4b092f99cb65d01beb800041fd5ba5c58d96a34bde8"
+    },
+    {
+      "file": "src/error-copy.js",
+      "sha256": "ed735ab4724dde4dfbce8e04aa10ba61b1e28243c37b36d16fa5ef6147650676"
+    },
+    {
+      "file": "src/kernel-config.js",
+      "sha256": "184d4fb091a927a144f3fbfd3ce44e71398094af48ee54f8c1846586456820af"
+    },
+    {
+      "file": "src/office-workflows.js",
+      "sha256": "c1231f02efd50e30ce2f385e040adfb626711880ffd2cf535fec925543140a93"
+    },
+    {
+      "file": "src/permissions.js",
+      "sha256": "a65d4cf8f14c999246ba11e959b0197c900c1c43615bc0d075dc15ba4d05e627"
+    },
+    {
+      "file": "src/privacy-core.js",
+      "sha256": "41d3d177a7386f6aa2b7b8df3f6d3f1ed55b626952687032611f935162760d27"
+    },
+    {
+      "file": "src/privacy-policy.js",
+      "sha256": "8b7d6d3c0476de1b7db9339fbd5bcfe25b5c203f4eb23460e821b153339e31c9"
+    },
+    {
+      "file": "src/privacy-recognizers.js",
+      "sha256": "6efca5954b5b0739a8ef18fd12b1ad63f737d63de4310e82b82510dc8e13826e"
+    },
+    {
+      "file": "src/project-core.js",
+      "sha256": "170b202ab2cc6e5ebb8d1b09f151262236d81330f51fdf7d9b4e1dcf5ddb0bb5"
+    },
+    {
+      "file": "src/provider-options.js",
+      "sha256": "77ceb059f8e64320bb6c7d9673113d5d5fe42ac1caba86ef108892d8d52db138"
+    },
+    {
+      "file": "src/scheduler.js",
+      "sha256": "0d3ec5682e503903a4c6b76b0f804f54ab1c6e5505dca9ca1c49f6c7178118c7"
+    },
+    {
+      "file": "src/session-commands.js",
+      "sha256": "2862d4d446b1036ba303b327466e833e759172ce8b1830eaa93ffac61e68e167"
+    },
+    {
+      "file": "src/store.js",
+      "sha256": "dd14b6a71fe8618c7b9364820e68ee7e9ec678db612412c1e48dce2c484012bc"
+    },
+    {
+      "file": "src/team-board.js",
+      "sha256": "72871a341fd2e7b3fb40c5a2997f5727a68ad595ec432edf22965b5b36ee77c3"
+    }
+  ]
+}

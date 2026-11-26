@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "version": "0.41.0",
+  "sourceCommit": "7ef24667ab8d546b94234a21706dffa2c8bae9d6",
+  "runId": "45864550645",
+  "files": [
+    {
+      "file": "logs/install.log",
+      "bytes": 2010,
+      "sha256": "7085af2bb26682b65cead1806d728edeb96e23c03e88b01550a6a24e2b1522d1"
+    },
+    {
+      "file": "logs/quality.log",
+      "bytes": 2097,
+      "sha256": "86d3734321ca88d9675c3d656a848eaa1f4c7fd229305f502076fe19465d05f4"
+    },
+    {
+      "file": "logs/package.log",
+      "bytes": 67888,
+      "sha256": "45dc34315ea515d348bc53e1211fc73da93460522b18ab48ea11e18995790edb"
+    },
+    {
+      "file": "logs/nsis.log",
+      "bytes": 886,
+      "sha256": "7f8cd79002fc700549a6b42244dbf941520aa3fc47ed67ba6ebf6ca1b9481844"
+    },
+    {
+      "file": "logs/verify.log",
+      "bytes": 186,
+      "sha256": "8a1d0425c9383ae41f4d3686fc93d2266c742b79f4fa96ed81f0d5013019681c"
+    },
+    {
+      "file": "logs/unit.log",
+      "bytes": 60028,
+      "sha256": "8d17db5d532a9fa66145c12822333211d8dc869f984cf5cddc3b36752a8a2473"
+    },
+    {
+      "file": "logs/components.log",
+      "bytes": 6057,
+      "sha256": "97ac2729b7df4537f2e27636129cf55f486607662c497bbde53234cbeb9fd2f9"
+    },
+    {
+      "file": "logs/sites.log",
+      "bytes": 472,
+      "sha256": "f810adc263ae2cbf67d35cad03f28a78dbb106df2e8cf0569539374ed1532bd1"
+    },
+    {
+      "file": "logs/packed.log",
+      "bytes": 44185,
+      "sha256": "805e165af5624dd89b29598d539987789c7b41721114f206b547a29382a1e423"
+    },
+    {
+      "file": "logs/errors.log",
+      "bytes": 1061,
+      "sha256": "c2af56aae011a4310ca40c03c01e90d86e76cd64a084230adb6ca11dcb423b02"
+    },
+    {
+      "file": "logs/native.log",
+      "bytes": 517,
+      "sha256": "a7f56b869ece5680ff1b388ccabbf9e53640803fad04f5ee36da1c742d71bf51"
+    },
+    {
+      "file": "logs/tools.log",
+      "bytes": 545,
+      "sha256": "97a5a4737650a84a7f9f3d35f7e9c393b9ed290e8d07e87fd3737e6e055896c4"
+    },
+    {
+      "file": "logs/phase0a.log",
+      "bytes": 1060,
+      "sha256": "0d9a89f0b71409ab22f4fb58717b0bf4f6052a1af3af4b314bb15674457fa970"
+    },
+    {
+      "file": "logs/phase1.log",
+      "bytes": 897,
+      "sha256": "df200ba0018b10c2ca5f373a01cc6fd4b9dc8234567ffcc2c5497f5aaf1a1ecd"
+    },
+    {
+      "file": "logs/dependencies.log",
+      "bytes": 317,
+      "sha256": "ff7ae1f6ff945753d0c46687d9b3f38e8c871c579eb03d7c3cc44946f32a74ae"
+    },
+    {
+      "file": "logs/startup.log",
+      "bytes": 3876,
+      "sha256": "bd2492dd97b5fd05a291286bfd11285d816066623fc0ecd2bcb5d46dbdd42ec6"
+    },
+    {
+      "file": "plan.json",
+      "bytes": 360,
+      "sha256": "90d40d762b14b6e29b3227f3d85637014575d376e51f72f217780d85ea1701e9"
+    },
+    {
+      "file": "outcomes.json",
+      "bytes": 1674,
+      "sha256": "f49980172ce100613c9fb9e64a9ed65a3cd3c49469010c5f8e05c6232c06cce5"
+    },
+    {
+      "file": "signature-status.json",
+      "bytes": 217,
+      "sha256": "d5e327c8272e0658b949a06b17c766098153878c2aefec0315ce82851e1932fc"
+    },
+    {
+      "file": "packed-source-manifest.json",
+      "bytes": 14673,
+      "sha256": "16568b89a347b8031a325a96d8277a536fd6cd09ba56606fe3127c786019427b"
+    },
+    {
+      "file": "dependencies/production-inventory.json",
+      "bytes": 422927,
+      "sha256": "2cc2e666c6cba3474f2336e6794136ec0468ca13c89b2d4c58b56a22fbe0bc2d"
+    },
+    {
+      "file": "dependencies/production-sbom.cdx.json",
+      "bytes": 924010,
+      "sha256": "20a04987f955445a4939cc0aa6a8f5b5b060d1a5f707e408c9118eb844466854"
+    },
+    {
+      "file": "dependencies/advisories-by-path.json",
+      "bytes": 685,
+      "sha256": "2aa4a2bba546df57e857a2e5c6bfa02e1cfbe5f1e8527371eb395aeeba56174f"
+    },
+    {
+      "file": "dependencies/summary.json",
+      "bytes": 383,
+      "sha256": "e70314a4ee01ab2c578eb0410b895297066bf7e67778f9bd86c2c5c3bba46a0a"
+    },
+    {
+      "file": "dependencies/npm-audit.json",
+      "bytes": 17756,
+      "sha256": "6560201a821413d847aa99401f6d5bdd5909c8e66f688a42501a163a0b2b8fa0"
+    },
+    {
+      "file": "journeys\\errors\\run-2EXAtP\\connection-refused.png",
+      "bytes": 54255,
+      "sha256": "d33d684800be9f4e42ba0ccb4a9891ec523bf962686c16312bb7f3a22f16d37b"
+    },
+    {
+      "file": "journeys\\errors\\run-2EXAtP\\dns-enotfound.png",
+      "bytes": 54705,
+      "sha256": "c6e55a8b5d548197214375b8efc59b98f6e8ff8b7fdbd0876bcc78f36e2a06ad"
+    },
+    {
+      "file": "journeys\\errors\\run-2EXAtP\\http-401.png",
+      "bytes": 54555,
+      "sha256": "e6a1bb0cf1fc63fc0c191fc8fd50d71a8082ec0be747b1b31b3c6e6e4315d6e9"
+    },
+    {
+      "file": "journeys\\errors\\run-2EXAtP\\intercepted-host.png",
+      "bytes": 56151,
+      "sha256": "897518cb03b229e56bdc25111dc6d559e8cf5c42aa4763ebff4fbabbbdd32bc3"
+    },
+    {
+      "file": "journeys\\errors\\run-2EXAtP\\result.json",
+      "bytes": 4805,
+      "sha256": "a420430dc5e9c6b28cb80012f5c80cf671b19fa4b2abfffc8ec1cd7e0c7e0bd6"
+    },
+    {
+      "file": "journeys\\errors\\run-2EXAtP\\timeout.png",
+      "bytes": 53702,
+      "sha256": "2e149d147e44dea0d2be2128e84f124b3775b2fc0e0c62b863d0ecb27428edeb"
+    },
+    {
+      "file": "journeys\\native\\run-z43VMC\\result.json",
+      "bytes": 2357,
+      "sha256": "01e15f2ab1c7cded73b8d0c8157b54853370beeb1acc07b60e8cd8c8695a831b"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\01-message-light.png",
+      "bytes": 65277,
+      "sha256": "0ad7c14e700469a4cf6589873848526ff646661ac3c694d256d0d36eb1716473"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\02-tools-expanded.png",
+      "bytes": 70424,
+      "sha256": "a090ae6747f66108a9ae28806e18b2e43e679efabef3437a40e7e7d08cf1e04b"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\03-feedback-over-limit.png",
+      "bytes": 85032,
+      "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\04-error-toast-long-input.png",
+      "bytes": 102965,
+      "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\05-error-toast-short-input.png",
+      "bytes": 69091,
+      "sha256": "56367f47a106b18c9f8f084471023cdcae94e6e130a10ffda4930299d80813cc"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\06-message-dark-narrow.png",
+      "bytes": 55793,
+      "sha256": "9621f17b1f5efb05c26ead14f82e0037894a09c32420f69cb1df6fd37be3e943"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\app-log-tail.txt",
+      "bytes": 1518,
+      "sha256": "ef0d0a6c626e4787a34ed552fcfe4ec8c067a13d2f95661a226336853de07f5f"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-HYKNZN\\result.json",
+      "bytes": 10833,
+      "sha256": "3337539663078d89f8efd328aacfe3ab82ad1ee8ec8b86f6c4780d22375782ae"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-5SCXSE\\01-draft-restored.png",
+      "bytes": 48265,
+      "sha256": "56d587b6f2383462f15fee951ffdbdd3b7b758801b4543ae444d11b61ea76b22"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-5SCXSE\\02-live-stream.png",
+      "bytes": 116936,
+      "sha256": "edf78043f88575f57468b6d45970c9a536b77279fea4e252173581c43797c245"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-5SCXSE\\03-final-reply.png",
+      "bytes": 174935,
+      "sha256": "d68f6da0fe3a218644b4e1479c8b5f2ff0df2630c428eeff74f533e6bbd340b7"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-5SCXSE\\app-log-tail.txt",
+      "bytes": 925,
+      "sha256": "6eebadcd7194d4fba7f27b709056a3b360a7bcb00031dbe04b3f9d5f719b36b6"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-5SCXSE\\result.json",
+      "bytes": 27238,
+      "sha256": "8561f26c1cd8ad103693118522e58f2680cae349baca25eefcccf6bdc07f159e"
+    },
+    {
+      "file": "components\\zhixing-drafts-native-4inT7X\\electron.log",
+      "bytes": 677,
+      "sha256": "b6bc4fbdcd2efd074a8e9082d7d4d5c503ebcc3b6a1467ec292f5549aef2f568"
+    },
+    {
+      "file": "components\\zhixing-drafts-native-4inT7X\\journey.json",
+      "bytes": 1823,
+      "sha256": "739daff7263cc92f939688b4090f64be1bc4362ec830186bed01f346085d6f34"
+    },
+    {
+      "file": "components\\zhixing-drafts-native-4inT7X\\source-hashes.json",
+      "bytes": 272,
+      "sha256": "1cf9a33fb1f03e11901fea1341180e20d19d0df7c501f727e304a30dccae3f8f"
+    },
+    {
+      "file": "components\\zhixing-drafts-native-4inT7X\\summary.json",
+      "bytes": 1259,
+      "sha256": "b2afc119197d70b5ddc03baf94e576282e693544fda6d2766f651d13c1e2faec"
+    },
+    {
+      "file": "components\\zhixing-recovery-ui-Li9BF4\\electron.log",
+      "bytes": 2214,
+      "sha256": "5747d1197f68fbb28ec79c8bbe4a2be2994b52ee0fbbbebf97a01d90e998cac3"
+    },
+    {
+      "file": "components\\zhixing-recovery-ui-Li9BF4\\journey.json",
+      "bytes": 2300,
+      "sha256": "5469d642f52ed56967cc8c030ef62ba7895411fbbe8b501d359751dedcbc372f"
+    },
+    {
+      "file": "components\\zhixing-recovery-ui-Li9BF4\\summary.json",
+      "bytes": 150,
+      "sha256": "a5ddb97a385fc41106415cd1b3dcc4e4a1c306a82e1b070aa33d59d2fac9ef09"
+    },
+    {
+      "file": "tool-timeline\\run-mwxtkavo\\result.json",
+      "bytes": 1636,
+      "sha256": "c8413ce7e3eb48cd03252fd2aa2ec820689ca84aec4ed5615217778d46bc6b58"
+    },
+    {
+      "file": "tool-timeline\\run-mwxtkavo\\tool-timeline.png",
+      "bytes": 46553,
+      "sha256": "2e5da9b1f2f07d144efa61e0f8119702f5b767031f3f231c1479264a1bbd5e45"
+    },
+    {
+      "file": "build-provenance.json",
+      "bytes": 287,
+      "sha256": "27c562c69455b6856dafaae2fc14c0001082695aac709efcd0bb556423651999"
+    },
+    {
+      "file": "app-update.yml",
+      "bytes": 111,
+      "sha256": "4f1b8da276060c800e09d2c87b550511fe48afb1ff3480bdde14af876862ec30"
+    },
+    {
+      "file": "latest.yml",
+      "bytes": 342,
+      "sha256": "068710006afc98576be150b399a76f9172a62ff3b12e346cec197623e42c16f9"
+    }
+  ],
+  "retainedBytes": 2742153,
+  "boundary": "Only explicitly named synthetic reports, bounded logs, screenshots and build metadata; no profile or project directories."
+}

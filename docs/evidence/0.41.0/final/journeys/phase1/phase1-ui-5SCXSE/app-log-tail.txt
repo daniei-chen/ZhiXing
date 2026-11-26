@@ -1,0 +1,19 @@
+
+Debugger listening on ws://127.0.0.1:57726/90cb5bb1-75a9-4cb2-ade5-ff09e8618ebe
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:57727/devtools/browser/40c05b8e-264a-48db-a754-f23cfe50672b
+Debugger attached.
+Debugger ending on ws://127.0.0.1:57726/90cb5bb1-75a9-4cb2-ade5-ff09e8618ebe
+For help, see: https://nodejs.org/learn/getting-started/debugging
+ZX_PHASE1_PREPARE_OBSERVED
+ZX_PHASE1_QUIT_ACK {"saved":true}
+
+Debugger listening on ws://127.0.0.1:57752/38ba81a2-b53b-449e-ac57-92a7b4598f52
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:57753/devtools/browser/45b34052-94d4-4bc8-bc63-559ce9636546
+Debugger attached.
+Debugger ending on ws://127.0.0.1:57752/38ba81a2-b53b-449e-ac57-92a7b4598f52
+For help, see: https://nodejs.org/learn/getting-started/debugging
+ZX_PHASE1_QUIT_ACK {"saved":true}

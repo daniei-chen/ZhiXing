@@ -1,0 +1,8 @@
+
+PASS 三份新草稿经真实DOM逐份回切，正文/独立附件/原归属和三个顶栏入口正确
+PASS 重新载入持久JSON文件后，三份草稿仍可逐份打开且使用原键
+Error occurred in handler for 'draft-fixture': Error: SYNTHETIC_DRAFT_FAILURE
+    at nativeJourney (D:\a\_temp\zhixing-release-temp\zhixing-drafts-native-4inT7X\main.cjs:204:17)
+PASS 首次发送失败无需导航，同页恢复正文附件并绑定实际chat，原new键已消费
+PASS 空项目草稿解析附件期间删除项目，迟到附件不复活，重载后仍无孤儿/删除marker
+PASS 当前目标直接调用原生指令，历史按钮已收起，原草稿和附件保留

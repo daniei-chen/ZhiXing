@@ -24,11 +24,25 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前源码进入 **0.41.0 Windows x64 预发行里程碑**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。本版分离草稿输入、流式正文与完整工作空间保存，并增加全局和工作面板的错误恢复；合入此前 Phase 0A / 0B 的聊天修复与工程门禁。 [0.41.0 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.41.0) · [本轮实现与限制](docs/iteration-0.41.0.md) · [外部审计](docs/audit-request-0.41.0.md)
+已发布 **0.41.0 Windows x64 预发行版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。本版分离草稿输入、流式正文与完整工作空间保存，并增加全局和工作面板的错误恢复；合入此前 Phase 0A / 0B 的聊天修复与工程门禁。 [0.41.0 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.41.0) · [本轮实现与限制](docs/iteration-0.41.0.md) · [外部审计](docs/audit-request-0.41.0.md)
 
-发布状态以发行页实际状态为准。安装器、源码指纹、依赖清单、验收摘要和 SHA256 随同次构建发布；源码测试、Windows 实包、NSIS 装配、用户安装生命周期和真实云端分别记录。安装器未签名，用户安装生命周期和真实云端办公评测不由托管 runner 的结果代替。
+安装器、源码指纹、依赖清单、验收摘要和 SHA256 来自同一次 main 构建，18 项发行资产已逐个核对。安装器为未签名预发行包；本轮没有执行用户安装生命周期或真实云端办公评测。
 
-此前 `3735910` 的 Windows 候选证据仍独立保留：[源码 CI](docs/evidence/phase-0b/windows-source-final.json) 为源码 560/560、组件及隔离 renderer 18/18、Sites 4/4；[目录包和六张截图](docs/evidence/phase-0b/windows-packed-final.json) 为包回归 383/383、错误提示 7 项、原生文件审批与导出 5 项、工具时间线 3 项、聊天界面 9/9。这些是 0.40.0 开发候选的历史结果，不能替代 0.41.0 的随包验收。
+源码提交：`7ef24667ab8d546b94234a21706dffa2c8bae9d6`。 [下载 Windows x64 安装器](https://github.com/daniei-chen/ZhiXing/releases/download/v0.41.0/ZhiXing-0.41.0-x64.exe) · [本轮 Windows 验收](docs/windows-acceptance-0.41.0.md) · [发布核验记录](docs/evidence/0.41.0/final/remote-verification.json)
+
+| 本轮证据层 | 实际结果 |
+| --- | --- |
+| 源码测试 | 605/605 |
+| 组件与隔离渲染 | 27/27 |
+| Sites 源码 | 4/4 |
+| 包内模块与真实 Harness | 406/406 |
+| Windows Phase 0A / Phase 1 | 9 / 7 项通过 |
+
+以上四套测试的失败和取消均为 0；跳过数分别为源码 0、组件 0、Sites 0、包内 0。包内测试按文件划分包含 package-aware、mixed-source 和 source-only 夹具，不表示全部断言仅运行包内代码。错误文案、原生文件审批与导出、工具时间线的细项及观察项见本轮验收。
+
+安装器：338,722,541 字节；SHA256：`121d1043b5edf77b8b9448d031dbcc54b16919247228d6d8ccd717728ddebf5a`。文件哈希不能替代发布者代码签名。
+
+[原始日志与截图](docs/evidence/0.41.0/final/) · [候选失败与修复调查](docs/evidence/0.41.0/candidate-validation.md)。此前 0.40.0 开发候选证据继续保存在 Phase 0B 文档中，不与本次发行数字混用。
 
 [Phase 0A 审计核实](docs/phase-0a-audit.md) · [Phase 0B 工程记录](docs/phase-0b-engineering.md) · [代码质量说明](docs/code-quality.md) · [成熟化路线](docs/maturity-roadmap.md)
 
@@ -39,6 +53,9 @@
 知行 Windows 工作台 · 0.11.0 历史截图
 
 </div>
+
+<details>
+<summary>历史更新记录（0.12–0.14，非当前验收结论）</summary>
 
 ## 0.14.0 历史更新
 
@@ -205,6 +222,8 @@
 
 以上工作台和隐私截图分别来自 0.11.0 和 0.12.0。各版本使用独立验收记录。 [0.12.0](docs/windows-acceptance-0.12.0.md) · [0.12.1](docs/windows-acceptance-0.12.1.md) · [0.12.2](docs/windows-acceptance-0.12.2.md) · [0.12.4](docs/windows-acceptance-0.12.4.md) · [0.12.5](docs/windows-acceptance-0.12.5.md) · [0.12.6](docs/windows-acceptance-0.12.6.md)
 
+</details>
+
 ## 开始使用
 
 ### 安装 Windows 版
@@ -215,6 +234,9 @@
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
 
 安装包包含 Node.js、Harness 和插件 npm CLI。Git 工作树需要本机 Git，部分 Office 技能需要额外的本机工具。SenseVoice 语音模型在用户主动准备时另行下载。当前安装包未签名，请核对来源与文件校验值。安装生命周期的结论限于验收记录所列条件。
+
+<details>
+<summary>0.14.0 历史资产与验收记录</summary>
 
 #### 0.14.0 历史资产与证据
 
@@ -232,6 +254,8 @@
 同一 Windows 账户的 NSIS 静默安装生命周期在 `0.13.2` 包上复跑：首次安装、同版本覆盖、卸载保留、重装保留与外部目录启动全部通过，项目／会话／草稿／加密配置哈希全程不变。`0.13.3` 另做了降级到 `0.13.2` 再升级回来的验证，数据文件哈希保持、升级后解密核对内容完整。**交互式安装全流程、跨账户解密、`quitAndInstall` 串联与真实云端仍未验证。**
 
 发行页提供完整安装包、机器可读验收摘要、生产依赖路径清单、组件 SBOM、与 0.13.9 的完整 diff 和 SHA-256 清单。包内 `build-provenance.json` 记录实际构建源码提交 `b1e7d234c97e13ddf7160d2fb55dd8d38df326e3`。 [v0.14.0 源码](https://github.com/daniei-chen/ZhiXing/tree/v0.14.0) · [外部审计说明](docs/audit-request-0.14.0.md)
+
+</details>
 
 ### 连接模型
 
@@ -307,7 +331,10 @@
 | Office 交付 | 已接入 OfficeKit 转换、工作簿重算和按页渲染。复杂排版、结构化报表类型及上游插件的完整生命周期仍待验证 |
 | 平台 | 当前面向 Windows x64。macOS、Linux 分发以及系统桌面 Computer Use 等扩展待独立验证 |
 
-[Harness 能力验收表](docs/harness-capability-map.md) · [0.40.0 历史 Windows 验收记录](docs/windows-acceptance-0.40.0.md) · [界面对照记录](design-qa.md)
+[Harness 能力验收表](docs/harness-capability-map.md) · [0.41.0 Windows 验收记录](docs/windows-acceptance-0.41.0.md) · [界面对照记录](design-qa.md)
+
+<details>
+<summary>0.11.0 历史工作方向</summary>
 
 ## 0.11.0 的工作重点
 
@@ -317,6 +344,8 @@
 - **桌面更集中**。三个顶栏入口、产出来源浮层、工作面板标签和独立侧边聊天，配套官方 SenseVoice 本机语音。
 
 源码回归、合成模型服务、Windows 页面交互、包内回归和安装升级分别记录。当前发行的具体通过项、未验证项及文件指纹以发行说明和 Windows 验收记录为准。
+
+</details>
 
 ## 源码开发
 

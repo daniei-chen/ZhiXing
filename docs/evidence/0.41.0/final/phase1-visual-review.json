@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "status": "ai_reviewed",
+  "version": "0.41.0",
+  "sourceCommit": "7ef24667ab8d546b94234a21706dffa2c8bae9d6",
+  "workflowRunId": "45864550645",
+  "reviewer": {
+    "type": "assistant",
+    "agent": "/root/chat_ui"
+  },
+  "recordCreatedAt": "2026-11-26T17:33:14.597Z",
+  "reviewMethod": "Three original PNGs from this release workflow were individually opened and visually inspected by the assistant earlier in this session. This record documents that completed inspection; the screenshots were not regenerated or edited.",
+  "artifact": {
+    "id": "15141092292",
+    "name": "release-evidence-7ef24667ab8d546b94234a21706dffa2c8bae9d6-1",
+    "zipBytes": 1407476,
+    "zipSha256": "e8d610e01449c11b9048ecd7d1e26ba0d2097611acef25f6c670adfeadaa98ad",
+    "expiresAt": "2026-12-26T17:22:50Z"
+  },
+  "rawEvidence": {
+    "directoryWithinArtifact": "journeys/phase1/phase1-ui-5SCXSE",
+    "reportFile": "result.json",
+    "originalVisualReview": "pending-human-review",
+    "originalReportModified": false,
+    "originalScreenshotsModified": false
+  },
+  "screenshots": [
+    {
+      "file": "01-draft-restored.png",
+      "status": "ai_reviewed",
+      "bytes": 48265,
+      "sha256": "56d587b6f2383462f15fee951ffdbdd3b7b758801b4543ae444d11b61ea76b22",
+      "width": 1255,
+      "height": 912,
+      "observations": [
+        "左侧项目树显示选中的「QA 草稿与流式」聊天，顶栏显示对应项目与聊天归属。",
+        "底部输入框显示多行草稿；「会议资料.txt」附件芯片及「已读取」状态可见。",
+        "输入框底部模型入口、麦克风与发送按钮可见；此画面没有遮挡这些控件的 Toast。"
+      ]
+    },
+    {
+      "file": "02-live-stream.png",
+      "status": "ai_reviewed",
+      "bytes": 116936,
+      "sha256": "edf78043f88575f57468b6d45970c9a536b77279fea4e252173581c43797c245",
+      "width": 1255,
+      "height": 912,
+      "observations": [
+        "用户消息及附件引用可见，助手区域显示墨竹标识与正在输出的合成测试正文。",
+        "正文末端的「思考中」状态和底部停止生成按钮可见，与运行中状态相符。",
+        "底部输入区保持可见，画面中未见 Toast 覆盖输入区或停止生成按钮。"
+      ]
+    },
+    {
+      "file": "03-final-reply.png",
+      "status": "ai_reviewed",
+      "bytes": 174935,
+      "sha256": "d68f6da0fe3a218644b4e1479c8b5f2ff0df2630c428eeff74f533e6bbd340b7",
+      "width": 1255,
+      "height": 912,
+      "observations": [
+        "完成后的合成测试正文尾部、折叠详情、上下文行和消息操作按钮可见。",
+        "底部输入框显示空态占位文本，发送按钮处于禁用外观；运行中的停止按钮已不再显示。",
+        "该画面中正文与底部输入区没有被 Toast 遮挡。"
+      ]
+    }
+  ],
+  "conclusion": "在本次三张截图的可见范围内，草稿和附件、运行中答复以及最终答复均呈现可识别的对应状态，未观察到输入区被 Toast 遮挡或阻塞本轮目标的布局问题。",
+  "limitations": [
+    "这是 AI 视觉复核，不是人工审核；原始报告中的 pending-human-review 状态保持不变。",
+    "没有执行像素一致性比对，也不声称与 Harness、Codex 或 ChatGPT 达到像素一致。",
+    "只观察本次 1255 × 912 截图，不覆盖其他 DPI、分辨率、窗口尺寸或主题。",
+    "三张截图不代表全页面、全流程或完整无障碍验收。",
+    "静态截图不能独立证明流式增长、写盘次数、刷新或重启恢复；这些行为应引用同一工作流的 Phase1 实包断言报告。",
+    "本次视觉素材来自 Windows 打包 EXE、真实 Harness 与本机合成 SSE 服务，不证明真实云端模型质量、安装升级或用户环境兼容性。"
+  ]
+}

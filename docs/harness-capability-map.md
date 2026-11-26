@@ -10,6 +10,8 @@
 
 实际发布状态、该构建的测试总数和源码指纹以 [发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.41.0) 中的 `acceptance-summary-0.41.0.json`、`windows-acceptance-0.41.0.md` 与 `packed-source-manifest.json` 为准。本能力地图是构建时源码说明，不预填未来门禁通过结果。
 
+**发布后补记：** 2026-11-27（北京时间），正式 main 提交 `7ef24667` 构建的 v0.41.0 已公开，18 项资产与本机下载字节的清单逐项核验一致。本轮源码 605/605、组件与隔离 renderer 27/27、Sites 4/4、目录包 406/406；Windows Phase 0A 9/9、Phase 1 7/7。具体层次、错误文案观察项、临时档案及本地合成服务边界见 [0.41.0 Windows 验收](windows-acceptance-0.41.0.md) 和 [正式证据归档](evidence/0.41.0/final/)。未签名、用户安装生命周期与真实云端办公评测仍未覆盖；已发布资产保留构建时原字节，本段为发布后的文档更新。
+
 ## 历史候选与证据入口（0.40.0 基线后的 Phase 0A / 0B）
 
 当前候选的源码修复及限制见 [Phase 0A 审计核实](phase-0a-audit.md)，新增工程门禁、打包来源与逐层结果见 [Phase 0B 工程记录](phase-0b-engineering.md)。这批候选当时仍为 0.40.0、没有发布新版；其证据按实际源码与构建指纹记录，不继承为 0.41.0 结果。

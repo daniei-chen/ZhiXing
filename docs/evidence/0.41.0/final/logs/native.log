@@ -1,0 +1,6 @@
+Evidence: D:\a\_temp\zhixing-release-evidence\journeys\native\run-z43VMC
+PASS Windows 当前执行权限触发原生 write 审批，拒绝后未写入
+PASS 实际批准的多文件补丁停在第 1/3 步，已写文件保留、后续文件不变
+PASS Office 转换的真实桌面审批可批准，源文件保持原字节
+PASS 重启后保留补丁终态；Markdown 按所选历史和已审阅快照保存准确字节，零新增出站
+PASS 保存对话框打开期间移动会话，旧快照不再允许写盘

@@ -1,0 +1,66 @@
+
+> office-agent@0.41.0 test:components
+> node --test --test-concurrency=1 tests/conversation-resources-ui.test.mjs tests/speech-input.test.mjs tests/delivery-review-ui.test.mjs tests/conversation-recovery-ui.test.mjs tests/conversation-drafts-ui.test.mjs tests/conversation-drafts-native.test.mjs tests/capability-ui.test.mjs tests/sidebar-ui.test.mjs tests/provider-settings-ui.test.mjs tests/error-boundary-ui.test.mjs
+
+Error occurred in handler for 'inspect': Error: SYNTHETIC_CHECK_FAILED
+    at D:\a\_temp\zhixing-release-temp\zhixing-capability-ui-TsBunM\main.cjs:4:94
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+{"result":"PASS capability renderer","checks":7,"inspectionCalls":4,"layer":"Windows Electron renderer with synthetic IPC; not final installer/cloud"}
+✔ Windows 内核设置能力状态：真实层级文案、检查失败清空旧结果、配置变化拒绝迟到目录 (1810.6683ms)
+PASS 三份新草稿经真实DOM逐份回切，正文/独立附件/原归属和三个顶栏入口正确
+PASS 重新载入持久JSON文件后，三份草稿仍可逐份打开且使用原键
+Error occurred in handler for 'draft-fixture': Error: SYNTHETIC_DRAFT_FAILURE
+    at nativeJourney (D:\a\_temp\zhixing-release-temp\zhixing-drafts-native-4inT7X\main.cjs:204:17)
+PASS 首次发送失败无需导航，同页恢复正文附件并绑定实际chat，原new键已消费
+PASS 空项目草稿解析附件期间删除项目，迟到附件不复活，重载后仍无孤儿/删除marker
+PASS 当前目标直接调用原生指令，历史按钮已收起，原草稿和附件保留
+Layer: Windows Electron real App/React/Chromium DOM + synthetic IPC and JSON file; not production main, encrypted vault, installer, Harness or cloud
+Checkpoints: 5; draft opens: 7; page loads: 4; model executions: 0; synthetic runPrepared: 2
+Isolated temporary files are removed after verification.
+Text evidence: D:\a\_temp\zhixing-release-evidence\components\zhixing-drafts-native-4inT7X
+✔ Windows Electron真实App/DOM：三份新草稿回切及文件重载、首次失败chat归属、删除项目迟到附件 (1690.5849ms)
+✔ 连续新建三份未发送草稿均有可见入口，切回保留正文附件与较新编辑 (40.0419ms)
+✔ 新草稿首次发送失败后归属实际聊天，原地可见，删除聊天不会留下一份新草稿 (10.8943ms)
+✔ 真实JSON文件重载后每份草稿可打开，空间/项目及附件原归属不变，旧键不复制 (8.9016ms)
+✔ 发送失败期间在当前聊天新输入或编辑后清空，旧草稿不能覆盖 (7.3685ms)
+✔ prepareRun期间的新编辑保留在原草稿，失败不能搬走或清空它 (4.5462ms)
+✔ 已打开列表中的旧回调在项目删除后不复活草稿，其他项目和较新编辑保留 (3.9799ms)
+✔ 空项目草稿尚在读取附件时删除项目，迟到解析结果不能恢复已删除草稿 (4.2088ms)
+✔ 关闭持久保存时新草稿仍可在本轮切回，发送到主机的快照无草稿，重载不恢复 (4.1964ms)
+✔ 助手正文先于改动与交付卡片，工具摘要和操作栏各在对应一侧 (3.0599ms)
+✔ 反馈超过备注上限后仍能清除，只禁止保存超限内容 (10.1331ms)
+✔ 连续编辑同一草稿不重新渲染 App 或保存整库，空闲后只提交草稿 (4.9161ms)
+✔ 流式正文不重新渲染 App 或写入工作空间，结束后保存最终正文 (4.8152ms)
+✔ 全局恢复等待旧任务completed完整交接，正文和交付物保存后才可重挂 (5.5333ms)
+✔ 全局恢复等待旧任务failed完整交接，正文和交付物保存后才可重挂 (4.5452ms)
+✔ 全局恢复等待旧任务cancelled完整交接，正文和交付物保存后才可重挂 (5.5586ms)
+✔ App卸载后的旧运行失败不能将恢复草稿写回新App的较新输入 (4.8968ms)
+✔ App卸载后的迟到附件不能覆盖新App的草稿和附件 (5.3416ms)
+✔ App卸载后迟到的prepare结果不得启动旧交办 (4.3175ms)
+11 business checkpoints passed; isolated temporary files are removed after verification.
+Text evidence: D:\a\_temp\zhixing-release-evidence\components\zhixing-recovery-ui-Li9BF4
+✔ Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试 (2364.934ms)
+✔ 独立 Windows renderer 验证资源浮层导航、滚动、键盘关闭和焦点恢复 (803.3032ms)
+Error occurred in handler for 'delivery:prepare': Error: SYNTHETIC_PREPARE_FAILED
+    at D:\a\_temp\zhixing-release-temp\zhixing-delivery-review-OMU28j\main.cjs:9:122
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'delivery:execute': Error: SYNTHETIC_SAVE_FAILED
+    at D:\a\_temp\zhixing-release-temp\zhixing-delivery-review-OMU28j\main.cjs:10:108
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+{"result":"PASS delivery renderer","fileAdapters":[{"action":"export","format":"txt","bytes":51},{"action":"export","format":"docx","bytes":9649},{"action":"export","format":"xlsx","bytes":6601},{"action":"share","format":"txt","bytes":51}],"prepareRequests":21,"hostTextAuthorization":false,"synthetic":true}
+✔ R02 真实 Windows renderer：主机快照、四路径文件字节、失效/错误恢复与 demo 范围 (2440.1198ms)
+✔ 真实 React renderer 验证全局/面板异常隔离、隐藏状态、安全诊断及实际恢复 (461.4416ms)
+✔ 供应商全部模型已隐藏时仍可批量恢复，单次IPC完成且更新目录 (4.3576ms)
+✔ 项目、置顶、独立及悬空项目聊天分别出现一次，不重复高亮或隐藏旧会话 (21.3883ms)
+✔ mounted VoiceInput isolates stale microphone callbacks and cleans scope, suspension and unmount (1655.393ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12625.0235
