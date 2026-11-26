@@ -8,6 +8,9 @@ const NETWORK_ERROR_COPY = [
   [/（(?:RATE_LIMIT|QUOTA|ACCOUNT_QUOTA)）/, '请求太频繁或额度已用尽，请稍后再试，或到账户里检查余额与限额。'],
   [/（SERVER）/, '模型服务内部出错，请稍后再试。'],
   [/（CONTEXT_WINDOW_EXCEEDED）/, '对话内容超出模型一次能处理的长度，请新建聊天或减少资料后再试。'],
+  // 桌面版在模型切换时先给拟用的请求头定价：装不下就压缩，压缩不成才抛这条。
+  // 它跟地址、Key、额度都无关，说成那三样会让人白折腾。
+  [/（MODEL_SWITCH_COMPACTION_FAILED）/, '换到的新模型装不下这段对话历史，压缩也没能腾出空间。请改用上下文更大的模型，或新建聊天后继续。'],
   [/（UNKNOWN_MODEL）/, '服务端不认这个模型，请刷新模型目录后重新选择。'],
   [/401|unauthorized|invalid api key|incorrect api key|authentication/i, 'API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。'],
   [/403|forbidden/i, '服务端拒绝了这次请求（403），请检查 API Key 权限或账户状态。'],

@@ -150,7 +150,10 @@ try {
   report.log = logText.split(/\r?\n/).filter(line => /turn-failed|MODEL_SWITCH_COMPACTION_FAILED/u.test(line)).slice(-2);
   assert.match(logText, /MODEL_SWITCH_COMPACTION_FAILED/u, '日志里应保留 MODEL_SWITCH_COMPACTION_FAILED');
   assert.match(after.lastAnswer, /未完成|运行错误/u, `这一轮应显示未完成，实际正文「${after.lastAnswer}」`);
-  await record('压缩失败时保留桌面版失败码且本轮显示未完成', { codes: ['MODEL_SWITCH_COMPACTION_FAILED'] });
+  // 这条失败与地址／Key／额度无关：界面必须换成窗口与下一步的说法，不能让人去查凭据。
+  assert.match(after.lastAnswer, /装不下这段对话历史/u, `界面应说明是模型窗口装不下，实际正文「${after.lastAnswer}」`);
+  assert.doesNotMatch(after.lastAnswer, /检查服务地址、模型 ID、API Key 或额度/u, `界面不应再让人查凭据，实际正文「${after.lastAnswer}」`);
+  await record('压缩失败时保留桌面版失败码，界面给出窗口与下一步', { codes: ['MODEL_SWITCH_COMPACTION_FAILED'], copy: 'window too small' });
 
   // ⑤ 新会话直接用��窗口型号：请求与用量都应是小窗口。
   const answered = await ui.evaluate("(()=>{const button=document.querySelector('button[aria-label=\"会话操作\"]');if(!button)return 'no-menu';button.click();return 'menu'})()");

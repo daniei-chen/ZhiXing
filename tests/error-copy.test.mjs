@@ -26,6 +26,8 @@ const COPY = {
   fetch: '网络请求失败，请检查网络连接或代理设置。',
   transport: '无法连接到模型服务，请检查网络、代理或服务地址后重试。',
   rate: '请求太频繁或额度已用尽，请稍后再试，或到账户里检查余额与限额。',
+  // 桌面版切换模型时先给拟用请求头定价，装不下且压缩不成才抛这条；与地址、Key、额度无关。
+  windowSwitch: '换到的新模型装不下这段对话历史，压缩也没能腾出空间。请改用上下文更大的模型，或新建聊天后继续。',
 };
 
 test('每个真实网络故障都有对应的可行动文案', async () => {
@@ -46,6 +48,7 @@ test('每个真实网络故障都有对应的可行动文案', async () => {
     ['模型未完成本次请求（ACCOUNT_TOKEN_INVALID）。请检查服务地址、模型 ID、API Key 或额度。', COPY.unauthorized],
     ['模型未完成本次请求（RATE_LIMIT）。请检查服务地址、模型 ID、API Key 或额度。', COPY.rate],
     ['模型未完成本次请求（QUOTA）。请检查服务地址、模型 ID、API Key 或额度。', COPY.rate],
+    ['模型未完成本次请求（MODEL_SWITCH_COMPACTION_FAILED）。请检查服务地址、模型 ID、API Key 或额度。', COPY.windowSwitch],
     ['模型未完成本次请求（SERVER）。请检查服务地址、模型 ID、API Key 或额度。', '模型服务内部出错，请稍后再试。'],
     // 本机网关连不上上游时给 502；500 是上游自己的错，仍保持原文不冒充网络故障。
     ['模型未完成本次请求（HTTP 502）。请检查服务地址、模型 ID、API Key 或额度。', COPY.transport],
@@ -123,3 +126,14 @@ test('超时与未知原因不冒充网络故障', async () => {
   // 没有错误码时不编造号码，但仍说明拉取失败并保留原始技术兜底。
   assert.equal(friendlyError('无法读取模型列表，请检查网络和 API 地址。'), '无法读取模型列表，请检查网络和 API 地址。');
 });
+
+test('切换压缩失败码被主进程带进句子', () => {
+  const reason = { error: { code: 'MODEL_SWITCH_COMPACTION_FAILED', message: 'Cannot switch to zhixing-provider/qa-small: context compaction failed: summary is not smaller than the shadowed content' } };
+  assert.equal(failureHint(reason), 'MODEL_SWITCH_COMPACTION_FAILED');
+  const sentence = turnFailureMessage(reason);
+  assert.match(sentence, /（MODEL_SWITCH_COMPACTION_FAILED）/u);
+  assert.equal(friendlyError(sentence), COPY.windowSwitch);
+  // 目标代码以外的码不臆造提示。
+  assert.equal(failureHint({ error: { code: 'CONTENT_REFUSED' } }), '');
+});
+
