@@ -24,13 +24,13 @@
 
 知行面向日常办公与政务材料处理。创建项目、选好资料，用自然语言交办一件事，再查看工具执行、核对来源、打开实际生成的文件。会话、项目目录、浏览器、终端和任务记录共同组成桌面工作台。
 
-当前源码基线为 **0.40.0 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [已发布版本](https://github.com/daniei-chen/ZhiXing/releases) · [0.40.0 历史验收记录](docs/windows-acceptance-0.40.0.md) · [能力与缺口总览](docs/harness-capability-map.md)
+当前源码进入 **0.41.0 Windows x64 预发行里程碑**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。本版分离草稿输入、流式正文与完整工作空间保存，并增加全局和工作面板的错误恢复；合入此前 Phase 0A / 0B 的聊天修复与工程门禁。 [0.41.0 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.41.0) · [本轮实现与限制](docs/iteration-0.41.0.md) · [外部审计](docs/audit-request-0.41.0.md)
 
-> **开发中的 Phase 0A / 0B 候选：** [Phase 0A 审计核实](docs/phase-0a-audit.md) · [Phase 0B 工程与验收记录](docs/phase-0b-engineering.md) · [代码质量说明](docs/code-quality.md) · [成熟化路线](docs/maturity-roadmap.md)。应用版本仍为 0.40.0，本分支尚未发布新版；CI 候选安装器与正式发布分别记录。下方保留历史更新，不代表当前候选已通过相应门禁。
+发布状态以发行页实际状态为准。安装器、源码指纹、依赖清单、验收摘要和 SHA256 随同次构建发布；源码测试、Windows 实包、NSIS 装配、用户安装生命周期和真实云端分别记录。安装器未签名，用户安装生命周期和真实云端办公评测不由托管 runner 的结果代替。
 
-候选源码 `3735910` 的 Windows 源码 CI 已通过源码 **560/560**、组件及隔离 renderer **18/18**、Sites **4/4**，无失败、取消或跳过；增量质量门禁与构建通过。[源码 CI 记录](docs/evidence/phase-0b/windows-source-final.json)。目录包、界面截图与候选安装器的证据另见 [Phase 0B 工程记录](docs/phase-0b-engineering.md)，用户安装生命周期、签名与真实云端办公评测仍未覆盖。
+此前 `3735910` 的 Windows 候选证据仍独立保留：[源码 CI](docs/evidence/phase-0b/windows-source-final.json) 为源码 560/560、组件及隔离 renderer 18/18、Sites 4/4；[目录包和六张截图](docs/evidence/phase-0b/windows-packed-final.json) 为包回归 383/383、错误提示 7 项、原生文件审批与导出 5 项、工具时间线 3 项、聊天界面 9/9。这些是 0.40.0 开发候选的历史结果，不能替代 0.41.0 的随包验收。
 
-同一候选的 Windows 打包工作流已通过目录包回归 **383/383**、错误提示 **7 项**、原生文件审批与导出 **5 项**、工具时间线 **3 项**、Phase 0A 聊天界面 **9/9**。[实包记录及六张截图](docs/evidence/phase-0b/windows-packed-final.json)。NSIS 已装配并独立下载核验字节，仍为 **未签名、未安装的开发候选**；该结果不代表正式新版发布。
+[Phase 0A 审计核实](docs/phase-0a-audit.md) · [Phase 0B 工程记录](docs/phase-0b-engineering.md) · [代码质量说明](docs/code-quality.md) · [成熟化路线](docs/maturity-roadmap.md)
 
 <div align="center">
 
@@ -209,7 +209,7 @@
 
 ### 安装 Windows 版
 
-1. 在 [GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases) 选择已发布的 Windows 安装包，同时核对该版本的 `SHA256SUMS-release.txt`、验收摘要和未覆盖范围。本分支的 Phase 0A / 0B 仍为开发候选；CI 候选产物须按对应构建证据核对，不代表已发布新版。
+1. 在 [GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases) 选择已发布的 Windows 安装包，同时核对该版本的 `SHA256SUMS-release.txt`、验收摘要和未覆盖范围。0.41.0 的资产须按对应源码与构建证据核对；Actions artifact 本身不等于已公开发行。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。

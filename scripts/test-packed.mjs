@@ -50,6 +50,7 @@ const tests = [
   'mcp-identity.test.mjs',
   'mcp-destination.test.mjs',
   'workspace-save-queue.test.mjs',
+  'workspace-persistence.test.mjs',
   'plugins.test.mjs',
   'updater-cache.test.mjs',
   'temp-hygiene.test.mjs',

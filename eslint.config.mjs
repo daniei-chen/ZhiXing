@@ -48,4 +48,10 @@ export default [
     files: ['tests/runtime-lifecycle.test.mjs'],
     linterOptions: { noInlineConfig: false, reportUnusedDisableDirectives: 'error' },
   },
+  {
+    // Five public-error translations intentionally omit private native paths,
+    // credentials and Harness stderr. Only the marked throw statements opt out.
+    files: ['electron/main.cjs'],
+    linterOptions: { noInlineConfig: false, reportUnusedDisableDirectives: 'error' },
+  },
 ];

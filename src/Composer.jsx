@@ -6,6 +6,7 @@ import {fileReadLabel} from './FileCoverage.jsx';
 import { VoiceInput } from './VoiceInput.jsx';
 import { ModelControls } from './ModelControls.jsx';
 import { matchesSessionCommandPrefix, parseSessionCommand } from './session-commands.js';
+import { useKeyedValue } from './use-keyed-value.js';
 
 const COMMANDS = [
   ['/plan', '计划模式', '先讨论方案，再批准执行', Lightbulb],
@@ -20,7 +21,10 @@ function markMoreBelow(field) {
   field.toggleAttribute('data-more-below', field.scrollHeight - field.clientHeight - field.scrollTop > 1);
 }
 
-export function Composer({ settings, files, input, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended }) {
+export function Composer({ settings, files: initialFiles, input: initialInput, draftStore, draftKey, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended }) {
+  const draft = useKeyedValue(draftStore, draftKey);
+  const input = draft?.text ?? initialInput;
+  const files = draft?.files ?? initialFiles;
   const [voiceActive, setVoiceActive] = useState(false);
   const [connections, setConnections] = useState([]);
   const [commandIndex,setCommandIndex]=useState(0),[dismissedInput,setDismissedInput]=useState(null);

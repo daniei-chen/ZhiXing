@@ -17,6 +17,19 @@
 - **未做**：知行没有这个机制。
 - **未核对**：还没查知行是否已有等价物，**不许当已做**。
 
+## 0.41.0 草稿与局部订阅核对
+
+本轮读取当前锁定依赖中 `@deepseek-ai/dsh-client-ui-chat@0.2.2-rc.5` 的 `src/client/chat/use-turn-data.ts`，核对它通过 `useSyncExternalStore` 订阅单个 keyed value；同时读取 `dsh-client-ui-conversation@0.2.2-rc.5` 的 `src/client/draft.ts` 和 `src/client/input/facade.ts`，核对独立语义草稿快照、会话输入模型、提交消费与恢复边界。这是安装依赖源码证据，未重新打开用户 D 盘的 Harness 桌面窗口。
+
+| 范围 | 结论 | 知行及边界 |
+| --- | --- | --- |
+| 按键订阅与局部流式正文 | **部分** | 当前输入框和运行正文按草稿键/runId订阅；没有移植完整 Turn Location、Lexical 与队列模型 |
+| 独立草稿与 revision | **部分** | 保留知行既有归属、附件 revision、消费及失败恢复，移除按键触发整库保存；未实现上游完整引用、command chip、quote 快照 |
+| 磁盘存储格式 | **未核对** | `workspace.bin` / `drafts.bin` / epoch 为知行的加密持久化实现，不宣称 Harness 桌面同格式；SQLite 尚未做 |
+| 全局/面板错误恢复的桌面 UI 等价性 | **未核对** | 本轮为现有界面增加基础容错，不改变内核机制；未取得桌面版相同 fallback 交互证据 |
+
+三份上游源文件 SHA256 依次为 `d73a23b1310ad7933698daa2c831cacae8b009490823a36b6f6542ff4d07dfad`、`1bac06e426106152c2f5f1bc475a72795f5dbed44742064fd5d419868e6f576c`、`35d04426a4ac222b890ff0926acd3742df88e7862e90ba3a7ebb55c4a4791266`。本轮实际运行结果以 0.41.0 发行资产的验收摘要为准，不把上游源码核对等同于知行端到端验收。
+
 ## 上下文与压缩（本轮用户点名的重点）
 
 | Harness 机制 | 包 | 知行现状 | 差距 |

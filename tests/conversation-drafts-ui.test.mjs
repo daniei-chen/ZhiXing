@@ -36,13 +36,18 @@ function fixture() {
   return state;
 }
 async function mount(saved = fixture(), overrides = {}) {
-  const slots = [], effects = [], listeners = new Map(), snapshots = [];
+  const slots = [], effects = [], listeners = new Map(), snapshots = [], draftSnapshots = [];
+  const timers = new Map();
+  let now = 0, timerId = 0, renders = 0, mounted = true;
   let index = 0, dirty = true, tree, stored = structuredClone(saved), pendingRun, pendingPrepare;
   const hooks = {
     useState(initial) {
       const position = index++;
       if (!slots[position]) slots[position] = {value: typeof initial === 'function' ? initial() : initial};
       return [slots[position].value, value => {
+        // React ignores updates from an already unmounted component. Keep
+        // asynchronous host calls observable rather than accidentally remounting it.
+        if (!mounted) return;
         const next = typeof value === 'function' ? value(slots[position].value) : value;
         if (!Object.is(next, slots[position].value)) { slots[position].value = next; dirty = true; }
       }];
@@ -60,6 +65,7 @@ async function mount(saved = fixture(), overrides = {}) {
   const desktop = {
     loadWorkspace: async () => structuredClone(stored),
     saveWorkspace: async value => { stored = structuredClone(value); snapshots.push(stored); },
+    saveDrafts: async drafts => { stored = { ...stored, drafts: structuredClone(drafts) }; draftSnapshots.push(stored.drafts); },
     runtimeStatus: async () => ({configured: true, providers: [{id: 'test-provider', baseUrl: 'https://fixture.invalid'}], models: [{id: 'test-model', providerId: 'test-provider', levels: ['high'], reasoningCapability: 'supported'}]}),
     listAutomations: async () => ({revision: 0, tasks: [], runs: []}),
     prepareRun: async () => overrides.deferPrepare ? new Promise(resolve => { pendingPrepare = resolve; }) : ({preparationId: 'prepared', privacyMode: 'redact'}),
@@ -73,16 +79,23 @@ async function mount(saved = fixture(), overrides = {}) {
     window: {zhixing: desktop, addEventListener() {}, removeEventListener() {}},
     document: {addEventListener() {}, removeEventListener() {}, querySelector: () => null},
     matchMedia: () => ({matches: false, addEventListener() {}, removeEventListener() {}}),
-    requestAnimationFrame: callback => callback(), setTimeout: () => 1, clearTimeout() {},
+    requestAnimationFrame: callback => callback(),
+    setTimeout: (callback, delay = 0) => { const id = ++timerId; timers.set(id, { callback, at: now + delay }); return id; },
+    clearTimeout: id => timers.delete(id),
     __hooks: hooks, __element: (type, props, ...children) => ({type, props: {...props, children}}),
   };
   vm.runInNewContext(compiled.outputFiles[0].text, sandbox, {filename: 'App.headless.cjs'});
-  async function flush() {
-    for (let turn = 0; turn < 40; turn++) {
-      if (dirty) { dirty = false; index = 0; tree = sandbox.module.exports.App(); }
+  async function flush({ advance = 400 } = {}) {
+    const deadline = now + advance;
+    for (let turn = 0; turn < 80; turn++) {
+      if (mounted && dirty) { dirty = false; index = 0; renders++; tree = sandbox.module.exports.App(); }
       effects.splice(0).forEach(effect => effect());
       await new Promise(resolve => setImmediate(resolve));
-      if (!dirty && !effects.length) return;
+      if (!dirty && !effects.length) {
+        const next = [...timers.entries()].filter(([, timer]) => timer.at <= deadline).sort((a, b) => a[1].at - b[1].at)[0];
+        if (!next) { now = deadline; return; }
+        timers.delete(next[0]); now = next[1].at; next[1].callback();
+      }
     }
     throw new Error('App hook scheduler did not settle');
   }
@@ -91,15 +104,35 @@ async function mount(saved = fixture(), overrides = {}) {
     if (Array.isArray(value)) return value.flatMap(child => nodes(child));
     return value && typeof value === 'object' && value.props ? [value, ...nodes(value.props.children ?? [])] : [];
   }
-  function component(name) { return nodes().find(node => node.type.displayName === name)?.props; }
+  function component(name) {
+    const props = nodes().find(node => node.type.displayName === name)?.props;
+    // This source-only harness stubs children. Expose the same keyed snapshot
+    // passed to the real Composer; Electron renderer tests cover subscription.
+    if (name === 'Composer' && props?.draftStore) {
+      const draft = props.draftStore.get(props.draftKey);
+      return { ...props, input: draft?.text ?? props.input, files: draft?.files ?? props.files };
+    }
+    return props;
+  }
   const text = node => Array.isArray(node) ? node.map(text).join('') : node?.props ? text(node.props.children) : typeof node === 'string' || typeof node === 'number' ? String(node) : '';
   function button(label) {
     const found = nodes().find(node => node.type === 'button' && text(node) === label);
     assert(found, `Missing button: ${label}`);
     return found;
   }
+  function unmount() {
+    if (!mounted) return;
+    mounted = false;
+    dirty = false;
+    tree = null;
+    effects.length = 0;
+    for (const slot of slots) {
+      slot.cleanup?.();
+      slot.cleanup = undefined;
+    }
+  }
   await flush();
-  return {flush, nodes, component, button, text, snapshots, get stored() { return stored; }, get pendingRun() { return pendingRun; }, get pendingPrepare() { return pendingPrepare; }};
+  return {flush, unmount, nodes, component, button, text, snapshots, draftSnapshots, listeners, get renders() { return renders; }, get stored() { return stored; }, get pendingRun() { return pendingRun; }, get pendingPrepare() { return pendingPrepare; }};
 }
 
 async function openDraft(app, marker) {
@@ -291,4 +324,138 @@ test('反馈超过备注上限后仍能清除，只禁止保存超限内容', as
   assert.equal(cleared[0].conversationId, 'feedback-chat');
   assert.equal(cleared[0].messageId, 'feedback-reply');
   assert(!app.nodes().some(node => node.props.className === 'feedback-panel'));
+});
+
+test('连续编辑同一草稿不重新渲染 App 或保存整库，空闲后只提交草稿', async () => {
+  const app = await mount();
+  app.component('Composer').setInput('开始');
+  await app.flush();
+  const before = { renders: app.renders, workspace: app.snapshots.length, drafts: app.draftSnapshots.length };
+  for (let index = 0; index < 100; index++) {
+    app.component('Composer').setInput(`开始${'字'.repeat(index + 1)}`);
+    await app.flush({ advance: 0 });
+  }
+  assert.equal(app.renders, before.renders);
+  assert.equal(app.snapshots.length, before.workspace);
+  assert.equal(app.draftSnapshots.length, before.drafts);
+  await app.flush();
+  assert.equal(app.snapshots.length, before.workspace);
+  assert.equal(app.draftSnapshots.length, before.drafts + 1);
+  assert.equal(app.component('Composer').input, `开始${'字'.repeat(100)}`);
+});
+
+test('流式正文不重新渲染 App 或写入工作空间，结束后保存最终正文', async () => {
+  const app = await mount();
+  app.component('Composer').setInput('请输出多段正文');
+  await app.flush();
+  const sending = app.component('Composer').onSubmit();
+  await app.flush();
+  const reply = app.stored.chats[0].messages.at(-1);
+  const before = { renders: app.renders, workspace: app.snapshots.length };
+  for (let index = 0; index < 80; index++) {
+    app.listeners.get('RuntimeEvent')({ type: 'draft', runId: reply.runId, text: `正在输出${'段'.repeat(index + 1)}` });
+    await app.flush({ advance: 0 });
+  }
+  assert.equal(app.renders, before.renders);
+  assert.equal(app.snapshots.length, before.workspace);
+  const streaming = app.component('StreamingAnswer');
+  assert.equal(streaming.store.get(reply.runId), `正在输出${'段'.repeat(80)}`);
+  app.pendingRun.resolve({ text: '完整最终正文', masked: '完整最终正文' });
+  await sending; await app.flush();
+  assert.equal(app.stored.chats[0].messages.at(-1).text, '完整最终正文');
+  assert.equal(app.stored.chats[0].messages.at(-1).pending, false);
+});
+
+function sharedPersistence(saved = fixture()) {
+  let value = structuredClone(saved);
+  const writes = [];
+  return {
+    get value() { return value; }, writes,
+    desktop: {
+      loadWorkspace: async () => structuredClone(value),
+      saveWorkspace: async state => { value = structuredClone(state); writes.push('workspace'); },
+      saveDrafts: async drafts => { value = { ...value, drafts: structuredClone(drafts) }; writes.push('drafts'); },
+    },
+  };
+}
+
+test('App卸载后的旧运行失败不能将恢复草稿写回新App的较新输入', async () => {
+  const host = sharedPersistence();
+  const old = await mount(host.value, host.desktop);
+  old.component('Composer').setInput('OLD_FAILED_SUBMISSION');
+  await old.flush();
+  const sending = old.component('Composer').onSubmit();
+  await old.flush();
+  assert(old.pendingRun);
+  const chatId = host.value.chats[0].id;
+  old.unmount();
+  await old.flush({ advance: 0 });
+  const rendersAtUnmount = old.renders;
+
+  const current = await mount(host.value, host.desktop);
+  current.component('Sidebar').openChat(chatId);
+  await current.flush();
+  current.component('Composer').setInput('NEW_APP_DRAFT');
+  current.component('Composer').setFiles([file('new-app-material')]);
+  await current.flush();
+  const durable = JSON.stringify(host.value), writes = host.writes.length;
+
+  old.pendingRun.reject(new Error('synthetic late failure'));
+  await sending;
+  await old.flush({ advance: 10000 });
+  assert.equal(old.renders, rendersAtUnmount);
+  assert.equal(host.writes.length, writes, 'an unmounted producer must not issue another host save');
+  assert.equal(JSON.stringify(host.value), durable);
+  assert.equal(current.component('Composer').input, 'NEW_APP_DRAFT');
+  assert.equal(host.value.drafts[`chat:${chatId}`].text, 'NEW_APP_DRAFT');
+});
+
+test('App卸载后的迟到附件不能覆盖新App的草稿和附件', async () => {
+  const host = sharedPersistence();
+  let finishPick;
+  const old = await mount(host.value, { ...host.desktop, pickFiles: () => new Promise(resolve => { finishPick = resolve; }) });
+  old.component('Composer').setInput('BEFORE_UNMOUNT');
+  await old.flush();
+  const picking = old.component('Composer').chooseFiles();
+  await old.flush({ advance: 0 });
+  assert.equal(typeof finishPick, 'function');
+  old.unmount();
+  await old.flush({ advance: 0 });
+
+  const current = await mount(host.value, host.desktop);
+  current.component('Composer').setInput('AFTER_REMOUNT');
+  current.component('Composer').setFiles([file('current-attachment')]);
+  await current.flush();
+  const durable = JSON.stringify(host.value), writes = host.writes.length;
+  finishPick([file('LATE_OLD_ATTACHMENT')]);
+  await picking;
+  await old.flush({ advance: 10000 });
+  assert.equal(host.writes.length, writes);
+  assert.equal(JSON.stringify(host.value), durable);
+  assert.equal(current.component('Composer').input, 'AFTER_REMOUNT');
+  assert.deepEqual(current.component('Composer').files.map(item => item.id), ['current-attachment']);
+  assert.doesNotMatch(JSON.stringify(host.value), /LATE_OLD_ATTACHMENT/);
+});
+
+test('App卸载后迟到的prepare结果不得启动旧交办', async () => {
+  const host = sharedPersistence();
+  let starts = 0;
+  const old = await mount(host.value, { ...host.desktop, deferPrepare: true, runPrepared: async () => { starts++; return {text: 'must not run'}; } });
+  old.component('Composer').setInput('OLD_PREPARED_SUBMISSION');
+  await old.flush();
+  const sending = old.component('Composer').onSubmit();
+  await old.flush({ advance: 0 });
+  assert.equal(typeof old.pendingPrepare, 'function');
+  old.unmount();
+  await old.flush({ advance: 0 });
+  const current = await mount(host.value, host.desktop);
+  current.component('Composer').setInput('CURRENT_UNSENT_DRAFT');
+  await current.flush();
+  const durable = JSON.stringify(host.value), writes = host.writes.length;
+  old.pendingPrepare({preparationId: 'prepared', privacyMode: 'redact'});
+  await sending;
+  await old.flush({ advance: 10000 });
+  assert.equal(starts, 0);
+  assert.equal(host.writes.length, writes);
+  assert.equal(JSON.stringify(host.value), durable);
 });

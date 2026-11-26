@@ -143,6 +143,17 @@ jobs:
           npm.cmd run test:phase0a -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/phase0a.log"
           exit $LASTEXITCODE
 
+      - name: Packaged Phase 1 persistence and recovery
+        id: phase1
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 10
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-packed-journeys/phase1
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:phase1 -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/phase1.log"
+          exit $LASTEXITCODE
+
       - name: Build uninstalled NSIS candidate
         id: nsis
         if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
@@ -196,7 +207,7 @@ jobs:
       - name: Require every package gate to pass
         if: ${{ always() }}
         env:
-          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.electron.outcome }} ${{ steps.package.outcome }} ${{ steps.verify.outcome }} ${{ steps.packed.outcome }} ${{ steps.errors.outcome }} ${{ steps.native.outcome }} ${{ steps.tools.outcome }} ${{ steps.phase0a.outcome }} ${{ steps.nsis.outcome }}
+          CI_REQUIRED_OUTCOMES: ${{ steps.install.outcome }} ${{ steps.electron.outcome }} ${{ steps.package.outcome }} ${{ steps.verify.outcome }} ${{ steps.packed.outcome }} ${{ steps.errors.outcome }} ${{ steps.native.outcome }} ${{ steps.tools.outcome }} ${{ steps.phase0a.outcome }} ${{ steps.phase1.outcome }} ${{ steps.nsis.outcome }}
         run: |
           if (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {
             Write-Error "A packaged check failed or did not run: $env:CI_REQUIRED_OUTCOMES"

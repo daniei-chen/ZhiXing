@@ -1,0 +1,331 @@
+name: Windows milestone prerelease
+
+# A main version milestone is verified before the separate publishing job gets
+# write access. Pull requests and manual dispatches cannot enter this workflow.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zhixing-milestone-release-main
+  cancel-in-progress: false
+
+jobs:
+  eligible:
+    if: ${{ github.repository == 'daniei-chen/ZhiXing' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      eligible: ${{ steps.plan.outputs.eligible }}
+      version: ${{ steps.plan.outputs.version }}
+      plan-artifact-id: ${{ steps.plan-upload.outputs.artifact-id }}
+    steps:
+      - name: Check out the exact main push
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up release tooling
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.19.0'
+          package-manager-cache: false
+      - name: Check published version and tag state
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release-plan.mjs "${{ runner.temp }}/zhixing-release-plan/plan.json"
+      - name: Retain immutable release plan
+        id: plan-upload
+        if: ${{ steps.plan.outputs.eligible == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-plan-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-release-plan/plan.json
+          retention-days: 7
+          if-no-files-found: error
+
+  windows:
+    needs: eligible
+    if: ${{ needs.eligible.outputs.eligible == 'true' }}
+    runs-on: windows-latest
+    timeout-minutes: 120
+    outputs:
+      bundle-artifact-id: ${{ steps.bundle-upload.outputs.artifact-id }}
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      RELEASE_EVIDENCE: ${{ runner.temp }}/zhixing-release-evidence
+      RELEASE_BUNDLE: ${{ runner.temp }}/zhixing-release-bundle
+    steps:
+      - name: Check out the exact release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up the licensed packaging runtime
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.19.0'
+          package-manager-cache: false
+      - name: Read this run's release plan
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2, node24; digest mismatch fails
+        with:
+          artifact-ids: ${{ needs.eligible.outputs.plan-artifact-id }}
+          path: ${{ runner.temp }}/zhixing-release-evidence
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Prepare isolated evidence and caches
+        run: |
+          New-Item -ItemType Directory -Force "$env:RELEASE_EVIDENCE/logs", "$env:RELEASE_EVIDENCE/journeys", "$env:RELEASE_EVIDENCE/dependencies" | Out-Null
+          $releaseLocalData = "$env:RUNNER_TEMP/zhixing-release-local-data"
+          $releaseTemporary = "$env:RUNNER_TEMP/zhixing-release-temp"
+          New-Item -ItemType Directory -Force $releaseLocalData, $releaseTemporary | Out-Null
+          "LOCALAPPDATA=$releaseLocalData" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEMP=$releaseTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$releaseTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Install locked dependencies
+        id: install
+        timeout-minutes: 12
+        run: |
+          npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/install.log"
+          exit $LASTEXITCODE
+      - name: Prepare the locked Electron executable
+        id: electron
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          node node_modules/electron/install.js 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/electron.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path -LiteralPath 'node_modules/electron/dist/electron.exe' -PathType Leaf)) { throw 'Locked Electron executable is missing' }
+      - name: Incremental code quality
+        id: quality
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          npm.cmd run quality 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/quality.log"
+          exit $LASTEXITCODE
+      - name: Build directory package without implicit publishing
+        id: package
+        if: ${{ !cancelled() && steps.electron.outcome == 'success' }}
+        timeout-minutes: 12
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run build 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/package.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx.cmd --no-install electron-builder --win --x64 --dir --publish never 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/package.log" -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/generate-installer-path-policy.mjs 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/package.log" -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/write-update-config.mjs 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/package.log" -Append
+          exit $LASTEXITCODE
+      - name: Build NSIS from the exact directory package
+        id: nsis
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
+        timeout-minutes: 10
+        run: |
+          npx.cmd --no-install electron-builder --win nsis --x64 --prepackaged release/win-unpacked --publish never 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/nsis.log"
+          exit $LASTEXITCODE
+      - name: Verify packaged source against this main checkout
+        id: verify
+        if: ${{ !cancelled() && steps.nsis.outcome == 'success' }}
+        timeout-minutes: 3
+        run: |
+          node scripts/verify-packed-sources.mjs "release/win-unpacked/resources/app" "$env:RELEASE_EVIDENCE/packed-source-manifest.json" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/verify.log"
+          exit $LASTEXITCODE
+      - name: Source tests
+        id: unit
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 12
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd test 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/unit.log"
+          exit $LASTEXITCODE
+      - name: Component and isolated Windows renderer tests
+        id: components
+        if: ${{ !cancelled() && steps.electron.outcome == 'success' }}
+        timeout-minutes: 6
+        env:
+          ZHIXING_TEST_EVIDENCE_DIR: ${{ runner.temp }}/zhixing-release-evidence/components
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:components 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/components.log"
+          exit $LASTEXITCODE
+      - name: Sites source tests
+        id: sites
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        timeout-minutes: 3
+        run: |
+          npm.cmd run test:sites 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/sites.log"
+          exit $LASTEXITCODE
+      - name: Packaged modules and real Harness
+        id: packed
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 18
+        run: |
+          npm.cmd run test:packed -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/packed.log"
+          exit $LASTEXITCODE
+      - name: Packaged network error messages
+        id: errors
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 7
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-release-evidence/journeys/errors
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:errors -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/errors.log"
+          exit $LASTEXITCODE
+      - name: Packaged file approvals and export
+        id: native
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 7
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-release-evidence/journeys/native
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          node scripts/test-native-files-export-ui.mjs "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/native.log"
+          exit $LASTEXITCODE
+      - name: Packaged tool timeline
+        id: tools
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 5
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:tools-ui -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/tools.log"
+          exit $LASTEXITCODE
+      - name: Packaged Phase 0A regressions
+        id: phase0a
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 8
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-release-evidence/journeys/phase0a
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:phase0a -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/phase0a.log"
+          exit $LASTEXITCODE
+      - name: Packaged Phase 1 persistence and recovery
+        id: phase1
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 10
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-release-evidence/journeys/phase1
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:phase1 -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/phase1.log"
+          exit $LASTEXITCODE
+      - name: Audit shipped dependency paths
+        id: dependencies
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 4
+        run: |
+          node scripts/audit-production-dependencies.mjs "release/win-unpacked/resources/app" "$env:RELEASE_EVIDENCE/dependencies" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/dependencies.log"
+          exit $LASTEXITCODE
+      - name: Measure startup on the verified packaged EXE
+        id: startup
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 6
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          node scripts/probe-startup.mjs "release/win-unpacked/知行.exe" 10 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/startup.log"
+          exit $LASTEXITCODE
+      - name: Read actual candidate signature status
+        id: signature
+        if: ${{ !cancelled() && steps.nsis.outcome == 'success' }}
+        run: |
+          $releaseVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          @{
+            version = $releaseVersion
+            sourceCommit = $env:GITHUB_SHA
+            installer = (Get-AuthenticodeSignature "release/ZhiXing-$releaseVersion-x64.exe").Status.ToString()
+            executable = (Get-AuthenticodeSignature 'release/win-unpacked/知行.exe').Status.ToString()
+            installationLifecycle = 'not run'
+            realCloud = 'not run'
+          } | ConvertTo-Json | Set-Content -Encoding utf8 "$env:RELEASE_EVIDENCE/signature-status.json"
+      - name: Record every gate outcome
+        if: ${{ always() }}
+        env:
+          CI_STEP_RESULTS: ${{ toJSON(steps) }}
+        run: |
+          New-Item -ItemType Directory -Force "$env:RELEASE_EVIDENCE" | Out-Null
+          $env:CI_STEP_RESULTS | Set-Content -Encoding utf8 "$env:RELEASE_EVIDENCE/outcomes.json"
+      - name: Assemble the prescribed 18 release assets
+        id: assemble
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        env:
+          CI_STEP_RESULTS: ${{ toJSON(steps) }}
+        run: node scripts/assemble-release.mjs --plan "$env:RELEASE_EVIDENCE/plan.json" --evidence "$env:RELEASE_EVIDENCE" --output "$env:RELEASE_BUNDLE"
+      - name: Collect bounded diagnostics and synthetic screenshots
+        if: ${{ always() }}
+        run: node scripts/collect-release-evidence.mjs "$env:RELEASE_EVIDENCE" "$env:RUNNER_TEMP/zhixing-release-evidence-upload"
+      - name: Preserve verification evidence even after a failed gate
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-release-evidence-upload/
+          retention-days: 30
+          if-no-files-found: error
+          include-hidden-files: false
+      - name: Transfer only the complete checked release bundle
+        id: bundle-upload
+        if: ${{ !cancelled() && steps.assemble.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-bundle-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-release-bundle/
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          include-hidden-files: false
+      - name: Require all verification and assembly steps
+        if: ${{ always() }}
+        env:
+          CI_STEP_RESULTS: ${{ toJSON(steps) }}
+        run: |
+          node --input-type=module -e "import assert from 'node:assert/strict'; import {requireGates} from './scripts/release-common.mjs'; const steps=JSON.parse(process.env.CI_STEP_RESULTS); requireGates(steps); assert.equal(steps.assemble?.outcome,'success','Release asset assembly did not pass');"
+          exit $LASTEXITCODE
+
+  publish:
+    needs: [eligible, windows]
+    if: ${{ github.repository == 'daniei-chen/ZhiXing' && github.ref == 'refs/heads/main' && needs.windows.result == 'success' && needs.eligible.outputs.eligible == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - name: Check out release verification scripts only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up release tooling
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.19.0'
+          package-manager-cache: false
+      - name: Download this run's verified release bundle
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.windows.outputs.bundle-artifact-id }}
+          path: ${{ runner.temp }}/zhixing-release-bundle
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Create exact tag, verify draft assets, then publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/publish-release.mjs "${{ runner.temp }}/zhixing-release-bundle" "${{ runner.temp }}/zhixing-release-receipt/publish-receipt.json"
+      - name: Retain the publication verification receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-receipt-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-release-receipt/publish-receipt.json
+          retention-days: 30
+          if-no-files-found: error

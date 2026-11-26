@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowCounterClockwise, ArrowUpRight, Check, CircleNotch, Copy, DownloadSimple, FileText, FloppyDisk, FolderOpen, ListBullets, NotePencil, Plus, ShareNetwork, ShieldCheck, SidebarSimple, ThumbsDown, ThumbsUp, WarningCircle, Info } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ArrowUpRight, Check, CircleNotch, Copy, DownloadSimple, FileText, FloppyDisk, FolderOpen, ListBullets, NotePencil, ShareNetwork, ShieldCheck, SidebarSimple, ThumbsDown, ThumbsUp, WarningCircle, Info } from '@phosphor-icons/react';
 import { Titlebar, Sidebar, AppRail } from './Sidebar.jsx';
 import { contextUsageText, contextWindowTokens } from './context-window.js';
 import { Composer } from './Composer.jsx';
@@ -14,7 +14,11 @@ import {AnswerText} from './AnswerText.jsx';
 import {DeliveryCards} from './DeliveryCards.jsx';
 import {ChangedFiles} from './ChangedFiles.jsx';
 import {actionDoneLabel,actionFailureLabel} from './file-actions.js';
-import {ReviewPanel} from './ReviewPanel.jsx';
+import { ErrorBoundary } from './ErrorBoundary.jsx';
+import { StreamingAnswer } from './StreamingAnswer.jsx';
+import { createKeyedStore } from './keyed-store.js';
+import { createDebouncedWriter } from './debounced-writer.js';
+import { registerRendererDurability } from './renderer-durability.js';
 import {ChatAttachments,ImportedActivity} from './ImportedChat.jsx';
 import { BrandMark, IconButton, MenuItem, Modal } from './ui.jsx';
 import { initialState, mergeState, restoredDraftView, saveState, downloadText, chatText, workspaceDeletion, orphanDrafts, newConversationDrafts, appendDraftFiles, recoverSubmittedDraft } from './store.js';
@@ -56,7 +60,13 @@ export function App() {
   const [sideSelection,setSideSelection]=useState({scope:'',id:null});
   const [customTab,setCustomTab]=useState('plugins');
   const [fileRequest,setFileRequest]=useState(null);
-  const [input, setInputValue] = useState('');
+  const [draftSlices] = useState(() => {
+    const store = createKeyedStore();
+    store.replace(state.drafts || {});
+    return store;
+  });
+  const [liveReplies] = useState(createKeyedStore);
+  const [, refreshDraftInventory] = useState(0);
   const [files, setFilesValue] = useState([]);
   const [busy, setBusy] = useState(false);
   const [menu, setMenu] = useState(null);
@@ -92,7 +102,8 @@ export function App() {
   const loadedRef = useRef(loaded);
   const inputRef = useRef('');
   const filesRef = useRef([]);
-  const draftMap = useRef({});
+  const draftMap = useRef(state.drafts || {});
+  const draftProducersLive = useRef(true);
   const newDraftIds = useRef(new Map());
   const draftScopes = useRef({});
   const removedDraftKeys = useRef(new Set());
@@ -103,9 +114,34 @@ export function App() {
   const activeDraftKey = useRef('');
   const saveSequence = useRef(0);
   const latestSaveSequence = useRef(0);
+  const [draftWriter] = useState(() => createDebouncedWriter({
+    snapshot: () => latest.current.settings.persist ? draftMap.current : {},
+    write: async drafts => {
+      if (!loadedRef.current || storageFailed.current) throw new Error('本机工作空间尚未成功读取。');
+      if (desktop?.saveDrafts) await desktop.saveDrafts(drafts);
+      else await persistWorkspaceSnapshot(latest.current);
+    },
+    onError: error => setWorkspaceSave(previous => ({ ...previous, status: 'failed', errorCode: errorText(error) || 'DRAFT_SAVE_FAILED' })),
+  }));
   latest.current = state;
   loadedRef.current = loaded;
   automationLatest.current = automationState;
+  const input = inputRef.current;
+
+  function setInputValue(text) {
+    const key = activeDraftKey.current;
+    draftSlices.set(key, { ...(draftMap.current[key] || {}), text, files: filesRef.current });
+  }
+
+  function workspaceSnapshot(current = latest.current) {
+    return current.settings.persist ? { ...current, drafts: draftMap.current }
+      : { ...current, chats: [], documents: [], drafts: {}, automations: [], settings: { ...current.settings, customTerms: [] } };
+  }
+
+  function publishDrafts() {
+    draftSlices.replace(draftMap.current);
+    refreshDraftInventory(value => value + 1);
+  }
 
   function setToast(message, type) {
     if (!message) { setToastState(null); return; }
@@ -117,7 +153,6 @@ export function App() {
   function setInput(value) {
     const next = typeof value === 'function' ? value(inputRef.current) : value;
     inputRef.current = next;
-    setInputValue(next);
     persistDraft(activeDraftKey.current, { text: next });
   }
 
@@ -149,12 +184,15 @@ export function App() {
   }
 
   function persistDraft(key, patch, expectedRevision) {
-    if (!key || removedDraftKeys.current.has(key)) return null;
+    if (!draftProducersLive.current || !key || removedDraftKeys.current.has(key)) return null;
     const previous = draftMap.current[key] || { revision: 0, text: '', files: [], updatedAt: Date.now() };
     if (expectedRevision !== undefined && previous.revision !== expectedRevision) return null;
     const next = { ...previous, ...(draftScopes.current[key] || {}), ...patch, revision: previous.revision + 1, filesRevision: (previous.filesRevision || 0) + (Object.hasOwn(patch, 'files') ? 1 : 0), updatedAt: Date.now() };
     draftMap.current = { ...draftMap.current, [key]: next };
-    setState(current => ({ ...current, drafts: draftMap.current }));
+    draftSlices.set(key, next);
+    // The banner counts drafts; editing their body does not invalidate App.
+    if (!!(previous.text.trim() || previous.files.length) !== !!(next.text.trim() || next.files.length)) refreshDraftInventory(value => value + 1);
+    draftWriter.schedule();
     return next;
   }
 
@@ -176,6 +214,7 @@ export function App() {
       draftScopes.current[consumed.key] = { kind: 'chat', draftId: submission.sessionId, chatId: submission.sessionId, workspaceId: submission.workspaceId, projectId: submission.projectId || null };
     }
     draftMap.current = consumed.drafts;
+    publishDrafts();
     setState(value => ({ ...value, drafts: draftMap.current }));
     if (activeDraftKey.current === key) {
       inputRef.current = ''; filesRef.current = [];
@@ -189,9 +228,11 @@ export function App() {
     if (storageFailed.current) {
       setWorkspaceSave(previous => ({ ...previous, status: 'recovering' }));
       try {
+        await desktop.retryWorkspaceSave?.();
         const saved = mergeState(await desktop.loadWorkspace());
         const restoredDrafts={...saved.drafts,...draftMap.current};
         draftMap.current = saved.settings.persist ? restoredDrafts : {};
+        publishDrafts();
         saved.drafts=draftMap.current;
         const restored = restoredDraftView(saved)||{section:'home',chatId:null,projectId:null,newDraftId:newDraftIdFor(saved.workspaceId,null)};
         const key=draftKeyFor({...restored,workspaceId:saved.workspaceId});
@@ -215,11 +256,11 @@ export function App() {
     latestSaveSequence.current = sequence;
     setWorkspaceSave(previous => ({ ...previous, status: 'saving' }));
     try {
-      if (!desktop) saveState(latest.current);
+      await draftWriter.flush();
+      if (!desktop) saveState(workspaceSnapshot());
       else if (desktop.retryWorkspaceSave) await desktop.retryWorkspaceSave();
       else {
-        const current = latest.current;
-        const snapshot = current.settings.persist ? current : { ...current, chats: [], documents: [], drafts: {}, automations: [], settings: { ...current.settings, customTerms: [] } };
+        const snapshot = workspaceSnapshot();
         await desktop.saveWorkspace(snapshot);
       }
       if (sequence !== latestSaveSequence.current) return;
@@ -296,6 +337,7 @@ export function App() {
       if(mounted){
         const initial=mergeState(saved);
         draftMap.current = initial.settings.persist ? initial.drafts || {} : {};
+        draftSlices.replace(draftMap.current);
         if(saved){
           setState(initial);
           const restored = restoredDraftView(initial);
@@ -362,31 +404,6 @@ export function App() {
     };
     const unsubscribeSave = desktop.onWorkspaceSaveState?.(applySaveState) || (() => {});
     desktop.workspaceSaveStatus?.().then(applySaveState).catch(() => {});
-    const unsubscribeQuit = desktop.onPrepareToQuit?.(async()=>{
-      try{
-        await new Promise((resolve,reject)=>{
-          let frames=0;
-          const check=()=>{
-            if(loadedRef.current){resolve();return;}
-            if(frames++>150){reject(new Error('本机工作空间尚未完成读取。'));return;}
-            requestAnimationFrame(check);
-          };
-          check();
-        });
-        if(storageFailed.current)throw new Error('本机工作空间读取失败，现有文件保持在磁盘中。');
-        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-        const current=latest.current;
-        const snapshot=current.settings.persist?current:{...current,chats:[],documents:[],drafts:{},automations:[],settings:{...current.settings,customTerms:[]}};
-        await desktop.saveWorkspace(snapshot);
-        setNativeProjects(snapshot.projects);
-        desktop.acknowledgeQuitPreparation?.({saved:true});
-      }catch(error){
-        const message=errorText(error);
-        setWorkspaceSave(previous=>({...previous,status:'failed',errorCode:message||'WORKSPACE_SAVE_FAILED'}));
-        setToast(`退出前保存失败：${message}`,'error');
-        desktop.acknowledgeQuitPreparation?.({saved:false,error:message});
-      }
-    });
     const applyAutomations = snapshot => {
       if (!mounted) return;
       setAutomationState(previous => snapshot.revision >= previous.revision ? snapshot : previous);
@@ -394,7 +411,7 @@ export function App() {
     };
     const unsubscribeAutomations = desktop.onAutomationChange(applyAutomations);
     desktop.listAutomations().then(applyAutomations).catch(() => setToast('自动化记录读取失败，请重新启动知行。'));
-    return () => { mounted = false; unsubscribe(); unsubscribeAutomations(); unsubscribeSave(); unsubscribeQuit?.(); };
+    return () => { mounted = false; unsubscribe(); unsubscribeAutomations(); unsubscribeSave(); };
   }, []);
 
   const renderedDraftKey = draftKeyFor({ workspaceId: workspace.id, projectId: chat?.projectId || projectId, chatId, newDraftId: view.newDraftId });
@@ -414,7 +431,7 @@ export function App() {
     if (desktop) {
       const sequence = ++saveSequence.current;
       latestSaveSequence.current = sequence;
-      const snapshot = state.settings.persist ? state : { ...state, chats: [], documents: [], drafts: {}, automations: [], settings: { ...state.settings, customTerms: [] } };
+      const snapshot = workspaceSnapshot(state);
       setWorkspaceSave(previous => previous.status === 'failed' ? previous : ({ ...previous, status: 'saving', errorCode: undefined }));
       desktop.saveWorkspace(snapshot, state.settings.persist ? undefined : state.settings.customTerms).then(()=>{
         if (sequence !== latestSaveSequence.current) return;
@@ -430,7 +447,7 @@ export function App() {
       });
     } else {
       setWorkspaceSave(previous => ({ ...previous, status: 'saving', errorCode: undefined }));
-      try { saveState(state); setWorkspaceSave(previous => ({ ...previous, status: 'saved', errorCode: undefined })); }
+      try { saveState(workspaceSnapshot(state)); setWorkspaceSave(previous => ({ ...previous, status: 'saved', errorCode: undefined })); }
       catch (error) {
         const message = error.message || '浏览器存储失败';
         setWorkspaceSave(previous => ({ ...previous, status: 'failed', errorCode: message }));
@@ -438,6 +455,52 @@ export function App() {
       }
     }
   }, [state, loaded]);
+
+  useEffect(() => {
+    draftProducersLive.current = true;
+    draftWriter.resume();
+    registerRendererDurability(async ({ reason } = {}) => {
+      // A failed/unfinished read has disabled editing; preserve the original
+      // files and allow another read without saving an empty initial state.
+      if (reason !== 'quit' && (!loadedRef.current || storageFailed.current)) return;
+      if (!loadedRef.current) await new Promise((resolve, reject) => {
+        let frames = 0;
+        const check = () => {
+          if (loadedRef.current) { resolve(); return; }
+          if (frames++ > 150) { reject(new Error('本机工作空间尚未完成读取。')); return; }
+          requestAnimationFrame(check);
+        };
+        check();
+      });
+      if (storageFailed.current) throw new Error('本机工作空间读取失败，现有文件保持在磁盘中。');
+      // The host can send a final run event immediately before asking to quit.
+      // Keep the existing two-frame barrier so React commits that outcome
+      // before latest.current is used for the final workspace snapshot.
+      if (reason === 'quit') await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await draftWriter.flush();
+      await persistWorkspaceSnapshot(latest.current);
+    });
+    const flush = () => { void draftWriter.flush().catch(() => {}); };
+    window.addEventListener('blur', flush);
+    window.addEventListener('pagehide', flush);
+    const beforeUnload = () => {
+      if (!desktop && loadedRef.current && !storageFailed.current) {
+        // Persist only the allowed browser metadata. saveState deliberately
+        // excludes draft bodies and attachments from localStorage.
+        try { saveState(workspaceSnapshot()); } catch { /* The visible save error is retained until unload. */ }
+      } else flush();
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => {
+      draftProducersLive.current = false;
+      window.removeEventListener('blur', flush);
+      window.removeEventListener('pagehide', flush);
+      window.removeEventListener('beforeunload', beforeUnload);
+      // React errors must not cancel an outstanding draft save.
+      flush();
+      draftWriter.dispose();
+    };
+  }, [draftWriter]);
 
   useEffect(() => {
     if (!toast) return;
@@ -472,6 +535,15 @@ export function App() {
     transcriptNearBottom.current=element.scrollHeight-element.scrollTop-element.clientHeight<72;
     if(chatId)transcriptPositions.current.set(chatId,element.scrollTop);
     if(transcriptNearBottom.current)setTranscriptHasNew(false);
+  }
+
+  function onStreamProgress() {
+    const element = transcript.current;
+    if (!element) return;
+    if (transcriptNearBottom.current) {
+      element.scrollTop = element.scrollHeight;
+      if (chatId) transcriptPositions.current.set(chatId, element.scrollTop);
+    } else setTranscriptHasNew(true);
   }
 
   function returnTranscriptToBottom(){
@@ -533,6 +605,7 @@ export function App() {
   function toggleMenu(name, event) { event?.stopPropagation(); setMenu(previous => previous?.name === name ? null : { name }); }
 
   function navigate(next, nextChat = null, nextProject = null, freshDraft = false, workspaceOverride = null, draftId = null) {
+    void draftWriter.flush().catch(() => {});
     viewToken.current++;
     if(chatId&&transcript.current)transcriptPositions.current.set(chatId,transcript.current.scrollTop);
     if(nextChat!==chatId||!['home','project'].includes(next))transcriptChatId.current=null;
@@ -625,7 +698,7 @@ export function App() {
     setMenu(null);
   }
 
-  function useTemplate(text) {
+  function applyTemplate(text) {
     if (!room) navigate('home');
     setInput(text); setModal(null); setMenu(null);
     requestAnimationFrame(() => composer.current?.focus());
@@ -704,7 +777,11 @@ export function App() {
   }
 
   function patchReply(job, patch) {
-    if (Object.hasOwn(patch, 'progressText')) job.progressText = patch.progressText;
+    if (Object.hasOwn(patch, 'progressText')) {
+      job.progressText = patch.progressText;
+      liveReplies.set(job.runId, patch.progressText);
+      if (Object.keys(patch).length === 1) return;
+    }
     setState(current => ({ ...current, chats: current.chats.map(item => item.id !== job.chatId ? item : {
       ...item, updatedAt: Date.now(), messages: item.messages.map(message => message.id === job.replyId ? { ...message, ...patch } : message),
     }) }));
@@ -734,9 +811,9 @@ export function App() {
     if (repeatMessageId && !previous) return;
     const draftKey = repeatMessageId || actionCommand ? null : sideTarget ? `chat:${sideTarget.chatId}` : activeDraftKey.current;
     const sourceDraft = draftMap.current[draftKey] || { revision: 0, text: '' };
-    const text = actionCommand ?? (repeatMessageId ? previous.text : (sideTarget ? sourceDraft.text : input).trim());
+    const text = actionCommand ?? (repeatMessageId ? previous.text : (sideTarget ? sourceDraft.text : inputRef.current).trim());
     if(!repeatMessageId&&!sideTarget&&['/model','/settings','/skills'].includes(text)){localCommand(text);return;}
-    const attachments = repeatMessageId || actionCommand ? [] : sideTarget ? sourceDraft.files||[] : files;
+    const attachments = repeatMessageId || actionCommand ? [] : sideTarget ? sourceDraft.files||[] : filesRef.current;
     if (!text && !attachments.length) return;
     if (attachments.some(file => file.status !== 'ready')) { setToast('请移除无法解析的附件后再发送。'); return; }
     const submittedRevision = sourceDraft.revision;
@@ -785,6 +862,10 @@ export function App() {
     const token = viewToken.current;
     setBusy(true);
     try {
+      await draftWriter.flush();
+      // The host authorizes against its durable project/settings snapshot.
+      await persistWorkspaceSnapshot(latest.current);
+      if (token !== viewToken.current) return;
       const visualIds = submittedFiles.flatMap(file => file.visual?.visualId ? [file.visual.visualId] : []);
       const preview = await desktop.prepareRun({ sessionId, prompt,bootstrapPrompt,command,startInPlanMode,mode, model, modelProviderId, reasoning, permission, workspaceId: workspace.id,projectId:project?.id||null,customTerms,privacyMode,privacyPolicy,visualIds });
       if (token === viewToken.current) {
@@ -800,12 +881,12 @@ export function App() {
   }
 
   async function startReply(draft, preview, demo = false) {
-    if (active.current || draft.workspaceId !== latest.current.workspaceId) return;
+    if (!draftProducersLive.current || active.current || draft.workspaceId !== latest.current.workspaceId) return;
     const recovery = draft.draftKey ? clearSubmittedDraft(draft) : null;
     const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [] };
     runJobs.current.set(job.runId, job);
     if (runJobs.current.size > 80) for (const [id, old] of runJobs.current) {
-      if (old !== job && old.finalization?.processStatus !== 'cleanup_pending' && old !== active.current) { runJobs.current.delete(id); break; }
+      if (old !== job && old.finalization?.processStatus !== 'cleanup_pending' && old !== active.current) { runJobs.current.delete(id); liveReplies.set(id, undefined); break; }
     }
     active.current = job; setRunning(job);
     const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl, visual }) => ({ id, name, size, path, sourceUrl, ...(visual ? { visual } : {}) })) };
@@ -921,6 +1002,8 @@ export function App() {
       retireDraft(key);
     }
     draftMap.current = following.drafts;
+    publishDrafts();
+    draftWriter.schedule();
     const next = { ...following, pendingWorkspaceDeletes: [...(current.pendingWorkspaceDeletes || []), operation] };
     latest.current = next;
     setState(next);
@@ -930,7 +1013,7 @@ export function App() {
   }
 
   async function persistWorkspaceSnapshot(snapshot) {
-    const saved = snapshot.settings.persist ? snapshot : { ...snapshot, chats: [], drafts: {}, documents: [], automations: [], settings: { ...snapshot.settings, customTerms: [] } };
+    const saved = workspaceSnapshot(snapshot);
     if (desktop) await desktop.saveWorkspace(saved);
     else saveState(saved);
   }
@@ -941,6 +1024,7 @@ export function App() {
     setDeletionError('');
     try {
       // First persist the removal and its cleanup intent. A failed save never masquerades as a finished delete.
+      await draftWriter.flush();
       await persistWorkspaceSnapshot(latest.current);
       for (const id of operation.taskIds) {
         const task = automationLatest.current.tasks.find(task => task.id === id);
@@ -956,6 +1040,7 @@ export function App() {
         for (const [runId, job] of runJobs.current) if (job.chatId === id && job !== active.current) {
           removedRuns.add(runId);
           runJobs.current.delete(runId);
+          liveReplies.set(runId, undefined);
         }
         for (const event of events) if (event.sessionId === id && event.runId) removedRuns.add(event.runId);
         forgottenRuntimeIds.current.sessions.add(id);
@@ -994,6 +1079,8 @@ export function App() {
     delete drafts[key];
     retireDraft(key);
     draftMap.current = drafts;
+    publishDrafts();
+    draftWriter.schedule();
     setState(current => ({ ...current, drafts }));
     newDraftIds.current.set(`${targetWorkspaceId}:home`, id);
     navigate('home');
@@ -1006,6 +1093,8 @@ export function App() {
     delete drafts[key];
     retireDraft(key);
     draftMap.current = drafts;
+    publishDrafts();
+    draftWriter.schedule();
     setState(current => ({ ...current, drafts }));
   }
 
@@ -1062,8 +1151,8 @@ export function App() {
         openExport(undefined,{format:'txt',titleSuffix:'（会话副本）'});
         return;
       }
-      if (desktop) await desktop.saveWorkspace(latest.current);
-      else saveState(latest.current);
+      await draftWriter.flush();
+      await persistWorkspaceSnapshot(latest.current);
       setMenu(null);
       setToast('当前会话已保存。');
     } catch (error) { setToast(`保存会话失败：${errorText(error)}`); }
@@ -1165,7 +1254,7 @@ export function App() {
   const sideChats=chats.filter(item=>item.workspaceId===workspace.id&&(item.projectId||null)===(project?.id||null)&&item.id!==chatId);
   const sideChatId=sideSelection.scope===workScopeKey&&sideChats.some(item=>item.id===sideSelection.id)?sideSelection.id:null;
   const sideChat=sideChats.find(item=>item.id===sideChatId);
-  const sideDraftState=sideChatId?state.drafts?.[`chat:${sideChatId}`]:null;
+  const sideDraftState=sideChatId?draftMap.current[`chat:${sideChatId}`]:null;
   const sideDraft=sideDraftState?.text||'';
   function selectSideChat(id) { setSideSelection({scope:workScopeKey,id}); }
   function createSideChat() {
@@ -1222,8 +1311,9 @@ export function App() {
     if (source.url) { void openAnswerUrl(source.url); return; }
     if (source.file) openModal({type:'document',value:{...source.file,status:source.file.status||'record',reason:source.recordOnly?'仅保留附件记录，原文件内容没有保存在此会话中。':source.file.reason}});
   }
-  const unresolvedDrafts = orphanDrafts(state);
-  const unsentDrafts = newConversationDrafts(state).filter(draft => modeWorkspaceIds.has(draft.workspaceId));
+  const draftState = { ...state, drafts: draftMap.current };
+  const unresolvedDrafts = orphanDrafts(draftState);
+  const unsentDrafts = newConversationDrafts(draftState).filter(draft => modeWorkspaceIds.has(draft.workspaceId));
   const pendingOutcomes = automationState.pendingOutcomes || [];
   const scopeProps = { workspace, projects, chats, spaceChats, documents, automations, taskRuns, project, mode, orphanDrafts: unresolvedDrafts };
 
@@ -1286,7 +1376,7 @@ export function App() {
                       </li>)}</ol>
                     </details>;
                   })()}
-                  {message.pending&&message.progressText&&<AnswerText text={message.progressText} onOpenUrl={openAnswerUrl}/>}
+                  {message.pending&&<StreamingAnswer store={liveReplies} runId={message.runId} initialText={message.progressText} onOpenUrl={openAnswerUrl} onProgress={onStreamProgress}/>}
                   {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':runStatusLabel(events,running?.runId)}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl} references={message.deliverables} onOpenFile={openDeliverable}/>}
                   {message.unrestored>0 && <p className="restore-note" role="status">{restoreNotice(message.unrestored)}</p>}
                   {!message.pending&&message.changes?.length>0&&<ChangedFiles files={message.changes} onOpen={file=>openReview(file?.path)}/>}
@@ -1331,13 +1421,13 @@ export function App() {
                 {project ? <span className="welcome-icon"><FolderOpen size={28} weight="light"/></span> : <BrandMark className="brand-welcome"/>}
                 <h1>{project ? project.name : mode === 'government' ? '今天要办理什么？' : '今天，有什么事交给知行？'}</h1>
                 <p>{project ? `${chats.filter(item => item.projectId === project.id).length} 段聊天` : '知你所需，行你所托。'}</p>
-                <div className="quick-workflows">{workflows[mode].slice(0, 3).map(([label, prompt]) => <button key={label} onClick={() => useTemplate(prompt)}>{label}<ArrowUpRight size={13}/></button>)}</div>
+                <div className="quick-workflows">{workflows[mode].slice(0, 3).map(([label, prompt]) => <button key={label} onClick={() => applyTemplate(prompt)}>{label}<ArrowUpRight size={13}/></button>)}</div>
                 {project && <button className="text-button" onClick={() => openModal({ type: 'project-settings', value: project })}>项目说明</button>}
               </section></div>}
-              <Composer settings={state.settings} files={files} input={input} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage||!!question}/>
-            </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={useTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
+              <Composer settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage||!!question}/>
+            </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={applyTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
           </div>
-          {room&&<Workbench key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={()=>setPanel(false)} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/>}
+          {room&&<ErrorBoundary key={workScopeKey} scope="workbench" hidden={!panel}><Workbench draftStore={draftSlices} liveReplies={liveReplies} key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={()=>setPanel(false)} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/></ErrorBoundary>}
 
         </div>
       </main>
@@ -1362,7 +1452,7 @@ export function App() {
     {privacyView && <PrivacyReview key={modal.type} modal={modal} original={reviewOriginal} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} currentMode={state.settings.privacyMode} onClose={() => setModal(null)} onSettings={() => openModal({ type: 'settings', tab: '隐私与数据' })} onSend={() => startReply(modal.draft, modal.preview)}/>}
     {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} history={state.settings.persist?modal.history:undefined} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} privacyMode={state.settings.privacyMode} desktop={desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
     {modal?.type === 'new-drafts' && <Modal title="未发送的新草稿" onClose={() => setModal(null)}><p className="modal-copy">选择一份继续编辑。草稿保留在各自的空间和项目中。</p><div className="record-list">{unsentDrafts.map(draft => <article key={draft.key} data-draft-key={draft.key}><NotePencil size={16}/><span><strong>{draft.text.trim().replace(/\s+/g, ' ').slice(0, 80) || '仅附件草稿'}</strong><small>{state.workspaces.find(space => space.id === draft.workspaceId)?.name} · {state.projects.find(project => project.id === draft.projectId)?.name || '未归入项目'}</small><small>{draft.text.length} 字 · {draft.files.length} 个附件 · {new Date(draft.updatedAt).toLocaleString('zh-CN')}</small></span><button type="button" className="secondary-button" onClick={() => openNewDraft(draft.key)}>继续编辑</button></article>)}{!unsentDrafts.length && <p className="empty-note">没有未发送的新草稿。</p>}</div></Modal>}
-    {modal && !privacyView && !['export-review', 'new-drafts'].includes(modal.type) && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={state} setState={setState} scope={scopeProps} recoverDraft={recoverOrphanDraft} discardDraft={discardOrphanDraft} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={useTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
+    {modal && !privacyView && !['export-review', 'new-drafts'].includes(modal.type) && <Dialogs key={`${modal.type}-${modal.id || ''}`} modal={modal} setModal={openModal} state={draftState} setState={setState} scope={scopeProps} recoverDraft={recoverOrphanDraft} discardDraft={discardOrphanDraft} openChat={openChat} importDeepSeek={importDeepSeek} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting} useTemplate={applyTemplate} removeItem={removeItem} updateChat={updateChat} createProject={createProject} updateProject={updateProject} saveWorkspace={saveWorkspace} changeWorkspace={changeWorkspace} attach={attach} taskAction={taskAction} openRun={openRun} notify={setToast} markRead={() => setUnread(false)}/>}
   </div>;
 }
 

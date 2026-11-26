@@ -7,6 +7,8 @@ import {FileLayout,supportsLayout} from './FileLayout.jsx';
 import {ExecutionPanel} from './ExecutionPanel.jsx';
 import {AnswerText} from './AnswerText.jsx';
 import {ReviewPanel} from './ReviewPanel.jsx';
+import { StreamingAnswer } from './StreamingAnswer.jsx';
+import { useKeyedValue } from './use-keyed-value.js';
 
 const pages=[['browser','浏览器',Globe],['files','文件',FolderOpen],['terminal','终端',TerminalWindow],['chat','侧边聊天',ChatCircle],['activity','执行',CircleNotch],['review','改动',FileCode],['deliverables','产出',Files],['stats','统计',ChartBar],['details','详情',FileText]];
 function ViewPicker({page,setPage}) {
@@ -33,7 +35,7 @@ export function Workbench({visible,suspended,onClose,page,setPage,context,scopeK
   <section className="workbench-view workbench-details" {...panelProps('details')}><h3>交办详情</h3><dl><div><dt>工作模式</dt><dd>{mode==='government'?'政务':'办公'}</dd></div><div><dt>项目</dt><dd>{project?.name||'个人聊天'}</dd></div><div><dt>工作区</dt><dd>{project?.directory||'尚未关联'}</dd></div><div><dt>发送方式</dt><dd>{privacyMode==='raw'?'非脱敏模式':'自动脱敏'}</dd></div></dl><h3>已选资料 · {files.length}</h3>{files.map(file=><p key={file.id}><FileText size={15}/>{file.name}</p>)}{!files.length&&<p className="muted">从网页或文件面板添加资料。</p>}</section>
  </aside>;
 }
-function DeliverablesPanel({messages,project,openDeliverable}){
+function DeliverablesPanel({messages,openDeliverable}){
  const files=messages.flatMap((message,messageIndex)=>(message.deliverables||[]).map((file,fileIndex)=>({file,message,messageIndex,fileIndex}))).reverse();
  return <div className="deliverables-panel"><h3>本对话产出{files.length?` · ${files.length}`:''}</h3>{files.length?<div className="deliverables-list">{files.map(({file,message,messageIndex,fileIndex})=>{
   const name=String(file.path||'成果文件').split(/[\\/]/).at(-1);
@@ -95,17 +97,20 @@ function BrowserPanel({context,scopeKey,shown,attach,openPanel,closePanel,viewPi
   </div>
  </>;
 }
-function SideChatPanel({sideChat,sideChatId,sideChats,sideDraft,sideFiles,onOpenUrl,onSideText,onSideSelect,onSideNew,onSideSubmit,sideRunning,sendDisabled,onStop}) {
+function SideChatPanel({sideChat,sideChatId,sideChats,sideDraft: initialDraft,sideFiles: initialFiles,draftStore,liveReplies,onOpenUrl,onSideText,onSideSelect,onSideNew,onSideSubmit,sideRunning,sendDisabled,onStop}) {
+ const draft=useKeyedValue(draftStore,sideChatId?`chat:${sideChatId}`:null);
+ const sideDraft=draft?.text??initialDraft,sideFiles=draft?.files??initialFiles;
  const transcript=useRef(null),nearBottom=useRef(true);
  const messages=sideChat?.messages||[];
  useLayoutEffect(()=>{if(transcript.current&&nearBottom.current)transcript.current.scrollTop=transcript.current.scrollHeight;},[sideChatId,messages.length,messages.at(-1)?.text,messages.at(-1)?.progressText]);
  useEffect(()=>{nearBottom.current=true;},[sideChatId]);
  const hasAttachments=sideFiles.length>0;
+ function streamProgress(){if(transcript.current&&nearBottom.current)transcript.current.scrollTop=transcript.current.scrollHeight;}
  function send(event) { event.preventDefault(); if(sideChatId&&(sideDraft.trim()||hasAttachments)&&!sendDisabled)onSideSubmit(); }
  return <div className="side-chat-panel">
   <div className="side-chat-toolbar"><select aria-label="选择侧边聊天" value={sideChatId||''} onChange={event=>onSideSelect(event.target.value)}><option value="" disabled>选择聊天</option>{sideChatId&&!sideChat&&<option value={sideChatId}>新聊天</option>}{sideChats.map(item=><option key={item.id} value={item.id}>{item.title}</option>)}</select><IconButton icon={Plus} label="新建侧边聊天" onClick={onSideNew}/></div>
   <div className="side-chat-transcript" aria-label="侧边聊天记录" ref={transcript} onScroll={()=>{const element=transcript.current;nearBottom.current=element.scrollHeight-element.scrollTop-element.clientHeight<72;}}>
-   {messages.length?messages.map((message,index)=><article key={message.id||index} className={message.role==='user'?'side-chat-user':'side-chat-assistant'}><strong>{message.role==='user'?'你':'知行'}{message.stopped?' · 已停止':message.error?' · 未完成':''}</strong><AnswerText text={message.pending?message.progressText||'正在处理…':message.text} onOpenUrl={onOpenUrl}/>{message.errorMessage&&<p role="alert" className="workbench-error">{message.errorMessage}</p>}</article>):<div className="side-chat-empty"><ChatCircle size={28} weight="light"/><p>{sideChatId?'在这里开始一段独立聊天。':'选择已有聊天，或新建一段侧边聊天。'}</p>{!sideChatId&&<button type="button" className="secondary-button" onClick={onSideNew}>新建侧边聊天</button>}</div>}
+   {messages.length?messages.map((message,index)=><article key={message.id||index} className={message.role==='user'?'side-chat-user':'side-chat-assistant'}><strong>{message.role==='user'?'你':'知行'}{message.stopped?' · 已停止':message.error?' · 未完成':''}</strong>{message.pending?<StreamingAnswer store={liveReplies} runId={message.runId} initialText={message.progressText||'正在处理…'} onOpenUrl={onOpenUrl} onProgress={streamProgress}/>:<AnswerText text={message.text} onOpenUrl={onOpenUrl}/>} {message.errorMessage&&<p role="alert" className="workbench-error">{message.errorMessage}</p>}</article>):<div className="side-chat-empty"><ChatCircle size={28} weight="light"/><p>{sideChatId?'在这里开始一段独立聊天。':'选择已有聊天，或新建一段侧边聊天。'}</p>{!sideChatId&&<button type="button" className="secondary-button" onClick={onSideNew}>新建侧边聊天</button>}</div>}
   </div>
   {hasAttachments&&<div className="side-chat-attachments" aria-label="侧边聊天草稿附件">{sideFiles.map((file,index)=><span key={file.id||index} title={file.reason||file.name}><FileText size={13}/>{file.name}{file.status!=='ready'?' · 尚未就绪':''}</span>)}</div>}
   {sideChatId&&<form className="side-chat-composer" onSubmit={send}><textarea aria-label="侧边聊天输入框" rows={2} value={sideDraft} disabled={sendDisabled&&!sideRunning} placeholder="交代一件事…" onChange={event=>onSideText(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing&&!event.isComposing){event.preventDefault();send(event);}}}/><IconButton icon={sideRunning?Stop:ArrowUp} label={sideRunning?'停止侧边聊天':'发送侧边聊天'} disabled={!sideRunning&&(sendDisabled||(!sideDraft.trim()&&!hasAttachments))} onClick={sideRunning?onStop:send}/></form>}
@@ -179,7 +184,7 @@ function XtermView({context,terminalId,shown,onError}){
    terminal.onResize(({cols,rows})=>{void api.terminalAction({...scope.current,action:'resize',id:terminalId,cols,rows}).catch(error=>onError(error.message));});
    if(host.current.getBoundingClientRect().width>10)fit.fit();
   }catch(error){if(!ended)onError(error.message);}}
-  void mount();const observer=new ResizeObserver(()=>{if(instance.current&&host.current?.getBoundingClientRect().width>10)try{instance.current.fit.fit();}catch{}});observer.observe(host.current);
+  void mount();const observer=new ResizeObserver(()=>{if(instance.current&&host.current?.getBoundingClientRect().width>10)try{instance.current.fit.fit();}catch{/* A hidden terminal may not have measurable cells yet. */}});observer.observe(host.current);
   return()=>{ended=true;off?.();observer.disconnect();instance.current=null;terminal?.dispose();};
  },[terminalId]);
  useEffect(()=>{if(shown&&instance.current){instance.current.fit.fit();instance.current.terminal.focus();}},[shown]);
