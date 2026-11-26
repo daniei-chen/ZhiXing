@@ -313,6 +313,11 @@ export class RuntimeManager{
   if(processExited(child))exited();else child.once('exit',exited);
  }
  safeMetadata(active,value,pattern){return typeof value==='string'&&pattern.test(value)&&(!active.safeContext||this.executionDisplay(value,active.safeContext)===value);}
+ sessionBusyMessage(sessionId){
+  const pending=[...this.runs.values()].find(active=>active.sessionId===sessionId&&(active.status==='cleanup_pending'||active.shutdownPending));
+  if(!pending)return '该会话正在执行，请先停止当前任务。';
+  return '上一轮的内核还没确认退出，恢复文件已保留。可以点「重试清理」，或稍等几秒再发一次；新建聊天可以立即使用。';
+ }
  cleanupError(active,error){return {code:this.safeMetadata(active,error?.code,/^[A-Z][A-Z0-9_]{0,79}$/)?error.code:'RUNTIME_CLOSE_FAILED',stage:this.safeMetadata(active,error?.stage,/^[a-z][a-z0-9_-]{0,39}$/)?error.stage:'close',message:active.safeContext?this.executionDisplay(error?.message||'内核退出仍待确认。',active.safeContext).slice(0,400):'内核退出仍待确认，恢复文件已保留。'};}
  getCleanupStatus(){return [...this.runs.values()].filter(active=>active.status==='cleanup_pending'||active.shutdownPending).map(active=>({runId:active.runId,sessionId:active.sessionId,status:'cleanup_pending',attempts:active.cleanupAttempts||0,error:active.cleanupError,finalization:structuredClone(active.finalization||{runId:active.runId,executionStatus:active.cancelled?'cancelled':'failed',persistenceStatus:'pending',processStatus:active.processExited?'exited':'cleanup_pending',eventWatermark:active.eventWatermark||0,error:active.cleanupError})}));}
  scheduleCleanup(active){
@@ -425,11 +430,11 @@ export class RuntimeManager{
  }
  async preview(options,config){
   if(this.closing)throw new Error('内核管理器正在关闭。');
-  if(this.busy.has(options.sessionId))throw new Error('该会话正在运行。');
+  if(this.busy.has(options.sessionId))throw new Error(this.sessionBusyMessage(options.sessionId));
   const stateVersion=this.sessionStateVersions.get(options.sessionId)||0;
   const prepared=await this.prepare(options,config);
   const {input,privacyMode}=prepared;
-  if(this.busy.has(options.sessionId))throw new Error('该会话正在运行或删除，请稍后重试。');
+  if(this.busy.has(options.sessionId))throw new Error(this.sessionBusyMessage(options.sessionId));
   if((this.sessionStateVersions.get(options.sessionId)||0)!==stateVersion)throw new Error('会话已删除，旧预览已失效。');
   const preparationId=crypto.randomUUID(),now=Date.now();
   for(const [id,p] of this.prepared)if(p.expires<=now||p.options.sessionId===options.sessionId)this.prepared.delete(id);
@@ -441,7 +446,7 @@ export class RuntimeManager{
   const p=this.prepared.get(preparationId);
   // Do not consume a reusable preview while its session is being deleted.
   // A failed host deletion must leave the original caches recoverable.
-  if(p&&this.busy.has(p.options.sessionId))throw new Error('该会话正在执行或删除，请先等待当前操作结束。');
+  if(p&&this.busy.has(p.options.sessionId))throw new Error(this.sessionBusyMessage(p.options.sessionId));
   this.prepared.delete(preparationId);
   if(!p||p.expires<Date.now())throw new Error('发送预览已过期，请重新预览。');
   if(typeof config==='function')({config,key}=config(p.config));
@@ -462,7 +467,7 @@ export class RuntimeManager{
   assertModelCredential(key);
   if((this.cancelled.get(runId)||0)>Date.now()){this.cancelled.delete(runId);throw new Error('任务已停止。');}
   if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
-  if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error('该会话正在执行，请先停止当前任务。');
+  if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error(this.sessionBusyMessage(sessionId));
   for(const [id,p] of this.prepared)if(p.options.sessionId===sessionId)this.prepared.delete(id);
   this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,officeVision,persistKey,persistBridgeKey,failure;const visualHistory={};const active={runId,sessionId,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128){const oldest=this.runSettlements.keys().next().value;this.runSettlements.delete(oldest);this.runSettlementSessions.delete(oldest);}this.runSettlements.set(runId,active.settled);this.runSettlementSessions.set(runId,sessionId);this.runs.set(runId,active);
   const connection={endpoint:config.baseUrl,providerId:config.providerId,protocol:config.protocol};

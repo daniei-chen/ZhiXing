@@ -47,7 +47,12 @@ test('R03 未确认退出保留 handle/会话互斥/恢复文件，重试只清�
   assert.equal(failure.finalization.executionStatus,'failed');
   assert.equal(f.events.at(-1).finalization.processStatus,'cleanup_pending');
   await fs.access(path.join(f.root,'quarantine-session','privacy-bridge.bin'));
-  await assert.rejects(run(f,'duplicate-run'),/会话|运行|执行/);assert.equal(f.created(),1);
+  // 这里没有任何任务在跑：说「该会话正在执行」是假话，用户该做的是重试清理或换聊天。
+  await assert.rejects(run(f,'duplicate-run'),error=>{
+   assert.match(error.message,/内核还没确认退出/);
+   assert.doesNotMatch(error.message,/正在执行|正在运行|请先停止/);
+   return true;
+  });assert.equal(f.created(),1);
   await f.manager.clearSavedHistory();await fs.access(path.join(f.root,'quarantine-session','privacy-bridge.bin'));
   const closed=await f.manager.close();assert.equal(closed.cleanupPending.length,1);
   assert.equal(f.manager.busy.has('quarantine-session'),true);
