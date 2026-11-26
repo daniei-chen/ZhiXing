@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowCounterClockwise, ArrowUpRight, Check, CircleNotch, Copy, DownloadSimple, FileText, FloppyDisk, FolderOpen, ListBullets, NotePencil, Plus, ShareNetwork, ShieldCheck, SidebarSimple, ThumbsDown, ThumbsUp, WarningCircle, Info } from '@phosphor-icons/react';
 import { Titlebar, Sidebar, AppRail } from './Sidebar.jsx';
+import { contextUsageText, contextWindowTokens } from './context-window.js';
 import { Composer } from './Composer.jsx';
 import { Dialogs } from './Dialogs.jsx';
 import { PrivacyReview, ExportReview } from './Review.jsx';
@@ -1280,7 +1281,7 @@ export function App() {
                   {message.unrestored>0 && <p className="restore-note" role="status">{restoreNotice(message.unrestored)}</p>}
                   {!message.pending&&<details className="run-summary"><summary>详情</summary><dl>{summaryRows(message).map(row => <div className="run-summary-row" key={row.key}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl></details>}
             {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
-                  {message.context?.measurement && <p className="context-usage">上下文 {message.context.measurement.totalTokens.toLocaleString()} / {(message.context.pressure?.contextWindow || 128000).toLocaleString()} tokens {message === currentContextMessage && <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/compact')}>压缩上下文</button>}</p>}
+                  {message.context?.measurement && <p className="context-usage">{contextUsageText(message.context.measurement.totalTokens, contextWindowTokens(runtime, state.settings, message.context.pressure?.contextWindow))} {message === currentContextMessage && <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/compact')}>压缩上下文</button>}</p>}
                   {message.finalization?.processStatus === 'cleanup_pending' && <p className="muted" role="status">执行已结束，内核退出仍待确认；请使用上方的重试清理。</p>}
                   {['pending', 'failed'].includes(message.finalization?.persistenceStatus) && <p className="muted" role="status">本次执行结果尚未保存。重试保存不会重新运行工具。</p>}
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}

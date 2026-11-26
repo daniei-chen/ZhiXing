@@ -170,6 +170,9 @@ try {
   report.switch = { opened, linked, options, picked, ui: switched }; await persist();
   assert.equal(picked, 'clicked', `没有点到小窗口模型：${JSON.stringify({ opened, linked, options })}`);
   assert.ok(switched.trigger.includes('QA 中窗口'), `模型入口应显示小窗口模型，实际「${switched.trigger}」`);
+  // 型号换了，输入区的窗口开销就得跟着换——不能等下一次请求回来才变。
+  assert.match(switched.usage, /32,768/u, `切换后应立刻按新型号显示窗口，实际「${switched.usage}」`);
+  await record('切换后输入区立刻按新型号显示窗口', { usage: switched.usage });
 
   // ③ 切换后的第一次提交：先压缩，再按新窗口发出更短的请求，最后给出答复。
   await send('切换之后，用新模型继续这一轮。', turns + 1, 30000);
