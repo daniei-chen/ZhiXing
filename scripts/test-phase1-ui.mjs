@@ -130,7 +130,7 @@ async function fingerprint(file) {
 }
 const sameFile = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 const savedWorkspace = () => evaluate(() => window.zhixing.loadWorkspace());
-async function ready() {
+async function ready(timeoutMs = 60000) {
   await until(
     () =>
       evaluate((selector) => {
@@ -142,8 +142,36 @@ async function ready() {
         );
       }, input),
     'interactive composer and saved workspace',
-    60000,
+    timeoutMs,
   );
+}
+async function reloadReady() {
+  const started = Date.now();
+  const previousTimeOrigin = await evaluate(() => performance.timeOrigin);
+  await current.ui.send('Page.reload');
+  // Page.reload acknowledges the command before the new document is ready.
+  // The previous document can still expose a saved banner and enabled input.
+  await until(
+    async () => {
+      try {
+        return await evaluate(
+          (previous) => performance.timeOrigin !== previous && document.readyState === 'complete',
+          previousTimeOrigin,
+        );
+      } catch (error) {
+        if (
+          /Execution context was destroyed|Cannot find context with specified id/.test(
+            error.message,
+          )
+        )
+          return false;
+        throw error;
+      }
+    },
+    'new document after reload',
+    Math.max(1, 60000 - (Date.now() - started)),
+  );
+  await ready(Math.max(1, 60000 - (Date.now() - started)));
 }
 async function settledWorkspace() {
   await ready();
@@ -161,12 +189,23 @@ async function settledWorkspace() {
 }
 async function selectChat() {
   const selector = `.chat-row[data-chat-id="${chatId}"] .chat-link`;
-  const title = await evaluate(
-    (value) => document.querySelector(value)?.textContent.trim(),
-    selector,
+  const title = await until(
+    () =>
+      evaluate((value) => {
+        const link = document.querySelector(value);
+        return link?.getClientRects().length ? link.textContent.trim() : false;
+      }, selector),
+    'persisted project chat has a visible entry',
   );
-  assert.ok(title, 'Persisted project chat must have a visible entry');
   await current.ui.click(title, selector);
+  await until(
+    () =>
+      evaluate(
+        (value) => document.querySelector(value)?.getAttribute('aria-current') === 'page',
+        selector,
+      ),
+    'selected project chat scope',
+  );
   await ready();
 }
 async function capture(name) {
@@ -388,6 +427,7 @@ try {
       versions: identity.versions,
     };
   });
+  currentCase = 'seeded project metadata is loaded in a new document';
   await evaluate(
     async (fixture) => {
       await window.zhixing.saveProvider({
@@ -443,8 +483,7 @@ try {
     },
     { baseUrl, workspaceId, projectId, chatId, directory: projectDirectory, model },
   );
-  await current.ui.send('Page.reload');
-  await ready();
+  await reloadReady();
   await selectChat();
   await check('real dropped attachment is parsed into the project chat draft', async () => {
     const point = await evaluate(() => {
@@ -539,8 +578,7 @@ try {
   await check(
     'reload and explicit chat selection restore draft text, attachment and ownership',
     async () => {
-      await current.ui.send('Page.reload');
-      await ready();
+      await reloadReady();
       await selectChat();
       assert.equal(
         await evaluate((selector) => document.querySelector(selector).value, input),
@@ -626,8 +664,7 @@ try {
       );
       assert.notEqual(message.finalization?.processStatus, 'cleanup_pending');
       await ready();
-      await current.ui.send('Page.reload');
-      await ready();
+      await reloadReady();
       await selectChat();
       assert.equal(
         await evaluate(
