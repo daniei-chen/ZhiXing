@@ -8,7 +8,12 @@ import { fileURLToPath } from 'node:url';
 
 const TIMEOUT_MS = 25_000;
 const BASE_COMMIT = 'fcba550b0ac56af16c1de571e2f55bcf8f54b55a';
-const STAGES = ['initialize', 'engine', 'file', 'open', 'decode', 'bitmap', 'recognize', 'serialize'];
+const STAGES = [
+  'initialize', 'consoleEncoding', 'runtimeAssembly', 'storageFileType',
+  'randomAccessStreamType', 'bitmapDecoderType', 'softwareBitmapType',
+  'ocrResultType', 'ocrEngineType', 'asTaskReflection',
+  'engine', 'file', 'open', 'decode', 'bitmap', 'recognize', 'serialize',
+];
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const hash = value => createHash('sha256').update(value).digest('hex');
 
@@ -25,6 +30,20 @@ export function instrumentWorker(source) {
     `${marker('initialize', 'before')}\n[Console]::Error.WriteLine('ZX_OCR_APARTMENT:' + [System.Threading.Thread]::CurrentThread.GetApartmentState())`, true);
   insert('initialize-end', '$stream=$null', marker('initialize', 'after'));
   const anchors = [
+    ['consoleEncoding', '[Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false)'],
+    ['runtimeAssembly', 'Add-Type -AssemblyName System.Runtime.WindowsRuntime'],
+    ['storageFileType', '$null=[Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime]'],
+    ['randomAccessStreamType', '$null=[Windows.Storage.Streams.IRandomAccessStream,Windows.Storage.Streams,ContentType=WindowsRuntime]'],
+    ['bitmapDecoderType', '$null=[Windows.Graphics.Imaging.BitmapDecoder,Windows.Graphics.Imaging,ContentType=WindowsRuntime]'],
+    ['softwareBitmapType', '$null=[Windows.Graphics.Imaging.SoftwareBitmap,Windows.Graphics.Imaging,ContentType=WindowsRuntime]'],
+    ['ocrResultType', '$null=[Windows.Media.Ocr.OcrResult,Windows.Foundation,ContentType=WindowsRuntime]'],
+    ['ocrEngineType', '$null=[Windows.Media.Ocr.OcrEngine,Windows.Foundation,ContentType=WindowsRuntime]'],
+    ['asTaskReflection', [
+      '$asTask=[System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {',
+      " $_.Name -eq 'AsTask' -and $_.IsGenericMethod -and $_.GetParameters().Count -eq 1 -and",
+      " $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'",
+      '} | Select-Object -First 1',
+    ].join('\n')],
     ['engine', ' $engine=[Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()'],
     ['file', ' $file=Wait-WinRt ([Windows.Storage.StorageFile]::GetFileFromPathAsync($Image)) ([Windows.Storage.StorageFile])'],
     ['open', ' $stream=Wait-WinRt ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])'],
@@ -49,7 +68,7 @@ async function main() {
   await fs.mkdir(path.dirname(destination), { recursive: true });
   const report = {
     schemaVersion: 1,
-    purpose: 'Diagnostic collection only, not product acceptance or the existing source gate. All samples are retained; any unsuccessful attempt still exits nonzero.',
+    purpose: 'Second diagnostic: locate slow initialization in default PowerShell. This is not product acceptance or the existing source gate. All samples are retained; any unsuccessful attempt still exits nonzero.',
     baseCommit: BASE_COMMIT,
     commit: process.env.GITHUB_SHA || null,
     runId: process.env.GITHUB_RUN_ID || null,
@@ -60,6 +79,7 @@ async function main() {
       availableParallelism: os.availableParallelism(), totalMemoryBytes: os.totalmem(),
     },
     timeoutMs: TIMEOUT_MS,
+    samplePlan: 'Default PowerShell only: two sequential attempts, then one pair with concurrency two. Four samples, three waves, at most 75 seconds of child-process waiting; no retries.',
     environment: 'Same eight-variable allowlist and PowerShell executable as electron/ocr-service.mjs',
     stages: STAGES,
     scope: 'Each attempt starts a new PowerShell process. First/repeat describe job order; Windows caches are not reset. Only synthetic fixture data is used; text and pixels are never saved in this report.',
@@ -89,7 +109,7 @@ async function main() {
     const env = Object.fromEntries(['SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'PATH']
       .filter(key => process.env[key]).map(key => [key, process.env[key]]));
     let sequence = 0;
-    const launches = { default: 0, mta: 0 };
+    const launches = { default: 0 };
 
     async function probe(mode, group, concurrency) {
       const id = ++sequence;
@@ -103,7 +123,7 @@ async function main() {
         const lines = (stderrTail + chunk.toString()).split(/\r?\n/);
         stderrTail = lines.pop().slice(-4096);
         for (const line of lines) {
-          let match = /^ZX_OCR_STAGE:([a-z]+):(before|after)$/.exec(line);
+          let match = /^ZX_OCR_STAGE:([A-Za-z][A-Za-z0-9]*):(before|after)$/.exec(line);
           if (match && STAGES.includes(match[1])) stages.push({ name: match[1], phase: match[2], elapsedMs: Math.round(performance.now() - started) });
           match = /^ZX_OCR_APARTMENT:(STA|MTA|Unknown)$/.exec(line);
           if (match) apartment = match[1];
@@ -111,8 +131,7 @@ async function main() {
           if (match) hresult = Number(match[1]);
         }
       };
-      const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-        ...(mode === 'mta' ? ['-MTA'] : []), '-File', worker, '-Image', image];
+      const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', worker, '-Image', image];
       return new Promise(resolve => {
         const child = execFile(executable, args, {
           windowsHide: true, timeout: TIMEOUT_MS, maxBuffer: 750_000, env,
@@ -138,16 +157,14 @@ async function main() {
       });
     }
 
-    // Eight interleaved sequential attempts plus two pairs: at most ten
-    // 25-second waves (250 seconds), with every result retained without retries.
-    for (const [index, mode] of ['default', 'mta', 'default', 'mta', 'mta', 'default', 'mta', 'default'].entries()) {
-      report.runs.push(await probe(mode, `sequential-${index + 1}`, 1));
+    // Four default-mode samples in three 25-second waves (75 seconds).
+    // Keep the initial attempts and both concurrent outcomes, without retries.
+    for (let index = 1; index <= 2; index++) {
+      report.runs.push(await probe('default', `sequential-${index}`, 1));
       await save();
     }
-    for (const [index, mode] of ['default', 'mta'].entries()) {
-      report.runs.push(...await Promise.all([probe(mode, `pair-${index + 1}`, 2), probe(mode, `pair-${index + 1}`, 2)]));
-      await save();
-    }
+    report.runs.push(...await Promise.all([probe('default', 'pair-1', 2), probe('default', 'pair-1', 2)]));
+    await save();
     report.diagnosticCompleted = true;
     report.successfulAttempts = report.runs.filter(run => run.success).length;
     report.unsuccessfulAttempts = report.runs.length - report.successfulAttempts;
