@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-26",
+  "commit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+  "gitTree": "1db7bb865cef118a6cd36a97e908d95971752520",
+  "layer": "Windows hosted runner source/build and isolated renderer. No packaged installer, installation lifecycle, or real cloud.",
+  "runner": {
+    "os": "Microsoft Windows Server 2025 10.0.26100 Datacenter",
+    "image": "windows-2025-vs2026",
+    "imageVersion": "20261116.315.1",
+    "node": "v24.22.3",
+    "npm": "11.19.1"
+  },
+  "runs": [
+    {
+      "runId": 45811169987,
+      "event": "pull_request",
+      "jobId": 139879133512,
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45811169987",
+      "conclusion": "failure",
+      "install": "success",
+      "build": "success",
+      "sites": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 125.1925
+      },
+      "source": {
+        "tests": 545,
+        "suites": 0,
+        "pass": 536,
+        "fail": 9,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 416264.4866
+      },
+      "components": {
+        "tests": 18,
+        "suites": 0,
+        "pass": 18,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 17062.3966
+      },
+      "failedOrCancelledCases": [
+        "Windows 图片 OCR 返回本机文字覆盖范围，不返回原始图片字节",
+        "真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话",
+        "官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式",
+        "Windows OCR image is read by office_read_file, protected before wire, and restored locally",
+        "Windows image privacy masks the actual pixels, removes metadata with zero hits, and handles no-text images",
+        "Windows WebP 和单帧 GIF 复用同一遮罩链，动图与伪装扩展名被拒绝",
+        "Windows 项目图片路径接受 WebP 与单帧 GIF，副本仍统一为 PNG",
+        "Windows real Harness sends only approved pixels and retains approved visual history on reopen",
+        "真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原"
+      ],
+      "artifacts": [
+        {
+          "id": 15113023298,
+          "name": "windows-source-evidence-1",
+          "bytes": 34544,
+          "digest": "sha256:78dabff3ba2022d4e69019a4d51e9059ccc2b5ff791016e8c1846a0b0ffdf441",
+          "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45811169987/artifacts/15113023298",
+          "expiresAt": "2026-12-03T11:39:26Z"
+        }
+      ]
+    },
+    {
+      "runId": 45811084825,
+      "event": "push",
+      "jobId": 139878854252,
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45811084825",
+      "conclusion": "failure",
+      "install": "success",
+      "build": "success",
+      "sites": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 141.6665
+      },
+      "source": {
+        "tests": 545,
+        "suites": 0,
+        "pass": 542,
+        "fail": 2,
+        "cancelled": 1,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 481070.4345
+      },
+      "components": {
+        "tests": 18,
+        "suites": 0,
+        "pass": 18,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 28805.6633
+      },
+      "failedOrCancelledCases": [
+        "Windows 图片 OCR 返回本机文字覆盖范围，不返回原始图片字节",
+        "Windows image privacy masks the actual pixels, removes metadata with zero hits, and handles no-text images",
+        "Windows WebP 和单帧 GIF 复用同一遮罩链，动图与伪装扩展名被拒绝"
+      ],
+      "artifacts": [
+        {
+          "id": 15114317485,
+          "name": "windows-source-evidence-1",
+          "bytes": 33849,
+          "digest": "sha256:2c1c107d4b6c97b77a2adb424834d706adfc15daa2587968d38999bce256e1ff",
+          "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45811084825/artifacts/15114317485",
+          "expiresAt": "2026-12-03T11:39:54Z"
+        }
+      ]
+    }
+  ],
+  "observations": [
+    "All nine PR source failures reach electron/ocr-service.mjs and report the same generic Windows OCR startup/timeout error. Most direct failures are near its 25 second budget.",
+    "The push run passes most OCR/visual tests but has two OCR failures and one 90000ms test cancellation. Missing OCR or language support for every runner is not established.",
+    "All 18 components and four Sites cases pass in both runs. This is isolated source renderer evidence, not packaged application visual acceptance.",
+    "OCR production files were unchanged by Phase 0A. A pristine c2f7588 Windows runner comparison was not executed; do not claim a Windows before/after regression classification.",
+    "execFile and JSON parse errors are currently collapsed; code/signal/killed and the last WinRT stage are unavailable. Cold start, apartment mode, and concurrency are hypotheses requiring a bounded diagnostic probe."
+  ],
+  "releaseGate": "blocked: source test gate is not green; no tag or Release created"
+}

@@ -20,7 +20,8 @@
     "aggregateSha256": "cfd60feccde624f37b36eb32509827b52bfd87819dabc527f33ad7ff0d611de1",
     "aggregateMethod": "SHA256 of UTF-8 JSON with sorted path keys and compact comma/colon separators",
     "scope": "src, electron, harness, scripts, tests, .github and package/build configuration; docs excluded",
-    "checkedUnchangedAfterFinalRuns": true
+    "checkedUnchangedAfterFinalRuns": true,
+    "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a"
   },
   "runs": {
     "pristineBaseline": {
@@ -151,7 +152,8 @@
     ],
     "retainedFailedCaseCount": 15,
     "newTests": 40,
-    "interpretation": "One reproducible lock-publication race fixed. Fifteen existing Linux failures remain; the full suite is not green."
+    "interpretation": "One reproducible lock-publication race fixed. Fifteen existing Linux failures remain; the full suite is not green.",
+    "platform": "Linux only; no pristine Windows runner comparison"
   },
   "remainingLinuxFailureGroups": [
     {
@@ -180,13 +182,14 @@
       "testFile": "tests/runtime-native-entrypoints.test.mjs",
       "passed": 3,
       "includedInFinalSuite": true,
-      "meaning": "Actual pinned Harness detects an inline skill gesture after existing prompt composition and sends separate child model requests on OpenAI and Anthropic synthetic providers. Does not prove Windows packaged subagent archive or real model quality."
+      "meaning": "Actual pinned Harness detects an inline skill gesture after existing prompt composition and sends separate child model requests on OpenAI and Anthropic synthetic providers. Does not prove Windows packaged subagent archive or real model quality.",
+      "windowsSourceEvidence": "The same three cases also passed in both Windows hosted runner runs; this remains synthetic model/source evidence, not packaged subagent archive UI or real cloud."
     },
     "nestedOfficeWrites": {
       "testFile": "tests/office-file-policy.test.mjs",
       "passed": 22,
       "includedInFinalSuite": true,
-      "meaning": "Approval ordering, canonical scope checks, directory/link replacement, cancellation and exclusive writes on this Linux filesystem. Windows junction/case behavior and atomic directory-handle I/O not proven."
+      "meaning": "Approval ordering, canonical scope checks, directory/link replacement, cancellation and exclusive writes passed on Linux and both Windows Server 2025 runners, including junction fixtures. Windows case-variation scenarios and atomic directory-handle I/O are not proven."
     },
     "lockRace": {
       "testFile": "tests/privacy-lock-recovery.test.mjs",
@@ -226,7 +229,35 @@
   },
   "windowsCi": {
     "workflow": ".github/workflows/ci.yml",
-    "status": "configured; awaiting first remote execution",
+    "status": "executed; failed source gate",
+    "evidence": "windows-ci.json",
+    "sourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+    "runs": [
+      45811169987,
+      45811084825
+    ],
+    "components": "18/18 passed in both runs",
+    "sites": "4/4 passed in both runs",
+    "build": "passed in both runs",
+    "sourceResults": [
+      {
+        "event": "pull_request",
+        "tests": 545,
+        "pass": 536,
+        "fail": 9,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      {
+        "event": "push",
+        "tests": 545,
+        "pass": 542,
+        "fail": 2,
+        "cancelled": 1,
+        "skipped": 0
+      }
+    ],
+    "remainingFailure": "Windows OCR startup/execution timeout; exact stage and cause not yet determined. The push run passes most OCR tests.",
     "scope": "ephemeral Windows source/build and isolated renderer only; no NSIS installation, upgrade, release or real cloud"
   },
   "notCovered": [

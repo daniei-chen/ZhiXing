@@ -12,7 +12,7 @@
 
 本轮取得并检查了基线仓库，复原锁文件依赖，在 Linux / Node 24.22.3 上运行源码测试、真实 Harness 配本地合成模型服务、React 组件回调和构建。Windows `D:\AI\codex\codex4\office-agent`、`D:\应用\知行`、Harness 桌面安装包、历史实包截图及 87.2 GB 目录均未挂载到本环境。用户提供的 Windows 测试数、磁盘容量、启动耗时和截图观察是外部基线，未作为本轮重新取得的证据。
 
-本轮实测数据及内容指纹见 [证据摘要](evidence/phase-0a/summary.json)。成熟化工作分解见 [后续路线与验收条件](maturity-roadmap.md)。
+本轮实测数据及内容指纹见 [证据摘要](evidence/phase-0a/summary.json)，远端 Windows 结果见 [CI 分层记录](evidence/phase-0a/windows-ci.json)。成熟化工作分解见 [后续路线与验收条件](maturity-roadmap.md)。
 
 ## 一、需要纠正或限定的审计结论
 
@@ -81,10 +81,13 @@ Windows CI 使用一次性 runner 和只读仓库权限，分别运行构建、�
 | 组件 | 真实 React 回调／SSR 与完整组件命令分列 | 最终 18 项：12 通过、5 失败、1 跳过；失败为 Windows 限定或本环境未安装 Electron 二进制的用例，不标作通过 |
 | 构建与站点 | `npm run build`、`npm run test:sites` | 构建成功，站点 4/4；三个 Sites 入口产物齐全，四个接入文件未改；主 JS chunk 747.29 kB 的体积警告仍在 |
 | 开发预览 | 启动 Vite，HTTP 200，检查 root 与实际源码入口 | 服务入口可响应；浏览器连接未成功，视觉验收未覆盖 |
+| Windows 托管 runner | `fcba550` 的 push 与 PR 两次 CI，Windows Server 2025 | 构建成功、Sites 4/4、组件及隔离 renderer 18/18；源码分别 542 通过／2 失败／1 超时取消，以及 536 通过／9 失败，均未通过总门禁 |
 | Windows 实包／安装生命周期 | 本轮未执行 | 未覆盖 |
 | 真实云端 | 未使用真实供应商凭据 | 未覆盖 |
 
 完整 Linux 基线的失败必须分别处理：Windows OCR / SenseVoice / PowerShell 依赖、junction 与 symlink 操作差异、POSIX 临时路径脱敏断言，以及可复现的锁竞争缺陷。后者已修复，不能把所有失败都归类为环境缺失。尚存的 POSIX 路径问题记录为平台覆盖缺口，不冒称 Windows 隐私验证失败，也不冒称跨平台隐私全绿。
+
+两次 Windows 失败集中于 `electron/ocr-service.mjs` 的 OCR 启动／执行超时，直接调用约 25 秒后失败；push 中另有一项达到 90 秒测试上限。相同镜像的 push run 能通过多数 OCR／视觉用例，不能直接断言没有 OCR 或缺语言包。现有错误处理丢弃了子进程 `code`／`signal`／`killed` 和具体阶段，冷启动、并发及线程单元模式只能作为待验证假设。OCR 产品代码本轮未改，且没有在同一 Windows runner 上执行干净基线，不能据此宣称 Windows 失败全部已被证明为旧问题。门禁继续保留失败状态。
 
 ## 四、发布状态与未覆盖范围
 
