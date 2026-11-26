@@ -4,7 +4,7 @@ name: Windows OCR diagnostics
 # 25-second OCR / 90-second vision-test limits. No installer or real-cloud run.
 # Diagnostic completion is not OCR acceptance; all per-sample failures remain
 # in the JSON and cause a nonzero probe exit after the complete schedule.
-# Second probe: four default-mode samples, with detailed initialization stages.
+# Third probe: eight default-mode samples across three temporary worker variants.
 on:
   push:
     branches: [diagnostics/phase-0a-ocr]
@@ -41,8 +41,8 @@ jobs:
           npm.cmd ci --no-audit --no-fund
           exit $LASTEXITCODE
 
-      - name: Inspect default PowerShell initialization
-        timeout-minutes: 2
+      - name: Compare isolated initialization variants
+        timeout-minutes: 4
         run: |
           node scripts/probe-windows-ocr.mjs "$env:RUNNER_TEMP/zhixing-ocr-diagnostics/summary.json"
           exit $LASTEXITCODE

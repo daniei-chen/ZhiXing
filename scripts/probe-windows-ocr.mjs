@@ -8,8 +8,13 @@ import { fileURLToPath } from 'node:url';
 
 const TIMEOUT_MS = 25_000;
 const BASE_COMMIT = 'fcba550b0ac56af16c1de571e2f55bcf8f54b55a';
+const VARIANTS = ['baseline', 'directEncoding', 'trustedUtility'];
+const ENCODING_LINE = '[Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false)';
+const DIRECT_ENCODING_LINE = '[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)';
+const ERROR_ACTION_LINE = "$ErrorActionPreference='Stop'";
+const TRUSTED_IMPORT_LINE = 'Import-Module "$PSHOME\\Modules\\Microsoft.PowerShell.Utility\\Microsoft.PowerShell.Utility.psd1" -ErrorAction Stop';
 const STAGES = [
-  'initialize', 'consoleEncoding', 'runtimeAssembly', 'storageFileType',
+  'initialize', 'trustedUtilityImport', 'consoleEncoding', 'runtimeAssembly', 'storageFileType',
   'randomAccessStreamType', 'bitmapDecoderType', 'softwareBitmapType',
   'ocrResultType', 'ocrEngineType', 'asTaskReflection',
   'engine', 'file', 'open', 'decode', 'bitmap', 'recognize', 'serialize',
@@ -19,8 +24,12 @@ const hash = value => createHash('sha256').update(value).digest('hex');
 
 // Exact, unique anchors fail closed if the production worker changes. Only a
 // temporary copy is instrumented; no OCR output or exception message is logged.
-export function instrumentWorker(source) {
+export function instrumentWorker(source, { variant = 'baseline' } = {}) {
+  assert(VARIANTS.includes(variant), 'Unknown diagnostic worker variant.');
   let body = source.replaceAll('\r\n', '\n');
+  for (const [name, anchor] of [['original-encoding', ENCODING_LINE], ['original-error-action', ERROR_ACTION_LINE]]) {
+    assert.equal(body.split(anchor).length - 1, 1, `Worker anchor missing or duplicated: ${name}`);
+  }
   const insert = (name, anchor, code, after = false) => {
     assert.equal(body.split(anchor).length - 1, 1, `Worker anchor missing or duplicated: ${name}`);
     body = body.replace(anchor, after ? `${anchor}\n${code}` : `${code}\n${anchor}`);
@@ -30,7 +39,7 @@ export function instrumentWorker(source) {
     `${marker('initialize', 'before')}\n[Console]::Error.WriteLine('ZX_OCR_APARTMENT:' + [System.Threading.Thread]::CurrentThread.GetApartmentState())`, true);
   insert('initialize-end', '$stream=$null', marker('initialize', 'after'));
   const anchors = [
-    ['consoleEncoding', '[Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false)'],
+    ['consoleEncoding', ENCODING_LINE],
     ['runtimeAssembly', 'Add-Type -AssemblyName System.Runtime.WindowsRuntime'],
     ['storageFileType', '$null=[Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime]'],
     ['randomAccessStreamType', '$null=[Windows.Storage.Streams.IRandomAccessStream,Windows.Storage.Streams,ContentType=WindowsRuntime]'],
@@ -58,6 +67,13 @@ export function instrumentWorker(source) {
   }
   insert('exception-code', " @{error='failed'} | ConvertTo-Json -Compress",
     "[Console]::Error.WriteLine('ZX_OCR_HRESULT:' + $_.Exception.HResult)");
+  // All original anchors were checked before applying one predeclared change.
+  // Other than diagnostics, baseline is unchanged; these are temporary copies.
+  if (variant === 'directEncoding') body = body.replace(ENCODING_LINE, DIRECT_ENCODING_LINE);
+  if (variant === 'trustedUtility') {
+    insert('trusted-utility-import', ERROR_ACTION_LINE,
+      `${marker('trustedUtilityImport', 'before')}\n${TRUSTED_IMPORT_LINE}\n${marker('trustedUtilityImport', 'after')}`, true);
+  }
   return body;
 }
 
@@ -68,7 +84,7 @@ async function main() {
   await fs.mkdir(path.dirname(destination), { recursive: true });
   const report = {
     schemaVersion: 1,
-    purpose: 'Second diagnostic: locate slow initialization in default PowerShell. This is not product acceptance or the existing source gate. All samples are retained; any unsuccessful attempt still exits nonzero.',
+    purpose: 'Third diagnostic: compare predeclared initialization changes in temporary workers only. Production is unchanged; this is not product acceptance or the existing source gate. All samples are retained; any unsuccessful attempt still exits nonzero.',
     baseCommit: BASE_COMMIT,
     commit: process.env.GITHUB_SHA || null,
     runId: process.env.GITHUB_RUN_ID || null,
@@ -79,7 +95,12 @@ async function main() {
       availableParallelism: os.availableParallelism(), totalMemoryBytes: os.totalmem(),
     },
     timeoutMs: TIMEOUT_MS,
-    samplePlan: 'Default PowerShell only: two sequential attempts, then one pair with concurrency two. Four samples, three waves, at most 75 seconds of child-process waiting; no retries.',
+    samplePlan: 'Default PowerShell only: baseline, directEncoding, trustedUtility, trustedUtility, directEncoding, baseline sequentially, then a trustedUtility pair. Eight samples, seven waves, at most 175 seconds of child-process waiting; no retries.',
+    variants: {
+      baseline: 'Original worker plus stage diagnostics only.',
+      directEncoding: 'Only the encoding constructor command is replaced with a direct .NET constructor.',
+      trustedUtility: 'Only an explicit Utility import from the PowerShell-owned PSHOME path is inserted after ErrorActionPreference and before encoding; no environment expansion.',
+    },
     environment: 'Same eight-variable allowlist and PowerShell executable as electron/ocr-service.mjs',
     stages: STAGES,
     scope: 'Each attempt starts a new PowerShell process. First/repeat describe job order; Windows caches are not reset. Only synthetic fixture data is used; text and pixels are never saved in this report.',
@@ -96,24 +117,28 @@ async function main() {
   try {
     await save();
     const source = await fs.readFile(path.join(ROOT, 'electron/ocr-worker.ps1'), 'utf8');
-    const instrumented = instrumentWorker(source);
+    const instrumented = Object.fromEntries(VARIANTS.map(variant => [variant, instrumentWorker(source, { variant })]));
     const fixture = await fs.readFile(path.join(ROOT, 'tests/fixtures/ocr-office-read.png'));
     report.workerSha256 = hash(source.replaceAll('\r\n', '\n'));
-    report.instrumentedWorkerSha256 = hash(instrumented);
+    report.instrumentedWorkerSha256 = hash(instrumented.baseline);
+    report.variantWorkerSha256 = Object.fromEntries(VARIANTS.map(variant => [variant, hash(instrumented[variant])]));
     report.fixtureSha256 = hash(fixture);
     report.probeSha256 = hash(await fs.readFile(fileURLToPath(import.meta.url)));
     directory = await fs.mkdtemp(path.join(os.tmpdir(), 'zhixing-ocr-diagnostics-'));
-    const worker = path.join(directory, 'ocr-worker.ps1');
-    await fs.writeFile(worker, instrumented);
+    const workers = {};
+    for (const variant of VARIANTS) {
+      workers[variant] = path.join(directory, `ocr-worker-${variant}.ps1`);
+      await fs.writeFile(workers[variant], instrumented[variant]);
+    }
     const executable = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
     const env = Object.fromEntries(['SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'PATH']
       .filter(key => process.env[key]).map(key => [key, process.env[key]]));
     let sequence = 0;
-    const launches = { default: 0 };
+    const launches = Object.fromEntries(VARIANTS.map(variant => [variant, 0]));
 
-    async function probe(mode, group, concurrency) {
+    async function probe(variant, group, concurrency) {
       const id = ++sequence;
-      const modeLaunch = ++launches[mode];
+      const variantLaunch = ++launches[variant];
       const image = path.join(directory, `fixture-${id}.png`);
       await fs.writeFile(image, fixture);
       const started = performance.now();
@@ -131,7 +156,7 @@ async function main() {
           if (match) hresult = Number(match[1]);
         }
       };
-      const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', worker, '-Image', image];
+      const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', workers[variant], '-Image', image];
       return new Promise(resolve => {
         const child = execFile(executable, args, {
           windowsHide: true, timeout: TIMEOUT_MS, maxBuffer: 750_000, env,
@@ -142,8 +167,9 @@ async function main() {
           const expectedTextMatch = typeof parsed?.text === 'string' && parsed.text.includes('13800000000');
           const success = !error && jsonParsed && !parsed?.error && expectedTextMatch;
           resolve({
-            sequence: id, mode, group, concurrency, modeLaunch, firstInJob: id === 1,
-            firstForMode: modeLaunch === 1, elapsedMs: Math.round(performance.now() - started),
+            sequence: id, mode: 'default', variant, group, concurrency, modeLaunch: id, variantLaunch,
+            firstInJob: id === 1, firstForMode: id === 1, firstForVariant: variantLaunch === 1,
+            elapsedMs: Math.round(performance.now() - started),
             code: error ? error.code ?? null : 0, signal: error?.signal ?? null,
             killed: Boolean(error?.killed), apartment, hresult, success,
             stages, lastStage: stages.at(-1)?.name ?? null, lastStagePhase: stages.at(-1)?.phase ?? null,
@@ -157,13 +183,13 @@ async function main() {
       });
     }
 
-    // Four default-mode samples in three 25-second waves (75 seconds).
-    // Keep the initial attempts and both concurrent outcomes, without retries.
-    for (let index = 1; index <= 2; index++) {
-      report.runs.push(await probe('default', `sequential-${index}`, 1));
+    // Eight samples in seven 25-second waves (175 seconds). Reversed serial
+    // order retains both early and later attempts; nothing is selectively retried.
+    for (const [index, variant] of ['baseline', 'directEncoding', 'trustedUtility', 'trustedUtility', 'directEncoding', 'baseline'].entries()) {
+      report.runs.push(await probe(variant, `sequential-${index + 1}`, 1));
       await save();
     }
-    report.runs.push(...await Promise.all([probe('default', 'pair-1', 2), probe('default', 'pair-1', 2)]));
+    report.runs.push(...await Promise.all([probe('trustedUtility', 'pair-1', 2), probe('trustedUtility', 'pair-1', 2)]));
     await save();
     report.diagnosticCompleted = true;
     report.successfulAttempts = report.runs.filter(run => run.success).length;
