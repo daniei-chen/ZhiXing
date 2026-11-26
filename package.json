@@ -1,6 +1,6 @@
 {
   "name": "office-agent",
-  "version": "0.35.0",
+  "version": "0.36.0",
   "description": "知行 AI 办公助手 · DeepSeek Harness",
   "author": "知行",
   "private": true,
@@ -48,7 +48,8 @@
     "test:review": "node scripts/test-review-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:compact-command": "node scripts/test-compact-command-ui.mjs \"release/win-unpacked/知行.exe\"",
     "test:overflow-recovery": "node scripts/test-overflow-recovery-ui.mjs \"release/win-unpacked/知行.exe\"",
-    "test:model-window": "node scripts/test-model-window-ui.mjs \"release/win-unpacked/知行.exe\""
+    "test:model-window": "node scripts/test-model-window-ui.mjs \"release/win-unpacked/知行.exe\"",
+    "test:model-switch": "node scripts/test-model-switch-ui.mjs \"release/win-unpacked/知行.exe\""
   },
   "main": "electron/main.cjs",
   "dependencies": {
