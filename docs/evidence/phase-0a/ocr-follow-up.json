@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "baseSourceCommit": "fcba550b0ac56af16c1de571e2f55bcf8f54b55a",
+  "baseManifest": "source-fingerprints.json",
+  "sourceDelta": {
+    "electron/ocr-worker.ps1": {
+      "before": "a912b02ec2403802aa99e345eb34b8bbcfa7b5281d3eb5a82eceb64507520d7e",
+      "after": "b5638ff819f2fd654cbc897f6e263f54366ffcfaf109c76e0c053a8c34b1abb1"
+    }
+  },
+  "candidateAggregateSha256": "9bc52cc51d6b053a1a2403e0f97f191d4fa12725e44929a338a129becc503776",
+  "aggregateMethod": "Apply sourceDelta.after to baseManifest, then SHA256 of UTF-8 JSON with sorted path keys and compact separators",
+  "change": "Explicitly import the built-in Microsoft.PowerShell.Utility manifest below $PSHOME before the first Utility cmdlet.",
+  "preserved": [
+    "original environment whitelist",
+    "25 second OCR process timeout",
+    "default PowerShell apartment",
+    "cancellation and cleanup",
+    "fail-closed recognition and image masking",
+    "original OCR algorithm and output schema"
+  ],
+  "diagnosticEvidence": [
+    "ocr-startup-probe.json",
+    "ocr-initialization-probe.json",
+    "ocr-module-loading-probe.json"
+  ],
+  "fullWindowsGate": "pending after production worker update",
+  "limitations": "Probe measures synthetic fixtures on Windows hosted runners. Internal PowerShell call stacks and the exact slow search path were not collected. No packaged Windows UI, installer or real cloud proof."
+}

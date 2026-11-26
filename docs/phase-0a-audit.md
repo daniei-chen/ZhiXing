@@ -87,7 +87,19 @@ Windows CI 使用一次性 runner 和只读仓库权限，分别运行构建、�
 
 完整 Linux 基线的失败必须分别处理：Windows OCR / SenseVoice / PowerShell 依赖、junction 与 symlink 操作差异、POSIX 临时路径脱敏断言，以及可复现的锁竞争缺陷。后者已修复，不能把所有失败都归类为环境缺失。尚存的 POSIX 路径问题记录为平台覆盖缺口，不冒称 Windows 隐私验证失败，也不冒称跨平台隐私全绿。
 
-两次 Windows 失败集中于 `electron/ocr-service.mjs` 的 OCR 启动／执行超时，直接调用约 25 秒后失败；push 中另有一项达到 90 秒测试上限。相同镜像的 push run 能通过多数 OCR／视觉用例，不能直接断言没有 OCR 或缺语言包。现有错误处理丢弃了子进程 `code`／`signal`／`killed` 和具体阶段，冷启动、并发及线程单元模式只能作为待验证假设。OCR 产品代码本轮未改，且没有在同一 Windows runner 上执行干净基线，不能据此宣称 Windows 失败全部已被证明为旧问题。门禁继续保留失败状态。
+两次 Windows 失败集中于 `electron/ocr-service.mjs` 的 OCR 启动／执行超时，直接调用约 25 秒后失败；push 中另有一项达到 90 秒测试上限。相同镜像的 push run 能通过多数 OCR／视觉用例，不能直接断言没有 OCR 或缺语言包。这两次 CI 的 `fcba550` 没有修改 OCR 产品代码，且没有在同一 Windows runner 上执行干净基线，不能据此宣称 Windows 失败全部已被证明为旧问题。上述失败记录永久保留，后续修复结果另列。
+
+### Windows OCR 后续定位与最小修复
+
+独立 `diagnostics/phase-0a-ocr` 分支使用原 worker 的临时插桩副本，只读取合成图片，记录阶段、耗时及退出信息，不记录识别正文。25 秒上限和环境白名单始终未变，没有用重试替换失败样本。
+
+1. [首次 12 样本](evidence/phase-0a/ocr-startup-probe.json)：默认 STA 与 MTA 的串行成功率均为 3/4，成功初始化约 22 秒，不能把 MTA 当作已证实的修复。
+2. [细分初始化的四样本](evidence/phase-0a/ocr-initialization-probe.json)：全部在 `New-Object` 编码赋值行停留到超时，尚未进入程序集加载或 OCR。
+3. [三个变体的八样本](evidence/phase-0a/ocr-module-loading-probe.json)：原写法总耗时 20.521 / 12.290 秒；直接构造编码对象仍耗时 12.196 / 12.107 秒，延迟转移到 `Add-Type`；显式导入 `$PSHOME` 内置 Utility 模块的四个串行／并发样本在 0.322–0.376 秒完成，全部识别匹配。后两个对照样本仍约 12 秒，结果不支持只用整体暖机解释。
+
+因此只在原 `ocr-worker.ps1` 中增加显式加载内置 Utility manifest 的语句，保持其它产品逻辑。微软文档说明，Windows PowerShell 在缺少 `PSModulePath` 时会构建默认搜索路径，从 PowerShell 7 经中间进程继承该变量反而可能引入不兼容模块，因此没有放宽环境白名单：[官方模块路径说明](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_psmodulepath?view=powershell-5.1)。
+
+这里测得的是首次 Utility 命令发现／自动加载相关的等待；没有采集 PowerShell 内部调用栈，不能进一步宣称具体慢目录或系统扫描器已被确定。这个小改动仍需不带诊断插桩的完整 Windows 门禁。源码增量指纹与后续门禁状态见 [OCR 跟进记录](evidence/phase-0a/ocr-follow-up.json)。
 
 ## 四、发布状态与未覆盖范围
 

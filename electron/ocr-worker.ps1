@@ -1,5 +1,7 @@
 param([Parameter(Mandatory=$true)][string]$Image)
 $ErrorActionPreference='Stop'
+# Load the built-in Utility module before the first command lookup.
+Import-Module "$PSHOME\Modules\Microsoft.PowerShell.Utility\Microsoft.PowerShell.Utility.psd1" -ErrorAction Stop
 [Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false)
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $null=[Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime]
