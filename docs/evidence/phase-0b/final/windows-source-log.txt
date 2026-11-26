@@ -1,0 +1,1115 @@
+﻿2026-11-26T13:56:30.2528815Z Current runner version: '2.338.2'
+2026-11-26T13:56:30.2548955Z ##[group]Runner Image Provisioner
+2026-11-26T13:56:30.2549616Z Hosted Compute Agent
+2026-11-26T13:56:30.2550138Z Version: 20261111.635
+2026-11-26T13:56:30.2550674Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-26T13:56:30.2551216Z Build Date: 2026-11-11T01:49:01Z
+2026-11-26T13:56:30.2551934Z Worker ID: {5a9a3c49-eb50-4a6f-acbd-cbe0da2eb2e7}
+2026-11-26T13:56:30.2552522Z Region: westus3
+2026-11-26T13:56:30.2552986Z Cloud: Azure
+2026-11-26T13:56:30.2553417Z ##[endgroup]
+2026-11-26T13:56:30.2554528Z ##[group]Operating System
+2026-11-26T13:56:30.2555042Z Microsoft Windows Server 2025
+2026-11-26T13:56:30.2555474Z 10.0.26100
+2026-11-26T13:56:30.2555837Z Datacenter
+2026-11-26T13:56:30.2556199Z ##[endgroup]
+2026-11-26T13:56:30.2556577Z ##[group]Runner Image
+2026-11-26T13:56:30.2557005Z Image: windows-2025-vs2026
+2026-11-26T13:56:30.2557420Z Version: 20261116.315.1
+2026-11-26T13:56:30.2558597Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261116.315/images/windows/Windows2025-VS2026-Readme.md
+2026-11-26T13:56:30.2559839Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261116.315
+2026-11-26T13:56:30.2560553Z ##[endgroup]
+2026-11-26T13:56:30.2561383Z ##[group]GITHUB_TOKEN Permissions
+2026-11-26T13:56:30.2562780Z Contents: read
+2026-11-26T13:56:30.2563274Z Metadata: read
+2026-11-26T13:56:30.2563711Z ##[endgroup]
+2026-11-26T13:56:30.2565335Z Secret source: Actions
+2026-11-26T13:56:30.2565995Z Cache mode: write
+2026-11-26T13:56:30.2566497Z Prepare workflow directory
+2026-11-26T13:56:30.2966445Z Prepare all required actions
+2026-11-26T13:56:30.3005429Z Getting action download info
+2026-11-26T13:56:30.5804195Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-11-26T13:56:30.6772422Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-11-26T13:56:30.8093898Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-11-26T13:56:30.9713780Z Complete job name: windows-source
+2026-11-26T13:56:31.0829720Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-11-26T13:56:31.0830712Z with:
+2026-11-26T13:56:31.0831014Z   fetch-depth: 0
+2026-11-26T13:56:31.0831357Z   persist-credentials: false
+2026-11-26T13:56:31.0831753Z   repository: daniei-chen/ZhiXing
+2026-11-26T13:56:31.0836282Z   token: ***
+2026-11-26T13:56:31.0836607Z   ssh-strict: true
+2026-11-26T13:56:31.0836937Z   ssh-user: git
+2026-11-26T13:56:31.0837232Z   clean: true
+2026-11-26T13:56:31.0837551Z   sparse-checkout-cone-mode: true
+2026-11-26T13:56:31.0837938Z   fetch-tags: false
+2026-11-26T13:56:31.0838250Z   show-progress: true
+2026-11-26T13:56:31.0838559Z   lfs: false
+2026-11-26T13:56:31.0838838Z   submodules: false
+2026-11-26T13:56:31.0839187Z   set-safe-directory: true
+2026-11-26T13:56:31.0839552Z   allow-unsafe-pr-checkout: false
+2026-11-26T13:56:31.0840105Z ##[endgroup]
+2026-11-26T13:56:31.2025324Z Syncing repository: daniei-chen/ZhiXing
+2026-11-26T13:56:31.2026689Z ##[group]Getting Git version info
+2026-11-26T13:56:31.2027134Z Working directory is 'D:\a\ZhiXing\ZhiXing'
+2026-11-26T13:56:31.2869772Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-11-26T13:56:31.5315810Z git version 2.56.1.windows.1
+2026-11-26T13:56:31.5354231Z ##[endgroup]
+2026-11-26T13:56:31.5367909Z Temporarily overriding HOME='D:\a\_temp\94c28110-8e3e-4ea7-9ae4-3ffc7bf857fe' before making global git config changes
+2026-11-26T13:56:31.5368897Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-26T13:56:31.5375607Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\ZhiXing\ZhiXing
+2026-11-26T13:56:31.5906449Z Deleting the contents of 'D:\a\ZhiXing\ZhiXing'
+2026-11-26T13:56:31.5910655Z ##[group]Determining repository object format
+2026-11-26T13:56:31.5912016Z ##[endgroup]
+2026-11-26T13:56:31.5912799Z ##[group]Initializing the repository
+2026-11-26T13:56:31.5919752Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\ZhiXing\ZhiXing
+2026-11-26T13:56:31.6674120Z Initialized empty Git repository in D:/a/ZhiXing/ZhiXing/.git/
+2026-11-26T13:56:31.6712095Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/daniei-chen/ZhiXing
+2026-11-26T13:56:31.7219641Z ##[endgroup]
+2026-11-26T13:56:31.7220227Z ##[group]Disabling automatic garbage collection
+2026-11-26T13:56:31.7227057Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-11-26T13:56:31.7515641Z ##[endgroup]
+2026-11-26T13:56:31.7516432Z ##[group]Setting up auth
+2026-11-26T13:56:31.7517231Z Removing SSH command configuration
+2026-11-26T13:56:31.7524703Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-26T13:56:31.7822567Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-26T13:56:32.9900233Z Removing HTTP extra header
+2026-11-26T13:56:32.9916118Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-26T13:56:33.0236766Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-26T13:56:33.4612335Z Removing includeIf entries pointing to credentials config files
+2026-11-26T13:56:33.4620366Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-26T13:56:33.4959219Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-26T13:56:33.9401859Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-11-26T13:56:33.9703842Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/ZhiXing/ZhiXing/.git.path D:\a\_temp\git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:33.9993012Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path D:\a\_temp\git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:34.0313390Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:34.0603248Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:34.0906291Z ##[endgroup]
+2026-11-26T13:56:34.0907193Z ##[group]Fetching the repository
+2026-11-26T13:56:34.0918525Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +6fa27fdef890a987af8d5e8a6592b764752b537b:refs/remotes/pull/1/merge
+2026-11-26T13:56:35.9592404Z From https://github.com/daniei-chen/ZhiXing
+2026-11-26T13:56:35.9593210Z  * [new branch]      diagnostics/phase-0a-ocr                 -> origin/diagnostics/phase-0a-ocr
+2026-11-26T13:56:35.9593944Z  * [new branch]      feat/0.12.0-kernel-privacy               -> origin/feat/0.12.0-kernel-privacy
+2026-11-26T13:56:35.9594677Z  * [new branch]      fix/phase-0a-audit                       -> origin/fix/phase-0a-audit
+2026-11-26T13:56:35.9596230Z  * [new branch]      hardening/0.11.0-core                    -> origin/hardening/0.11.0-core
+2026-11-26T13:56:35.9596766Z  * [new branch]      main                                     -> origin/main
+2026-11-26T13:56:35.9597246Z  * [new tag]         v0.11.0                                  -> v0.11.0
+2026-11-26T13:56:35.9597701Z  * [new tag]         v0.11.0-preview.1                        -> v0.11.0-preview.1
+2026-11-26T13:56:35.9598180Z  * [new tag]         v0.12.0                                  -> v0.12.0
+2026-11-26T13:56:35.9598606Z  * [new tag]         v0.12.1                                  -> v0.12.1
+2026-11-26T13:56:35.9599053Z  * [new tag]         v0.12.10                                 -> v0.12.10
+2026-11-26T13:56:35.9599487Z  * [new tag]         v0.12.11                                 -> v0.12.11
+2026-11-26T13:56:35.9599907Z  * [new tag]         v0.12.12                                 -> v0.12.12
+2026-11-26T13:56:35.9600384Z  * [new tag]         v0.12.2                                  -> v0.12.2
+2026-11-26T13:56:35.9601155Z  * [new tag]         v0.12.3                                  -> v0.12.3
+2026-11-26T13:56:35.9601911Z  * [new tag]         v0.12.4                                  -> v0.12.4
+2026-11-26T13:56:35.9602498Z  * [new tag]         v0.12.5                                  -> v0.12.5
+2026-11-26T13:56:35.9603099Z  * [new tag]         v0.12.6                                  -> v0.12.6
+2026-11-26T13:56:35.9603485Z  * [new tag]         v0.12.7                                  -> v0.12.7
+2026-11-26T13:56:35.9603885Z  * [new tag]         v0.12.8                                  -> v0.12.8
+2026-11-26T13:56:35.9604307Z  * [new tag]         v0.12.9                                  -> v0.12.9
+2026-11-26T13:56:35.9604741Z  * [new tag]         v0.13.0                                  -> v0.13.0
+2026-11-26T13:56:35.9605213Z  * [new tag]         v0.13.1                                  -> v0.13.1
+2026-11-26T13:56:35.9605635Z  * [new tag]         v0.13.2                                  -> v0.13.2
+2026-11-26T13:56:35.9606095Z  * [new tag]         v0.13.3                                  -> v0.13.3
+2026-11-26T13:56:35.9606503Z  * [new tag]         v0.13.4                                  -> v0.13.4
+2026-11-26T13:56:35.9607634Z  * [new tag]         v0.13.5                                  -> v0.13.5
+2026-11-26T13:56:35.9608329Z  * [new tag]         v0.13.6                                  -> v0.13.6
+2026-11-26T13:56:35.9608752Z  * [new tag]         v0.13.7                                  -> v0.13.7
+2026-11-26T13:56:35.9609142Z  * [new tag]         v0.13.8                                  -> v0.13.8
+2026-11-26T13:56:35.9609546Z  * [new tag]         v0.13.9                                  -> v0.13.9
+2026-11-26T13:56:35.9610006Z  * [new tag]         v0.14.0                                  -> v0.14.0
+2026-11-26T13:56:35.9610445Z  * [new tag]         v0.14.1                                  -> v0.14.1
+2026-11-26T13:56:35.9610895Z  * [new tag]         v0.14.10                                 -> v0.14.10
+2026-11-26T13:56:35.9611344Z  * [new tag]         v0.14.11                                 -> v0.14.11
+2026-11-26T13:56:35.9611786Z  * [new tag]         v0.14.12                                 -> v0.14.12
+2026-11-26T13:56:35.9612220Z  * [new tag]         v0.14.13                                 -> v0.14.13
+2026-11-26T13:56:35.9612666Z  * [new tag]         v0.14.2                                  -> v0.14.2
+2026-11-26T13:56:35.9613090Z  * [new tag]         v0.14.3                                  -> v0.14.3
+2026-11-26T13:56:35.9613517Z  * [new tag]         v0.14.4                                  -> v0.14.4
+2026-11-26T13:56:35.9613954Z  * [new tag]         v0.14.5                                  -> v0.14.5
+2026-11-26T13:56:35.9614334Z  * [new tag]         v0.14.6                                  -> v0.14.6
+2026-11-26T13:56:35.9614855Z  * [new tag]         v0.14.7                                  -> v0.14.7
+2026-11-26T13:56:35.9615272Z  * [new tag]         v0.14.8                                  -> v0.14.8
+2026-11-26T13:56:35.9615526Z  * [new tag]         v0.14.9                                  -> v0.14.9
+2026-11-26T13:56:35.9615776Z  * [new tag]         v0.15.0                                  -> v0.15.0
+2026-11-26T13:56:35.9616045Z  * [new tag]         v0.15.1                                  -> v0.15.1
+2026-11-26T13:56:35.9616298Z  * [new tag]         v0.15.2                                  -> v0.15.2
+2026-11-26T13:56:35.9616550Z  * [new tag]         v0.16.0                                  -> v0.16.0
+2026-11-26T13:56:35.9616804Z  * [new tag]         v0.17.0                                  -> v0.17.0
+2026-11-26T13:56:35.9617065Z  * [new tag]         v0.18.0                                  -> v0.18.0
+2026-11-26T13:56:35.9617327Z  * [new tag]         v0.19.0                                  -> v0.19.0
+2026-11-26T13:56:35.9617594Z  * [new tag]         v0.20.0                                  -> v0.20.0
+2026-11-26T13:56:35.9617858Z  * [new tag]         v0.21.0                                  -> v0.21.0
+2026-11-26T13:56:35.9618112Z  * [new tag]         v0.22.0                                  -> v0.22.0
+2026-11-26T13:56:35.9618371Z  * [new tag]         v0.22.1                                  -> v0.22.1
+2026-11-26T13:56:35.9618621Z  * [new tag]         v0.23.0                                  -> v0.23.0
+2026-11-26T13:56:35.9618873Z  * [new tag]         v0.24.0                                  -> v0.24.0
+2026-11-26T13:56:35.9619137Z  * [new tag]         v0.25.0                                  -> v0.25.0
+2026-11-26T13:56:35.9619390Z  * [new tag]         v0.26.0                                  -> v0.26.0
+2026-11-26T13:56:35.9619644Z  * [new tag]         v0.27.0                                  -> v0.27.0
+2026-11-26T13:56:35.9619896Z  * [new tag]         v0.28.0                                  -> v0.28.0
+2026-11-26T13:56:35.9620146Z  * [new tag]         v0.29.0                                  -> v0.29.0
+2026-11-26T13:56:35.9620403Z  * [new tag]         v0.30.0                                  -> v0.30.0
+2026-11-26T13:56:35.9620657Z  * [new tag]         v0.31.0                                  -> v0.31.0
+2026-11-26T13:56:35.9621000Z  * [new tag]         v0.32.0                                  -> v0.32.0
+2026-11-26T13:56:35.9621261Z  * [new tag]         v0.33.0                                  -> v0.33.0
+2026-11-26T13:56:35.9621511Z  * [new tag]         v0.34.0                                  -> v0.34.0
+2026-11-26T13:56:35.9621912Z  * [new tag]         v0.35.0                                  -> v0.35.0
+2026-11-26T13:56:35.9622220Z  * [new tag]         v0.36.0                                  -> v0.36.0
+2026-11-26T13:56:35.9622481Z  * [new tag]         v0.37.0                                  -> v0.37.0
+2026-11-26T13:56:35.9622735Z  * [new tag]         v0.38.0                                  -> v0.38.0
+2026-11-26T13:56:35.9622989Z  * [new tag]         v0.39.0                                  -> v0.39.0
+2026-11-26T13:56:35.9623403Z  * [new tag]         v0.40.0                                  -> v0.40.0
+2026-11-26T13:56:35.9623928Z  * [new ref]         6fa27fdef890a987af8d5e8a6592b764752b537b -> pull/1/merge
+2026-11-26T13:56:35.9631479Z ##[endgroup]
+2026-11-26T13:56:35.9632468Z ##[group]Determining the checkout info
+2026-11-26T13:56:35.9633005Z ##[endgroup]
+2026-11-26T13:56:35.9639657Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-11-26T13:56:36.0042092Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-11-26T13:56:36.0323756Z ##[group]Checking out the ref
+2026-11-26T13:56:36.0330044Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/1/merge
+2026-11-26T13:56:36.1991041Z Note: switching to 'refs/remotes/pull/1/merge'.
+2026-11-26T13:56:36.1991352Z 
+2026-11-26T13:56:36.1991526Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-26T13:56:36.1991925Z changes and commit them, and you can discard any commits you make in this
+2026-11-26T13:56:36.1992620Z state without impacting any branches by switching back to a branch.
+2026-11-26T13:56:36.1992882Z 
+2026-11-26T13:56:36.1993103Z If you want to create a new branch to retain commits you create, you may
+2026-11-26T13:56:36.1993614Z do so (now or later) by using -c with the switch command. Example:
+2026-11-26T13:56:36.1993943Z 
+2026-11-26T13:56:36.1994081Z   git switch -c <new-branch-name>
+2026-11-26T13:56:36.1994217Z 
+2026-11-26T13:56:36.1994298Z Or undo this operation with:
+2026-11-26T13:56:36.1994414Z 
+2026-11-26T13:56:36.1994525Z   git switch -
+2026-11-26T13:56:36.1994661Z 
+2026-11-26T13:56:36.1994840Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-26T13:56:36.1995074Z 
+2026-11-26T13:56:36.1995356Z HEAD is now at 6fa27fd Merge 3735910a7795b24f282d1f273bcd2841fd685960 into c2f7588d7e158a1e6179f65441e556d37acc2ab8
+2026-11-26T13:56:36.2048798Z ##[endgroup]
+2026-11-26T13:56:36.2417375Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-11-26T13:56:36.2698115Z 6fa27fdef890a987af8d5e8a6592b764752b537b
+2026-11-26T13:56:36.2735755Z ##[group]Removing auth
+2026-11-26T13:56:36.2736093Z Removing SSH command configuration
+2026-11-26T13:56:36.2743534Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-26T13:56:36.3111223Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-26T13:56:36.7524739Z Removing HTTP extra header
+2026-11-26T13:56:36.7532127Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-26T13:56:36.7825946Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-26T13:56:37.2110926Z Removing includeIf entries pointing to credentials config files
+2026-11-26T13:56:37.2120147Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-26T13:56:37.2385586Z includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git.path
+2026-11-26T13:56:37.2386144Z includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path
+2026-11-26T13:56:37.2386591Z includeif.gitdir:/github/workspace/.git.path
+2026-11-26T13:56:37.2387203Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-26T13:56:37.2417820Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git.path
+2026-11-26T13:56:37.2675073Z D:\a\_temp\git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:37.2706771Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git.path D\:\\a\\_temp\\git\-credentials\-03c7705d\-7672\-4472\-b88c\-434fb9aafbf2\.config
+2026-11-26T13:56:37.2997995Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path
+2026-11-26T13:56:37.3252901Z D:\a\_temp\git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:37.3284949Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path D\:\\a\\_temp\\git\-credentials\-03c7705d\-7672\-4472\-b88c\-434fb9aafbf2\.config
+2026-11-26T13:56:37.3592860Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-26T13:56:37.3850933Z /github/runner_temp/git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:37.3891141Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-03c7705d\-7672\-4472\-b88c\-434fb9aafbf2\.config
+2026-11-26T13:56:37.4272097Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-26T13:56:37.4579129Z /github/runner_temp/git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config
+2026-11-26T13:56:37.4610097Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-03c7705d\-7672\-4472\-b88c\-434fb9aafbf2\.config
+2026-11-26T13:56:37.4906103Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-26T13:56:37.9422205Z Removing credentials config 'D:\a\_temp\git-credentials-03c7705d-7672-4472-b88c-434fb9aafbf2.config'
+2026-11-26T13:56:37.9432754Z ##[endgroup]
+2026-11-26T13:56:37.9766446Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-11-26T13:56:37.9766866Z with:
+2026-11-26T13:56:37.9767015Z   node-version: 24
+2026-11-26T13:56:37.9767185Z   package-manager-cache: false
+2026-11-26T13:56:37.9767375Z   check-latest: false
+2026-11-26T13:56:37.9769214Z   token: ***
+2026-11-26T13:56:37.9769362Z ##[endgroup]
+2026-11-26T13:56:38.1106362Z Found in cache @ C:\hostedtoolcache\windows\node\24.22.3\x64
+2026-11-26T13:56:40.6576134Z ##[group]Environment details
+2026-11-26T13:56:44.6110994Z node: v24.22.3
+2026-11-26T13:56:44.6111271Z npm: 11.19.1
+2026-11-26T13:56:44.6111490Z yarn: 1.22.22
+2026-11-26T13:56:44.6111924Z ##[endgroup]
+2026-11-26T13:56:44.6370319Z ##[group]Run New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-ci-logs" | Out-Null
+2026-11-26T13:56:44.6370932Z [36;1mNew-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-ci-logs" | Out-Null[0m
+2026-11-26T13:56:44.6921369Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T13:56:44.6921659Z ##[endgroup]
+2026-11-26T13:56:45.0636809Z ##[group]Run npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/install.log"
+2026-11-26T13:56:45.0637746Z [36;1mnpm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/install.log"[0m
+2026-11-26T13:56:45.0638238Z [36;1mexit $LASTEXITCODE[0m
+2026-11-26T13:56:45.0697622Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T13:56:45.0697901Z ##[endgroup]
+2026-11-26T13:56:53.9992307Z [31;1mnpm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported[0m
+2026-11-26T13:56:59.1109890Z [31;1mnpm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.[0m
+2026-11-26T13:56:59.3185216Z [31;1mnpm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.[0m
+2026-11-26T13:57:01.6786962Z [31;1mnpm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me[0m
+2026-11-26T13:57:04.5319392Z [31;1mnpm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.[0m
+2026-11-26T13:57:05.2896999Z [31;1mnpm warn deprecated fstream@1.0.12: This package is no longer supported.[0m
+2026-11-26T13:57:07.7947875Z [31;1mnpm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead[0m
+2026-11-26T13:57:53.8306596Z 
+2026-11-26T13:57:53.8308600Z added 1327 packages in 1m
+2026-11-26T13:57:53.8323916Z [31;1mnpm warn install-scripts 7 packages have install scripts not yet covered by allowScripts:[0m
+2026-11-26T13:57:53.8329407Z [31;1mnpm warn install-scripts   @deepseek-ai/dsh-subprocess-local@0.2.2-rc.5 (postinstall: node scripts/ensure-spawn-helper.mjs)[0m
+2026-11-26T13:57:53.8334774Z [31;1mnpm warn install-scripts   @google/genai@2.21.0 (preinstall: echo 'preinstall: no-op')[0m
+2026-11-26T13:57:53.8339527Z [31;1mnpm warn install-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)[0m
+2026-11-26T13:57:53.8344186Z [31;1mnpm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)[0m
+2026-11-26T13:57:53.8349392Z [31;1mnpm warn install-scripts   koffi@3.1.1 (install: node ./cnoke.cjs -P . -D src/koffi --prebuild --release)[0m
+2026-11-26T13:57:53.8353911Z [31;1mnpm warn install-scripts   node-pty@1.2.0-beta.15 (install: node scripts/prebuild.js || node-gyp rebuild; postinstall: node scripts/post-install.js)[0m
+2026-11-26T13:57:53.8358257Z [31;1mnpm warn install-scripts   protobufjs@7.6.6 (postinstall: node scripts/postinstall)[0m
+2026-11-26T13:57:53.8385911Z [31;1mnpm warn install-scripts[0m
+2026-11-26T13:57:53.8389978Z [31;1mnpm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.[0m
+2026-11-26T13:57:54.7637429Z ##[group]Run npm.cmd run quality 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/quality.log"
+2026-11-26T13:57:54.7638316Z [36;1mnpm.cmd run quality 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/quality.log"[0m
+2026-11-26T13:57:54.7638686Z [36;1mexit $LASTEXITCODE[0m
+2026-11-26T13:57:54.7708980Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T13:57:54.7709277Z ##[endgroup]
+2026-11-26T13:57:55.3104368Z 
+2026-11-26T13:57:55.3109118Z > office-agent@0.40.0 quality
+2026-11-26T13:57:55.3110816Z > node scripts/check-quality.mjs
+2026-11-26T13:57:55.3112649Z 
+2026-11-26T13:57:56.9891918Z [31;1m[csstree-match] BREAK after 15000 iterations[0m
+2026-11-26T13:57:57.2945592Z Quality scope: adopted-and-changed-scope; baseline 718cb62.
+2026-11-26T13:57:57.2946502Z ESLint 30/284 JS files; Stylelint 4/4 CSS files; Prettier 15/513 text files.
+2026-11-26T13:57:57.2954458Z Legacy formatting not adopted (21): .github/workflows/ci.yml, scripts/pack-runtime.cjs, scripts/test-packed.mjs, scripts/test-tool-timeline-ui.mjs, scripts/verify-packed-sources.mjs, src/styles.css, tests/archive-name.test.mjs, tests/assistant-stream.test.mjs, tests/automation.test.mjs, tests/composer-runtime.test.mjs, tests/document-text.test.mjs, tests/mcp-identity.test.mjs, tests/providers.test.mjs, tests/runtime-cleanup.test.mjs, tests/runtime-lifecycle.test.mjs, tests/runtime-native-entrypoints.test.mjs, tests/temp-hygiene.test.mjs, tests/updater-cache.test.mjs, tests/workbench.test.mjs, tests/workspace-save-queue.test.mjs, tests/zip-writer.test.mjs
+2026-11-26T13:57:57.2957820Z Generated evidence/lock files excluded: 9.
+2026-11-26T13:57:57.2959183Z Documented inline exceptions (2): tests/runtime-lifecycle.test.mjs:130 no-unsafe-finally, tests/runtime-lifecycle.test.mjs:418 no-unsafe-finally
+2026-11-26T13:57:57.2960736Z Errors: 0; warnings: 0. Scoped success is not whole-repository quality, runtime behavior, or Windows package acceptance.
+2026-11-26T13:57:57.3984164Z ##[group]Run npm.cmd run build 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/build.log"
+2026-11-26T13:57:57.3985121Z [36;1mnpm.cmd run build 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/build.log"[0m
+2026-11-26T13:57:57.3985724Z [36;1mexit $LASTEXITCODE[0m
+2026-11-26T13:57:57.4049384Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T13:57:57.4049668Z ##[endgroup]
+2026-11-26T13:57:57.9151311Z 
+2026-11-26T13:57:57.9155432Z > office-agent@0.40.0 build
+2026-11-26T13:57:57.9157411Z > vite build && node scripts/prepare-sites-build.mjs
+2026-11-26T13:57:57.9159262Z 
+2026-11-26T13:57:58.2610262Z [36mvite v6.4.6 [32mbuilding for production...[36m[39m
+2026-11-26T13:57:58.3147362Z transforming...
+2026-11-26T13:58:03.4048548Z [32m✓[39m 4894 modules transformed.
+2026-11-26T13:58:03.5951008Z rendering chunks...
+2026-11-26T13:58:03.7633780Z computing gzip size...
+2026-11-26T13:58:03.7855412Z [2mdist/client/[22m[32mindex.html                    [39m[1m[2m  0.57 kB[22m[1m[22m[2m │ gzip:   0.37 kB[22m
+2026-11-26T13:58:03.7856747Z [2mdist/client/[22m[35massets/xterm-DYP7pi_n.css     [39m[1m[2m  4.15 kB[22m[1m[22m[2m │ gzip:   1.68 kB[22m
+2026-11-26T13:58:03.7857877Z [2mdist/client/[22m[35massets/index-BsIbT9ek.css     [39m[1m[2m 92.95 kB[22m[1m[22m[2m │ gzip:  17.81 kB[22m
+2026-11-26T13:58:03.7862461Z [2mdist/client/[22m[36massets/addon-fit-BEYchpMh.js  [39m[1m[2m  1.81 kB[22m[1m[22m[2m │ gzip:   0.83 kB[22m
+2026-11-26T13:58:03.7864576Z [2mdist/client/[22m[36massets/markdown-BOhPJHrX.js   [39m[1m[2m176.42 kB[22m[1m[22m[2m │ gzip:  54.00 kB[22m
+2026-11-26T13:58:03.7866115Z [2mdist/client/[22m[36massets/xterm-DoU7rZf7.js      [39m[1m[2m291.26 kB[22m[1m[22m[2m │ gzip:  72.66 kB[22m
+2026-11-26T13:58:03.7867459Z [2mdist/client/[22m[36massets/index-Cr4ARB7l.js      [39m[1m[33m747.29 kB[39m[22m[2m │ gzip: 215.68 kB[22m
+2026-11-26T13:58:03.8528527Z [31;1m[33m[0m
+2026-11-26T13:58:03.8561647Z [31;1m(!) Some chunks are larger than 500 kB after minification. Consider:[0m
+2026-11-26T13:58:03.8742480Z [31;1m- Using dynamic import() to code-split the application[0m
+2026-11-26T13:58:03.8756411Z [31;1m- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks[0m
+2026-11-26T13:58:03.8759360Z [31;1m- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m[0m
+2026-11-26T13:58:03.8760294Z [32m✓ built in 5.50s[39m
+2026-11-26T13:58:03.9271558Z Prepared Sites build: dist/server/index.js and dist/.openai/hosting.json
+2026-11-26T13:58:04.0035500Z ##[group]Run npm.cmd run test:sites 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/sites.log"
+2026-11-26T13:58:04.0036138Z [36;1mnpm.cmd run test:sites 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/sites.log"[0m
+2026-11-26T13:58:04.0036518Z [36;1mexit $LASTEXITCODE[0m
+2026-11-26T13:58:04.0094311Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T13:58:04.0094595Z ##[endgroup]
+2026-11-26T13:58:04.5080726Z 
+2026-11-26T13:58:04.5084702Z > office-agent@0.40.0 test:sites
+2026-11-26T13:58:04.5086774Z > node --test tests/sites-worker.test.mjs
+2026-11-26T13:58:04.5087886Z 
+2026-11-26T13:58:04.6380260Z ✔ serves existing static assets without a fallback (23.6981ms)
+2026-11-26T13:58:04.6383079Z ✔ falls back to index.html for an unknown app route (1.1703ms)
+2026-11-26T13:58:04.6385544Z ✔ does not turn missing API or write requests into the app shell (0.5147ms)
+2026-11-26T13:58:04.6396744Z ✔ emits the files required by Sites packaging (4.8703ms)
+2026-11-26T13:58:04.6511410Z ℹ tests 4
+2026-11-26T13:58:04.6513243Z ℹ suites 0
+2026-11-26T13:58:04.6514841Z ℹ pass 4
+2026-11-26T13:58:04.6516855Z ℹ fail 0
+2026-11-26T13:58:04.6519318Z ℹ cancelled 0
+2026-11-26T13:58:04.6521924Z ℹ skipped 0
+2026-11-26T13:58:04.6524502Z ℹ todo 0
+2026-11-26T13:58:04.6526911Z ℹ duration_ms 97.3956
+2026-11-26T13:58:04.7241212Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-26T13:58:04.7241742Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-26T13:58:04.7242180Z [36;1mnpm.cmd test 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/unit.log"[0m
+2026-11-26T13:58:04.7242525Z [36;1mexit $LASTEXITCODE[0m
+2026-11-26T13:58:04.7300086Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T13:58:04.7300405Z ##[endgroup]
+2026-11-26T13:58:05.2453771Z 
+2026-11-26T13:58:05.2459429Z > office-agent@0.40.0 test
+2026-11-26T13:58:05.2473470Z > node --test --test-concurrency=2 tests/context-window.test.mjs tests/model-catalog-limits.test.mjs tests/privacy.test.mjs tests/credential-boundary.test.mjs tests/delivery-review.test.mjs tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/privacy-gateway.test.mjs tests/kernel-native.test.mjs tests/capability-manifest.test.mjs tests/capability-runtime.test.mjs tests/office-directory.test.mjs tests/office.test.mjs tests/store.test.mjs tests/conversation-state.test.mjs tests/conversation-resources.test.mjs tests/deliverable-access.test.mjs tests/assistant-stream.test.mjs tests/automation.test.mjs tests/automation-persistence.test.mjs tests/runtime.test.mjs tests/runtime-image-ocr.test.mjs tests/runtime-vision.test.mjs tests/runtime-cleanup.test.mjs tests/runtime-finalization.test.mjs tests/runtime-context.test.mjs tests/privacy-lock-recovery.test.mjs tests/runtime-launch.test.mjs tests/runtime-policy.test.mjs tests/runtime-lifecycle.test.mjs tests/workbench.test.mjs tests/kernel.test.mjs tests/desktop-release.test.mjs tests/document-text.test.mjs tests/composer-runtime.test.mjs tests/speech-audio.test.mjs tests/speech-service.test.mjs tests/providers.test.mjs tests/error-copy.test.mjs tests/mcp-identity.test.mjs tests/mcp-destination.test.mjs tests/plugins.test.mjs tests/workspace-save-queue.test.mjs tests/app-log.test.mjs tests/updater-cache.test.mjs tests/temp-hygiene.test.mjs tests/zip-writer.test.mjs tests/change-summary.test.mjs tests/inline-references.test.mjs tests/review-diff.test.mjs tests/review-view.test.mjs tests/file-actions.test.mjs tests/changed-files.test.mjs tests/deliverable-cards.test.mjs tests/trace-filter.test.mjs tests/run-status.test.mjs tests/providers-hidden-model.test.mjs tests/privacy-warning.test.mjs tests/provider-reasoning.test.mjs tests/message-feedback.test.mjs tests/compaction-policy.test.mjs tests/runtime-patch.test.mjs tests/run-summary.test.mjs tests/subagent-archive.test.mjs tests/archive-name.test.mjs tests/runtime-native-entrypoints.test.mjs tests/office-file-policy.test.mjs tests/quality-gate.test.mjs tests/maintenance-inventory.test.mjs tests/packed-provenance.test.mjs
+2026-11-26T13:58:05.2480332Z 
+2026-11-26T13:58:05.3711276Z ✔ writes and tails events (9.7991ms)
+2026-11-26T13:58:05.3753036Z ✔ redacts secret-shaped fields and truncates long strings (5.5846ms)
+2026-11-26T13:58:05.3910040Z ✔ rotates once the file exceeds its limit (15.2495ms)
+2026-11-26T13:58:05.3969352Z ✔ copies existing log files to an export directory (6.2255ms)
+2026-11-26T13:58:05.4002030Z ✔ survives an unwritable directory without throwing to the caller (2.7801ms)
+2026-11-26T13:58:05.4103895Z ✔ 默认文件名带会话名与日期，扩展名固定为 .md (1.6002ms)
+2026-11-26T13:58:05.4105379Z ✔ 会话名里的 Windows 非法字符被替换，过长会截断 (0.3861ms)
+2026-11-26T13:58:05.4106872Z ✔ 没有标题与非法日期时仍给出可用名字 (0.2248ms)
+2026-11-26T13:58:05.4108836Z ✔ 重名时按序号退让，不改扩展名 (0.1872ms)
+2026-11-26T13:58:05.5070412Z ✔ live assistant previews retain ordered cumulative text and publish the final held suffix (13.5226ms)
+2026-11-26T13:58:05.5132432Z ✔ live assistant previews restore values authorized by the earlier user prompt (1.9095ms)
+2026-11-26T13:58:05.5147275Z ✔ newly detected sensitive output stays masked in streaming and cancelled previews (1.1625ms)
+2026-11-26T13:58:05.5152187Z ✔ arbitrary long API keys remain buffered until they can be blocked (0.5322ms)
+2026-11-26T13:58:05.5190203Z ✔ live assistant previews block credentials and discard delayed or out-of-order frames (0.4823ms)
+2026-11-26T13:58:05.5205517Z ✔ live assistant preview decodes fragmented OpenAI and Anthropic text events only (1.7082ms)
+2026-11-26T13:58:05.5250789Z ✔ live assistant decoder handles standalone CR and refuses to commit truncated transport output (0.3374ms)
+2026-11-26T13:58:05.5296285Z ✔ live assistant preview assembles attempts without exposing held text or losing the final suffix (1.0452ms)
+2026-11-26T13:58:05.5328379Z ✔ failed model retries roll back abandoned partial output before the final attempt (1.6589ms)
+2026-11-26T13:58:05.5943112Z ✔ the local privacy gateway forwards live provider text while preserving the wire response (89.2885ms)
+2026-11-26T13:58:05.8996941Z ✔ R04 成功结果终态 ENOSPC 后可读、暂停；并发重试只落盘一次且重启保留正文 (32.5942ms)
+2026-11-26T13:58:05.9056666Z ✔ R04 提醒失败保存同样保留 outcome；close flush 不再执行提醒或模型 (6.5933ms)
+2026-11-26T13:58:05.9111837Z ✔ R04 执行失败与状态保存失败分开，恢复写入只保存同一 runId/错误 (5.5093ms)
+2026-11-26T13:58:05.9164562Z ✔ R04 内核退出未确认的已验证正文仍可保存/重试，执行次数始终为一 (5.2655ms)
+2026-11-26T13:58:05.9229380Z ✔ R04 后到的清理完成事件更新pending/已存终态；其写盘失败也可仅保存重试 (6.2531ms)
+2026-11-26T13:58:05.9349042Z ✔ R04 首次/重试写入期间到达的 exit 证据不会被旧 outcome 覆盖 (11.135ms)
+2026-11-26T13:58:05.9396954Z ✔ R04 内核已完成而取消未受理时，不把完成结果改成 stopped 或清空正文 (5.6334ms)
+2026-11-26T13:58:05.9458989Z ✔ R04 未成功写盘即强制中断的旧 running 台账重启后暂停，不自动重复工具 (5.8934ms)
+2026-11-26T13:58:06.2616665Z ✔ R04 超过120条历史与容量清理均保留 pending/running 行，retrySave仍找到原 runId (315.2015ms)
+2026-11-26T13:58:06.6500284Z ✔ R04 单份结果超过容量时明确失败并保留 outcome，不能删本次终态后伪报保存成功 (388.0925ms)
+2026-11-26T13:58:06.6853484Z ✔ 过期隐私引擎授权在重启时暂停，规范化后的模型凭证不能进入自动化预览 (5.9816ms)
+2026-11-26T13:58:06.6855958Z ✔ Agent 定时任务工具复用同一调度器、草稿暂停及项目隔离 (2.046ms)
+2026-11-26T13:58:06.6864724Z ✔ 日期计算遵守未来起始日、工作日、单次、月末和闰年 (2.5503ms)
+2026-11-26T13:58:06.6866796Z ✔ 资料与项目限定在同一工作空间，任务包含实际选定资料 (0.8431ms)
+2026-11-26T13:58:06.6867486Z ✔ 主机审阅单次使用，资料、模型连接或发送方式变更使授权失效 (4.1125ms)
+2026-11-26T13:58:06.6868090Z ✔ 到期任务先持久化再执行，重开仅补最近一次，单次执行后关闭 (22.5231ms)
+2026-11-26T13:58:06.6868664Z ✔ 运行可取消、禁止运行时编辑，失败与中断不会伪装成功 (1.4335ms)
+2026-11-26T13:58:06.6869170Z ✔ 写入失败不会启用计划或调用模型 (0.7929ms)
+2026-11-26T13:58:06.6869739Z ✔ Harness Cron 核对指定时区和夏令时，RRULE 只预览剩余有效日期 (25.8666ms)
+2026-11-26T13:58:06.6870381Z ✔ RRULE 到期只补最近一次，固定间隔保留节拍，延迟规则只执行一次 (7.7593ms)
+2026-11-26T13:58:06.6870973Z ✔ 同一条任务聊天使用同一 Harness 会话，材料变更重新审阅后隔离旧会话 (2.5945ms)
+2026-11-26T13:58:06.6871526Z ✔ 已有聊天把审阅过的消息纳入指令，结果按次送达，新增上下文使计划暂停 (2.5288ms)
+2026-11-26T13:58:06.6872049Z ✔ 未检查目录时不能把配置开关当作已注册或可执行 (1.3638ms)
+2026-11-26T13:58:06.6880219Z ✔ 真实目录存在不掩盖路由、项目、执行权限和桥接门槛 (0.6254ms)
+2026-11-26T13:58:06.6880915Z ✔ 开关关闭、规划模式和禁止联网立即反映在有效能力上 (1.1764ms)
+2026-11-26T13:58:06.6881420Z ✔ 工具缺失和未接入范围不可被伪造的同名目录开启 (0.3002ms)
+2026-11-26T13:58:06.6881922Z ✔ 完整目录与满足门槛仅证明可调度，保留逐次审批及证据语义 (1.6809ms)
+2026-11-26T13:58:06.6882431Z ✔ 清单只输出固定元数据，不包含工具参数、目录、模型或凭据 (0.5088ms)
+2026-11-26T13:58:14.8982211Z ✔ 真实 Harness 能力清单按项目、协议、权限与开关变化，诊断没有模型请求 (8138.6589ms)
+2026-11-26T13:58:14.9119966Z ✔ 新增文件按行数算新增 (2.0095ms)
+2026-11-26T13:58:14.9122242Z ✔ 替换行拆成新增与删除，不把上下文算进去 (0.2473ms)
+2026-11-26T13:58:14.9122758Z ✔ 纯删除与纯插入 (0.2899ms)
+2026-11-26T13:58:14.9123207Z ✔ meta.diffs 转成条目，空路径与无 diffs 都被跳过 (0.3846ms)
+2026-11-26T13:58:14.9123755Z ✔ mergeEntries 跨多次工具结果累计，并有上限 (0.4716ms)
+2026-11-26T13:58:14.9124643Z ✔ 合并时保留工作区相对展示名 (0.2468ms)
+2026-11-26T13:58:14.9125262Z ✔ 汇总总计 (0.2344ms)
+2026-11-26T13:58:14.9125636Z ✔ 标题只在有文件时给出，并带数量 (0.8916ms)
+2026-11-26T13:58:14.9126278Z ✔ 路径缺失时给占位，不抛错 (0.1818ms)
+2026-11-26T13:58:14.9127485Z ✔ 给了工作区相对名就用相对名，完整路径留给 title (0.9827ms)
+2026-11-26T13:58:14.9129766Z ✔ 行数写成 +新增 / -删除 (0.2979ms)
+2026-11-26T13:58:14.9131783Z ✔ 总计累加，并给出合计文案 (0.7304ms)
+2026-11-26T13:58:14.9133289Z ✔ 128k 窗口用桌面版默认 headroom，不收缩 (2.0678ms)
+2026-11-26T13:58:14.9135887Z ✔ 200k 窗口阈值仍受 headroom 限制 (2.1503ms)
+2026-11-26T13:58:14.9136714Z ✔ 小窗口按预算收缩并标记，仍能算出正阈值 (0.4066ms)
+2026-11-26T13:58:14.9137933Z ✔ 极窄窗口收缩后保底 1024 (0.2753ms)
+2026-11-26T13:58:14.9138915Z ✔ maxTokens 不小于窗口时报错，不静默糊过去 (0.5498ms)
+2026-11-26T13:58:14.9139557Z ✔ 比例越界与 retain 不小于 threshold 都报错 (0.2536ms)
+2026-11-26T13:58:18.9406874Z ✔ 模型目录使用真实内核 ID；配置模型保留；思考强度只提供内核档位 (2.2966ms)
+2026-11-26T13:58:18.9407826Z ✔ 刷新目录只请求配置服务；拒绝重定向；不把凭据转发到其他地址 (34.6576ms)
+2026-11-26T13:58:18.9408651Z ✔ 个人偏好进入正常脱敏链；本机语音校验会话、语言和音频 (4.452ms)
+2026-11-26T13:58:18.9409136Z ✔ 同一聊天切换模型和四档思考强度，规划草稿随附件自动脱敏 (11346.235ms)
+2026-11-26T13:58:31.9858891Z ✔ 中文原生命令保留动词，原生状态和拒绝原因跨会话重开，且不调用模型 (13045.8277ms)
+2026-11-26T13:58:31.9992011Z ✔ Windows SenseVoice Provider can inspect local model state without recording or downloading (13.765ms)
+2026-11-26T13:58:32.0144041Z ✔ 窗口优先取型号自己声明的值 (0.7897ms)
+2026-11-26T13:58:32.0146923Z ✔ 同名型号按供应商区分 (0.1249ms)
+2026-11-26T13:58:32.0147721Z ✔ 型号没声明窗口时退回供应商声明 (0.2023ms)
+2026-11-26T13:58:32.0148742Z ✔ 运行时目录里没有该型号时退回上一次实测值 (0.197ms)
+2026-11-26T13:58:32.0149383Z ✔ 全都不知道时用 128,000，不编造型号 (0.1189ms)
+2026-11-26T13:58:32.0151743Z ✔ 用量文案统一成同一种排版 (13.8132ms)
+2026-11-26T13:58:32.0152243Z ✔ 空会话与不完整历史返回空集合，正文里的链接不成为来源 (2.6157ms)
+2026-11-26T13:58:32.0152797Z ✔ 产出按完整路径聚合，Windows 路径去重后保留最新文件引用 (0.686ms)
+2026-11-26T13:58:32.0156954Z ✔ 用户附件区分可打开内容与仅有名称大小的历史记录 (0.615ms)
+2026-11-26T13:58:32.0157612Z ✔ 网页来源只使用明确的 sourceUrl 和 importedTools.url，保留原附件引用 (0.516ms)
+2026-11-26T13:58:32.0158241Z ✔ 来源拒绝凭据地址和非网页协议，不从工具 detail 或参数正文提取链接 (0.2836ms)
+2026-11-26T13:58:32.0159536Z ✔ 实际执行投影中的搜索摘要跳执行，调用和结果不会变成两个网页来源 (0.8123ms)
+2026-11-26T13:58:32.0160197Z ✔ 搜索或读取轨迹含明确网页字段时才提供可打开来源 (0.4949ms)
+2026-11-26T13:58:32.0160708Z ✔ 子任务及作业来自真实标识，历史与 liveTrace 重叠不重复计数，作业按运行和子会话隔离 (0.3152ms)
+2026-11-26T13:58:32.0161160Z ✔ 聚合不更改消息、文件或轨迹数据 (0.4377ms)
+2026-11-26T13:58:32.0161860Z ✔ R05 删除单聊及归档聊天后正文和解析附件从持久字节消失，共享资料及其他草稿保留 (13.3475ms)
+2026-11-26T13:58:32.0162356Z ✔ R05 项目删除按最新聊天归属级联，已移出的聊天和过时归属草稿不误删 (3.7678ms)
+2026-11-26T13:58:32.0162983Z ✔ R05 历史孤儿草稿保持原字节且有可列举恢复/删除入口，正常归档草稿不误分类 (3.5153ms)
+2026-11-26T13:58:32.0163724Z ✔ R08 去重追加保留原附件，Windows路径忽略大小写，超过12个明确返回未加入数量 (0.5764ms)
+2026-11-26T13:58:32.0164837Z ✔ R08 失败恢复须匹配提交revision和空正文/空附件，不能覆盖新输入或用户清空后的新版 (0.3417ms)
+2026-11-26T13:58:32.0165693Z ✔ 多份新草稿保留独立键和归属，列举所有有效草稿而非仅最近一份，排除空草稿/孤儿/待删除项目 (4.0947ms)
+2026-11-26T13:58:32.0166942Z ✔ 首次发送消费新草稿时绑定实际聊天，失败正文/附件可恢复并随聊天删除，重载无残留 (5.4172ms)
+2026-11-26T13:58:32.0167613Z ✔ 发送只消费匹配revision，不覆盖prepare期间的新编辑或目标已有草稿；普通聊天保持原键 (0.2639ms)
+2026-11-26T13:58:32.0168507Z ✔ 浏览器localStorage不保存草稿正文/附件，浏览器初始化也不恢复注入的旧草稿 (0.6002ms)
+2026-11-26T13:58:32.0169378Z ✔ R07 NETWORK_DISCONNECTED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (4.5158ms)
+2026-11-26T13:58:32.0170059Z ✔ R07 QUOTA_EXCEEDED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (3.5441ms)
+2026-11-26T13:58:32.0170713Z ✔ R07 PERMISSION_DENIED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (2.5621ms)
+2026-11-26T13:58:32.0171437Z ✔ R07 RUNTIME_CANCELLED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (2.8836ms)
+2026-11-26T13:58:32.0172094Z ✔ R07 已验证输出完成但close失败时归档terminal.result，不将completed误标成执行失败 (0.3654ms)
+2026-11-26T13:58:32.0172803Z ✔ R07 displayRedacted终态摘要不能覆盖validated-result draft正文，仅无正文时用保护后摘要 (0.1699ms)
+2026-11-26T13:58:32.0173458Z ✔ 凭证检测覆盖短值、Unicode 变体和 JSON 转义；可用模型密钥至少八字符 (3.2259ms)
+2026-11-26T13:58:32.0173957Z ✔ 非脱敏模式强制凭证拦截且不改写存储策略；旧引擎审阅版本失效 (6.0423ms)
+2026-11-26T13:58:32.0174575Z ✔ 短凭证所有分块边界、Unicode 分块和本机还原均不能进入流式预览 (18.432ms)
+2026-11-26T13:58:32.0175246Z ✔ openai/redact 实际网关：已知短密钥和通用凭证在收件前检查 (142.0935ms)
+2026-11-26T13:58:32.0175845Z ✔ openai/raw 实际网关：已知短密钥和通用凭证在收件前检查 (71.502ms)
+2026-11-26T13:58:32.0176394Z ✔ anthropic/redact 实际网关：已知短密钥和通用凭证在收件前检查 (74.1289ms)
+2026-11-26T13:58:32.0176926Z ✔ anthropic/raw 实际网关：已知短密钥和通用凭证在收件前检查 (72.0155ms)
+2026-11-26T13:58:32.0177535Z ✔ 真实预览保留发送前的凭证检查依据，脱敏不能把已知密钥隐藏成可发送占位符 (4.8388ms)
+2026-11-26T13:58:32.0178026Z ✔ 交互提问的正文、说明与选项在还原后再次检查当前 Key (23.4929ms)
+2026-11-26T13:58:32.0178649Z ✔ Harness Markdown 逐模式审阅，主机历史不接受替代正文，交付只使用审阅后的 UTF-8 字节 (38.2346ms)
+2026-11-26T13:58:32.0179334Z ✔ Harness Markdown 阻断当前凭据，拒绝活动会话、关闭持久化、坏日志和重定向目录 (25.7851ms)
+2026-11-26T13:58:32.0179918Z ✔ 项目外真实 present 文件可由专用引用读取，渲染端伪造路径不授予访问 (798.9891ms)
+2026-11-26T13:58:32.0180496Z ✔ 引用拒绝跨会话、工作模式、项目以及签名或事件索引篡改 (15.9015ms)
+2026-11-26T13:58:32.0181012Z ✔ 重建访问模块仍可验证引用，普通文件更新读取当前位置的内容 (13.1245ms)
+2026-11-26T13:58:32.0196638Z ✔ raw 与 redact 历史保持独立，子会话须有完整原生归属链 (36.0286ms)
+2026-11-26T13:58:32.0197243Z ✔ 加密历史身份、版本、序号或密文损坏均拒绝交付访问 (17.2883ms)
+2026-11-26T13:58:32.0197709Z ✔ 没有主机密钥或原生日志时不从消息路径补造交付授权 (7.6856ms)
+2026-11-26T13:58:32.0198146Z ✔ 缺失文件、目录、私密路径和应用数据保留不可用状态 (9.3383ms)
+2026-11-26T13:58:32.0198591Z ✔ 目录链接重定向后旧引用失效，日志目录链接不能跨应用根读取 (16.9082ms)
+2026-11-26T13:58:32.0199005Z ✔ 交付文件预览受大小限制，读取中归属变化拒绝返回内容 (12.6302ms)
+2026-11-26T13:58:32.0199514Z ✔ 真实 Harness 在完全访问下 present 项目外文件后可用主机引用预览 (3317.8974ms)
+2026-11-26T13:58:32.0199957Z ✔ 文件名取路径末段，路径缺失时给出占位名 (0.7536ms)
+2026-11-26T13:58:32.0200302Z ✔ 按扩展名给出文件类型 (1.4524ms)
+2026-11-26T13:58:32.0200604Z ✔ 有说明用说明，没有说明用类型 (0.1611ms)
+2026-11-26T13:58:32.0200947Z ✔ 超过四个才折叠，四个以内全部展示 (0.1856ms)
+2026-11-26T13:58:32.0201294Z ✔ 展开提示带上总数，展开后是收起 (0.1827ms)
+2026-11-26T13:58:32.0201787Z ✔ 交付快照继承当前规则，旧 masked 不能复活自定义秘密；raw/self 也不能绕过凭据 (17.4641ms)
+2026-11-26T13:58:32.0202502Z ✔ TXT/DOCX/XLSX 与剪贴板的真实内容来自同一主机策略快照 (166.0411ms)
+2026-11-26T13:58:32.0202941Z ✔ 本人版普通个人信息允许保留，显式禁止类别继续阻止全部交付入口 (1.1722ms)
+2026-11-26T13:58:32.0203432Z ✔ 审阅绑定内容、策略、格式、接收范围与动作；修改规则/模式/凭据后禁止复用 (1.7923ms)
+2026-11-26T13:58:32.0203876Z ✔ 原生对话框期间规则更新二次检查；取消可重用，过期与返回对象篡改无效 (1.3108ms)
+2026-11-26T13:58:32.0204283Z ✔ 知行桌面版本按 SemVer 顺序比较 (1.2476ms)
+2026-11-26T13:58:32.0204685Z ✔ 发行检查选择最新兼容标签并准确识别 Windows 安装包 (1.8667ms)
+2026-11-26T13:58:32.0205179Z ✔ 没有比本机更新的发行版时不误报更新 (0.2573ms)
+2026-11-26T13:58:32.0205547Z ✔ 发行页始终指向知行仓库且拒绝不合法标签 (0.1797ms)
+2026-11-26T13:58:32.0205906Z ✔ GitHub 不可用或返回无效数据时明确失败 (0.3026ms)
+2026-11-26T13:58:34.0171773Z ✔ Word 提取正文、页眉页脚、修订和批注，图片只记录范围 (436.2101ms)
+2026-11-26T13:58:34.0178729Z ✔ Excel 包含隐藏区域、合并单元格、批注和公式缓存，避免误报重算 (481.2751ms)
+2026-11-26T13:58:34.0180433Z ✔ PPTX 按真实目录顺序读取幻灯片、隐藏页与演讲者备注 (418.1476ms)
+2026-11-26T13:58:34.0181220Z ✔ 文字 PDF 在独立进程本机读取，链接和文档脚本不会访问网络 (3475.2698ms)
+2026-11-26T13:58:34.0181965Z ✔ 异常压缩包、DTD、宏及取消均拒绝；UTF-16 文本可本机读取 (1618.2462ms)
+2026-11-26T13:58:34.0182748Z ✔ 中文 PDF 的 ToUnicode 文字映射可本机读取 (565.9943ms)
+2026-11-26T13:58:34.0183486Z ✔ 图片型 PPTX 不会把生成的页码误当作已提取正文 (412.8671ms)
+2026-11-26T13:58:34.0184542Z ✔ Windows 图片 OCR 返回本机文字覆盖范围，不返回原始图片字节 (4729.463ms)
+2026-11-26T13:58:34.0335653Z ✔ 每个真实网络故障都有对应的可行动文案 (1.3927ms)
+2026-11-26T13:58:34.0336707Z ✔ IPC 包装层被剥掉，非 Error 输入不抛异常 (0.3264ms)
+2026-11-26T13:58:34.0337346Z ✔ 匹配不到的原始错误保持原样 (0.1618ms)
+2026-11-26T13:58:34.0337939Z ✔ 主进程保留系统错误码，界面把整句换成对应文案 (21.6938ms)
+2026-11-26T13:58:34.0338611Z ✔ 发送失败时内核给出的状态与代码被带进句子，界面再整句替换 (0.4445ms)
+2026-11-26T13:58:34.0339184Z ✔ 内核没有给出状态时不编造原因 (0.4918ms)
+2026-11-26T13:58:34.0339680Z ✔ 超时与未知原因不冒充网络故障 (0.2455ms)
+2026-11-26T13:58:34.0340169Z ✔ 切换压缩失败码被主进程带进句子 (0.1796ms)
+2026-11-26T13:58:34.0340749Z ✔ 动作清单与桌面版一致：预览、默认应用打开、文件管理器定位 (1.4112ms)
+2026-11-26T13:58:34.0341342Z ✔ 进行中的提示按动作区分 (0.176ms)
+2026-11-26T13:58:34.0341865Z ✔ 成功只在这两个动作上有句子 (0.8856ms)
+2026-11-26T13:58:34.0342363Z ✔ 失败文案说明下一步，且不冒充成功 (0.1921ms)
+2026-11-26T13:58:34.0342872Z ✔ basename 取路径末段 (0.7954ms)
+2026-11-26T13:58:34.0344192Z ✔ 辨认像路径的 token (1.0855ms)
+2026-11-26T13:58:34.0344752Z ✔ 唯一 basename 可解析，斜杠方向与大小写不敏感 (0.3851ms)
+2026-11-26T13:58:34.0346178Z ✔ 有歧义的 basename 保持不可点击 (0.1522ms)
+2026-11-26T13:58:34.0346818Z ✔ 精确路径可解析，且必须是唯一匹配 (0.1906ms)
+2026-11-26T13:58:34.0347287Z ✔ 不做后缀或当前目录猜测 (0.1477ms)
+2026-11-26T13:58:34.0347737Z ✔ title 用完整路径 (0.1046ms)
+2026-11-26T13:58:38.7373587Z ✔ 真实 Harness 非脱敏模式在工具返回和流式/最终回复中仍拦截凭证 (5922.6851ms)
+2026-11-26T13:58:41.5972764Z run.turn-failed {"finishReason":"error","hint":"HTTP 400","reason":{"kind":"error","error":{"message":"本机隐私边界未完成请求，请检查脱敏规则和连接。","code":"INVALID_REQUEST","status":400}}}
+2026-11-26T13:58:41.6926665Z ✔ 真实 Harness 的工作计划事件不能显示当前模型凭证 (2954.943ms)
+2026-11-26T13:58:57.5151381Z ✔ 真实 Harness 转换并重算 Office 文档，受审批的成果字节留在项目 (15822.5046ms)
+2026-11-26T13:59:10.3298700Z ✔ 真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话 (12815.2472ms)
+2026-11-26T13:59:17.3434176Z ✔ 官方原生文件读写和编辑遵守项目范围、版本检查及脱敏占位符 (7013.8129ms)
+2026-11-26T13:59:21.0224385Z ✔ 官方多文件补丁先审批整批，真实内容变更保留结果和原始文件边界 (3679.0166ms)
+2026-11-26T13:59:24.2025870Z ✔ 原生补丁中途停止后，磁盘、模型回执和重新载入的执行轨迹均保留实际结果 (3180.0063ms)
+2026-11-26T13:59:27.6849618Z ✔ 官方 glob 和 grep 运行随包 ripgrep，排除私密文件与项目外链接并保护匹配文本 (3482.3889ms)
+2026-11-26T13:59:36.8111265Z ✔ 官方工作目录限定在项目内，相对文件操作与搜索随会话重开保留 (9126.2609ms)
+2026-11-26T13:59:55.2797633Z ✔ 同一原生会话降回请求批准后，下一次命令使用同步的工作区沙箱 (18468.7417ms)
+2026-11-26T14:00:03.2685102Z ✔ 官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式 (7988.993ms)
+2026-11-26T14:00:11.8713441Z ✔ 原生 Agent Teams 创建、CAS 领取/完成、列表及加密重启恢复 (8603.0216ms)
+2026-11-26T14:00:18.0029463Z ✔ 原生 PTC run_code 实际编排办公工具、保留受控环境并遵守规划模式 (6129.0561ms)
+2026-11-26T14:00:18.0031184Z ✔ 共享任务展示去除新生成的凭证和个人信息，不修改原生记录 (1.2899ms)
+2026-11-26T14:00:18.0033570Z ✔ 命令环境按白名单清除新增秘密，规划只读检查按实际操作判断 (0.3046ms)
+2026-11-26T14:00:23.4745510Z ✔ 全角当前模型凭证在最终回复、流式草稿与执行预览中均被阻断 (5470.583ms)
+2026-11-26T14:00:27.9349908Z ✔ 真实多供应商适配器对 429 和 503 有界重试，保持脱敏请求 (4461.4799ms)
+2026-11-26T14:00:39.2380314Z ✔ 真实 Windows 沙箱在 ask/auto 拒绝项目外写入，full 明确放行且命令无内核秘密 (11304.5338ms)
+2026-11-26T14:00:39.2604581Z ✔ 内核设置校验及真实工具目录遵循关闭开关 (4995.2387ms)
+2026-11-26T14:00:39.2605550Z ✔ 清单完整列出固定目录的普通文件元数据、分类和保留理由，不改动文件 (47.5763ms)
+2026-11-26T14:00:39.2606935Z ✔ 固定目标和目标内部的目录链接/junction 均只记录跳过，不读取链接目标 (8.9736ms)
+2026-11-26T14:00:39.2607504Z ✔ 目录拒绝访问和文件读取状态失败均保留错误，清单不能冒充完整 (6.9032ms)
+2026-11-26T14:00:39.2608423Z ✔ 列目录期间目标被换成外部链接时中止该树，不继续扫描外部文件 (8.6589ms)
+2026-11-26T14:00:39.2609016Z ✔ 固定目录不存在时逐项说明 absent，不推测清理量或创建目录 (3.141ms)
+2026-11-26T14:00:39.2611263Z ✔ 仓库根为链接时拒绝扫描，CLI 也不接受任意根目录或删除参数 (116.1766ms)
+2026-11-26T14:00:39.2611940Z ✔ 真实 Harness 同时连接 HTTP MCP A/B，A/B bearer 各到原目的地且不调用模型 (3123.5208ms)
+2026-11-26T14:00:39.2612920Z ✔ 真实 HTTP MCP 更改 port 后留空不继承 A bearer，明确清空后 B 收到无鉴权请求，重填 B 后恢复 (8557.2352ms)
+2026-11-26T14:00:39.2613860Z ✔ 真实 HTTP MCP 更改 path 后留空不继承 A bearer，明确清空后 B 收到无鉴权请求，重填 B 后恢复 (8251.0766ms)
+2026-11-26T14:00:39.2614561Z ✔ 真实 HTTP MCP 更改 host 后留空不继承 A bearer，明确清空后 B 收到无鉴权请求，重填 B 后恢复 (8334.4804ms)
+2026-11-26T14:00:39.2615211Z ✔ 真实 HTTP MCP 仅切换 enabled 保留凭据，禁用时不连接，重新启用仍只到 A (5773.2319ms)
+2026-11-26T14:00:39.2616373Z ✔ 真实 HTTP MCP 显式 {} 清空同目的地凭据，匿名端点也确实不收到旧 bearer (5526.156ms)
+2026-11-26T14:00:39.2618956Z ✔ 真实 Harness 从 HTTP 改 stdio 不继承凭据，显式空 env 后复用仓库 stdio fixture 正常连接 (5819.3139ms)
+2026-11-26T14:00:39.2619681Z ✔ 真实 Harness 从含环境凭据的 stdio 改 HTTP，B 不收到旧 env bearer (5832.2945ms)
+2026-11-26T14:00:39.2620495Z ✔ 合成模型仅当前用户输入 QA_ERROR 返回确定性 400，历史与其他角色不误触发 (139.8446ms)
+2026-11-26T14:00:39.2621182Z ✔ 本机模型经真实 Harness 连续交办保留历史，QA_MCP 实际调用 A 工具并返回结果 (9359.4093ms)
+2026-11-26T14:00:39.2622165Z ✔ 本机长流经真实 Harness 首段输出后可停止，服务收件记录确认连接中止 (3010.7848ms)
+2026-11-26T14:00:39.2622741Z ✔ 收件接口有递增序号、计数和合成配置，A bearer 从未进入 B 或变更后的地址 (8.46ms)
+2026-11-26T14:00:39.2623214Z ✔ HTTP MCP 身份规范化并绑定 scheme、host、port 和 path (2.8173ms)
+2026-11-26T14:00:39.2623694Z ✔ 公开 MCP helper 导出固定摘要身份，且身份不受凭据值影响 (1.1911ms)
+2026-11-26T14:00:39.2624213Z ✔ stdio MCP 身份绑定 transport、command、args 与 cwd (0.4544ms)
+2026-11-26T14:00:39.2624673Z ✔ 同一 MCP 目标保留秘密，显式空映射清除秘密 (1.2508ms)
+2026-11-26T14:00:39.2625023Z ✔ HTTP 目的地变化不继承旧 header，等待新凭据 (0.5743ms)
+2026-11-26T14:00:39.2625522Z ✔ stdio 目标变化不继承旧环境秘密 (0.6572ms)
+2026-11-26T14:00:39.2625832Z ✔ 无凭据公共视图和格式错误不得回显 secret (0.4943ms)
+2026-11-26T14:00:39.2626453Z ✔ 七个分类 id 与桌面版一致，标签是中文释义 (1.1871ms)
+2026-11-26T14:00:39.2627052Z ✔ 只接受赞与踩 (0.2389ms)
+2026-11-26T14:00:39.2627573Z ✔ 分类必须是固定表里的 id，空值表示不选 (0.1202ms)
+2026-11-26T14:00:39.2628080Z ✔ 备注：空白算无效，超过 8192 字节算过大，边界值通过 (2.0311ms)
+2026-11-26T14:00:39.2628513Z ✔ 落盘条带时间戳；缺会话或消息 id 直接拒绝 (0.3112ms)
+2026-11-26T14:00:39.2628909Z ✔ 同一条消息后写覆盖先写，删除按消息定位 (0.3044ms)
+2026-11-26T14:00:39.2629265Z ✔ 摘要行只给赞/踩与分类，不摊备注 (0.169ms)
+2026-11-26T14:00:39.2630032Z ✔ OpenAI 兼容的 context_length 与 max_output_tokens 被采纳 (1.299ms)
+2026-11-26T14:00:39.2631057Z ✔ Anthropic 的 limit.context 与 limit.output 被采纳 (0.1439ms)
+2026-11-26T14:00:39.2631665Z ✔ max_input_tokens 与 top_provider.max_completion_tokens 被采纳 (0.1107ms)
+2026-11-26T14:00:39.2632229Z ✔ 字符串数字被接受，缺失时什么都不写 (0.0969ms)
+2026-11-26T14:00:39.2632549Z ✔ 越界与非法值一律不采信 (0.2632ms)
+2026-11-26T14:00:39.2633555Z ✔ 输出上限必须小于窗口，否则只保留窗口 (0.1478ms)
+2026-11-26T14:00:39.2634503Z ✔ R10 真实目录 0 项：旧调用保持兼容并明确完整性 (61.5452ms)
+2026-11-26T14:00:39.2635453Z ✔ R10 真实目录 1 项：旧调用保持兼容并明确完整性 (29.8175ms)
+2026-11-26T14:00:39.2636132Z ✔ R10 真实目录 119 项：旧调用保持兼容并明确完整性 (144.253ms)
+2026-11-26T14:00:39.2636527Z ✔ R10 真实目录 120 项：旧调用保持兼容并明确完整性 (123.1675ms)
+2026-11-26T14:00:39.2637155Z ✔ R10 真实目录 121 项：旧调用保持兼容并明确完整性 (144.3823ms)
+2026-11-26T14:00:39.2638061Z ✔ R10 真实 1000 项目录逐页完整、稳定、无重漏，末页不伪称截断 (937.8374ms)
+2026-11-26T14:00:39.2638563Z ✔ R10 UTF-16 顺序独立于创建顺序、语言与文件类型；自定义页大小可连续遍历 (64.1796ms)
+2026-11-26T14:00:39.2639073Z ✔ R10 页参数严格校验，拒绝时不读映射、不扫描、不发起审批 (7.6403ms)
+2026-11-26T14:00:39.2639413Z ✔ R10 10000 个直接条目可完整统计；最后偏移量 10000 返回空终页 (429.0208ms)
+2026-11-26T14:00:39.2639931Z ✔ R10 超大可见目录显式拒绝，最多探测 10001 项且关闭句柄 (130.1139ms)
+2026-11-26T14:00:39.2640305Z ✔ R10 超大隐藏目录显式拒绝，最多探测 10001 项且关闭句柄 (90.2145ms)
+2026-11-26T14:00:39.2640952Z ✔ R10 真实 10001 项目录达到扫描上限，明确报错且不返回截断页 (6085.9779ms)
+2026-11-26T14:00:39.2641680Z ✔ R10 排除隐藏项、禁止位置与链接；不递归且不读取文件内容 (26.188ms)
+2026-11-26T14:00:39.2642135Z ✔ R10 非普通目录项不伪装成文件 (15.1392ms)
+2026-11-26T14:00:39.2642588Z ✔ R10 只接受目录，路径错误不回显原始绝对路径或敏感文件名 (7.6259ms)
+2026-11-26T14:00:39.2643041Z ✔ R10 ask 模式保留外部真实目录主机审批 (20.3471ms)
+2026-11-26T14:00:39.2643837Z ✔ R10 auto 模式保留外部真实目录主机审批 (15.5496ms)
+2026-11-26T14:00:39.2644318Z ✔ R10 full 模式保留外部真实目录主机审批 (17.777ms)
+2026-11-26T14:00:39.2644735Z ✔ R10 拒绝审批后不打开外部目录 (7.4521ms)
+2026-11-26T14:00:39.2645125Z ✔ R10 工作区内的外链按真实外部路径审批；脱敏目录可用于续页 (26.3272ms)
+2026-11-26T14:00:39.2645580Z ✔ R10 审批等待时目录改成外链，拒绝使用旧批准位置 (7.3937ms)
+2026-11-26T14:00:39.2646419Z ✔ R10 扫描期间目录变化则拒绝声称得到完整页 (7.8759ms)
+2026-11-26T14:00:39.2646830Z ✔ R10 调用前取消不读映射、不请求审批或扫描 (5.5132ms)
+2026-11-26T14:00:39.2647262Z ✔ R10 等待主机审批时取消，获批后也不会扫描 (7.0594ms)
+2026-11-26T14:00:39.2648093Z ✔ R10 扫描中取消立即停止，关闭目录句柄且不发布局部页 (6.7976ms)
+2026-11-26T14:00:39.2648562Z ✔ R10 扫描读取错误关闭句柄，保留安全错误码并隐藏路径 (27.6944ms)
+2026-11-26T14:00:39.2649208Z ✔ R10 结果隐私处理期间取消，不向调用方返回已取消的页 (59.0715ms)
+2026-11-26T14:00:39.2650009Z ✔ R10 文件名与目录经现有隐私桥保护；分页按原名排序并可还原 (33.2736ms)
+2026-11-26T14:00:39.2650455Z ✔ R10 raw 允许普通个人信息原文，仍保留精确分页 (18.1291ms)
+2026-11-26T14:00:39.2651188Z ✔ R10 redact 拒绝文件名中的凭据，不因分页或审批放行 (34.7832ms)
+2026-11-26T14:00:39.2652106Z ✔ R10 raw 拒绝文件名中的凭据，不因分页或审批放行 (41.3225ms)
+2026-11-26T14:00:39.2652527Z ✔ R10 显式 block 隐私策略仍阻止敏感文件名返回 (15.844ms)
+2026-11-26T14:00:39.2653355Z ✔ 嵌套输出先解析最近存在祖先，解析期间不创建任何目录 (28.5607ms)
+2026-11-26T14:00:39.2653796Z ✔ ask 获批后创建嵌套目录并写入真实文件；审批时目录尚不存在 (49.3214ms)
+2026-11-26T14:00:39.2654872Z ✔ auto 的既有工作区写入授权支持嵌套目录 (38.0695ms)
+2026-11-26T14:00:39.2655410Z ✔ full 的既有工作区写入授权支持嵌套目录 (38.4929ms)
+2026-11-26T14:00:39.2656181Z ✔ 拒绝审批不创建目录或文件 (9.5402ms)
+2026-11-26T14:00:39.2656664Z ✔ 调用前或审批期间取消不创建目录 (12.2767ms)
+2026-11-26T14:00:39.2657568Z ✔ 工作区链接指向外部时按真实外部目标审批，不能继承 auto 的内部授权 (37.9479ms)
+2026-11-26T14:00:39.2658036Z ✔ 外部嵌套目录拒绝批准后保持不存在 (8.6941ms)
+2026-11-26T14:00:39.2658829Z ✔ 现有成果自动编号另存，原件内容不变 (29.9955ms)
+2026-11-26T14:00:39.2659505Z ✔ 审批期间 link 置换导致原授权失效 (12.3908ms)
+2026-11-26T14:00:39.2660014Z ✔ 审批期间 directory 置换导致原授权失效 (11.9704ms)
+2026-11-26T14:00:39.2660790Z ✔ 审批期间 root 置换导致原授权失效 (11.4099ms)
+2026-11-26T14:00:39.2661393Z ✔ 审批期间原本缺少的目录出现，不采用未知目录继续写入 (12.7227ms)
+2026-11-26T14:00:39.2662654Z ✔ 非目录祖先、断链与目标链接均拒绝，不伪装成可创建目录 (13.4176ms)
+2026-11-26T14:00:39.2663499Z ✔ 禁止位置在创建缺失目录和审批之前被拒绝 (7.0773ms)
+2026-11-26T14:00:39.2663983Z ✔ mkdir 后立即检查链接置换，不向替换目录写入成果 (15.1731ms)
+2026-11-26T14:00:39.2664448Z ✔ mkdir 期间取消停止后续层级和文件写入 (14.4832ms)
+2026-11-26T14:00:39.2665433Z ✔ 审批后同名竞争保留竞争者与原件（自动编号=false） (11.0482ms)
+2026-11-26T14:00:39.2665901Z ✔ 审批后同名竞争保留竞争者与原件（自动编号=true） (12.3535ms)
+2026-11-26T14:00:39.2666943Z ✔ 最后一次校验后出现同名文件仍由 wx 拒绝，不覆盖或改名重试 (13.5549ms)
+2026-11-26T14:00:39.2667405Z ✔ 排他打开后目标被替换，拒绝写入且失败清理不删除竞争者 (13.3254ms)
+2026-11-26T14:00:39.2668090Z ✔ 路径系统错误保留代码但不向工具泄露绝对路径 (8.367ms)
+2026-11-26T14:00:39.2669502Z ✔ 办公计算与重复缺失检查 (0.9945ms)
+2026-11-26T14:00:39.2670270Z ✔ 文本、纯值表格与可编辑成果导出 (2850.2333ms)
+2026-11-26T14:00:39.2671038Z ✔ 月末与每周调度按本机日历计算 (0.6569ms)
+2026-11-26T14:00:39.2671797Z ✔ 文件冲突安全生成实际新路径并保留原件 (7.4097ms)
+2026-11-26T14:00:39.2672931Z warning: in the working copy of 'scripts/verify-packed-sources.mjs', LF will be replaced by CRLF the next time Git touches it
+2026-11-26T14:00:39.2674237Z ✔ 包来源核对接受当前 HEAD，拒绝仅格式正确但不属于当前 checkout 的提交 (608.1681ms)
+2026-11-26T14:00:39.2674817Z ✔ Harness 原生目录与 pnpm 隔离管理，可安装、启用、更新并移除插件 (36936.5627ms)
+2026-11-26T14:00:39.2675764Z ✔ R01 数据键拒绝而不改名；固定 schema 关键字、required 和引用保持一致 (12.0015ms)
+2026-11-26T14:00:39.2676410Z ✔ R01 raw 保留允许的普通键；禁止规则、SECRET=mask 的动态键以及动态自定义词不能改名放行 (1.3301ms)
+2026-11-26T14:00:39.2677773Z {"protocol":"openai","kind":"arguments","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-26T14:00:39.2678643Z ✔ R01 openai/arguments 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (110.834ms)
+2026-11-26T14:00:39.2679384Z {"protocol":"openai","kind":"schema","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-26T14:00:39.2680609Z ✔ R01 openai/schema 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (50.9285ms)
+2026-11-26T14:00:39.2683346Z {"protocol":"openai","kind":"extension","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-26T14:00:39.2684683Z ✔ R01 openai/extension 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (44.2238ms)
+2026-11-26T14:00:39.2687049Z {"protocol":"anthropic","kind":"arguments","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-26T14:00:39.2688065Z ✔ R01 anthropic/arguments 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (42.8566ms)
+2026-11-26T14:00:39.2688849Z {"protocol":"anthropic","kind":"schema","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-26T14:00:39.2689924Z ✔ R01 anthropic/schema 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (45.5718ms)
+2026-11-26T14:00:39.2690735Z {"protocol":"anthropic","kind":"extension","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-26T14:00:39.2691603Z ✔ R01 anthropic/extension 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (45.4037ms)
+2026-11-26T14:00:39.2692145Z ✔ R01 协议键不会因自定义词改名；扩展参数值继承策略并在收件前拦截 (85.0823ms)
+2026-11-26T14:00:39.2692636Z ✔ R01 openai 顶层及消息扩展字段同样检查动态键；raw 仍拒绝自定义秘密 (50.7404ms)
+2026-11-26T14:00:39.2693086Z ✔ R01 anthropic 顶层及消息扩展字段同样检查动态键；raw 仍拒绝自定义秘密 (52.489ms)
+2026-11-26T14:00:39.2694683Z {"boundary":"MCP + extension pre-execute -> loopback JSON-RPC","rejected":6,"preApprovalRejected":6,"rejectedReceiverDelta":0,"ordinaryReceipts":2,"ordinaryExecutions":2}
+2026-11-26T14:00:39.2695376Z ✔ R01 MCP 与扩展工具共用真实 pre-execute 边界：拒绝零收件，普通参数只执行一次 (17.2321ms)
+2026-11-26T14:00:39.2695757Z ✔ openai 实际 HTTP 边界：Unicode 脱敏及伪造占位符凭证在外发前阻断 (117.5642ms)
+2026-11-26T14:00:39.2696118Z ✔ anthropic 实际 HTTP 边界：Unicode 脱敏及伪造占位符凭证在外发前阻断 (51.1659ms)
+2026-11-26T14:00:39.2696471Z ✔ 网关隔离父子流式预览、同步新映射，并区分隐私阻断、上游状态与连接故障 (82.6988ms)
+2026-11-26T14:00:42.1665129Z ✔ R09 lock: kill child after mkdir and before owner publication, then recover (101.5168ms)
+2026-11-26T14:00:42.1669293Z ✔ R09 guard: kill child after mkdir and before owner publication, then recover (108.1967ms)
+2026-11-26T14:00:42.1672021Z ✔ R09 lock: real child crash at partial-owner remains recoverable (88.7138ms)
+2026-11-26T14:00:42.1673295Z ✔ R09 lock: real child crash at before-publish remains recoverable (90.6336ms)
+2026-11-26T14:00:42.1674644Z ✔ R09 lock: real child crash at published remains recoverable (92.7437ms)
+2026-11-26T14:00:42.1675780Z ✔ R09 guard: real child crash at partial-owner remains recoverable (91.1253ms)
+2026-11-26T14:00:42.1676905Z ✔ R09 guard: real child crash at before-publish remains recoverable (81.1578ms)
+2026-11-26T14:00:42.1677693Z ✔ R09 guard: real child crash at published remains recoverable (86.7145ms)
+2026-11-26T14:00:42.1678465Z ✔ R09 lock: live published owner is never reclaimed on timeout (184.6478ms)
+2026-11-26T14:00:42.1679286Z ✔ R09 guard: live published owner is never reclaimed on timeout (153.8646ms)
+2026-11-26T14:00:42.1680215Z ✔ R09 live unpublished guard does not block another writer or overwrite its result (94.3007ms)
+2026-11-26T14:00:42.1681146Z ✔ R09 live main-lock initializer retains the guard until owner publication (139.1547ms)
+2026-11-26T14:00:42.1682116Z ✔ R09 EEXIST: a rename loser retries after the competing guard has already retired (187.5195ms)
+2026-11-26T14:00:42.1683145Z ✔ R09 ENOTEMPTY: a rename loser retries after the competing guard has already retired (175.6619ms)
+2026-11-26T14:00:42.1684498Z ✔ R09 EPERM: publication permission failures without a competing lock are not swallowed (83.0949ms)
+2026-11-26T14:00:42.1685628Z ✔ R09 EACCES: publication permission failures without a competing lock are not swallowed (77.8677ms)
+2026-11-26T14:00:42.1686670Z ✔ R09 simultaneous real writers preserve all updates and exclusive callback entry (3069.8395ms)
+2026-11-26T14:00:43.8402356Z ✔ R09 stale guard reaper cannot remove a replacement live token (1673.6563ms)
+2026-11-26T14:00:43.9884826Z ✔ R09 killing a guard reaper after unlink leaves a safely recoverable empty V2 guard (148.3261ms)
+2026-11-26T14:00:44.0848617Z ✔ R09 killing main-lock release after owner removal cannot strand the canonical lock (96.2538ms)
+2026-11-26T14:00:44.2474083Z ✔ R09 killing normal guard release after unlink remains recoverable without stealing a live main lock (162.5293ms)
+2026-11-26T14:00:44.3078177Z ✔ R09 same-process reentry times out without stealing the outer lock (60.4071ms)
+2026-11-26T14:00:45.1211699Z ✔ R09 parallel same-process callers queue instead of treating the PID as reentrant ownership (813.2467ms)
+2026-11-26T14:00:45.1337539Z ✔ R09 release preserves an owner whose token no longer matches (12.9573ms)
+2026-11-26T14:00:45.1458766Z ✔ R09 release preserves an owner whose pid no longer matches (11.9855ms)
+2026-11-26T14:00:45.3087880Z ✔ R09 main-lock recovery restores a changed live owner instead of deleting its token (162.5383ms)
+2026-11-26T14:00:45.3696973Z ✔ R09 empty-guard observer cannot delete a newly published nonempty live guard (60.7628ms)
+2026-11-26T14:00:45.4169378Z ✔ R09 uncertain PID probe (EPERM) never authorizes reclamation (47.385ms)
+2026-11-26T14:00:45.4663758Z ✔ R09 uncertain PID probe (EACCES) never authorizes reclamation (49.4465ms)
+2026-11-26T14:00:45.5123967Z ✔ R09 uncertain PID probe (EIO) never authorizes reclamation (45.6721ms)
+2026-11-26T14:00:45.5752431Z ✔ R09 anonymous/malformed legacy .lock stays fail-closed (undefined) (62.9528ms)
+2026-11-26T14:00:45.6248901Z ✔ R09 anonymous/malformed legacy .lock stays fail-closed ({partial) (49.7021ms)
+2026-11-26T14:00:45.6690780Z ✔ R09 anonymous/malformed legacy .lock stays fail-closed ({"pid":0,"token":""}) (43.8198ms)
+2026-11-26T14:00:45.7153996Z ✔ R09 anonymous/malformed legacy .lock.guard stays fail-closed (undefined) (46.3267ms)
+2026-11-26T14:00:45.7656728Z ✔ R09 anonymous/malformed legacy .lock.guard stays fail-closed ({partial) (50.3577ms)
+2026-11-26T14:00:45.8076336Z ✔ R09 anonymous/malformed legacy .lock.guard stays fail-closed ({"pid":0,"token":""}) (41.8559ms)
+2026-11-26T14:00:45.8612819Z ✔ R09 .lock directory symlink/junction is not followed or removed (53.6635ms)
+2026-11-26T14:00:45.9035561Z ✔ R09 .lock.guard directory symlink/junction is not followed or removed (42.1576ms)
+2026-11-26T14:00:45.9568340Z ✔ R09 .lock.guard.v2 directory symlink/junction is not followed or removed (53.1063ms)
+2026-11-26T14:00:46.0035748Z ✔ R09 guard owner-entry junction and malformed names cannot authorize external cleanup (46.7284ms)
+2026-11-26T14:00:46.0564611Z ✔ R09 malformed V2 guard entry stays fail-closed: owner.json (52.9574ms)
+2026-11-26T14:00:46.1084452Z ✔ R09 malformed V2 guard entry stays fail-closed: 1-not-a-token.owner (51.8852ms)
+2026-11-26T14:00:46.1619729Z ✔ R09 malformed V2 guard entry stays fail-closed: 9007199254740992-00000000-0000-4000-8000-000000000000.owner (53.3608ms)
+2026-11-26T14:00:46.2260281Z ✔ R09 owner.json symlink is rejected without reading or deleting its target (63.9702ms)
+2026-11-26T14:00:46.2892282Z ✔ R09 owner.json junction is rejected and its external contents survive (63.1287ms)
+2026-11-26T14:00:46.3381141Z ✔ R09 owner-file symlink metadata fails closed before owner content is read (48.7534ms)
+2026-11-26T14:00:46.3455936Z ✔ R09 lock owner write failure cleans only its private candidate (7.8731ms)
+2026-11-26T14:00:46.3504148Z ✔ R09 guard owner write failure cleans only its private candidate (4.4022ms)
+2026-11-26T14:00:46.3586863Z ✔ R09 lock publication failure does not run the producer or delete another path (8.6373ms)
+2026-11-26T14:00:46.3632165Z ✔ R09 guard publication failure does not run the producer or delete another path (4.3208ms)
+2026-11-26T14:00:46.3930043Z ✔ R09 Windows delete-pending readdir retries acquisition before the callback (29.4395ms)
+2026-11-26T14:00:46.4241234Z ✔ R09 Windows delete-pending rename retries acquisition before the callback (31.3005ms)
+2026-11-26T14:00:46.4784077Z ✔ R09 persistent Windows guard access failure remains bounded without invoking the callback (54.0518ms)
+2026-11-26T14:00:46.5864002Z ✔ R09 abort while waiting leaves the live owner unchanged and never calls update (108.0378ms)
+2026-11-26T14:00:46.5966414Z run.turn-failed {"finishReason":"error","hint":"HTTP 400","reason":{"kind":"error","error":{"message":"结构化字段或工具约束包含需保护的信息，请使用不含敏感值的字段和约束。","code":"INVALID_REQUEST","status":400}}}
+2026-11-26T14:00:46.5980793Z {"boundary":"native Harness -> official MCP client -> loopback","unsafeTypes":["phone","email","custom-secret"],"unsafeToolCallReceipts":0,"ordinaryToolCallReceipts":1,"unsafeModelReceipts":1,"ordinaryModelReceipts":2,"synthetic":true}
+2026-11-26T14:00:46.5983813Z ✔ R01 原生 Harness → 官方 MCP client → loopback：三种敏感动态键 tools/call 为零，普通调用恰好一次 (5642.683ms)
+2026-11-26T14:00:46.5984483Z ✔ 没有无法归属的占位符时不显示提示 (0.6543ms)
+2026-11-26T14:00:46.5984849Z ✔ 提示里带处数与中性标记 (0.1478ms)
+2026-11-26T14:00:46.5985189Z ✔ 标记本身不是可还原的占位符 (0.7257ms)
+2026-11-26T14:00:46.5985603Z ✔ 导出正文附一句同样的说明，单段与会话口径不同 (0.1629ms)
+2026-11-26T14:00:46.5986002Z ✔ 会话口径把各条回答的处数相加 (0.1434ms)
+2026-11-26T14:00:46.5986380Z ✔ 同任务复用、跨任务隔离、可保存映射 (8.6472ms)
+2026-11-26T14:00:46.5986791Z ✔ 扩展规则、校验位、排除词、大小写和分类动作 (2.7595ms)
+2026-11-26T14:00:46.5987230Z ✔ 嵌套请求和 JSON 字段逐值脱敏，保持结构和占位符完整 (2.6325ms)
+2026-11-26T14:00:46.5987668Z ✔ 逐字符流及所有分块边界不暴露残缺占位符 (0.6704ms)
+2026-11-26T14:00:46.5988300Z ✔ 凭证阻止发送且永不还原；既有占位符不被二次破坏 (0.8668ms)
+2026-11-26T14:00:46.5988747Z ✔ 全角、零宽和方向控制字符以原始位置替换并精确还原 (1.2065ms)
+2026-11-26T14:00:46.5989241Z ✔ 伪造占位符不能隐藏凭证和手机号，只有本任务签发的占位符受保留 (2.1421ms)
+2026-11-26T14:00:46.5989697Z ✔ 重叠自定义词不能降低内部实体的拦截动作，凭证永不还原 (0.5367ms)
+2026-11-26T14:00:46.5990145Z ✔ 结构化字段识别大小写别名及数字凭证，不改变非敏感值的类型 (1.0651ms)
+2026-11-26T14:00:46.5990602Z ✔ IBAN 通过 MOD-97 才作为无字段账户识别，错误校验不误报 (0.9876ms)
+2026-11-26T14:00:46.5991062Z ✔ 按工作区设置找到当前模型，档位来自扁平清单 (1.9339ms)
+2026-11-26T14:00:46.5991467Z ✔ 只给当前模型支持的档位，顺序按内核四档 (0.1615ms)
+2026-11-26T14:00:46.5992005Z ✔ 没有档位信息时不猜，给出刷新提示 (0.2203ms)
+2026-11-26T14:00:46.5992406Z ✔ 当前档位不受支持时明确提示，而不是静默保留 (0.1764ms)
+2026-11-26T14:00:46.5992800Z ✔ 正常情况没有提示，选中项就是设置里的档位 (0.1199ms)
+2026-11-26T14:00:46.5993188Z ✔ 扁平清单缺失时退回原始记录，不会因此崩掉 (0.1078ms)
+2026-11-26T14:00:46.5993571Z ✔ 隐藏一个模型后，公开列表与模型清单都不再包含它 (1.5605ms)
+2026-11-26T14:00:46.5993911Z ✔ 恢复后模型回到列表，隐藏清单清空 (0.1898ms)
+2026-11-26T14:00:46.5994240Z ✔ 重复隐藏不会产生重复项 (0.1774ms)
+2026-11-26T14:00:46.5994584Z ✔ 未知供应商或未知模型都拒绝 (0.4331ms)
+2026-11-26T14:00:46.5995017Z ✔ 批量恢复当前供应商全部隐藏模型，包括旧目录残留 ID，不改动其他供应商 (0.367ms)
+2026-11-26T14:00:57.1719823Z ✔ 模型目录不回传明文或 Unicode 凭证，旧短密钥必须重配且不发起请求 (39.4436ms)
+2026-11-26T14:00:57.1722880Z ✔ 同名模型按供应商和凭据区分，换地址不能沿用原密钥 (1.3173ms)
+2026-11-26T14:00:57.1724308Z ✔ 显式失效供应商与型号、未知能力和不支持档位均阻止解析 (0.5922ms)
+2026-11-26T14:00:57.1724798Z ✔ 界面模型查找不跨供应商或静默改选 (0.1842ms)
+2026-11-26T14:00:57.1725264Z ✔ 非推理模型、硅基流动与明确不覆盖推理的自定义路由可正常发送 (0.6333ms)
+2026-11-26T14:00:57.1725747Z ✔ 视觉模态只继承实际供应商声明或官方 DeepSeek 目录 (1.2852ms)
+2026-11-26T14:00:57.1726406Z ✔ 真实 Harness 对接自定义 Chat Completions / Messages，收件端核对模型、档位、脱敏与恢复 (10939.4294ms)
+2026-11-26T14:00:57.1859052Z ✔ scope includes changed and untracked code, keeps old formatting separate, and rejects a missing snapshot (410.0647ms)
+2026-11-26T14:00:57.1861230Z ✔ snapshot still detects new and modified files after a squash without the original Git object (628.5299ms)
+2026-11-26T14:00:57.1862767Z ✔ actual ESLint catches undefined JSX, invalid hook order, and ignored inline suppression (392.1026ms)
+2026-11-26T14:00:57.1865014Z ✔ actual Stylelint catches unknown tokens and the invalid font shorthand even with a disable comment (215.3167ms)
+2026-11-26T14:00:57.1867324Z ✔ format checks reject unformatted selected files without rewriting them (46.2374ms)
+2026-11-26T14:00:57.1868483Z ✔ runtime CSS reference fails closed when its inline binding disappears (5.2984ms)
+2026-11-26T14:00:57.1869697Z ✔ CLI reports failure with a nonzero exit and only becomes green after the actual error is removed (1966.3738ms)
+2026-11-26T14:00:57.1870848Z ✔ Git attributes keep checked source LF even with core.autocrlf enabled (243.3011ms)
+2026-11-26T14:00:57.1871425Z ✔ 新增文件整段是新增行 (1.3588ms)
+2026-11-26T14:00:57.1871912Z ✔ 替换行给出删除在前、新增在后，并带行号 (0.222ms)
+2026-11-26T14:00:57.1872423Z ✔ 远处相同的行折叠成一个 gap，且不留首尾 gap (0.4512ms)
+2026-11-26T14:00:57.1872844Z ✔ 超过文本上限只给跳过标记，不假装有对比 (0.1746ms)
+2026-11-26T14:00:57.1873225Z ✔ 行数超过显示上限时标注 truncated (0.1869ms)
+2026-11-26T14:00:57.1873620Z ✔ 收集时跳过空路径与无变化，并累计字节 (0.2634ms)
+2026-11-26T14:00:57.1873992Z ✔ 文件过大时保留条目但标注跳过，不伪造对比行 (0.1683ms)
+2026-11-26T14:00:57.1874369Z ✔ 标题带文件数，没有改动时不留数字 (0.9575ms)
+2026-11-26T14:00:57.1874744Z ✔ 文件行优先用工作区相对名 (0.1503ms)
+2026-11-26T14:00:57.1875092Z ✔ 行数带正负号，估算时写「约」 (0.9271ms)
+2026-11-26T14:00:57.1875478Z ✔ 对比行只认四种类型，其余按普通行处理 (0.6789ms)
+2026-11-26T14:00:57.1875833Z ✔ 空态与跳过文案只在对应情况下出现 (0.1606ms)
+2026-11-26T14:00:57.1876186Z ✔ 没有事件时显示「思考中」，不显示内核阶段名 (1.005ms)
+2026-11-26T14:00:57.1876526Z ✔ 忽略其它运行与空标签 (0.1438ms)
+2026-11-26T14:00:57.1876870Z ✔ 有工具在跑时显示工具动作，而不是阶段名 (0.1857ms)
+2026-11-26T14:00:57.1877319Z ✔ 工具已经出结果时回到「思考中」 (0.1738ms)
+2026-11-26T14:00:57.1877749Z ✔ 只有推理事件时回到「思考中」 (0.1171ms)
+2026-11-26T14:00:57.1878144Z ✔ 旧工具轨迹不凭相同标签猜配，也不把结果再次计成调用 (0.8283ms)
+2026-11-26T14:00:57.1878603Z ✔ 真实内核事件字段把一次 call/result 合并，保留最终状态与耗时 (0.5493ms)
+2026-11-26T14:00:57.1879124Z ✔ 并行子会话、主会话和不同运行即使 provider call id 相同也互不串配 (0.4067ms)
+2026-11-26T14:00:57.1879596Z ✔ 并行调用乱序完成时不把尚未完成的工具状态隐藏成思考中 (0.3406ms)
+2026-11-26T14:00:57.1880045Z ✔ 没有工具名称的完成事件也会结束运行文案，但不隐藏另一已关联的运行中调用 (0.3377ms)
+2026-11-26T14:00:57.1880549Z ✔ 同一工具重复事件不多计，不同步骤重用 provider call id 仍是两次调用 (0.2304ms)
+2026-11-26T14:00:57.1881039Z ✔ 默认保留全部已保存调用，显式显示截断证据范围 (0.3218ms)
+2026-11-26T14:00:57.1881454Z ✔ 无关联信息的历史结果不虚构调用次数，空输入不会崩溃 (0.1942ms)
+2026-11-26T14:00:57.1882375Z ✔ 投影只增加不透明关联坐标，不带出模型 id、参数、路径、结果或错误正文 (0.3393ms)
+2026-11-26T14:00:57.1882877Z ✔ 缺少序号时也用不透明关联 id；内核停止 patch 保持未完成状态 (0.5786ms)
+2026-11-26T14:00:57.1883409Z ✔ liveToolCalls 只看当前运行 (0.201ms)
+2026-11-26T14:00:57.1883890Z ✔ 耗时按秒与分秒展示，未记录时为空 (1.131ms)
+2026-11-26T14:00:57.1884329Z ✔ 完成的一轮汇总状态、耗时、工具与子任务 (0.4519ms)
+2026-11-26T14:00:57.1884697Z ✔ 失败与取消各有自己的文案，错误码原样带出 (0.2165ms)
+2026-11-26T14:00:57.1885087Z ✔ 运行中的一轮不把 updatedAt 当结束时间 (0.1133ms)
+2026-11-26T14:00:57.1885441Z ✔ 有无法归属的占位符时详情里也要写明处数 (0.3439ms)
+2026-11-26T14:00:57.1885741Z ✔ 没有工具、子任务、产出时不显示空的产出行 (0.6649ms)
+2026-11-26T14:00:57.1885967Z ✔ 详情里写明发送方式与本机替换处数 (0.3724ms)
+2026-11-26T14:00:57.1886229Z ✔ 详情和时间线采用同一计数口径，旧结果与被截断的范围明确显示 (0.2491ms)
+2026-11-26T14:00:57.1886529Z ✔ 运行失败与 SDK 关闭失败保留各自原因，关闭未确认时保留恢复文件 (32.168ms)
+2026-11-26T14:00:57.1886868Z ✔ 目录等待超时后 SDK 关闭也失败时保留 context 和 close 两层诊断 (5022.5966ms)
+2026-11-26T14:00:57.1888422Z ✔ 只有 SDK 关闭失败时返回单一分层原因，不误报交办成功或删除临时恢复文件 (59.9593ms)
+2026-11-26T14:00:57.1888875Z ✔ 目录检查启动失败与关闭失败均可诊断，未确认退出时保留独立检查目录 (5.644ms)
+2026-11-26T14:00:57.1889549Z ✔ SDK close resolution records process termination even when the exit status is nonzero (6.4642ms)
+2026-11-26T14:00:57.9585947Z ✔ 子会话的后续快照保留父会话完整的工具与技能目录 (17.5546ms)
+2026-11-26T14:00:57.9586624Z ✔ 技能目录延迟时 session flush 等待全部已排队的父子快照 (8.285ms)
+2026-11-26T14:00:57.9587119Z ✔ 一次快照写入失败不会永久阻断后续目录保存 (1149.907ms)
+2026-11-26T14:00:57.9890307Z ✔ 加密桥 Windows EPERM 短暂占用只重试同一密文 temp，旧目标保持可读 (30.6177ms)
+2026-11-26T14:00:58.0231910Z ✔ 加密桥 Windows EACCES 短暂占用只重试同一密文 temp，旧目标保持可读 (33.8802ms)
+2026-11-26T14:00:58.0523535Z ✔ 加密桥 Windows EBUSY 短暂占用只重试同一密文 temp，旧目标保持可读 (28.8582ms)
+2026-11-26T14:00:59.1895860Z ✔ 加密桥 Windows 持续占用有界失败，保留原错误与旧文件且仅清理 temp (1137.2521ms)
+2026-11-26T14:01:00.3570417Z ✔ 加密桥 Windows 第八次重试仍可提交，不重新序列化或写密文 (1167.2541ms)
+2026-11-26T14:01:00.3621011Z ✔ 加密桥非暂时 rename 错误立即失败，不删除或覆盖旧目标 (5.0936ms)
+2026-11-26T14:01:00.3687727Z ✔ 加密桥写 temp 失败不重试写入或 rename，清理半成品并保留旧目标 (6.3133ms)
+2026-11-26T14:01:00.4443767Z ✔ 加密桥 rename 重试期间保持跨调用锁独占，更新回调仅执行一次 (75.9995ms)
+2026-11-26T14:01:00.4578385Z ✔ R03 未确认退出保留 handle/会话互斥/恢复文件，重试只清理不再创建内核 (31.9413ms)
+2026-11-26T14:01:00.4579124Z ✔ R03 真实合成子进程 exit 证据触发释放；独立会话可运行，旧会话恢复后可新建 (41.4491ms)
+2026-11-26T14:01:00.4579663Z ✔ R03 不返回的关闭有界结束且隔离；拿到退出证据前不删除临时资料 (76.3543ms)
+2026-11-26T14:01:00.4580804Z ✔ RunFinalization 分开记录完成/保存/退出，terminal、返回值与 settlement 一致 (8.4732ms)
+2026-11-26T14:01:00.4581457Z ✔ R03 check 关闭失败同样保留实例并参与关窗，确认退出后删除独立检查目录 (4.8391ms)
+2026-11-26T14:01:00.4582441Z ✔ R03 check 仍在启动时也纳入 close join，不能等到失败后才注册 handle (48.2971ms)
+2026-11-26T14:01:00.4583019Z ✔ R03 后台清理有次数上限，失败不会释放互斥，手动重试和取消不新建内核 (70.3082ms)
+2026-11-26T14:01:00.4583723Z ✔ R03 空重试计划自动清理为零次，手动重试失败仍隔离且可继续恢复 (104.5546ms)
+2026-11-26T14:01:00.4584258Z ✔ R03 对外隔离诊断可序列化且不会携带配置 Key/任意 code 或 stage (8.3954ms)
+2026-11-26T14:01:00.4584920Z ✔ RunFinalization 取消与关闭失败可同时呈现，重试清理不改执行终态 (5.1698ms)
+2026-11-26T14:01:00.4585669Z ✔ RunFinalization 内核已退出而映射写盘失败保留恢复文件，不能误报 saved (10.7747ms)
+2026-11-26T14:01:00.4586532Z ✔ RunFinalization 输出凭证绝不标 completed 或附 result (8.5183ms)
+2026-11-26T14:01:00.4587305Z privacy.restore-unknown {"count":1}
+2026-11-26T14:01:00.4588074Z ✔ RunFinalization 无法归属的占位符保留正文、不还原、并记下处数 (8.6024ms)
+2026-11-26T14:01:00.4588720Z ✔ R03 有效最终正文完成但 close 失败时，经 terminal/error.result 保留同一安全结果 (10.6578ms)
+2026-11-26T14:01:00.4589364Z ✔ R03 终态摘要不含已还原PII，私有result和可靠validated-result保留完整正文 (8.9415ms)
+2026-11-26T14:01:00.4590009Z ✔ R05 忘记会话清目标volatile/原文预览/settlement，不等待或清理其他活动会话 (15.6325ms)
+2026-11-26T14:01:00.4590813Z ✔ R05 忘记回调持有目标互斥，并发旧预览拒绝且内核创建数0；回调失败保留缓存 (8.9065ms)
+2026-11-26T14:01:00.4591315Z ✔ R05 活跃/隔离会话不能忘记，磁盘回调不执行且恢复缓存保持完整 (7.345ms)
+2026-11-26T14:01:00.4591796Z ✔ R05 删除前已开始的异步预览不能在成功删除后复活缓存；删除失败仍可恢复 (14.69ms)
+2026-11-26T14:01:02.3674121Z ✔ Windows OCR image is read by office_read_file, protected before wire, and restored locally (3228.231ms)
+2026-11-26T14:01:10.6301818Z ✔ SDK 内核使用指定独立 Node，连续目录检查均确认 exit 和 close (9689.079ms)
+2026-11-26T14:01:13.1199068Z ✔ 停止保留已生成正文，重复取消与关闭等待最终保存后仅发出一次终态 (2643.6494ms)
+2026-11-26T14:01:13.1199667Z ✔ 再次执行在真实模型请求与加密历史中追加相同交办和附件并保留原回答 (5076.6739ms)
+2026-11-26T14:01:13.1200089Z ✔ 原生取消通道失效时强制收尾标记 interrupted 并释放运行 (2520.591ms)
+2026-11-26T14:01:16.4780725Z ✔ openai 首个流式 chunk 后取消保留原生前缀并等待保存、连接及运行收尾 (3358.5229ms)
+2026-11-26T14:01:19.6728794Z ✔ deepseek 首个流式 chunk 后取消保留原生前缀并等待保存、连接及运行收尾 (3194.8085ms)
+2026-11-26T14:01:20.3063879Z ✔ 原生技能手势在界面组装与任务模式前缀后仍注入完整技能，无需模型调用 skill (2942.4729ms)
+2026-11-26T14:01:20.3066168Z ✔ 原生子 Agent 继承 openai 自定义路由，真实发出请求并保留独立会话输出 (3200.7409ms)
+2026-11-26T14:01:20.3066860Z ✔ 原生子 Agent 继承 anthropic 自定义路由，真实发出请求并保留独立会话输出 (3021.024ms)
+2026-11-26T14:01:20.3203979Z ✔ 压缩配置写进补丁时用桌面版默认 headroom (32.4797ms)
+2026-11-26T14:01:20.3204713Z ✔ image-offload 不在禁用清单里，且作为挂载项插入 (8.8327ms)
+2026-11-26T14:01:20.8740373Z ✔ 保留原生目标工具的协议 ID，继续脱敏目标正文与普通消息 (11.7249ms)
+2026-11-26T14:01:20.8806477Z ✔ MCP 配置校验、凭据不回显及保留环境隔离 (1.7683ms)
+2026-11-26T14:01:20.8809555Z ✔ 网页地址策略拒绝内网、IPv6 映射和保留地址 (2.2551ms)
+2026-11-26T14:01:21.3744481Z ✔ 跨进程更新脱敏映射不会覆盖或丢失 (504.633ms)
+2026-11-26T14:01:21.5114899Z ✔ 失活进程的脱敏锁可恢复，活进程锁保持独占 (138.7056ms)
+2026-11-26T14:01:21.5486482Z ✔ 运行管理器关闭会等待最终保存，晚到取消不改写成功终态 (37.4504ms)
+2026-11-26T14:01:21.5635851Z ✔ 后台作业停止未到终态时显式发出有界等待结果 (15.1254ms)
+2026-11-26T14:01:24.7424793Z ✔ Windows image privacy masks the actual pixels, removes metadata with zero hits, and handles no-text images (3937.3083ms)
+2026-11-26T14:01:27.4978137Z ✔ Windows WebP 和单帧 GIF 复用同一遮罩链，动图与伪装扩展名被拒绝 (2755.3381ms)
+2026-11-26T14:01:28.5062385Z ✔ Windows 项目图片路径接受 WebP 与单帧 GIF，副本仍统一为 PNG (1008.4538ms)
+2026-11-26T14:01:40.4569517Z ✔ Windows real Harness sends only approved pixels and retains approved visual history on reopen (11950.7278ms)
+2026-11-26T14:01:40.9600095Z ✔ model gateway forwards only the approved image representation in both wire formats (503.2415ms)
+2026-11-26T14:03:06.1154153Z ✔ 真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原 (103695.2421ms)
+2026-11-26T14:03:06.1370524Z ✔ mono 16 kHz PCM16 WAV is canonical and survives host validation (0.9752ms)
+2026-11-26T14:03:06.1372459Z ✔ stereo audio downmixes; non-16kHz recordings are resampled without clipping (0.8215ms)
+2026-11-26T14:03:06.1377134Z ✔ MediaRecorder output can be decoded and converted with the browser audio API contract (0.37ms)
+2026-11-26T14:03:06.1379903Z ✔ invalid payloads and recordings over two minutes are refused locally (0.4278ms)
+2026-11-26T14:03:06.1381564Z Downloading Electron binary...
+2026-11-26T14:03:06.1382948Z ✔ speech capture permission requires an armed main-window audio request (0.9033ms)
+2026-11-26T14:03:06.1384320Z ✔ real Electron speech subprocess starts its Windows Job runner as Node and restores the host environment (1340.4996ms)
+2026-11-26T14:03:06.1385275Z ✔ simultaneous recording admissions reserve one local recognizer (1.4443ms)
+2026-11-26T14:03:06.1386235Z ✔ cancellation joins inference cleanup, rejects duplicate audio and publishes one terminal event (2.6678ms)
+2026-11-26T14:03:06.1387292Z ✔ closing during actual local provider startup disposes initialization and refuses later work (13.7112ms)
+2026-11-26T14:03:06.1388601Z ✔ prepare waits for initial cache inspection and starts once its upstream slot is released (1.6887ms)
+2026-11-26T14:03:06.1389725Z ✔ cancel during initial inspection never starts a late model preparation (1.1715ms)
+2026-11-26T14:03:06.1390986Z ✔ invalid audio and a failed inference release admission and permit a successful retry (1.0285ms)
+2026-11-26T14:03:06.1391891Z ✔ 会话副本保留停止和失败后的部分正文及其状态 (1.0506ms)
+2026-11-26T14:03:06.1392422Z ✔ 旧政务空间迁移保留用户资料与真实聊天，关闭旧 AI 调度 (1.3821ms)
+2026-11-26T14:03:06.1392935Z ✔ 项目独立绑定工作区，旧目录迁移而模式切换不授予文件访问 (0.8988ms)
+2026-11-26T14:03:06.1393408Z ✔ 重启后保留各自空间和已明确选择的发送模式 (0.3103ms)
+2026-11-26T14:03:06.1393871Z ✔ 工作区恢复保留作用域草稿版本与附件引用 (0.4693ms)
+2026-11-26T14:03:06.1394307Z ✔ 启动恢复最近的有效草稿作用域并保留中断输出 (0.4265ms)
+2026-11-26T14:03:06.1394772Z ✔ 旧版本存档缺少新增字段时补默认且不丢用户数据 (1.1071ms)
+2026-11-26T14:03:06.1395209Z ✔ 未知的多余字段被忽略而不是让启动失败 (0.2819ms)
+2026-11-26T14:03:06.1395643Z ✔ 损坏的存档回退到默认状态而不是抛错 (0.3238ms)
+2026-11-26T14:03:06.1396074Z ✔ 旧版草稿引用已删除会话时不会凭空恢复 (0.3881ms)
+2026-11-26T14:03:06.1396516Z ✔ 归档包含会话、编号、状态、时间与正文 (1.1153ms)
+2026-11-26T14:03:06.1397225Z ✔ 截断的消息在归档里标注清楚，不冒充完整内容 (0.9828ms)
+2026-11-26T14:03:06.1397678Z ✔ 没有消息、没有子会话时拒绝归档 (0.3826ms)
+2026-11-26T14:03:06.1398072Z ✔ 空消息占位而不是留下空标题 (0.2236ms)
+2026-11-26T14:03:06.1398494Z ✔ 批量归档把多个子任务合成一份，跳过没有对话的 (0.4382ms)
+2026-11-26T14:03:06.1399247Z ✔ 没有可归档子任务时批量归档直接拒绝 (0.1529ms)
+2026-11-26T14:03:06.1399759Z ✔ 只有字节里带产品名的卸载器副本才算知行的 (0.9339ms)
+2026-11-26T14:03:06.1400232Z ✔ 三条判据缺一不可：目录存在、够旧、字节能证明是我们 (0.3492ms)
+2026-11-26T14:03:06.1400710Z ✔ 过期且带产品名的 ~nsu.tmp 会被整体删除 (11.5288ms)
+2026-11-26T14:03:06.1401176Z ✔ 别家应用的同名目录不动，刚写入的也不动 (8.765ms)
+2026-11-26T14:03:06.1401608Z ✔ 目录不存在或没有临时目录时安静返回 (1.2242ms)
+2026-11-26T14:03:06.1402433Z ✔ NSIS 临时目录名：~nsu.tmp 与 nsXXXX.tmp 两种形状 (0.2162ms)
+2026-11-26T14:03:06.1403088Z ✔ 安装过程留下的 nsXXXX.tmp 也会按同一套判据处理 (9.0964ms)
+2026-11-26T14:03:06.1403555Z ✔ 空查询原样返回全部行 (1.2483ms)
+2026-11-26T14:03:06.1403955Z ✔ 按标签子串匹配且不改变顺序 (1.054ms)
+2026-11-26T14:03:06.1404657Z ✔ 大小写与首尾空格不影响匹配 (0.253ms)
+2026-11-26T14:03:06.1405037Z ✔ 状态与分类也参与检索 (0.1597ms)
+2026-11-26T14:03:06.1405412Z ✔ 子任务行按展示名检索 (0.2245ms)
+2026-11-26T14:03:06.1405828Z ✔ 摘要行说明匹配数量或没有匹配 (0.1367ms)
+2026-11-26T14:03:06.1406267Z ✔ 文件名里的版本号能取出来，取不出来就返回空串 (1.3234ms)
+2026-11-26T14:03:06.1406781Z ✔ 版本比较：预发布版低于同号正式版，补齐位数 (0.5356ms)
+2026-11-26T14:03:06.1407272Z ✔ 装着的东西删掉：版本不高于当前版本的缓存一律清理，含同号 (3.9881ms)
+2026-11-26T14:03:06.1407757Z ✔ 正在等的更新不删：比当前版本新、而且是刚写入的 (0.2132ms)
+2026-11-26T14:03:06.1408254Z ✔ 解析不出版本又过了保留期的陈旧文件也会清掉，连同它的元数据 (0.2284ms)
+2026-11-26T14:03:06.1409102Z ✔ 没有待装安装包时元数据一起清，有就一起留 (0.3342ms)
+2026-11-26T14:03:06.1409754Z ✔ 真删：目录不存在不报错，空掉的 pending 目录一起收走 (12.8993ms)
+2026-11-26T14:03:06.1410646Z ✔ 缓存目录名只认 app-update.yml，不按应用名猜 (5.1143ms)
+2026-11-26T14:03:06.1411499Z ✔ 原生 Harness 从本地提交创建和恢复独立工作树 (10729.2944ms)
+2026-11-26T14:03:06.1412014Z ✔ 浏览器仅允许网页协议，排除凭据并限制视图范围 (1.4096ms)
+2026-11-26T14:03:06.1412508Z ✔ 项目文件浏览与预览限制在工作区，私密文件不展示 (434.2372ms)
+2026-11-26T14:03:06.1413068Z ✔ 原生 OfficeKit 生成版面和 PDF，重算另存且保留原公式缓存 (3332.562ms)
+2026-11-26T14:03:06.1413640Z ✔ 官方 DeepSeek 导入识别当前分支，保留附件记录、图片和历史思考 (755.4465ms)
+2026-11-26T14:03:06.1414208Z ✔ 真实 Windows OCR 读取 Office 版面的文字，并记录页面范围 (1735.412ms)
+2026-11-26T14:03:06.1414918Z ✔ 真实 Harness PTY：输入、屏幕恢复、范围校验与退出 (3874.3425ms)
+2026-11-26T14:03:06.1415681Z ✔ concurrent workspace snapshots coalesce and flush the newest revision (1.8716ms)
+2026-11-26T14:03:06.1416560Z ✔ write failures remain visible and retry the same revision (0.5481ms)
+2026-11-26T14:03:06.1417851Z ✔ shutdown flush waits for an active write and propagates persistent failure (5.244ms)
+2026-11-26T14:03:06.1418876Z ✔ older out-of-order snapshots cannot overwrite the newest persisted state (0.3635ms)
+2026-11-26T14:03:06.1419824Z ✔ concurrent flush calls reject when the active write fails (0.8082ms)
+2026-11-26T14:03:06.1420777Z ✔ retry after an active-write failure lets new flush calls await durable recovery (1.7161ms)
+2026-11-26T14:03:06.1422040Z ✔ failure of an older active write keeps flush waiting for the coalesced newer revision (0.527ms)
+2026-11-26T14:03:06.1424591Z ✔ flush rejects if the newest revision fails after an older revision is persisted (0.5042ms)
+2026-11-26T14:03:06.1426256Z ✔ a newer save replaces the failed snapshot and older acknowledgements cannot overwrite it (0.4504ms)
+2026-11-26T14:03:06.1427100Z ✔ a state listener retry cannot hide failure from flush callers already waiting (0.3974ms)
+2026-11-26T14:03:06.1427528Z ✔ CRC32 与标准向量一致 (0.7669ms)
+2026-11-26T14:03:06.1427869Z ✔ 打出来的 zip 能被系统同一套解析库读回，中文名与空文件都在 (10.7802ms)
+2026-11-26T14:03:06.1428173Z ✔ 不压缩模式同样可读 (1.2124ms)
+2026-11-26T14:03:06.1428483Z ✔ 归档路径必须相对、不许穿越、不许重名 (1.3396ms)
+2026-11-26T14:03:06.1428804Z ✔ 目录收集：跳过私密文件、保持稳定顺序、按上限拒绝 (18.3997ms)
+2026-11-26T14:03:06.1429067Z ℹ tests 560
+2026-11-26T14:03:06.1429274Z ℹ suites 0
+2026-11-26T14:03:06.1429474Z ℹ pass 560
+2026-11-26T14:03:06.1429676Z ℹ fail 0
+2026-11-26T14:03:06.1429882Z ℹ cancelled 0
+2026-11-26T14:03:06.1430115Z ℹ skipped 0
+2026-11-26T14:03:06.1430506Z ℹ todo 0
+2026-11-26T14:03:06.1430737Z ℹ duration_ms 300852.994
+2026-11-26T14:03:06.2074189Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-26T14:03:06.2074814Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-26T14:03:06.2075569Z [36;1mnpm.cmd run test:components 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-ci-logs/components.log"[0m
+2026-11-26T14:03:06.2076014Z [36;1mexit $LASTEXITCODE[0m
+2026-11-26T14:03:06.2136866Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T14:03:06.2137186Z env:
+2026-11-26T14:03:06.2137458Z   ZHIXING_TEST_EVIDENCE_DIR: D:\a\_temp/zhixing-ci-native
+2026-11-26T14:03:06.2137756Z ##[endgroup]
+2026-11-26T14:03:06.7332060Z 
+2026-11-26T14:03:06.7336364Z > office-agent@0.40.0 test:components
+2026-11-26T14:03:06.7340624Z > node --test --test-concurrency=1 tests/conversation-resources-ui.test.mjs tests/speech-input.test.mjs tests/delivery-review-ui.test.mjs tests/conversation-recovery-ui.test.mjs tests/conversation-drafts-ui.test.mjs tests/conversation-drafts-native.test.mjs tests/capability-ui.test.mjs tests/sidebar-ui.test.mjs tests/provider-settings-ui.test.mjs
+2026-11-26T14:03:06.7341769Z 
+2026-11-26T14:03:08.9313557Z Error occurred in handler for 'inspect': Error: SYNTHETIC_CHECK_FAILED
+2026-11-26T14:03:08.9317045Z     at C:\Users\runneradmin\AppData\Local\Temp\zhixing-capability-ui-rsXDKC\main.cjs:4:94
+2026-11-26T14:03:08.9320285Z     at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+2026-11-26T14:03:08.9327297Z     at Session.emit (node:events:514:28)
+2026-11-26T14:03:08.9348699Z {"result":"PASS capability renderer","checks":7,"inspectionCalls":4,"layer":"Windows Electron renderer with synthetic IPC; not final installer/cloud"}
+2026-11-26T14:03:08.9427681Z ✔ Windows 内核设置能力状态：真实层级文案、检查失败清空旧结果、配置变化拒绝迟到目录 (2090.3676ms)
+2026-11-26T14:03:11.1958621Z PASS 三份新草稿经真实DOM逐份回切，正文/独立附件/原归属和三个顶栏入口正确
+2026-11-26T14:03:11.1969397Z PASS 重新载入持久JSON文件后，三份草稿仍可逐份打开且使用原键
+2026-11-26T14:03:11.1971257Z Error occurred in handler for 'draft-fixture': Error: SYNTHETIC_DRAFT_FAILURE
+2026-11-26T14:03:11.1977614Z     at nativeJourney (C:\Users\runneradmin\AppData\Local\Temp\zhixing-drafts-native-Ii4f06\main.cjs:204:17)
+2026-11-26T14:03:11.1979741Z PASS 首次发送失败无需导航，同页恢复正文附件并绑定实际chat，原new键已消费
+2026-11-26T14:03:11.1980869Z PASS 空项目草稿解析附件期间删除项目，迟到附件不复活，重载后仍无孤儿/删除marker
+2026-11-26T14:03:11.1986654Z PASS 当前目标直接调用原生指令，历史按钮已收起，原草稿和附件保留
+2026-11-26T14:03:11.1987782Z Layer: Windows Electron real App/React/Chromium DOM + synthetic IPC and JSON file; not production main, encrypted vault, installer, Harness or cloud
+2026-11-26T14:03:11.1990508Z Checkpoints: 5; draft opens: 7; page loads: 4; model executions: 0; synthetic runPrepared: 2
+2026-11-26T14:03:11.1991514Z Isolated temporary files are removed after verification.
+2026-11-26T14:03:11.1992575Z Text evidence: D:\a\_temp\zhixing-ci-native\zhixing-drafts-native-Ii4f06
+2026-11-26T14:03:11.2114004Z ✔ Windows Electron真实App/DOM：三份新草稿回切及文件重载、首次失败chat归属、删除项目迟到附件 (2199.6878ms)
+2026-11-26T14:03:11.3785882Z ✔ 连续新建三份未发送草稿均有可见入口，切回保留正文附件与较新编辑 (36.3152ms)
+2026-11-26T14:03:11.3880292Z ✔ 新草稿首次发送失败后归属实际聊天，原地可见，删除聊天不会留下一份新草稿 (11.2864ms)
+2026-11-26T14:03:11.3990803Z ✔ 真实JSON文件重载后每份草稿可打开，空间/项目及附件原归属不变，旧键不复制 (10.0437ms)
+2026-11-26T14:03:11.4086638Z ✔ 发送失败期间在当前聊天新输入或编辑后清空，旧草稿不能覆盖 (9.094ms)
+2026-11-26T14:03:11.4142322Z ✔ prepareRun期间的新编辑保留在原草稿，失败不能搬走或清空它 (5.9004ms)
+2026-11-26T14:03:11.4197295Z ✔ 已打开列表中的旧回调在项目删除后不复活草稿，其他项目和较新编辑保留 (5.2468ms)
+2026-11-26T14:03:11.4241225Z ✔ 空项目草稿尚在读取附件时删除项目，迟到解析结果不能恢复已删除草稿 (4.7405ms)
+2026-11-26T14:03:11.4299736Z ✔ 关闭持久保存时新草稿仍可在本轮切回，发送到主机的快照无草稿，重载不恢复 (5.5727ms)
+2026-11-26T14:03:11.4342866Z ✔ 助手正文先于改动与交付卡片，工具摘要和操作栏各在对应一侧 (3.8716ms)
+2026-11-26T14:03:11.4401979Z ✔ 反馈超过备注上限后仍能清除，只禁止保存超限内容 (7.4623ms)
+2026-11-26T14:03:14.1651388Z 11 business checkpoints passed; isolated temporary files are removed after verification.
+2026-11-26T14:03:14.1695759Z Text evidence: D:\a\_temp\zhixing-ci-native\zhixing-recovery-ui-gNlZDp
+2026-11-26T14:03:14.1808614Z ✔ Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试 (2665.0527ms)
+2026-11-26T14:03:15.6060879Z ✔ 独立 Windows renderer 验证资源浮层导航、滚动、键盘关闭和焦点恢复 (1345.9251ms)
+2026-11-26T14:03:18.8656334Z Error occurred in handler for 'delivery:prepare': Error: SYNTHETIC_PREPARE_FAILED
+2026-11-26T14:03:18.8657850Z     at C:\Users\runneradmin\AppData\Local\Temp\zhixing-delivery-review-Qzvazx\main.cjs:9:122
+2026-11-26T14:03:18.8659283Z     at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+2026-11-26T14:03:18.8659978Z     at Session.emit (node:events:514:28)
+2026-11-26T14:03:18.8660725Z Error occurred in handler for 'delivery:execute': Error: SYNTHETIC_SAVE_FAILED
+2026-11-26T14:03:18.8662596Z     at C:\Users\runneradmin\AppData\Local\Temp\zhixing-delivery-review-Qzvazx\main.cjs:10:108
+2026-11-26T14:03:18.8663733Z     at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+2026-11-26T14:03:18.8664269Z     at Session.emit (node:events:514:28)
+2026-11-26T14:03:18.8709559Z {"result":"PASS delivery renderer","fileAdapters":[{"action":"export","format":"txt","bytes":51},{"action":"export","format":"docx","bytes":9649},{"action":"export","format":"xlsx","bytes":6600},{"action":"share","format":"txt","bytes":51}],"prepareRequests":21,"hostTextAuthorization":false,"synthetic":true}
+2026-11-26T14:03:18.8776581Z ✔ R02 真实 Windows renderer：主机快照、四路径文件字节、失效/错误恢复与 demo 范围 (3200.557ms)
+2026-11-26T14:03:18.9767622Z ✔ 供应商全部模型已隐藏时仍可批量恢复，单次IPC完成且更新目录 (4.2665ms)
+2026-11-26T14:03:19.5612961Z ✔ 项目、置顶、独立及悬空项目聊天分别出现一次，不重复高亮或隐藏旧会话 (18.9612ms)
+2026-11-26T14:03:21.3995320Z ✔ mounted VoiceInput isolates stale microphone callbacks and cleans scope, suspension and unmount (1768.283ms)
+2026-11-26T14:03:21.4110066Z ℹ tests 18
+2026-11-26T14:03:21.4112445Z ℹ suites 0
+2026-11-26T14:03:21.4116421Z ℹ pass 18
+2026-11-26T14:03:21.4116958Z ℹ fail 0
+2026-11-26T14:03:21.4117399Z ℹ cancelled 0
+2026-11-26T14:03:21.4117848Z ℹ skipped 0
+2026-11-26T14:03:21.4118326Z ℹ todo 0
+2026-11-26T14:03:21.4119187Z ℹ duration_ms 14632.9905
+2026-11-26T14:03:21.4739354Z ##[group]Run @'
+2026-11-26T14:03:21.4739621Z [36;1m@'[0m
+2026-11-26T14:03:21.4739886Z [36;1mimport { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';[0m
+2026-11-26T14:03:21.4740212Z [36;1mimport path from 'node:path';[0m
+2026-11-26T14:03:21.4740528Z [36;1mconst target = path.join(process.env.RUNNER_TEMP, 'zhixing-ci-artifact');[0m
+2026-11-26T14:03:21.4740918Z [36;1mconst logs = path.join(process.env.RUNNER_TEMP, 'zhixing-ci-logs');[0m
+2026-11-26T14:03:21.4741291Z [36;1mconst native = path.join(process.env.RUNNER_TEMP, 'zhixing-ci-native');[0m
+2026-11-26T14:03:21.4741606Z [36;1mawait mkdir(target, { recursive: true });[0m
+2026-11-26T14:03:21.4741827Z [36;1mconst copies = [];[0m
+2026-11-26T14:03:21.4742099Z [36;1masync function copy(source, destination, limit, allowTruncate = false) {[0m
+2026-11-26T14:03:21.4742438Z [36;1m  const data = await readFile(source).catch(error => {[0m
+2026-11-26T14:03:21.4742759Z [36;1m    if (error.code !== 'ENOENT') throw error;[0m
+2026-11-26T14:03:21.4742970Z [36;1m  });[0m
+2026-11-26T14:03:21.4743117Z [36;1m  if (!data) return;[0m
+2026-11-26T14:03:21.4743321Z [36;1m  if (data.length > limit && !allowTruncate) {[0m
+2026-11-26T14:03:21.4743678Z [36;1m    copies.push({ file: destination, omitted: 'size-limit', originalBytes: data.length });[0m
+2026-11-26T14:03:21.4743997Z [36;1m    return;[0m
+2026-11-26T14:03:21.4744153Z [36;1m  }[0m
+2026-11-26T14:03:21.4744388Z [36;1m  await writeFile(path.join(target, destination), data.subarray(-limit));[0m
+2026-11-26T14:03:21.4744832Z [36;1m  copies.push({ file: destination, originalBytes: data.length, truncated: data.length > limit });[0m
+2026-11-26T14:03:21.4745165Z [36;1m}[0m
+2026-11-26T14:03:21.4745466Z [36;1mfor (const name of ['install.log', 'quality.log', 'build.log', 'sites.log', 'unit.log', 'components.log']) {[0m
+2026-11-26T14:03:21.4745877Z [36;1m  await copy(path.join(logs, name), name, 256 * 1024, true);[0m
+2026-11-26T14:03:21.4746127Z [36;1m}[0m
+2026-11-26T14:03:21.4746374Z [36;1mconst fixtures = await readdir(native, { withFileTypes: true }).catch(error => {[0m
+2026-11-26T14:03:21.4746709Z [36;1m  if (error.code !== 'ENOENT') throw error;[0m
+2026-11-26T14:03:21.4746920Z [36;1m  return [];[0m
+2026-11-26T14:03:21.4747071Z [36;1m});[0m
+2026-11-26T14:03:21.4747459Z [36;1mfor (const fixture of fixtures.filter(row => row.isDirectory() && /^zhixing-(recovery-ui|drafts-native)-/.test(row.name)).slice(0, 8)) {[0m
+2026-11-26T14:03:21.4748064Z [36;1m  for (const name of ['journey.json', 'summary.json', 'failure.json', 'source-hashes.json', 'electron.log']) {[0m
+2026-11-26T14:03:21.4748548Z [36;1m    await copy(path.join(native, fixture.name, name), `${fixture.name}-${name}`, 64 * 1024);[0m
+2026-11-26T14:03:21.4748860Z [36;1m  }[0m
+2026-11-26T14:03:21.4749002Z [36;1m}[0m
+2026-11-26T14:03:21.4749232Z [36;1mawait writeFile(path.join(target, 'checks.json'), JSON.stringify({[0m
+2026-11-26T14:03:21.4749669Z [36;1m  layer: 'Windows hosted runner: source/build and isolated renderer; no installer or real cloud',[0m
+2026-11-26T14:03:21.4750083Z [36;1m  commit: process.env.GITHUB_SHA, ref: process.env.GITHUB_REF,[0m
+2026-11-26T14:03:21.4750438Z [36;1m  runId: process.env.GITHUB_RUN_ID, node: process.env.CI_NODE_VERSION,[0m
+2026-11-26T14:03:21.4750806Z [36;1m  steps: JSON.parse(process.env.CI_STEP_RESULTS || '{}'), files: copies,[0m
+2026-11-26T14:03:21.4751087Z [36;1m}, null, 2));[0m
+2026-11-26T14:03:21.4751270Z [36;1m'@ | node --input-type=module[0m
+2026-11-26T14:03:21.4751484Z [36;1mexit $LASTEXITCODE[0m
+2026-11-26T14:03:21.4807833Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T14:03:21.4808103Z env:
+2026-11-26T14:03:21.4811119Z   CI_STEP_RESULTS: {
+  "node": {
+    "outputs": {
+      "node-version": "v24.22.3"
+    },
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "install": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "quality": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "build": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "sites": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "unit": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "components": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  }
+}
+2026-11-26T14:03:21.4812733Z   CI_NODE_VERSION: v24.22.3
+2026-11-26T14:03:21.4812909Z ##[endgroup]
+2026-11-26T14:03:21.8249857Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-11-26T14:03:21.8250223Z with:
+2026-11-26T14:03:21.8250397Z   name: windows-source-evidence-1
+2026-11-26T14:03:21.8250606Z   path: D:\a\_temp/zhixing-ci-artifact/
+2026-11-26T14:03:21.8250809Z   retention-days: 7
+2026-11-26T14:03:21.8250977Z   if-no-files-found: error
+2026-11-26T14:03:21.8251153Z   include-hidden-files: false
+2026-11-26T14:03:21.8251350Z   compression-level: 6
+2026-11-26T14:03:21.8251508Z   overwrite: false
+2026-11-26T14:03:21.8251650Z   archive: true
+2026-11-26T14:03:21.8251791Z ##[endgroup]
+2026-11-26T14:03:21.9702757Z With the provided path, there will be 14 files uploaded
+2026-11-26T14:03:21.9706371Z Artifact name is valid!
+2026-11-26T14:03:21.9707207Z Root directory input is valid!
+2026-11-26T14:03:22.3160221Z Uploading artifact: windows-source-evidence-1.zip
+2026-11-26T14:03:22.3189919Z Beginning upload of artifact content to blob storage
+2026-11-26T14:03:22.6072467Z Uploaded bytes 34982
+2026-11-26T14:03:22.6624953Z Finished uploading artifact content to blob storage!
+2026-11-26T14:03:22.6625982Z SHA256 digest of uploaded artifact is 694e9d78076f450afdb40bc86866e16254cd058ac8c863515efaf0fcb4f4f4ca
+2026-11-26T14:03:22.6627194Z Finalizing artifact upload
+2026-11-26T14:03:23.1689045Z Artifact windows-source-evidence-1 successfully finalized. Artifact ID 15125710258
+2026-11-26T14:03:23.1690140Z Artifact windows-source-evidence-1 has been successfully uploaded! Final size is 34982 bytes. Artifact ID is 15125710258
+2026-11-26T14:03:23.1696785Z Artifact download URL: https://github.com/daniei-chen/ZhiXing/actions/runs/45834015257/artifacts/15125710258
+2026-11-26T14:03:23.1946792Z ##[group]Run if (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {
+2026-11-26T14:03:23.1947413Z [36;1mif (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {[0m
+2026-11-26T14:03:23.1947919Z [36;1m  Write-Error "At least one required check failed or did not run: $env:CI_REQUIRED_OUTCOMES"[0m
+2026-11-26T14:03:23.1948252Z [36;1m  exit 1[0m
+2026-11-26T14:03:23.1948406Z [36;1m}[0m
+2026-11-26T14:03:23.2004050Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-26T14:03:23.2004325Z env:
+2026-11-26T14:03:23.2004557Z   CI_REQUIRED_OUTCOMES: success success success success success success
+2026-11-26T14:03:23.2004849Z ##[endgroup]
+2026-11-26T14:03:23.5309452Z Post job cleanup.
+2026-11-26T14:03:23.6716544Z Post job cleanup.
+2026-11-26T14:03:23.8309740Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-11-26T14:03:23.8594877Z git version 2.56.1.windows.1
+2026-11-26T14:03:23.8651016Z Temporarily overriding HOME='D:\a\_temp\215ea8ee-a0a0-4107-8dc2-d28a21aedb3d' before making global git config changes
+2026-11-26T14:03:23.8651781Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-26T14:03:23.8659458Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\ZhiXing\ZhiXing
+2026-11-26T14:03:23.8952933Z Removing SSH command configuration
+2026-11-26T14:03:23.8961412Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-26T14:03:23.9261224Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-26T14:03:24.4094213Z Removing HTTP extra header
+2026-11-26T14:03:24.4103105Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-26T14:03:24.4405674Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-26T14:03:24.8653689Z Removing includeIf entries pointing to credentials config files
+2026-11-26T14:03:24.8662839Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-26T14:03:24.8958123Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-26T14:03:25.3456385Z Cleaning up orphan processes

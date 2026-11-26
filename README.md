@@ -26,9 +26,11 @@
 
 当前源码基线为 **0.40.0 Windows x64 未签名预发布版**，随包使用 **DeepSeek Harness 0.2.2-rc.5**。绑定工作目录的项目可调用原生文件工具，会话可从已保存的内核日志导出 Markdown，应用内可检查并下载更新，运行异常会写入本机诊断日志并可一键导出。 [已发布版本](https://github.com/daniei-chen/ZhiXing/releases) · [0.40.0 历史验收记录](docs/windows-acceptance-0.40.0.md) · [能力与缺口总览](docs/harness-capability-map.md)
 
-> **开发中的 Phase 0A 源码候选：** [审计核实与修复说明](docs/phase-0a-audit.md) · [本轮证据](docs/evidence/phase-0a/summary.json) · [成熟化路线](docs/maturity-roadmap.md)。本分支未升版本、未生成新安装包；源码、合成运行、Windows 实包和真实云端证据分别记录。下方保留 0.14.0 及以前的历史更新，不代表当前候选已通过相应门禁。
+> **开发中的 Phase 0A / 0B 候选：** [Phase 0A 审计核实](docs/phase-0a-audit.md) · [Phase 0B 工程与验收记录](docs/phase-0b-engineering.md) · [代码质量说明](docs/code-quality.md) · [成熟化路线](docs/maturity-roadmap.md)。应用版本仍为 0.40.0，本分支尚未发布新版；CI 候选安装器与正式发布分别记录。下方保留历史更新，不代表当前候选已通过相应门禁。
 
-当前候选的产品源码 `abac9ba` 已在两台 Windows 托管 runner 上通过原完整门禁：源码 **545/545**、组件及隔离 renderer **18/18**、Sites **4/4**，无失败、取消或跳过；构建成功。[两次运行及源码指纹](docs/evidence/phase-0a/windows-ci-after-ocr-fix.json)。Windows 安装包、用户安装生命周期、签名与真实云端仍未覆盖。
+候选源码 `3735910` 的 Windows 源码 CI 已通过源码 **560/560**、组件及隔离 renderer **18/18**、Sites **4/4**，无失败、取消或跳过；增量质量门禁与构建通过。[源码 CI 记录](docs/evidence/phase-0b/windows-source-final.json)。目录包、界面截图与候选安装器的证据另见 [Phase 0B 工程记录](docs/phase-0b-engineering.md)，用户安装生命周期、签名与真实云端办公评测仍未覆盖。
+
+同一候选的 Windows 打包工作流已通过目录包回归 **383/383**、错误提示 **7 项**、原生文件审批与导出 **5 项**、工具时间线 **3 项**、Phase 0A 聊天界面 **9/9**。[实包记录及六张截图](docs/evidence/phase-0b/windows-packed-final.json)。NSIS 已装配并独立下载核验字节，仍为 **未签名、未安装的开发候选**；该结果不代表正式新版发布。
 
 <div align="center">
 
@@ -207,7 +209,7 @@
 
 ### 安装 Windows 版
 
-1. 在 [GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases) 选择已发布的 Windows 安装包，同时核对该版本的 `SHA256SUMS-release.txt`、验收摘要和未覆盖范围。本分支的 Phase 0A 源码候选尚无新安装包。
+1. 在 [GitHub 发行页](https://github.com/daniei-chen/ZhiXing/releases) 选择已发布的 Windows 安装包，同时核对该版本的 `SHA256SUMS-release.txt`、验收摘要和未覆盖范围。本分支的 Phase 0A / 0B 仍为开发候选；CI 候选产物须按对应构建证据核对，不代表已发布新版。
 2. 安装并启动知行，在「设置 → 供应商」中连接模型服务，读取模型目录，选择模型与实际支持的思考档位。
 3. 创建项目，在项目设置中绑定工作目录，添加需要处理的资料。
 4. 写下交办内容，检查资料读取范围和执行权限，发送后查看执行过程与成果文件。
@@ -318,7 +320,7 @@
 
 ## 源码开发
 
-历史桌面验证环境为 **Windows 11 x64 · Node.js 24.19.0 · npm 11**。Phase 0A 的本地基线及回归来自 Linux / Node.js 24.22.3，随后在 Windows Server 2025 / Node.js 24.22.3 托管 runner 完成两次原源码与隔离 renderer 全套门禁。各平台结果分别记录，不能外推为用户安装包验收，详见 [证据摘要](docs/evidence/phase-0a/summary.json)。
+历史用户桌面环境为 **Windows 11 x64 · Node.js 24.19.0 · npm 11**。本轮本地开发使用 Linux / Node.js 24.22.3，Windows 源码 CI 使用 Windows Server 2025 / Node.js 24.22.3，打包 CI 使用 Node.js 24.19.0。实际 Electron 内嵌 Node 与捆绑的独立 Node 另行记录。各层结果及未覆盖范围见 [Phase 0B 工程记录](docs/phase-0b-engineering.md)，托管 runner 结果不能外推为用户安装生命周期验收。
 
 ```powershell
 git clone https://github.com/daniei-chen/ZhiXing.git
@@ -333,6 +335,7 @@ npm run electron
 ### 验证
 
 ```powershell
+npm run quality
 npm test
 npm run test:components
 npm run test:sites
@@ -343,7 +346,10 @@ npm run test:browser
 
 ### 构建 Windows 安装包
 
+当前打包 CI 固定 Node.js 24.19.0，与仓库已有的随包许可证一致；源码 CI 的 Node 24 系列版本另行记录。锁定的 Electron 依赖需要显式准备二进制，不能依赖之前运行源码测试时触发下载。
+
 ```powershell
+node node_modules/electron/install.js
 npm run electron:install
 npm run test:packed -- ".\release\win-unpacked\知行.exe"
 npm run test:browser -- ".\release\win-unpacked\知行.exe"
@@ -356,7 +362,7 @@ Get-ChildItem .\release\*-x64.exe | Get-FileHash -Algorithm SHA256
 
 欢迎通过 Issue 提交可复现的问题与办公场景。请附版本、Windows 环境、复现步骤和预期结果，使用合成资料和已去除敏感信息的日志。模型 Key、MCP 凭据和真实业务原件应妥善保管。
 
-[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [Phase 0A 审计核实](docs/phase-0a-audit.md) · [成熟化路线](docs/maturity-roadmap.md)
+[提交问题](https://github.com/daniei-chen/ZhiXing/issues) · [Phase 0A 审计核实](docs/phase-0a-audit.md) · [Phase 0B 工程记录](docs/phase-0b-engineering.md) · [成熟化路线](docs/maturity-roadmap.md)
 
 ## 致谢
 

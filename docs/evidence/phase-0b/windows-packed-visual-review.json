@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "status": "reviewed-by-assistant",
+  "label": "AI 视觉复核",
+  "runId": "45834015245",
+  "checkoutCommit": "3735910a7795b24f282d1f273bcd2841fd685960",
+  "reviewers": [
+    {
+      "agent": "/root/chat_ui",
+      "method": "Opened all six original PNGs individually with view_image."
+    },
+    {
+      "agent": "/root",
+      "method": "Independently opened all six original PNGs with view_image; reported matching observations."
+    }
+  ],
+  "independentObservations": 2,
+  "humanReviewPerformed": false,
+  "rawMetadataPreserved": true,
+  "rawVisualReview": "pending-human-review",
+  "result": "No blocking layout issue was observed in the six captured Phase0A states.",
+  "images": [
+    {
+      "file": "docs/evidence/phase-0b/final/01-message-light.png",
+      "sha256": "0ad7c14e700469a4cf6589873848526ff646661ac3c694d256d0d36eb1716473",
+      "width": 1255,
+      "height": 912,
+      "status": "reviewed-by-assistant",
+      "observations": [
+        "Neutral light UI and bamboo assistant mark are visible.",
+        "Tool summary precedes final text; changed-file summary and delivery cards follow the text with a shared left edge.",
+        "Active project chat appears once; pinned, independent and orphan entries remain visible."
+      ]
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/02-tools-expanded.png",
+      "sha256": "a090ae6747f66108a9ae28806e18b2e43e679efabef3437a40e7e7d08cf1e04b",
+      "width": 1255,
+      "height": 912,
+      "status": "reviewed-by-assistant",
+      "observations": [
+        "Three bordered completed tool rows are visible: two writes and one delivery.",
+        "Expanded tool rows keep the final text above the change and delivery cards."
+      ]
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/03-feedback-over-limit.png",
+      "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf",
+      "width": 1255,
+      "height": 912,
+      "status": "reviewed-by-assistant",
+      "observations": [
+        "The note counter reads 9000 / 8192 bytes in red.",
+        "Save is visually disabled while Clear remains visibly enabled; the test result separately verifies the actual clear action."
+      ]
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/04-error-toast-long-input.png",
+      "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a",
+      "width": 1255,
+      "height": 912,
+      "status": "reviewed-by-assistant",
+      "observations": [
+        "The persistent error toast sits at the top above the long editor.",
+        "The editor shows an internal scroll region and a visible fixed control row; model and send controls are not covered by the toast."
+      ]
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/05-error-toast-short-input.png",
+      "sha256": "56367f47a106b18c9f8f084471023cdcae94e6e130a10ffda4930299d80813cc",
+      "width": 1255,
+      "height": 912,
+      "status": "reviewed-by-assistant",
+      "observations": [
+        "The editor contracts after replacing long text with short text.",
+        "The same error toast remains above the editor, with model and send controls visible."
+      ]
+    },
+    {
+      "file": "docs/evidence/phase-0b/final/06-message-dark-narrow.png",
+      "sha256": "9621f17b1f5efb05c26ead14f82e0037894a09c32420f69cb1df6fd37be3e943",
+      "width": 950,
+      "height": 912,
+      "status": "reviewed-by-assistant",
+      "observations": [
+        "At the recorded 950 by 912 viewport, neutral dark colors and the bamboo mark on a pale backing are visible.",
+        "Text, change card, delivery cards and actions remain aligned; the input control row is visible."
+      ]
+    }
+  ],
+  "limitations": [
+    "These are AI observations of six screenshots, not human approval.",
+    "No claim of Harness/ChatGPT/Codex pixel parity is made.",
+    "These screenshots do not cover all pages, interaction states, DPI settings, Windows display setups or accessibility modes.",
+    "Screenshots alone cannot establish persistence, actual button effects, model quality, installation or upgrade behavior; the separate recorded assertions establish only their specific tested behavior.",
+    "Toast placement is checked for unobstructed editor controls; the screenshots show the toast over part of the header region."
+  ]
+}

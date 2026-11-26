@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "layer": "Windows hosted runner: packaged EXE, real Harness with synthetic providers, network error probes, uninstalled unsigned NSIS candidate",
+  "notCovered": [
+    "installer execution and upgrade lifecycle",
+    "user installation or D drive",
+    "real cloud model tasks",
+    "code signing",
+    "manual visual review unless separately recorded"
+  ],
+  "sourceRef": "refs/pull/1/merge",
+  "workflowSha": "0760b468aea17f9b3593a02d9a3dae2d1eece8e3",
+  "runId": "45828772595",
+  "node": "v24.19.0",
+  "version": "0.40.0",
+  "steps": {
+    "install": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "package": {
+      "outputs": {},
+      "outcome": "failure",
+      "conclusion": "failure"
+    },
+    "verify": {
+      "outputs": {},
+      "outcome": "skipped",
+      "conclusion": "skipped"
+    },
+    "packed": {
+      "outputs": {},
+      "outcome": "skipped",
+      "conclusion": "skipped"
+    },
+    "errors": {
+      "outputs": {},
+      "outcome": "skipped",
+      "conclusion": "skipped"
+    },
+    "native": {
+      "outputs": {},
+      "outcome": "skipped",
+      "conclusion": "skipped"
+    },
+    "tools": {
+      "outputs": {},
+      "outcome": "skipped",
+      "conclusion": "skipped"
+    },
+    "phase0a": {
+      "outputs": {},
+      "outcome": "skipped",
+      "conclusion": "skipped"
+    },
+    "nsis": {
+      "outputs": {},
+      "outcome": "skipped",
+      "conclusion": "skipped"
+    }
+  },
+  "packedDirectory": {
+    "missing": true
+  },
+  "binaries": [
+    {
+      "file": "release/ZhiXing-0.40.0-x64.exe",
+      "missing": true
+    },
+    {
+      "file": "release/ZhiXing-0.40.0-x64.exe.blockmap",
+      "missing": true
+    },
+    {
+      "file": "release/win-unpacked/知行.exe",
+      "missing": true
+    },
+    {
+      "file": "release/win-unpacked/resources/app/runtime/node.exe",
+      "missing": true
+    }
+  ],
+  "files": [
+    {
+      "file": "logs/install.log",
+      "originalBytes": 2009,
+      "bytes": 2009,
+      "truncated": false,
+      "sha256": "bd7d89622fb73bde7c23e46488f610830cbb44abb6a286ef3f36854f4772a233"
+    },
+    {
+      "file": "logs/package.log",
+      "originalBytes": 3835,
+      "bytes": 3835,
+      "truncated": false,
+      "sha256": "8a8fe11250e4a33d4df8f6c26eca9e52a343bf58299a66d38fed57a7ea574ddf"
+    }
+  ],
+  "auditedOutcome": {
+    "status": "failed-before-packaging",
+    "checkoutCommit": "069207651c3d779f880c0479dc49217698525c8f",
+    "runId": 45828772595,
+    "jobId": 139939699541,
+    "artifactId": 15122395602,
+    "artifactBytes": 3517,
+    "artifactSha256": "5c62061a25f41b85773901b7658cb80c79b4c7eaee4e2d4e962f16979c7fe997",
+    "error": "The specified electronDist does not exist",
+    "cause": "Locked Electron 44.11.5 downloads its binary on explicit install.js or first import; directory packaging ran before either.",
+    "uiExecuted": false,
+    "nsisBuilt": false,
+    "logSha256": "8a8fe11250e4a33d4df8f6c26eca9e52a343bf58299a66d38fed57a7ea574ddf"
+  }
+}

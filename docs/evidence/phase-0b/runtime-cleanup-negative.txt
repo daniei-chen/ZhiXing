@@ -1,0 +1,30 @@
+✖ SDK close resolution records process termination even when the exit status is nonzero (32.023288ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 753.029521
+
+✖ failing tests:
+
+test at ../../../../tmp/zhixing-cleanup-negative-zytNVA/runtime-cleanup.test.mjs:162:1
+✖ SDK close resolution records process termination even when the exit status is nonzero (32.023288ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + null
+  - 3221226505
+  
+      at TestContext.<anonymous> (file:///tmp/zhixing-cleanup-negative-zytNVA/runtime-cleanup.test.mjs:172:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: 3221226505,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

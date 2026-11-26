@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "evidenceLayer": "Windows hosted runner: source/build and isolated renderer; no packaged installer or real-cloud acceptance",
+  "repository": "daniei-chen/ZhiXing",
+  "sourceHead": "069207651c3d779f880c0479dc49217698525c8f",
+  "runner": {
+    "os": "Microsoft Windows Server 2025",
+    "image": "windows-2025-vs2026",
+    "imageVersion": "20261116.315.1",
+    "runnerVersion": "2.338.2",
+    "node": "v24.22.3",
+    "npm": "11.19.1"
+  },
+  "quality": {
+    "status": "success",
+    "scope": "adopted-and-changed-scope",
+    "baseline": "718cb62e4018f43553968bd3ff96e9243acd1ecc",
+    "eslint": {
+      "checked": 28,
+      "total": 284
+    },
+    "stylelint": {
+      "checked": 4,
+      "total": 4
+    },
+    "prettier": {
+      "checked": 15,
+      "total": 513
+    },
+    "legacyFormattingNotAdopted": 19,
+    "generatedExcluded": 9,
+    "documentedInlineExceptions": [
+      {
+        "file": "tests/runtime-lifecycle.test.mjs",
+        "line": 130,
+        "rule": "no-unsafe-finally"
+      },
+      {
+        "file": "tests/runtime-lifecycle.test.mjs",
+        "line": 418,
+        "rule": "no-unsafe-finally"
+      }
+    ],
+    "reportedErrors": 0,
+    "reportedWarnings": 0,
+    "additionalStderr": [
+      "[csstree-match] BREAK after 15000 iterations"
+    ]
+  },
+  "runs": [
+    {
+      "event": "pull_request",
+      "runId": 45828772555,
+      "jobId": 139939699472,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45828772555/job/139939699472",
+      "checkedOutCommit": "0760b468aea17f9b3593a02d9a3dae2d1eece8e3",
+      "mergeHead": "069207651c3d779f880c0479dc49217698525c8f",
+      "mergeBase": "c2f7588d7e158a1e6179f65441e556d37acc2ab8",
+      "checks": {
+        "install": "success",
+        "quality": "success",
+        "build": "success",
+        "sites": {
+          "tests": 4,
+          "pass": 4,
+          "fail": 0,
+          "skipped": 0,
+          "durationMs": 80.6573
+        },
+        "source": {
+          "tests": 560,
+          "pass": 560,
+          "fail": 0,
+          "skipped": 0,
+          "durationMs": 239888.0084
+        },
+        "components": {
+          "tests": 18,
+          "pass": 18,
+          "fail": 0,
+          "skipped": 0,
+          "durationMs": 13907.3138
+        },
+        "collectEvidence": "success",
+        "uploadEvidence": "success",
+        "aggregateGate": "success"
+      },
+      "decodedJobLog": {
+        "path": "/tmp/zhixing-source-06920765-pr-1ti43iq1.log",
+        "encoding": "UTF-8",
+        "bytes": 120167,
+        "sha256": "27ce1d680ba9f69c44308f720b2bec4b95406a26417051ae2e5fbc814b960c59"
+      },
+      "artifact": {
+        "id": 15122820227,
+        "name": "windows-source-evidence-1",
+        "bytes": 34932,
+        "digest": "sha256:d9b3b2590dc7559750ed9acfd592a03ba02a0fbeaaaab15a4f9bda7c565f95bb",
+        "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45828772555/artifacts/15122820227",
+        "createdAt": "2026-11-26T13:29:40Z",
+        "expiresAt": "2026-12-03T13:29:39Z",
+        "expiredAtRetrieval": false,
+        "digestVerifiedAgainstUploadLog": true,
+        "zipLocallyDownloadedAndHashed": false
+      }
+    },
+    {
+      "event": "push",
+      "runId": 45828760456,
+      "jobId": 139939658606,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45828760456/job/139939658606",
+      "checkedOutCommit": "069207651c3d779f880c0479dc49217698525c8f",
+      "checks": {
+        "install": "success",
+        "quality": "success",
+        "build": "success",
+        "sites": {
+          "tests": 4,
+          "pass": 4,
+          "fail": 0,
+          "skipped": 0,
+          "durationMs": 135.8257
+        },
+        "source": {
+          "tests": 560,
+          "pass": 560,
+          "fail": 0,
+          "skipped": 0,
+          "durationMs": 388244.0133
+        },
+        "components": {
+          "tests": 18,
+          "pass": 18,
+          "fail": 0,
+          "skipped": 0,
+          "durationMs": 17598.3399
+        },
+        "collectEvidence": "success",
+        "uploadEvidence": "success",
+        "aggregateGate": "success"
+      },
+      "decodedJobLog": {
+        "path": "/tmp/zhixing-source-06920765-push-kt1p9pjw.log",
+        "encoding": "UTF-8",
+        "bytes": 118072,
+        "sha256": "06160563f8473a62944416e6a7ea747025fd15501ffb5a4b96dcd0c0793e3e38"
+      },
+      "artifact": {
+        "id": 15121687311,
+        "name": "windows-source-evidence-1",
+        "bytes": 35075,
+        "digest": "sha256:13867040f5a1dcf679a3b58b3444db5f647917e90ee27e29f4b7cfb8337038ff",
+        "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45828760456/artifacts/15121687311",
+        "createdAt": "2026-11-26T13:32:46Z",
+        "expiresAt": "2026-12-03T13:32:44Z",
+        "expiredAtRetrieval": false,
+        "digestVerifiedAgainstUploadLog": true,
+        "zipLocallyDownloadedAndHashed": false
+      }
+    }
+  ],
+  "boundaries": [
+    "Source quality is scoped, not all repository code.",
+    "Tests execute on a hosted Windows runner, not the user installation.",
+    "No installer, upgrade lifecycle, signing, or real-cloud task acceptance is inferred.",
+    "Log hashes identify decoded UTF-8 logs; artifact digests are GitHub-reported and matched to upload logs."
+  ]
+}

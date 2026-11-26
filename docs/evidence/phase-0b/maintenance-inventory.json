@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "mode": "read-only",
+  "status": "complete",
+  "generatedAt": "2026-11-26T13:37:47.703Z",
+  "repository": "/workspace/scratch/7464bebaff38/ZhiXing",
+  "scope": [
+    "release",
+    ".preview",
+    ".zhixing-pack-check"
+  ],
+  "contentsRead": false,
+  "hashesComputed": false,
+  "measure": "logical-regular-file-bytes",
+  "boundaries": [
+    "仅统计固定目录中的普通文件；不跟随符号链接或 junction。",
+    "大小为逻辑文件大小，不代表可回收的物理磁盘空间。",
+    "不读取文件内容，不证明远端副本、可重建性或没有进程使用。",
+    "元数据不是原子快照；发现读取失败或路径变化时明确报告。",
+    "本清单不授权删除，所有条目均保留。"
+  ],
+  "targets": [
+    {
+      "path": "release",
+      "status": "absent"
+    },
+    {
+      "path": ".preview",
+      "status": "absent"
+    },
+    {
+      "path": ".zhixing-pack-check",
+      "status": "absent"
+    }
+  ],
+  "files": [],
+  "skipped": [],
+  "errors": [],
+  "totals": {
+    "files": 0,
+    "bytes": 0,
+    "directories": 0,
+    "skipped": 0
+  }
+}

@@ -1,0 +1,14 @@
+
+> office-agent@0.40.0 test:phase0a
+> node scripts/test-phase0a-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\_temp\zhixing-packed-journeys\phase0a\phase0a-ui-IYTdbK
+PASS packaged EXE uses only the isolated QA profile
+PASS project, pinned, independent and orphan chats each have one selectable entry
+PASS real Harness writes and presents both files and retains three linked calls
+PASS body precedes changes and deliverables; all assistant sections share a baseline
+PASS tool steps expand as three completed styled rows
+PASS reload preserves real message order, linked tool count and sidebar ownership
+PASS feedback over 8192 bytes disables save while Clear remains usable
+FAIL failed file action shows a persistent top toast without covering long input controls: SyntaxError: Invalid or unexpected token
+{"status":"failed","passed":7,"failed":1,"screenshots":4,"visualReview":"pending-human-review","evidence":"D:\\a\\_temp\\zhixing-packed-journeys\\phase0a\\phase0a-ui-IYTdbK"}

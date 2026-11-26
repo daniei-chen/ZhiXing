@@ -1,0 +1,6 @@
+{
+  "executable": "NotSigned",
+  "installationLifecycle": "not run",
+  "realCloud": "not run",
+  "installer": "NotSigned"
+}

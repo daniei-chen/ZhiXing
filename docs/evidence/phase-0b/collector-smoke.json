@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "retained": [
+    "journeys/phase0a/phase0a-ui-fixture/app-log-tail.txt",
+    "journeys/phase0a/phase0a-ui-fixture/layout.png",
+    "journeys/phase0a/phase0a-ui-fixture/result.json"
+  ],
+  "logTailBytes": 131072,
+  "excluded": [
+    "other.log",
+    "profile/result.json",
+    "project/data.png"
+  ],
+  "recordedAgainstCommit": "069207651c3d779f880c0479dc49217698525c8f"
+}

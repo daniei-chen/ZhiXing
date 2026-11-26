@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 1,
+  "layer": "Windows hosted runner: directory package, packaged module checks and targeted real Electron UI with deterministic model fixtures",
+  "runId": "45830590242",
+  "jobId": "139946001118",
+  "runUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45830590242",
+  "jobUrl": "https://github.com/daniei-chen/ZhiXing/actions/runs/45830590242/job/139946001118",
+  "conclusion": "failure",
+  "checkoutCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+  "workflowSha": "4ce70de7911b9969103e73415da683179e9f5a60",
+  "provenance": {
+    "schemaVersion": 1,
+    "version": "0.40.0",
+    "sourceCommit": "91307819e1f666c624e2bd66a16741012a9cf601",
+    "sourceDirty": false,
+    "builtAt": "2026-11-26T13:38:19.767Z",
+    "nodeVersion": "v24.19.0",
+    "lockSha256": "910b7d23d8f512c88b476fa5b1a6c2bc68672be3a3fe71806ba9c8ffe7f0dd3a"
+  },
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "runtimeVersions": {
+    "electron": "44.11.5",
+    "chrome": "152.0.7977.169",
+    "node": "24.22.3"
+  },
+  "steps": {
+    "install": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "electron": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "package": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "verify": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "packed": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "errors": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "native": {
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "tools": {
+      "outcome": "failure",
+      "conclusion": "failure"
+    },
+    "phase0a": {
+      "outcome": "failure",
+      "conclusion": "failure"
+    },
+    "nsis": {
+      "outcome": "success",
+      "conclusion": "success"
+    }
+  },
+  "coverage": {
+    "directoryPackageBuilt": true,
+    "packagedSourceMatched": true,
+    "packagedRegressionPassed": true,
+    "networkErrorUiPassed": true,
+    "nativeFilesUiPassed": true,
+    "toolTimelineUiPassed": false,
+    "phase0aUiPassed": false,
+    "uninstalledNsisBuilt": true
+  },
+  "packagedRegression": {
+    "status": "passed",
+    "counts": {
+      "tests": 383,
+      "suites": 0,
+      "pass": 383,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 407236.6393
+    },
+    "scope": {
+      "type": "packed-test-scope",
+      "unit": "test-files",
+      "package-aware": [
+        "privacy.test.mjs",
+        "credential-boundary.test.mjs",
+        "privacy-dynamic-keys.test.mjs",
+        "privacy-mcp-native.test.mjs",
+        "privacy-gateway.test.mjs",
+        "delivery-review.test.mjs",
+        "conversation-state.test.mjs",
+        "kernel-native.test.mjs",
+        "capability-manifest.test.mjs",
+        "capability-runtime.test.mjs",
+        "office-directory.test.mjs",
+        "office-file-policy.test.mjs",
+        "privacy-lock-recovery.test.mjs",
+        "automation.test.mjs",
+        "automation-persistence.test.mjs",
+        "runtime.test.mjs",
+        "runtime-native-entrypoints.test.mjs",
+        "runtime-image-ocr.test.mjs",
+        "runtime-vision.test.mjs",
+        "runtime-cleanup.test.mjs",
+        "runtime-finalization.test.mjs",
+        "runtime-context.test.mjs",
+        "runtime-launch.test.mjs",
+        "runtime-lifecycle.test.mjs",
+        "document-text.test.mjs",
+        "workbench.test.mjs",
+        "deliverable-access.test.mjs",
+        "assistant-stream.test.mjs",
+        "providers.test.mjs",
+        "mcp-identity.test.mjs",
+        "mcp-destination.test.mjs",
+        "workspace-save-queue.test.mjs",
+        "plugins.test.mjs",
+        "updater-cache.test.mjs",
+        "temp-hygiene.test.mjs",
+        "zip-writer.test.mjs",
+        "archive-name.test.mjs"
+      ],
+      "mixed-source": [
+        "composer-runtime.test.mjs",
+        "speech-audio.test.mjs",
+        "speech-service.test.mjs"
+      ],
+      "source-only": [
+        "subagent-archive.test.mjs"
+      ],
+      "sourceHelpers": {
+        "composer-runtime.test.mjs": [
+          "src/model-options.js"
+        ],
+        "speech-audio.test.mjs": [
+          "src/speech-audio.js"
+        ],
+        "speech-service.test.mjs": [
+          "src/speech-audio.js",
+          "source Electron fixture launcher"
+        ],
+        "subagent-archive.test.mjs": [
+          "src/subagent-archive.js"
+        ]
+      },
+      "boundary": "Packaged EXE runs source test files; fixture generators and test dependencies may come from the checkout. Mixed/source-only helpers do not verify the renderer bundle."
+    },
+    "log": "logs/packed.log",
+    "logSha256": "b8c854310151e64a6c019ebf2f6baad33da6419f32b62081b110449f74607be5"
+  },
+  "uiResults": {
+    "errors": {
+      "status": "passed",
+      "caseCounts": {
+        "passed": 7,
+        "failed": 0,
+        "observed": 5,
+        "other": 0
+      },
+      "countingRule": "Only status=passed counts as an assertion pass. Five observed records are not five additional passes.",
+      "observedCodes": [
+        "HTTP_401",
+        "ENOTFOUND",
+        "ENOTFOUND",
+        "ECONNREFUSED",
+        "TIMEOUT"
+      ],
+      "rawResult": "journeys/errors/run-BQ3HJi/result.json",
+      "sha256": "9e8d0f7ec4b19029c9e1f8bf15f52a2ce85d7edb8882a7b3de2294ca358d5514"
+    },
+    "nativeFiles": {
+      "status": "passed",
+      "caseCounts": {
+        "passed": 5,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      },
+      "recordField": "records",
+      "dialogSelection": "synthetic approval and save selection only",
+      "rawResult": "journeys/native/run-HCa2iI/result.json",
+      "sha256": "68de182fd57196bcbf7ee2edcbc7ca9da2bf996a3e9c6bee4ce45555e246b717"
+    },
+    "tools": {
+      "status": "failed",
+      "caseCounts": {
+        "passed": 2,
+        "failed": 0,
+        "observed": 0,
+        "other": 0
+      },
+      "cases": [
+        {
+          "name": "假服务已保存，工作区指向它",
+          "status": "passed"
+        },
+        {
+          "name": "调用与结果合为一次工具调用，保留完成状态",
+          "status": "passed",
+          "rows": [
+            "更新工作计划 · 完成"
+          ],
+          "summary": "1 次工具调用"
+        }
+      ],
+      "error": "UI condition not reached: document.querySelector(\".tool-strip summary\")?.textContent.trim()===\"1 次工具调用\"",
+      "failureRecordedAsCase": false,
+      "diagnosis": "The real call/result assertion passed. After reload the script waited for a conversation-only summary without reselecting the persisted conversation. This failed gate is not proof of a product persistence defect.",
+      "rawResult": "tool-timeline/run-mwxlvsvo/result.json",
+      "sha256": "d3fd0392d0dee16458b1fd52d402dff13714e5ffccf6a2bb399ab3dc9f5442c5"
+    },
+    "phase0a": {
+      "status": "failed",
+      "caseCounts": {
+        "passed": 7,
+        "failed": 1,
+        "observed": 0,
+        "other": 0
+      },
+      "cases": [
+        {
+          "name": "packaged EXE uses only the isolated QA profile",
+          "status": "passed"
+        },
+        {
+          "name": "project, pinned, independent and orphan chats each have one selectable entry",
+          "status": "passed"
+        },
+        {
+          "name": "real Harness writes and presents both files and retains three linked calls",
+          "status": "passed"
+        },
+        {
+          "name": "body precedes changes and deliverables; all assistant sections share a baseline",
+          "status": "passed"
+        },
+        {
+          "name": "tool steps expand as three completed styled rows",
+          "status": "passed"
+        },
+        {
+          "name": "reload preserves real message order, linked tool count and sidebar ownership",
+          "status": "passed"
+        },
+        {
+          "name": "feedback over 8192 bytes disables save while Clear remains usable",
+          "status": "passed"
+        },
+        {
+          "name": "failed file action shows a persistent top toast without covering long input controls",
+          "status": "failed",
+          "error": "SyntaxError: Invalid or unexpected token"
+        }
+      ],
+      "error": "Error: SyntaxError: Invalid or unexpected token\n    at Object.evaluate (file:///D:/a/ZhiXing/ZhiXing/scripts/qa-cdp.mjs:34:42)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase0a-ui.mjs:590:24\n    at async check (file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase0a-ui.mjs:113:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase0a-ui.mjs:574:3",
+      "notReached": [
+        "actual dark appearance keeps the assistant baseline at a narrower window"
+      ],
+      "screenshots": [
+        {
+          "file": "01-message-light.png",
+          "bytes": 65277,
+          "sha256": "0ad7c14e700469a4cf6589873848526ff646661ac3c694d256d0d36eb1716473",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "02-tools-expanded.png",
+          "bytes": 70424,
+          "sha256": "a090ae6747f66108a9ae28806e18b2e43e679efabef3437a40e7e7d08cf1e04b",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "03-feedback-over-limit.png",
+          "bytes": 85032,
+          "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        },
+        {
+          "file": "failure.png",
+          "bytes": 102965,
+          "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a",
+          "width": 1255,
+          "height": 912,
+          "visualReview": "pending-human-review"
+        }
+      ],
+      "visualReview": "pending-human-review",
+      "processExit": {
+        "code": 0,
+        "signal": null
+      },
+      "cleanup": {
+        "processExited": true,
+        "temporaryRemoved": true
+      },
+      "diagnosis": "The outer template cooked a single escaped newline into a literal line break inside the inner split string, causing the generated CDP expression to fail parsing before the Toast geometry assertions. This is a test-driver syntax error.",
+      "rawResult": "journeys/phase0a/phase0a-ui-IYTdbK/result.json",
+      "sha256": "07246e2bd95f3d65550e4c8f72f11453a4856f7a902be2d207400143c166da88"
+    }
+  },
+  "candidate": {
+    "status": "assembled, unsigned, not installed",
+    "installationLifecycle": "not run",
+    "publication": "No release, tag or update-feed publication was performed by this workflow.",
+    "signatureStatus": {
+      "installationLifecycle": "not run",
+      "installer": "NotSigned",
+      "realCloud": "not run",
+      "executable": "NotSigned"
+    },
+    "binaries": [
+      {
+        "file": "release/ZhiXing-0.40.0-x64.exe",
+        "bytes": 338716410,
+        "sha256": "a59e518062aff23605b423254e74f95384fb1ae34ba95bcb2ab4d5fbc095f7ad"
+      },
+      {
+        "file": "release/ZhiXing-0.40.0-x64.exe.blockmap",
+        "bytes": 314795,
+        "sha256": "5210c14bd2c8cf91b569ea5c5559cca7fde89ac5cd73f8b6e6c69dfda2821795"
+      },
+      {
+        "file": "release/win-unpacked/知行.exe",
+        "bytes": 246511104,
+        "sha256": "cf428b2bd5fe57944ebb57ac57128a46734faaa16e81d3b06f263732d493f4af"
+      },
+      {
+        "file": "release/win-unpacked/resources/app/runtime/node.exe",
+        "bytes": 92825416,
+        "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+      }
+    ],
+    "packedDirectory": {
+      "files": 48966,
+      "directories": 8237,
+      "symbolicLinks": 0,
+      "bytes": 1244559468
+    },
+    "artifact": {
+      "id": "15124120283",
+      "name": "windows-unsigned-candidate-91307819e1f666c624e2bd66a16741012a9cf601",
+      "bytes": 339031844,
+      "sha256": "74ff17e9036a2f7dcb38d0a6cb842760c5cd0275b50495dcf35ce4a1b8ee86fa",
+      "downloadedForThisReview": false
+    }
+  },
+  "rawEvidenceArtifact": {
+    "id": "15123850427",
+    "name": "windows-packed-evidence-1",
+    "bytes": 649457,
+    "sha256": "0f5b504f746111e81703edf770e6483b53e14b9c4b52cafed02c82b50843c557",
+    "downloadSha256MatchedGitHubDigest": true,
+    "rawResultsUnmodified": true,
+    "containsProfileOrProject": false
+  },
+  "followUpSyntaxCheck": {
+    "layer": "Linux static parsing only; not Windows execution",
+    "file": "scripts/test-phase0a-ui.mjs",
+    "before": {
+      "generatedExpressions": 26,
+      "parsed": 25,
+      "failed": 1,
+      "failureLine": 590,
+      "failure": "Unterminated string constant (6:260)"
+    },
+    "after": {
+      "generatedExpressions": 26,
+      "parsedByAcornAndVmScript": 26,
+      "failed": 0
+    },
+    "nodeCheck": "passed",
+    "eslint": "passed",
+    "prettierCheck": "passed",
+    "assertionsOrTimeoutsRelaxed": false,
+    "windowsRerun": "not part of this report"
+  },
+  "boundaries": [
+    "This run failed; passing subchecks do not make the whole package gate pass.",
+    "The packaged test aggregate includes the declared mixed-source and source-only supplemental files; it does not imply renderer-bundle coverage for those helpers.",
+    "Targeted UI tests use a loopback model fixture; real cloud model task quality is not covered.",
+    "The errors journey reached real provider HTTP 401 using a deliberately invalid key; this is not a successful cloud-model evaluation.",
+    "The Phase0A Toast geometry assertion did not execute successfully, despite a failure screenshot showing that UI state.",
+    "Dark and narrower-window Phase0A coverage was not reached.",
+    "Manual screenshot review is recorded separately; raw visualReview metadata remains unchanged.",
+    "No installer execution, user installation, upgrade lifecycle, code signing, Windows shortcut or cross-account migration was exercised."
+  ]
+}

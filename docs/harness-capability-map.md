@@ -4,13 +4,19 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
-## 当前候选与证据入口（0.40.0 基线后的 Phase 0A）
+## 当前候选与证据入口（0.40.0 基线后的 Phase 0A / 0B）
 
-当前源码修复候选及其限制以 [Phase 0A 审计核实](phase-0a-audit.md) 和 [本轮证据摘要](evidence/phase-0a/summary.json) 为准。候选未升版本、未生成安装包，Windows 及真实云端证据不能从历史版本继承。
+当前候选的源码修复及限制见 [Phase 0A 审计核实](phase-0a-audit.md)，新增工程门禁、打包来源与逐层结果见 [Phase 0B 工程记录](phase-0b-engineering.md)。应用仍为 0.40.0，尚未发布新版；候选产物的证据按实际源码与构建指纹记录，不从历史版本继承。
 
 本轮已核实：工具 call/result 需按调用关联计数；原生技能手势能在用户文本前有模式说明时生效；自定义 OpenAI / Anthropic spawn 子 Agent 能继承父路由并发出独立请求。后两项在 Linux 及 Windows 托管 runner 的真实 Harness＋本地合成服务回归中通过，仍不代表 Windows 实包子任务归档 UI 已完成。文件嵌套目录、模型批量恢复、聊天结构、映射锁竞争及 OCR 系统模块加载修复范围见候选报告。
 
-产品源码 `abac9ba` 的两次 Windows 原完整门禁均为源码 545/545、组件及隔离 renderer 18/18、Sites 4/4，零失败／取消／跳过。对应 [最终 CI 记录](evidence/phase-0a/windows-ci-after-ocr-fix.json)，不替代实包、安装生命周期和真实云端证据。
+**Phase 0A 历史候选：** 产品源码 `abac9ba` 的两次 Windows 原完整门禁均为源码 545/545、组件及隔离 renderer 18/18、Sites 4/4，零失败／取消／跳过。对应 [当轮 CI 记录](evidence/phase-0a/windows-ci-after-ocr-fix.json)，不替代后续候选的实包、安装生命周期和真实云端证据。
+
+Phase 0B 的目录包驱动包含 41 个测试文件：37 个 package-aware、3 个 mixed-source、1 个 source-only。这是加载来源分类，不是断言总数；测试文件、夹具及部分辅助模块来自源码 checkout。工程门禁和测试分类本身不提升尚未实跑能力的验收等级，实际结果见 [本轮工程记录](phase-0b-engineering.md)。
+
+**Phase 0B 源码证据：** `3735910` 对应 Windows 源码 CI 为源码 560/560、组件及隔离 renderer 18/18、Sites 4/4，零失败／取消／跳过。PR 实际检出 `6fa27fd`，与该 head 的源码树相同，详见 [源码 CI 记录](evidence/phase-0b/windows-source-final.json)。目录包、界面及 NSIS 候选结果单列，不由源码结果代替。
+
+**Phase 0B 目录包证据：** 同一 head 的包回归 383/383，实包错误文案 7 项（另 5 条 observed 不计入通过）、原生文件审批与导出 5 项、时间线 3 项、聊天 UI 9/9。六张图已做 AI 视觉复核，原始真人待审状态未篡改；NSIS 已生成并独立下载复算 SHA256，但 NotSigned，安装生命周期与真实云端任务未跑。完整边界及文件指纹见 [最终打包记录](evidence/phase-0b/windows-packed-final.json)。这批证据没有把常驻 Host、SQLite、专业 Office 引擎或全量 Harness 桌面版对标升级为已完成。
 
 ## 历史状态总览（0.20.0，当时记录）
 
