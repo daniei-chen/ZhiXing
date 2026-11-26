@@ -592,7 +592,7 @@ try {
       const toast=document.querySelector('.toast.error');
       const controls=['.composer',${JSON.stringify(input)},'.model-trigger','button.send-button'].map(selector=>{const node=document.querySelector(selector);if(!node)throw Error('Missing '+selector);return {selector,rect:rect(node)};});
       const button=document.querySelector('button.send-button'),r=button.getBoundingClientRect();
-      return {toast:rect(toast),toastPosition:getComputedStyle(toast).position,controls,sendReachable:button.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)),inputLines:document.querySelector(${JSON.stringify(input)}).value.split('\n').length};
+      return {toast:rect(toast),toastPosition:getComputedStyle(toast).position,controls,sendReachable:button.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)),inputLines:document.querySelector(${JSON.stringify(input)}).value.split('\\n').length};
     })()`);
       assert.equal(geometry.toastPosition, 'fixed');
       assert.equal(geometry.inputLines, 14);

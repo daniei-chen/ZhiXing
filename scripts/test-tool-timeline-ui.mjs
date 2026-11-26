@@ -93,7 +93,7 @@ try {
     return {providerId:mine.id};
   })()`);
   assert.ok(saved.providerId);
-  try { await ui.evaluate('location.reload(); true'); } catch {}
+  try { await ui.evaluate('location.reload(); true'); } catch { /* Reload can destroy the current CDP execution context. */ }
   await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')&&!document.querySelector(\'textarea[aria-label="聊天输入框"]\').disabled', 60000);
   await record('假服务已保存，工作区指向它');
 
@@ -117,13 +117,40 @@ try {
   assert.equal(summary, '1 次工具调用');
   await record('调用与结果合为一次工具调用，保留完成状态', { rows, summary });
 
-  try { await ui.evaluate('location.reload(); true'); } catch {}
+  // The renderer starts on Home after reload. Reopen the same saved chat via
+  // its real sidebar entry before checking the persisted tool timeline.
+  await ui.waitFor(`document.querySelector('.workspace-save-banner')?.dataset.saveStatus === 'saved'`);
+  const chat = await ui.evaluate(`(()=>{
+    const selected=document.querySelector('.chat-link[aria-current="page"]');
+    const id=selected?.closest('.chat-row')?.dataset.chatId;
+    return id?{id,timeOrigin:performance.timeOrigin,selector:'.chat-row[data-chat-id="'+CSS.escape(id)+'"] .chat-link'}:null;
+  })()`);
+  assert.ok(chat?.id, 'The completed conversation must have a selected sidebar entry');
+  try { await ui.evaluate('location.reload(); true'); } catch { /* Reload can destroy the current CDP execution context. */ }
+  await ui.waitFor(`performance.timeOrigin !== ${JSON.stringify(chat.timeOrigin)} && document.querySelector(${JSON.stringify(chat.selector)})?.textContent.trim()`, 45000);
+  const chatTitle = await ui.evaluate(`document.querySelector(${JSON.stringify(chat.selector)}).textContent.trim()`);
+  await ui.click(chatTitle, chat.selector);
+  await ui.waitFor(`document.querySelector(${JSON.stringify(chat.selector)})?.getAttribute('aria-current') === 'page'`);
   await ui.waitFor('document.querySelector(".tool-strip summary")?.textContent.trim()==="1 次工具调用"', 45000);
   const restored = await ui.evaluate('(()=>{const last=[...document.querySelectorAll(".tool-strip")].at(-1);return {rows:[...last.querySelectorAll("li")].map(li=>li.textContent.trim()),summary:last.querySelector("summary").textContent.trim()};})()');
   assert.equal(restored.rows.length, 1);
   assert.match(restored.rows[0], /更新工作计划 · 完成/u);
   assert.equal(restored.summary, '1 次工具调用');
-  await record('刷新后从保存轨迹恢复一次调用', restored);
+  const savedTrace = await ui.evaluate(`(async()=>{
+    const workspace=await window.zhixing.loadWorkspace();
+    const message=workspace.chats.find(item=>item.id===${JSON.stringify(chat.id)})?.messages.findLast(item=>item.role==='assistant');
+    return (message?.trace||[]).filter(event=>event.type==='tool/call'||event.type==='tool/result')
+      .map(({type,callId,childSessionId,status})=>({type,callId,childSessionId,status}));
+  })()`);
+  const call = savedTrace.filter(event => event.type === 'tool/call');
+  const result = savedTrace.filter(event => event.type === 'tool/result');
+  assert.equal(call.length, 1, 'The saved trace must retain the real tool call');
+  assert.equal(result.length, 1, 'The saved trace must retain the real tool result');
+  assert.ok(call[0].callId, 'The saved call must retain its safe correlation id');
+  assert.equal(result[0].callId, call[0].callId);
+  assert.equal(result[0].childSessionId, call[0].childSessionId);
+  assert.equal(result[0].status, 'completed');
+  await record('刷新后从保存轨迹恢复一次调用', { ...restored, savedTrace });
 
   report.status = 'passed'; await persist();
   console.log(JSON.stringify({ status: report.status, cases: report.cases.length, rows, evidence }, null, 2));
@@ -132,10 +159,10 @@ try {
   console.error(`FAIL ${report.error}`);
   process.exitCode = 1;
 } finally {
-  try { server.closeAllConnections(); server.close(); } catch {}
-  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch {}
-  try { if (ui) ui.close(); } catch {}
-  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch {}
-  try { if (log) await log.close(); } catch {}
-  try { await fs.rm(profile, { recursive: true, force: true }); } catch {}
+  try { server.closeAllConnections(); server.close(); } catch { /* The fixture server may already be closed after a failed startup. */ }
+  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch { /* Closing the app may disconnect CDP before the reply arrives. */ }
+  try { if (ui) ui.close(); } catch { /* The CDP socket may already have closed with the app. */ }
+  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch { /* Keep the original test failure if the fixture process has already exited. */ }
+  try { if (log) await log.close(); } catch { /* The log handle may already be unavailable after an earlier failure. */ }
+  try { await fs.rm(profile, { recursive: true, force: true }); } catch { /* Windows may briefly retain a handle to the isolated fixture profile. */ }
 }
