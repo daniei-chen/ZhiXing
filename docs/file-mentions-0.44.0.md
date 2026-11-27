@@ -49,7 +49,7 @@
 
 ## 测试
 
-- `tests/file-mentions.test.mjs`（20 例，纯函数）：记号边界、引号、插入与不叠加、光标在引用中间的整段替换、排序与并列、目录内查询、点路径、截断、三种空态。
+- `tests/file-mentions.test.mjs`（21 例，纯函数）：记号边界、引号、插入与不叠加、光标在引用中间的整段替换、排序与并列、目录内查询、点路径、截断、三种空态。
 - `tests/file-reference-list.test.mjs`（6 例，主机层）：递归相对路径、私密清单与 `isPrivateRelative` 一致、符号链接不跟随、条目上限、无工作区与空工作区。
 - `tests/file-mention-ui.test.mjs`（真实 Electron renderer，11 个 PASS）：输入 `@` 出候选且一次记号只取一次索引、索引在途时逐字输入不会重复请求、每个新 `@` 重新取索引、方向键与 Enter 插入、在已有引用中间补全不留残尾、Esc 关闭与记号变化后重开、两种空态、切聊天关闭并重新取索引、手写 `@` 原样提交、IME 组合不抢键。
 
