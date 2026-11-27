@@ -1,0 +1,4 @@
+{"name":"allow","status":"passed","requests":2,"contentShapes":["string","string"]}
+{"name":"reject","status":"passed","requests":2,"contentShapes":["string","string"]}
+{"name":"present","status":"passed","requests":2,"contentShapes":["string","string"]}
+{"name":"reload","status":"passed","requests":3,"contentShapes":["string","string","string","string","string"]}

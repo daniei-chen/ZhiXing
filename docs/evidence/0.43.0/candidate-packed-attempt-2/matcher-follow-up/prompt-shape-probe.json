@@ -1,0 +1,74 @@
+{
+  "layer": "actual RuntimeManager + real Harness + privacy gateway + loopback synthetic model; Linux; no Electron app",
+  "requests": [
+    {
+      "number": 1,
+      "model": "qa-approval-model",
+      "oldLastUserMatcher": false,
+      "messages": [
+        {
+          "index": 0,
+          "role": "system",
+          "contentType": "string",
+          "blockTypes": [],
+          "chars": 4515,
+          "sha256": "45908a15a58c2bbc3f3ebe97b4a0a05af5e12b7a30a2c2baafeef4769b5d36c3",
+          "exactTypedMatch": false,
+          "containsTaskMarker": false,
+          "containsModePrefix": false,
+          "containsRuntimeReminder": false
+        },
+        {
+          "index": 1,
+          "role": "user",
+          "contentType": "string",
+          "blockTypes": [],
+          "chars": 44,
+          "sha256": "48c63931cb2611853d8f93dd320e0baf3bf00c284397e9deb815f9e9be8e5d00",
+          "exactTypedMatch": true,
+          "containsTaskMarker": true,
+          "containsModePrefix": true,
+          "containsRuntimeReminder": false
+        },
+        {
+          "index": 2,
+          "role": "user",
+          "contentType": "string",
+          "blockTypes": [],
+          "chars": 378,
+          "sha256": "d25a302d5747cd34004e3c6d995e1e1fa5f6c1f445cdcb6fd1ca4efdc5eed387",
+          "exactTypedMatch": false,
+          "containsTaskMarker": false,
+          "containsModePrefix": false,
+          "containsRuntimeReminder": true
+        },
+        {
+          "index": 3,
+          "role": "user",
+          "contentType": "string",
+          "blockTypes": [],
+          "chars": 1563,
+          "sha256": "db5a2c70402a83a4d56e4c1c818933efd61916c6da4d17977f8f967669ddb8b5",
+          "exactTypedMatch": false,
+          "containsTaskMarker": false,
+          "containsModePrefix": false,
+          "containsRuntimeReminder": true
+        },
+        {
+          "index": 4,
+          "role": "user",
+          "contentType": "string",
+          "blockTypes": [],
+          "chars": 258,
+          "sha256": "a0009a3d4add6468ddbd70b709ab59a471afbe31ff980ef524a2bfad9b372c14",
+          "exactTypedMatch": false,
+          "containsTaskMarker": false,
+          "containsModePrefix": false,
+          "containsRuntimeReminder": false
+        }
+      ]
+    }
+  ],
+  "completed": true,
+  "cleanupPending": []
+}

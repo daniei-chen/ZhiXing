@@ -1,0 +1,79 @@
+{
+  "artifactId": 15180250939,
+  "zipBytes": 41983,
+  "zipSha256": "afd03eba093ea20c4c75b988398e69fff4ce262ece4ba94bd98fae7a7e4f6982",
+  "expectedDigestMatched": true,
+  "extractedBytes": 95300,
+  "files": [
+    {
+      "path": "build.log",
+      "bytes": 1549,
+      "sha256": "921874916dfbd94288fd456908a417b689ccd655ec0b146db0ab812970dd4091"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 2477,
+      "sha256": "43455dc4a5ee904568bb8733c7020ee939bfdc3e110ca35d5bd3547fd4143baa"
+    },
+    {
+      "path": "install.log",
+      "bytes": 2016,
+      "sha256": "106d994a0fb6a3102b023358a93f6161ad3ba422bd13dd984021f92144c19bce"
+    },
+    {
+      "path": "components.log",
+      "bytes": 8103,
+      "sha256": "dc3c69de1abd022f2f6693f2d8badc4ccb27c4f9229c9e1ad101d906632c12ba"
+    },
+    {
+      "path": "quality.log",
+      "bytes": 2630,
+      "sha256": "5cec4983dce8d08a99e58a76508965fb4501ee3f9f461a3f1aa9252cf08f3a0c"
+    },
+    {
+      "path": "unit.log",
+      "bytes": 69181,
+      "sha256": "961db6612b57631a69ed111be06507e7902c4c3403959c0b7d5b137bd35cb021"
+    },
+    {
+      "path": "sites.log",
+      "bytes": 472,
+      "sha256": "7fe1458018d32d5037c7bad06ecdcf6a2591d7a5c9d40279f5038d1fb60aa1ee"
+    },
+    {
+      "path": "zhixing-drafts-native-d5pWII-electron.log",
+      "bytes": 685,
+      "sha256": "6eebc80527434af71b95fb703bedf21ed92a48888b50fe36dc4e8cb7e77b8228"
+    },
+    {
+      "path": "zhixing-drafts-native-d5pWII-journey.json",
+      "bytes": 1823,
+      "sha256": "23b32a513c5f9898b2a329e2c370f7f30e4b83ba299ee4bd75bc168e5e8ad61c"
+    },
+    {
+      "path": "zhixing-drafts-native-d5pWII-source-hashes.json",
+      "bytes": 272,
+      "sha256": "05152273d2195ed2d7c19577e3c6055ece78cb8fee46f35a85bb588f74bdb4e9"
+    },
+    {
+      "path": "zhixing-drafts-native-d5pWII-summary.json",
+      "bytes": 1269,
+      "sha256": "5a3adc8ca0f7513b067eee2e8e2e830b011d2fc82b98f93c869c645122b0b833"
+    },
+    {
+      "path": "zhixing-recovery-ui-iqG5O5-electron.log",
+      "bytes": 2298,
+      "sha256": "62fa8a7b89cbc5db3766bf05db9d6809a3098e4f5beafc2e95381047071e9263"
+    },
+    {
+      "path": "zhixing-recovery-ui-iqG5O5-journey.json",
+      "bytes": 2375,
+      "sha256": "3883ecf78a79a1346e7e88118aff0ec84a1955b9c001f4cad34fc492e5d2453b"
+    },
+    {
+      "path": "zhixing-recovery-ui-iqG5O5-summary.json",
+      "bytes": 150,
+      "sha256": "a5ddb97a385fc41106415cd1b3dcc4e4a1c306a82e1b070aa33d59d2fac9ef09"
+    }
+  ]
+}

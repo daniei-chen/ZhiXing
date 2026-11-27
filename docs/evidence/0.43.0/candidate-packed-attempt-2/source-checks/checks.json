@@ -1,0 +1,113 @@
+{
+  "layer": "Windows hosted runner: source/build and isolated renderer; no installer or real cloud",
+  "commit": "b8ac25431513b02c5dd9ffdbaf8b6fb9e5545f6b",
+  "ref": "refs/pull/3/merge",
+  "runId": "45958375606",
+  "node": "v24.22.3",
+  "steps": {
+    "node": {
+      "outputs": {
+        "node-version": "v24.22.3"
+      },
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "install": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "quality": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "build": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "sites": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "unit": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "components": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    }
+  },
+  "files": [
+    {
+      "file": "install.log",
+      "originalBytes": 2016,
+      "truncated": false
+    },
+    {
+      "file": "quality.log",
+      "originalBytes": 2630,
+      "truncated": false
+    },
+    {
+      "file": "build.log",
+      "originalBytes": 1549,
+      "truncated": false
+    },
+    {
+      "file": "sites.log",
+      "originalBytes": 472,
+      "truncated": false
+    },
+    {
+      "file": "unit.log",
+      "originalBytes": 69181,
+      "truncated": false
+    },
+    {
+      "file": "components.log",
+      "originalBytes": 8103,
+      "truncated": false
+    },
+    {
+      "file": "zhixing-drafts-native-d5pWII-journey.json",
+      "originalBytes": 1823,
+      "truncated": false
+    },
+    {
+      "file": "zhixing-drafts-native-d5pWII-summary.json",
+      "originalBytes": 1269,
+      "truncated": false
+    },
+    {
+      "file": "zhixing-drafts-native-d5pWII-source-hashes.json",
+      "originalBytes": 272,
+      "truncated": false
+    },
+    {
+      "file": "zhixing-drafts-native-d5pWII-electron.log",
+      "originalBytes": 685,
+      "truncated": false
+    },
+    {
+      "file": "zhixing-recovery-ui-iqG5O5-journey.json",
+      "originalBytes": 2375,
+      "truncated": false
+    },
+    {
+      "file": "zhixing-recovery-ui-iqG5O5-summary.json",
+      "originalBytes": 150,
+      "truncated": false
+    },
+    {
+      "file": "zhixing-recovery-ui-iqG5O5-electron.log",
+      "originalBytes": 2298,
+      "truncated": false
+    }
+  ]
+}

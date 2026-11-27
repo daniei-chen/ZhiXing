@@ -1,0 +1,105 @@
+name: Windows approval diagnostic
+
+# Fast feedback for changes to this real-application journey. This read-only
+# job does not replace the full packaged checks or any release prerequisite.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/approval-diagnostic.yml'
+      - 'scripts/test-approval-recovery-ui.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  approval-diagnostic:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - name: Check out the exact diagnostic source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up the licensed packaging runtime
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.19.0'
+          package-manager-cache: false
+      - name: Prepare isolated diagnostics and caches
+        run: |
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-packed-logs", "$env:RUNNER_TEMP/zhixing-packed-artifact" | Out-Null
+          $qaLocalData = "$env:RUNNER_TEMP/zhixing-approval-local-data"
+          $qaTemporary = "$env:RUNNER_TEMP/zhixing-approval-temp"
+          New-Item -ItemType Directory -Force $qaLocalData, $qaTemporary | Out-Null
+          "LOCALAPPDATA=$qaLocalData" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEMP=$qaTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$qaTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Install locked dependencies
+        id: install
+        timeout-minutes: 12
+        run: |
+          npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/install.log"
+          exit $LASTEXITCODE
+      - name: Prepare the locked Electron executable
+        id: electron
+        timeout-minutes: 5
+        run: |
+          node node_modules/electron/install.js 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/electron.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path -LiteralPath 'node_modules/electron/dist/electron.exe' -PathType Leaf)) { throw 'Locked Electron executable is missing' }
+      - name: Build an uninstalled directory package
+        id: package
+        timeout-minutes: 12
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run electron:dist 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/package.log"
+          exit $LASTEXITCODE
+      - name: Verify exact packaged source
+        id: verify
+        timeout-minutes: 3
+        run: |
+          node scripts/verify-packed-sources.mjs "release/win-unpacked/resources/app" "$env:RUNNER_TEMP/zhixing-packed-artifact/packed-source-manifest.json" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/verify.log"
+          exit $LASTEXITCODE
+      - name: Diagnose native approvals and renderer recovery
+        id: approvals
+        timeout-minutes: 10
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-packed-journeys/approvals
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:approvals -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/approvals.log"
+          exit $LASTEXITCODE
+      - name: Collect bounded diagnostic evidence
+        if: ${{ always() }}
+        env:
+          CI_STEP_RESULTS: ${{ toJSON(steps) }}
+        run: |
+          node scripts/collect-packed-evidence.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          @{
+            purpose = 'Single Windows approval journey diagnosis; not a complete packaged or release gate result'
+            sourceCommit = (git rev-parse HEAD)
+            releasePublication = 'not attempted'
+            omitted = @('source suite', 'component suite', 'Sites suite', 'packaged module suite', 'other UI journeys', 'NSIS build', 'dependency audit', 'startup measurement', 'signature verification', 'installation lifecycle', 'real cloud')
+          } | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 "$env:RUNNER_TEMP/zhixing-packed-artifact/diagnostic-scope.json"
+      - name: Upload small diagnostic evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-approval-diagnostic-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/zhixing-packed-artifact/
+          retention-days: 7
+          if-no-files-found: error
+          include-hidden-files: false

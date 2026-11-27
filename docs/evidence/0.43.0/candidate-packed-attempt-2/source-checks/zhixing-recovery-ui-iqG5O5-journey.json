@@ -1,0 +1,81 @@
+{
+  "layer": "Windows Electron renderer with synthetic IPC/fault injection; not final installer or cloud",
+  "records": [
+    {
+      "name": "失败后不导航即恢复正文和2个附件，terminal前归档轨迹/成果/子任务",
+      "status": "passed",
+      "details": {
+        "runId": "4873860b-4eca-4068-aeac-a0fcd96858ed",
+        "executionCount": 1,
+        "traceCount": 3
+      }
+    },
+    {
+      "name": "内核清理重试只调用cleanup，不重新执行",
+      "status": "passed",
+      "details": {
+        "cleanupRetries": 1,
+        "executionCount": 1
+      }
+    },
+    {
+      "name": "从实际合成存储文件重新载入后失败正文/轨迹/清理终态仍在",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "失败期间的新输入及空附件不被旧草稿覆盖",
+      "status": "passed",
+      "details": {
+        "executionCount": 2
+      }
+    },
+    {
+      "name": "资料空间加入第三份资料保留原正文和前2个附件，再次加入不重复",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "附件读取期间正常打字不使附件generation过期",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "12个附件满额时明确提示未加入数量且原附件全部保留",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "forget失败或未确认不提前清缓存；成功仅清目标job/轨迹/滚动及问题；迟到事件不复活且另一root问题可见",
+      "status": "passed",
+      "details": {
+        "retainedRunId": "ba1fd8b6-cb65-437a-abb6-044d6ed88d25",
+        "removedRunId": "788e68f3-f2de-4712-bcea-30ecc4961c1c",
+        "retainedQuestionId": "kept-question"
+      }
+    },
+    {
+      "name": "删除写盘故障可见且不提前forget，重试后文件字节与重启均无目标marker",
+      "status": "passed",
+      "details": {
+        "forgotten": [
+          "chat"
+        ],
+        "bytes": 2692
+      }
+    },
+    {
+      "name": "历史孤儿不会静默删除，显式恢复后正文附件可见",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "自动化待保存正文可读，重试保存不增加runPrepared次数",
+      "status": "passed",
+      "details": {
+        "saveRetries": 1,
+        "executionCount": 4
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+  • electron-builder  version=26.18.0 os=10.0.26100
+  • loaded configuration  file=D:\a\ZhiXing\ZhiXing\electron-builder.yml
+  • building        target=nsis file=release\ZhiXing-0.43.0-x64.exe archs=x64 oneClick=false perMachine=false
+  • downloaded      label=7zip-win-x64.tar.gz progress=100%
+  • downloaded      label=nsis-3.0.4.1.7z progress=100%
+  • no code signing certificate configured, signing is skipped  path=D:\a\_temp\zhixing-packed-temp\t-flfAdT\elevate-staging-0\resources\elevate.exe
+  • downloaded      label=nsis-resources-3.4.1.7z progress=100%
+  • no code signing certificate configured, signing is skipped  path=release\ZhiXing-0.43.0-x64.__uninstaller.exe
+  • no code signing certificate configured, signing is skipped  path=release\ZhiXing-0.43.0-x64.exe
+  • building block map  blockMapFile=release\ZhiXing-0.43.0-x64.exe.blockmap

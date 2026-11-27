@@ -48,6 +48,8 @@
 
 主机规则、实际 Cordis 服务及 HTTP、真实 Harness 配合 loopback 模型、React renderer、Windows 实包专项分别记录。正式门禁为 `npm run test:approvals`，默认要求 Windows 实包、干净源码指纹和一次性 profile。失败、跳过、缺失或清理失败均阻止发布。
 
+`Windows approval diagnostic` 在专项脚本变更时独立构建目录包并执行同一旅程，也支持手动触发。它只提供该专项的快速反馈，报告明确列出未运行的整套回归和发行检查；不构建安装器、不发布、不替代 PR 的完整目录包门禁或 main 的 20 项发行门禁。合成服务必须在真实用户文本中唯一匹配完整场景指令，不能假设 Harness 追加上下文之后的最后一条 `user` 仍是原始交办；收到 POST 与成功识别的请求分别计数。
+
 本地 `--source` 全应用尝试在任何业务请求前被 Chromium 单实例 Unix socket `EPERM` 阻断，模型请求 0；没有绕过保护，不写全链路通过。正式 Windows 数字由该版本发行资产自动从实际报告装配。
 
 本轮没有 Resident Host、跨轮后台任务、队列/Steer、完整 Action Cards、SQLite、Git 快照、专业 Office 编辑、真实云端办公成功率或安装生命周期验收。没有操作用户 `D:\应用\知行`。

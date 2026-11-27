@@ -1,0 +1,51 @@
+{
+  "layer": "local matcher regression using AST-extracted actual QA function and scenario definitions; no application or Windows run",
+  "script": "scripts/test-approval-recovery-ui.mjs",
+  "scriptSha256": "15d87e7a7c9aec606575319d3ff4d1fa7ef9449e1a26a9090dc3dd822c601e44",
+  "matcherSha256": "cf068fb8925f9ad701cb87a66a3176612f88a274b7c7cc8b70cebeaa9fd932f2",
+  "results": [
+    {
+      "name": "original exact user line before native supplemental users is recognized",
+      "status": "passed"
+    },
+    {
+      "name": "a text block is recognized without accepting image content as user text",
+      "status": "passed"
+    },
+    {
+      "name": "assistant and tool content cannot provide the scenario identity",
+      "status": "passed"
+    },
+    {
+      "name": "an unsupported block type cannot supply a scenario",
+      "status": "passed"
+    },
+    {
+      "name": "prefixes suffixes and whitespace changes do not match the genuine typed line",
+      "status": "passed"
+    },
+    {
+      "name": "two different scenarios remain ambiguous and are rejected",
+      "status": "passed"
+    },
+    {
+      "name": "the same typed scenario appearing twice is rejected rather than guessed",
+      "status": "passed"
+    },
+    {
+      "name": "partial text blocks are not concatenated to manufacture a matching prompt",
+      "status": "passed"
+    },
+    {
+      "name": "a non-array message list is rejected",
+      "status": "passed"
+    },
+    {
+      "name": "duplicate matching lines inside a single user block are rejected",
+      "status": "passed"
+    }
+  ],
+  "passed": 10,
+  "failed": 0,
+  "boundary": "Synthetic protocol negatives complement the separate actual Harness payload and sequence probes; they do not establish the 13-case Windows journey."
+}

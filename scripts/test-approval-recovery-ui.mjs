@@ -117,13 +117,16 @@ const report = {
   cases: [],
   screenshots: [],
   processExits: [],
+  receivedModelRequests: 0,
   providerRequests: [],
+  requestShapes: [],
   visualReview: 'pending-human-review',
   boundaries: [
     'Only provider configuration and empty project/chat metadata are seeded through desktop IPC in an isolated temporary profile.',
     'Each tool call and result uses the real Harness, native approval bridge and production file policy. The loopback model provides deterministic SSE responses.',
     'Only one-time allow/reject choices are exercised; no session grant, persistent grant, real cloud, installer or user installation is covered.',
     'Approval and handoff snapshots are observed through production IPC. The expired-response negative case calls the real answer IPC; normal decisions use trusted CDP pointer events.',
+    'receivedModelRequests counts matching POST endpoints before fixture assertions; providerRequests contains only requests accepted by the scenario and tool-sequence checks. Neither field alone establishes successful model output.',
     'The global fallback case injects failed state into the real application ErrorBoundary through CDP to exercise actual App unmount/recovery; it does not establish that a spontaneous exception was caught.',
     'Recovery is within the same live host with local persistence enabled. Normal host restart must retain saved terminal messages but must not revive pending approvals.',
     'A separate case disables persistence through the real settings UI and starts a new project chat. Reload must cancel that volatile run instead of restoring its conversation or approval.',
@@ -391,6 +394,33 @@ async function capture(name) {
   await persist();
 }
 
+function matchingScenarios(messages, scenarios) {
+  assert(Array.isArray(messages), 'Fixture requires a real message list');
+  const matches = [];
+  for (const [messageIndex, message] of messages.entries()) {
+    if (message.role !== 'user') continue;
+    const blocks =
+      typeof message.content === 'string'
+        ? [{ blockIndex: 0, text: message.content }]
+        : Array.isArray(message.content)
+          ? message.content.flatMap((block, blockIndex) =>
+              block.type === 'text' && typeof block.text === 'string'
+                ? [{ blockIndex, text: block.text }]
+                : [],
+            )
+          : [];
+    for (const { blockIndex, text } of blocks) {
+      for (const [lineIndex, line] of text.split(/\r?\n/).entries()) {
+        for (const candidate of scenarios) {
+          if (line === candidate.prompt)
+            matches.push({ scenario: candidate.name, messageIndex, blockIndex, lineIndex });
+        }
+      }
+    }
+  }
+  return matches;
+}
+
 const server = http.createServer(async (request, response) => {
   try {
     if (request.method === 'GET' && request.url === '/v1/models') {
@@ -404,6 +434,7 @@ const server = http.createServer(async (request, response) => {
     }
     assert.equal(request.method, 'POST');
     assert.equal(request.url, '/v1/chat/completions');
+    report.receivedModelRequests += 1;
     let body = '';
     for await (const chunk of request) {
       body += chunk;
@@ -412,11 +443,19 @@ const server = http.createServer(async (request, response) => {
     const payload = JSON.parse(body);
     assert.equal(payload.model, model);
     assert.equal(payload.stream, true);
-    const prompt = JSON.stringify(
-      payload.messages.findLast((message) => message.role === 'user')?.content,
-    );
-    const item = Object.values(cases).find((candidate) => prompt.includes(candidate.prompt));
-    assert(item, 'Fixture needs the genuine typed scenario prompt');
+    // Native reminders can follow the original user message. Match one exact
+    // typed line in user text, never the last role alone or the current QA case.
+    const matches = matchingScenarios(payload.messages, Object.values(cases));
+    report.requestShapes.push({
+      number: report.receivedModelRequests,
+      messages: payload.messages.map((message) => ({
+        role: message.role,
+        contentType: Array.isArray(message.content) ? 'array' : typeof message.content,
+      })),
+      typedMatches: matches,
+    });
+    assert.equal(matches.length, 1, 'Fixture needs exactly one genuine typed scenario prompt');
+    const item = cases[matches[0].scenario];
     const results = payload.messages.filter((message) => message.role === 'tool');
     assert.deepEqual(
       results.map((result) => result.tool_call_id),
@@ -1093,6 +1132,7 @@ try {
     },
   );
   assert.equal(fixtureError, undefined);
+  assert.equal(report.receivedModelRequests, report.providerRequests.length);
   assert.equal(report.cases.length, 13);
   report.status = 'passed';
 } catch (error) {

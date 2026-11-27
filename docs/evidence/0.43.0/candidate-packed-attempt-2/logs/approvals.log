@@ -1,0 +1,7 @@
+
+> office-agent@0.43.0 test:approvals
+> node scripts/test-approval-recovery-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\_temp\zhixing-packed-journeys\approvals\approval-recovery-ui-vyk1v3
+PASS application identity and temporary profile are verified
+FAIL ask-mode write waits in the card without any file side effect: Fixture needs the genuine typed scenario prompt

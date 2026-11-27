@@ -1,0 +1,2 @@
+94d59d3ba0fc9b1e884da6896e3f1cd25217fe2cfd1954ae34f6713571bb94c9  ZhiXing-0.43.0-x64.exe
+219f87b0577c2f692a96b8b2efe5fbfa751adc5eed220fa94ebc86dca646b3d7  ZhiXing-0.43.0-x64.exe.blockmap

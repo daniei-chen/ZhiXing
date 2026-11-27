@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "b57539c357f29c21b0246cb2443f2144024eb40b",
+  "sourceScriptSha256": "15d87e7a7c9aec606575319d3ff4d1fa7ef9449e1a26a9090dc3dd822c601e44",
+  "layer": "Linux source RuntimeManager + real Harness + native approval bridge + extracted loopback provider; no Electron, Windows or UI",
+  "runner": {
+    "platform": "linux",
+    "node": "v24.22.3",
+    "arch": "x64"
+  },
+  "startedAt": "2026-11-27T07:55:10.142Z",
+  "status": "failed",
+  "cases": [
+    {
+      "name": "allow",
+      "startedAt": "2026-11-27T07:55:10.151Z",
+      "status": "failed",
+      "decisions": [],
+      "providerRequests": [],
+      "observations": [],
+      "fixtureError": null,
+      "error": {
+        "name": "JsonRpcResponseError",
+        "code": "RUNTIME_EXECUTION_FAILED",
+        "message": "no adapter registered for provider \"zhixing-provider\"",
+        "stack": "JsonRpcResponseError: no adapter registered for provider \"zhixing-provider\"\n    at JsonRpcLineTransport.handleIncomingResponse (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:224:19)\n    at JsonRpcLineTransport.handleLine (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:196:9)\n    at JsonRpcLineTransport.drainLines (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:169:9)\n    at Socket.onData (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:160:8)\n    at Socket.emit (node:events:514:28)\n    at addChunk (node:internal/streams/readable:569:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:520:3)\n    at Readable.push (node:internal/streams/readable:400:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:194:23)"
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "failed",
+          "finalization": {
+            "runId": "probe-allow",
+            "executionStatus": "failed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 1,
+            "error": {
+              "code": "RUNTIME_EXECUTION_FAILED",
+              "stage": "query",
+              "message": "no adapter registered for provider \"zhixing-provider\""
+            },
+            "deliverables": [],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 0,
+      "requestShapes": [],
+      "finishedAt": "2026-11-27T07:55:13.043Z"
+    },
+    {
+      "name": "reject",
+      "startedAt": "2026-11-27T07:55:13.045Z",
+      "status": "failed",
+      "decisions": [],
+      "providerRequests": [],
+      "observations": [],
+      "fixtureError": null,
+      "error": {
+        "name": "JsonRpcResponseError",
+        "code": "RUNTIME_EXECUTION_FAILED",
+        "message": "no adapter registered for provider \"zhixing-provider\"",
+        "stack": "JsonRpcResponseError: no adapter registered for provider \"zhixing-provider\"\n    at JsonRpcLineTransport.handleIncomingResponse (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:224:19)\n    at JsonRpcLineTransport.handleLine (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:196:9)\n    at JsonRpcLineTransport.drainLines (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:169:9)\n    at Socket.onData (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:160:8)\n    at Socket.emit (node:events:514:28)\n    at addChunk (node:internal/streams/readable:569:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:520:3)\n    at Readable.push (node:internal/streams/readable:400:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:194:23)"
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "failed",
+          "finalization": {
+            "runId": "probe-reject",
+            "executionStatus": "failed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 1,
+            "error": {
+              "code": "RUNTIME_EXECUTION_FAILED",
+              "stage": "query",
+              "message": "no adapter registered for provider \"zhixing-provider\""
+            },
+            "deliverables": [],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 0,
+      "requestShapes": [],
+      "finishedAt": "2026-11-27T07:55:15.240Z"
+    },
+    {
+      "name": "present",
+      "startedAt": "2026-11-27T07:55:15.241Z",
+      "status": "failed",
+      "decisions": [],
+      "providerRequests": [],
+      "observations": [],
+      "fixtureError": null,
+      "error": {
+        "name": "JsonRpcResponseError",
+        "code": "RUNTIME_EXECUTION_FAILED",
+        "message": "no adapter registered for provider \"zhixing-provider\"",
+        "stack": "JsonRpcResponseError: no adapter registered for provider \"zhixing-provider\"\n    at JsonRpcLineTransport.handleIncomingResponse (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:224:19)\n    at JsonRpcLineTransport.handleLine (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:196:9)\n    at JsonRpcLineTransport.drainLines (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:169:9)\n    at Socket.onData (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:160:8)\n    at Socket.emit (node:events:514:28)\n    at addChunk (node:internal/streams/readable:569:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:520:3)\n    at Readable.push (node:internal/streams/readable:400:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:194:23)"
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "failed",
+          "finalization": {
+            "runId": "probe-present",
+            "executionStatus": "failed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 1,
+            "error": {
+              "code": "RUNTIME_EXECUTION_FAILED",
+              "stage": "query",
+              "message": "no adapter registered for provider \"zhixing-provider\""
+            },
+            "deliverables": [],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 0,
+      "requestShapes": [],
+      "finishedAt": "2026-11-27T07:55:17.096Z"
+    },
+    {
+      "name": "reload",
+      "startedAt": "2026-11-27T07:55:17.097Z",
+      "status": "failed",
+      "decisions": [],
+      "providerRequests": [],
+      "observations": [],
+      "fixtureError": null,
+      "error": {
+        "name": "JsonRpcResponseError",
+        "code": "RUNTIME_EXECUTION_FAILED",
+        "message": "no adapter registered for provider \"zhixing-provider\"",
+        "stack": "JsonRpcResponseError: no adapter registered for provider \"zhixing-provider\"\n    at JsonRpcLineTransport.handleIncomingResponse (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:224:19)\n    at JsonRpcLineTransport.handleLine (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:196:9)\n    at JsonRpcLineTransport.drainLines (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:169:9)\n    at Socket.onData (file:///workspace/scratch/7464bebaff38/ZhiXing/node_modules/@deepseek-ai/dsh-sdk-protocol/lib/index.js:160:8)\n    at Socket.emit (node:events:514:28)\n    at addChunk (node:internal/streams/readable:569:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:520:3)\n    at Readable.push (node:internal/streams/readable:400:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:194:23)"
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "failed",
+          "finalization": {
+            "runId": "probe-reload",
+            "executionStatus": "failed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 1,
+            "error": {
+              "code": "RUNTIME_EXECUTION_FAILED",
+              "stage": "query",
+              "message": "no adapter registered for provider \"zhixing-provider\""
+            },
+            "deliverables": [],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 0,
+      "requestShapes": [],
+      "finishedAt": "2026-11-27T07:55:18.725Z"
+    }
+  ],
+  "boundaries": [
+    "The current fake provider callback and exact prompt matcher are extracted verbatim; only structural observation is inserted.",
+    "Host broker decisions are made programmatically for synthetic files; no user or UI approval interaction is claimed.",
+    "reload names the original two-tool fixture sequence; no renderer reload or handoff ACK is simulated here.",
+    "Only bounded structural request metadata and synthetic result match booleans are retained; request bodies, credentials and live profile contents are not archived."
+  ],
+  "finishedAt": "2026-11-27T07:55:18.725Z"
+}
