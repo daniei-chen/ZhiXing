@@ -23,6 +23,7 @@ export const REQUIRED_GATES = [
   'tools',
   'phase0a',
   'phase1',
+  'workbench',
   'dependencies',
   'startup',
   'signature',

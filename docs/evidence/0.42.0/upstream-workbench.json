@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "subject": "ZhiXing 0.42.0 workbench navigation and delivery text preview",
+  "inspectedOn": "2026-11-27",
+  "evidenceLevel": "installed-dependency-source-review",
+  "repositoryBaseCommit": "cabb754b08883902b12f876e2d68338a7699d5fb",
+  "lockfileAtInspection": {
+    "path": "package-lock.json",
+    "sha256": "0a87ad1dc899eae089cb8a134af6aa75edb561cc22190ad9a81b6630fecc6c93",
+    "note": "Installed lockfile fingerprint at source inspection; provenance only, not the release build identity."
+  },
+  "acquisition": "Read npm packages restored from this repository lockfile; no fresh extraction of the user Windows Harness installation.",
+  "packages": [
+    {
+      "name": "@deepseek-ai/dsh-client-ui-deliverables",
+      "version": "0.2.2-rc.5",
+      "resolved": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-deliverables/-/dsh-client-ui-deliverables-0.2.2-rc.5.tgz",
+      "integrity": "sha512-gXoYDZdzH0RrH1NlJD6vmHEfOW8Yemvll5do7nDG0SF+IAGNsOfMaWp5VRs4/eaRNaxIEV6N7ZyH4n0v9ZF6vg=="
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-chat",
+      "version": "0.2.2-rc.5",
+      "resolved": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-chat/-/dsh-client-ui-chat-0.2.2-rc.5.tgz",
+      "integrity": "sha512-ZEw+3zt3+ENW7OpfnHBoEoU7jRCT9js8UZSe9gEYoRvVgAxO8/JKhNAXf1NCL0HLFD3fgkD0v4OkRZ2JXybSXw=="
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar-right",
+      "version": "0.2.2-rc.5",
+      "resolved": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-sidebar-right/-/dsh-client-ui-sidebar-right-0.2.2-rc.5.tgz",
+      "integrity": "sha512-tdkC2f4lzyn8QHXDEuAyvmB+XEezrRtXu09r1B4cnX2ouKy30iLkjrvyxF5NQIJrLDTUM5EQkAuRl10/WyiOwA=="
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar-documentpreview",
+      "version": "0.2.2-rc.5",
+      "resolved": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/-/dsh-client-ui-sidebar-documentpreview-0.2.2-rc.5.tgz",
+      "integrity": "sha512-BQQrAOJgGwqD25pmJbSDBzvj11gnP5VhQShdUlIc6OJ+W66sBjmz0nqZ92CNTtwZVYm9gZl7LIgnSbPtL/2WPA=="
+    }
+  ],
+  "files": [
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-deliverables/src/client/PresentedFileCard.tsx",
+      "bytes": 3003,
+      "sha256": "7e9440610e6d62d6eb0f564850cb2eaceef9ec75b4c40a92424d2c97f6136815"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-deliverables/src/client/Deliverables.tsx",
+      "bytes": 7798,
+      "sha256": "3d7d7512f7da17a8918f4cd40d856828770472319102aaadb79ba83a20dd8e6c"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-deliverables/src/client/index.ts",
+      "bytes": 6470,
+      "sha256": "ece5a10b76e29a27a697dcd54d8cb65189fb8f8aedb8b43f0be0442b561db3db"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-chat/src/client/apply.ts",
+      "bytes": 17937,
+      "sha256": "3f2824757df3fd343f3032a8d98b5f28e53b31e94ced7c56c9d3ac895ed0e424"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-right/src/client/shell/SidebarRight.tsx",
+      "bytes": 24183,
+      "sha256": "3b55707af33c14d575d74b35335ad64a5607de425063548f28db3af11ab15a56"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-right/README.zh.md",
+      "bytes": 29126,
+      "sha256": "3cf6be1f125d55113d0bc6c501170e33ab2863a90ab5c85bac43e83e0d29ab10"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/definition.ts",
+      "bytes": 2208,
+      "sha256": "6cf2dd02bb5edda4d1e4389d47ca8d1c3cd85bc81b44465ac9bfe7a06bf53e3e"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/index.ts",
+      "bytes": 6544,
+      "sha256": "596e98749fdedc1aa80fe16c10a6e3524075c5a3da7a6deaf5420de0846b9bdd"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/TextPreview.tsx",
+      "bytes": 22642,
+      "sha256": "7ca521c3dcee0b00a843fb9c9f0aabe684f7635acf09d56fe473b2c7763a1384"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/face.ts",
+      "bytes": 10484,
+      "sha256": "1f85ba71accc8d0e3669c3b8e03b89c79c46adb419d934941418ee497b38d516"
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/README.zh.md",
+      "bytes": 29793,
+      "sha256": "0d6d1d8bdda7af1586f34d34ed0cd6dcad53ebd33ef091ada665be463cb502bc"
+    }
+  ],
+  "observations": [
+    {
+      "id": "delivery-opens-sidebar",
+      "evidence": [
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-deliverables/src/client/PresentedFileCard.tsx",
+          "lines": [40, 41]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-deliverables/src/client/Deliverables.tsx",
+          "lines": [109, 112]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-chat/src/client/apply.ts",
+          "lines": [274, 279]
+        }
+      ],
+      "upstream": "The delivery card calls openFile. The chat owner resolves a session file address and calls sidebarRight.openResource.",
+      "zhixingParity": "部分",
+      "candidateScope": "Use the existing host-verified delivery reference to show extracted text in the right-hand deliverables view; no native resource URI or dynamic per-file tab implementation."
+    },
+    {
+      "id": "inline-reference-shares-file-opener",
+      "evidence": [
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-deliverables/src/client/index.ts",
+          "lines": [104, 117]
+        }
+      ],
+      "upstream": "Closing-prose file mentions use the owner openFile entry point.",
+      "zhixingParity": "部分",
+      "candidateScope": "Retain the existing unambiguous reference matching limited to this message deliveries and route that entry to the same preview."
+    },
+    {
+      "id": "right-panel-tab-strip",
+      "evidence": [
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-right/src/client/shell/SidebarRight.tsx",
+          "lines": [272, 305]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-right/src/client/shell/SidebarRight.tsx",
+          "lines": [353, 369]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-right/README.zh.md",
+          "section": "呈现形态 / 状态 / ctx.sidebarRight"
+        }
+      ],
+      "upstream": "The right panel renders a DockLayout with resource tabs and panel controls; the owner also manages session layouts, split panes and floating panels.",
+      "zhixingParity": "部分",
+      "candidateScope": "Visible navigation for nine existing functional views, not the full native resource-tab or docking model."
+    },
+    {
+      "id": "session-file-text-preview",
+      "evidence": [
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/definition.ts",
+          "lines": [45, 53]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/index.ts",
+          "lines": [94, 123]
+        }
+      ],
+      "upstream": "A fallback text tab claims session file addresses and registers a right-panel body with remote file reads.",
+      "zhixingParity": "部分",
+      "candidateScope": "Extracted local text with coverage and truncation notices; Office extraction is not equivalent to the native Office renderer."
+    },
+    {
+      "id": "preview-request-lifetime",
+      "evidence": [
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/TextPreview.tsx",
+          "lines": [388, 445]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/face.ts",
+          "lines": [114, 152]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/face.ts",
+          "lines": [167, 200]
+        }
+      ],
+      "upstream": "The preview has loading/failure/retry states and tracks generations, per-tab state and abort signals.",
+      "zhixingParity": "部分",
+      "candidateScope": "Scope and request generation reject stale renderer results. Existing host read IPC has no cancellation argument, so already-started parsing is not cancelled by dismissing the preview."
+    },
+    {
+      "id": "full-renderers-outside-candidate",
+      "evidence": [
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/src/client/index.ts",
+          "lines": [124, 131]
+        },
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/README.zh.md",
+          "section": "怎么读 / Office 预览"
+        }
+      ],
+      "upstream": "The official plugin separately registers Markdown, HTML, image, PDF, Office, spreadsheet and code renderers. Word and PowerPoint previews use locally converted PDF.",
+      "zhixingParity": "未做",
+      "candidateScope": "These original-layout and interactive renderers are not implemented by this delivery text-preview change. Existing workspace-file features are a separate authorization and UI path."
+    },
+    {
+      "id": "preview-kept-out-of-model-input",
+      "evidence": [
+        {
+          "path": "node_modules/@deepseek-ai/dsh-client-ui-sidebar-documentpreview/README.zh.md",
+          "lines": [133, 139]
+        }
+      ],
+      "upstream": "The viewer does not register tools, prompt fragments or session events; viewed content does not enter model requests.",
+      "zhixingParity": "部分",
+      "candidateScope": "Hold preview content only in transient renderer state. Do not attach it to prompts, documents, drafts or persisted chat history."
+    }
+  ],
+  "productTestsRecorded": [],
+  "releaseCompletionClaimed": false,
+  "notCovered": [
+    "Current installed Windows Harness UI and pixel-level visual comparison",
+    "Fresh extraction or validation of the historical 200-package desktop inventory",
+    "Product source, component, browser, Windows packed, cloud or installation test outcomes; this record reports none",
+    "Native dynamic resource tabs, docking, floating windows and session layout persistence",
+    "Delivery image/PDF/Office original-layout rendering, spreadsheet interaction, editing, paging or automatic refresh",
+    "Cancellation of an already-started host delivery read or document parse",
+    "Git worktree snapshots, whole-turn diffs and rollback",
+    "Windows code signing, user installation lifecycle and release asset verification"
+  ]
+}

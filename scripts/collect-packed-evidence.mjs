@@ -94,7 +94,7 @@ async function journey(directory, prefix, depth = 0) {
     const destination = path.join(prefix, entry.name);
     if (
       entry.isDirectory() &&
-      (depth === 0 || /^(?:run-|phase0a-ui-|phase1-ui-)/.test(entry.name))
+      (depth === 0 || /^(?:run-|phase0a-ui-|phase1-ui-|workbench-preview-ui-)/.test(entry.name))
     ) {
       await journey(source, destination, depth + 1);
     } else if (entry.isFile() && entry.name === 'app-log-tail.txt') {
@@ -119,6 +119,7 @@ for (const name of [
   'tools',
   'phase0a',
   'phase1',
+  'workbench',
   'nsis',
 ]) {
   await copy(
@@ -210,6 +211,7 @@ await fs.writeFile(
         toolTimelineUiPassed: steps.tools?.outcome === 'success',
         phase0aUiPassed: steps.phase0a?.outcome === 'success',
         phase1UiPassed: steps.phase1?.outcome === 'success',
+        workbenchUiPassed: steps.workbench?.outcome === 'success',
         uninstalledNsisBuilt: steps.nsis?.outcome === 'success',
       },
       packedDirectory,

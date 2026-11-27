@@ -46,6 +46,8 @@
 
 [Phase 0A 审计核实](docs/phase-0a-audit.md) · [Phase 0B 工程记录](docs/phase-0b-engineering.md) · [代码质量说明](docs/code-quality.md) · [成熟化路线](docs/maturity-roadmap.md)
 
+下一里程碑 **0.42.0 候选**正在验证工作面板标签和右侧交付文字预览，范围与限制见 [本轮说明](docs/iteration-0.42.0.md)。以上下载、计数和校验值仍属于已发布的 0.41.0，不能视为 0.42.0 的验收结果。
+
 <div align="center">
 
 <img src="docs/assets/readme-workbench-0.11.0.png" alt="知行 0.11.0 Windows 工作台，展示项目侧栏、墨竹欢迎页和交办输入区" width="100%" />
@@ -400,14 +402,3 @@ Get-ChildItem .\release\*-x64.exe | Get-FileHash -Algorithm SHA256
 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) · [Electron](https://www.electronjs.org/) · [React](https://react.dev/)
 
 <br />
-
-
-
-
-
-
-
-
-
-
-

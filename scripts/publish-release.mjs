@@ -130,6 +130,28 @@ async function assetsFor(releaseId) {
   throw new Error('Unexpectedly large release asset collection');
 }
 
+// 0.41.0 created its draft successfully, but the immediately following lookup
+// returned no record. Retry only that observed absence, never draft creation.
+export async function findCreatedDraft({
+  tag,
+  sourceCommit,
+  lookup = releaseForTag,
+  wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+}) {
+  for (const delay of [0, 500, 1000, 2000]) {
+    if (delay) await wait(delay);
+    const release = await lookup(REPOSITORY, tag);
+    if (!release) continue;
+    assert.ok(Number.isSafeInteger(release.id) && release.id > 0, 'Invalid created draft ID');
+    assert.equal(release.tag_name, tag, 'Created draft tag differs from the verified bundle');
+    assert.equal(release.target_commitish, sourceCommit, 'Created draft has a different source');
+    assert.equal(release.draft, true, 'Newly created release is no longer a draft');
+    assert.equal(release.prerelease, true, 'Newly created release must be a prerelease');
+    return release;
+  }
+  throw new Error('The newly created draft was not found by its real release ID');
+}
+
 export async function publishRelease({ bundle, sha, ref, event }) {
   assert.ok(process.env.GH_TOKEN, 'The publishing job needs its scoped GitHub token');
   assert.equal(process.env.GITHUB_REPOSITORY, REPOSITORY);
@@ -170,12 +192,11 @@ export async function publishRelease({ bundle, sha, ref, event }) {
       '--draft',
       '--prerelease',
       '--title',
-      `知行 ${manifest.version} · Phase 1 基础`,
+      `知行 ${manifest.version} · Windows 预发行版`,
       '--notes-file',
       path.join(bundle, 'assets', `release-notes-${manifest.version}.md`),
     ]);
-    release = await releaseForTag(REPOSITORY, manifest.tag);
-    assert.ok(release, 'The newly created draft was not found by its real release ID');
+    release = await findCreatedDraft({ tag: manifest.tag, sourceCommit: sha });
   }
   assert.equal(release.tag_name, manifest.tag);
   assert.equal(release.prerelease, true, 'This workflow only publishes prereleases');

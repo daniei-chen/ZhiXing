@@ -12,6 +12,8 @@ import {Workbench} from './Workbench.jsx';
 import {ConversationResources} from './ConversationResources.jsx';
 import {AnswerText} from './AnswerText.jsx';
 import {DeliveryCards} from './DeliveryCards.jsx';
+import { DeliveryPreview } from './DeliveryPreview.jsx';
+import { useDeliveryPreview } from './use-delivery-preview.js';
 import {ChangedFiles} from './ChangedFiles.jsx';
 import {actionDoneLabel,actionFailureLabel} from './file-actions.js';
 import { ErrorBoundary } from './ErrorBoundary.jsx';
@@ -1268,6 +1270,11 @@ export function App() {
   const visibleEvents = events.filter(event => spaceChats.some(item => item.id === event.sessionId));
   const workContext={workspaceId:workspace.id,projectId:project?.id||null,sessionId:chat?.id||null};
   const workScopeKey=`${workspace.id}:${project?.id||chat?.id||'home'}`;
+  const deliveryPreview = useDeliveryPreview({
+    api: desktop,
+    context: workContext,
+    scopeKey: JSON.stringify([workspace.id, project?.id, project?.directory, chat?.id, viewToken.current]),
+  });
   const sideChats=chats.filter(item=>item.workspaceId===workspace.id&&(item.projectId||null)===(project?.id||null)&&item.id!==chatId);
   const sideChatId=sideSelection.scope===workScopeKey&&sideChats.some(item=>item.id===sideSelection.id)?sideSelection.id:null;
   const sideChat=sideChats.find(item=>item.id===sideChatId);
@@ -1288,6 +1295,7 @@ export function App() {
   const statsHere=runningHere&&liveStats?.runId===running.runId?liveStats.context:null;
   function openReview(path){ setReviewPath(typeof path==="string"?path:""); showWorkPage("review"); }
   function showWorkPage(page){setWorkPage(page);setPanel(true);setMenu(null);}
+  function closeWorkPanel(){deliveryPreview.close();setPanel(false);}
   function returnToRunningChat() {
     const target = latest.current.chats.find(item => item.id === running?.chatId);
     if (!target) return;
@@ -1309,18 +1317,9 @@ export function App() {
     } catch (error) { if (token===viewToken.current) setToast(actionFailureLabel(action)+errorText(error),'error'); }
     finally { setDeliverableBusy(current=>{const next={...current};delete next[file.path];return next;}); }
   }
-  async function openDeliverable(file) {
-    setMenu(null);
-    if (!desktop?.listDeliverables || !chat?.id) { setToast('交付预览需要在桌面版的所属会话中打开。'); return; }
-    const token=viewToken.current;
-    try {
-      const references=await desktop.listDeliverables(workContext);
-      const reference=references.findLast(item=>item.path===file.path);
-      if (!reference?.available) throw new Error(reference?.reason||'没有找到可核验的原生交付记录，请在原会话中重新交付。');
-      const parsed=await desktop.readDeliverable({...workContext,id:reference.id});
-      if(token!==viewToken.current)return;
-      openModal({type:'document',value:{...parsed,status:'ready',text:parsed.text||'',size:parsed.size||reference.size}});
-    } catch(error) { if(token===viewToken.current)setToast(`打开交付文件失败：${errorText(error)}`,'error'); }
+  function openDeliverable(file) {
+    showWorkPage('deliverables');
+    void deliveryPreview.open(file);
   }
   function attachWorkingMaterial(file){if(file.status!=='ready'){setToast('这份资料尚未解析。');return;}appendMaterials([{...file,workspaceId:workspace.id}]);}
   async function openAnswerUrl(url){showWorkPage('browser');if(desktop)try{await desktop.browserAction({...workContext,action:'new',url});}catch(error){setToast(errorText(error));}}
@@ -1359,7 +1358,7 @@ export function App() {
                 <IconButton icon={ListBullets} label="查看当前对话产出与来源" aria-expanded={menu?.name==='resources'} onClick={event=>toggleMenu('resources',event)}/>
                 {menu?.name==='resources'&&<ConversationResources messages={messages} liveTrace={runEvents} running={running} runningTitle={state.chats.find(item=>item.id===running?.chatId)?.title} onOpenDeliverable={openDeliverable} onOpenSource={openConversationSource} onViewActivity={()=>showWorkPage('activity')} onViewFiles={()=>showWorkPage('files')} onAddSource={()=>showWorkPage('browser')} onReturnToRun={returnToRunningChat} onClose={()=>setMenu(null)}/>}
               </div>
-              <IconButton icon={SidebarSimple} label={panel?'隐藏工作面板':'打开工作面板'} aria-expanded={panel} onClick={()=>setPanel(value=>!value)}/>
+              <IconButton icon={SidebarSimple} label={panel?'隐藏工作面板':'打开工作面板'} aria-expanded={panel} onClick={()=>panel?closeWorkPanel():setPanel(true)}/>
             </>}
           </div>
         </div>
@@ -1444,7 +1443,7 @@ export function App() {
               <Composer settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage||!!question}/>
             </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={applyTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
           </div>
-          {room&&<ErrorBoundary key={workScopeKey} scope="workbench" hidden={!panel}><Workbench draftStore={draftSlices} liveReplies={liveReplies} key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={()=>setPanel(false)} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/></ErrorBoundary>}
+          {room&&<ErrorBoundary key={workScopeKey} scope="workbench" hidden={!panel}><Workbench deliveryPreview={deliveryPreview.preview && <DeliveryPreview preview={deliveryPreview.preview} onBack={deliveryPreview.close} onRetry={deliveryPreview.retry} onEnlarge={value => openModal({type:'document',value})}/>} draftStore={draftSlices} liveReplies={liveReplies} key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={closeWorkPanel} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/></ErrorBoundary>}
 
         </div>
       </main>

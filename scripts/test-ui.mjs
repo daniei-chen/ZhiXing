@@ -4,6 +4,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { connectUi } from './qa-cdp.mjs';
+import { selectWorkbenchTab } from './qa-workbench.mjs';
 
 // Run against an isolated source or packaged Windows renderer started with a
 // loopback remote-debugging port. No renderer or IPC implementations are mocked.
@@ -256,7 +257,7 @@ try {
       assert.equal(await ui.evaluate('document.activeElement?.getAttribute("aria-label")'), '新建项目');
       await record('弹窗 Escape 与关闭按钮返回焦点');
       if (!await ui.evaluate('!!document.querySelector(".workbench:not([hidden])")')) await ui.click('打开工作面板');
-      await ui.fill('select[aria-label="工作面板视图"]', 'browser');
+      await selectWorkbenchTab(ui, 'browser');
       if (await ui.evaluate('!!document.querySelector("input[aria-label=新标签页网址]")')) {
         await ui.fill('input[aria-label="新标签页网址"]', 'http://127.0.0.1:43123/__qa/health');
         await ui.click('前往网址');
@@ -406,7 +407,7 @@ try {
       assert.equal(await ui.evaluate('document.querySelector(".workspace-save-banner.saved")?.getClientRects().length'),0);
       if (!await ui.evaluate('!!document.querySelector(".workbench:not([hidden])")')) await ui.click('打开工作面板');
       for (const [id, label] of [['browser', '浏览器'], ['files', '文件'], ['terminal', '终端'], ['chat', '侧边聊天'], ['activity', '执行'], ['deliverables', '产出'], ['stats', '统计'], ['details', '详情']]) {
-        await ui.fill('select[aria-label="工作面板视图"]', id);
+        await selectWorkbenchTab(ui, id);
         await ui.screenshot(path.join(evidence, `${sizeLabel}-面板-${label}.png`));
         await record(`${width}×${height} ${zoom * 100}% 面板 ${label}`, await ui.evaluate('({width:innerWidth,height:innerHeight,dpr:devicePixelRatio})'));
       }

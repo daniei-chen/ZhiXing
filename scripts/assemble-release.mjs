@@ -25,7 +25,10 @@ async function soleReport(directory, depth = 0) {
   for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
     const target = path.join(directory, entry.name);
     if (entry.isFile() && entry.name === 'result.json') matches.push(target);
-    else if (entry.isDirectory() && /^(run-|phase[01][a-z]?-ui-)/.test(entry.name)) {
+    else if (
+      entry.isDirectory() &&
+      /^(run-|phase[01][a-z]?-ui-|workbench-preview-ui-)/.test(entry.name)
+    ) {
       matches.push(...(await soleReport(target, depth + 1)));
     }
   }
@@ -181,7 +184,7 @@ export async function assembleRelease({ root, evidence, output, plan, steps, run
   for (const name of ['unit', 'components', 'sites', 'packed', 'quality', 'startup'])
     await recordEvidence(path.join(evidence, 'logs', `${name}.log`), `logs/${name}.log`);
   const journeys = {};
-  for (const name of ['errors', 'native', 'tools', 'phase0a', 'phase1']) {
+  for (const name of ['errors', 'native', 'tools', 'phase0a', 'phase1', 'workbench']) {
     const directory =
       name === 'tools'
         ? path.join(root, `.preview/qa-${version}/tool-timeline`)

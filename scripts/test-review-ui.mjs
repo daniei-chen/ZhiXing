@@ -78,7 +78,7 @@ const server = http.createServer((request, response) => {
 
 const cards = () => ui.evaluate(`(()=>{const box=[...document.querySelectorAll('.assistant-message .change-files')].at(-1);if(!box)return {count:0};return {count:Number(box.dataset.count||0),header:(box.querySelector('header')?.textContent||'').trim(),rows:[...box.querySelectorAll('li button')].map(node=>({name:node.querySelector('span')?.textContent||'',counts:node.querySelector('small')?.textContent||''}))};})()`);
 const clickRow = index => ui.evaluate(`(()=>{const box=[...document.querySelectorAll('.assistant-message .change-files')].at(-1);const button=[...box.querySelectorAll('li button')][${index}];if(!button)throw new Error('missing row');button.click();return true})()`);
-const review = () => ui.evaluate(`(()=>{const panel=[...document.querySelectorAll('.review-panel')].at(-1);if(!panel)return {open:false};const select=document.querySelector('select[aria-label="工作面板视图"]');return {open:true,view:select?.value||'',header:(panel.querySelector('.review-head strong')?.textContent||'').trim(),summary:(panel.querySelector('.review-head small')?.textContent||'').trim(),files:[...panel.querySelectorAll('.review-files button')].map(node=>({name:node.querySelector('span')?.textContent||'',counts:node.querySelector('small')?.textContent||'',active:node.getAttribute('aria-pressed')==='true'})),diffLabel:panel.querySelector('.review-diff')?.getAttribute('aria-label')||'',rows:[...panel.querySelectorAll('.review-diff .review-line')].map(node=>({type:node.dataset.type||'gap',text:(node.querySelector('code')?.textContent||'').trim()})),notes:[...panel.querySelectorAll('.review-note')].map(node=>node.textContent.trim())};})()`);
+const review = () => ui.evaluate(`(()=>{const panel=[...document.querySelectorAll('.review-panel')].at(-1);if(!panel)return {open:false};const tab=document.querySelector('[role="tab"][data-workbench-page][aria-selected="true"]');return {open:true,view:tab?.dataset.workbenchPage||'',header:(panel.querySelector('.review-head strong')?.textContent||'').trim(),summary:(panel.querySelector('.review-head small')?.textContent||'').trim(),files:[...panel.querySelectorAll('.review-files button')].map(node=>({name:node.querySelector('span')?.textContent||'',counts:node.querySelector('small')?.textContent||'',active:node.getAttribute('aria-pressed')==='true'})),diffLabel:panel.querySelector('.review-diff')?.getAttribute('aria-label')||'',rows:[...panel.querySelectorAll('.review-diff .review-line')].map(node=>({type:node.dataset.type||'gap',text:(node.querySelector('code')?.textContent||'').trim()})),notes:[...panel.querySelectorAll('.review-note')].map(node=>node.textContent.trim())};})()`);
 
 let ui = null, child = null, exit = null, log = null;
 try {
@@ -116,7 +116,7 @@ try {
     return {providerId:mine.id,workspaceId,projectId};
   })()`);
   report.workspace = prepared; await persist();
-  try { await ui.evaluate('location.reload(); true'); } catch {}
+  try { await ui.evaluate('location.reload(); true'); } catch { /* The renderer may reload before the CDP reply. */ }
   await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')&&!document.querySelector(\'textarea[aria-label="聊天输入框"]\').disabled', 60000);
 
   await ui.evaluate('(()=>{const node=[...document.querySelectorAll(".sidebar button, .sidebar [role=\\"button\\"], button")].find(el=>el.textContent.trim().includes("QA 对比项目"));if(!node)throw new Error("Missing project row");node.click();return true})()');
@@ -167,7 +167,6 @@ try {
   assert.equal(view.diffLabel.includes(firstFile), true, `对比区标题没带文件名：${view.diffLabel}`);
   await record('对比行区分新增、删除与折叠', { added: added.length, removed: removed.length, gaps });
 
-  const switched = view.files.find(file => file.name === secondFile);
   await ui.evaluate(`(()=>{const panel=[...document.querySelectorAll('.review-panel')].at(-1);const button=[...panel.querySelectorAll('.review-files button')].find(node=>(node.querySelector('span')?.textContent||'')===${JSON.stringify(secondFile)});if(!button)throw new Error('missing second file');button.click();return true})()`);
   await pause(900);
   view = await review();
@@ -187,10 +186,10 @@ try {
   console.error(`FAIL ${report.error}`);
   process.exitCode = 1;
 } finally {
-  try { server.closeAllConnections(); server.close(); } catch {}
-  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch {}
-  try { if (ui) ui.close(); } catch {}
-  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch {}
-  try { if (log) await log.close(); } catch {}
-  try { await fs.rm(profile, { recursive: true, force: true }); } catch {}
+  try { server.closeAllConnections(); server.close(); } catch { /* Legacy teardown tolerates an already-closed fixture server. */ }
+  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch { /* The window may close before the CDP reply. */ }
+  try { if (ui) ui.close(); } catch { /* Legacy teardown tolerates an already-closed CDP connection. */ }
+  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch { /* Legacy teardown continues if the child already exited. */ }
+  try { if (log) await log.close(); } catch { /* Legacy teardown tolerates an already-closed log handle. */ }
+  try { await fs.rm(profile, { recursive: true, force: true }); } catch { /* Legacy cleanup remains best effort; this selector migration does not change its verdict. */ }
 }

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-27",
+  "timezone": "Asia/Shanghai",
+  "stage": "candidate-local-source-and-renderer",
+  "baseCommit": "cabb754b08883902b12f876e2d68338a7699d5fb",
+  "platform": "Linux",
+  "nodeVersion": "v24.22.3",
+  "checks": [
+    {
+      "command": "npm run quality",
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 0,
+      "scope": "adopted-and-changed-scope",
+      "eslintFiles": 78,
+      "javascriptFiles": 312,
+      "stylelintFiles": 7,
+      "cssFiles": 7,
+      "prettierFiles": 57,
+      "textFiles": 555,
+      "limitation": "csstree-match emitted BREAK after 15000 iterations; incremental scope is not whole-repository quality."
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "requiredOutputs": [
+        "dist/client/index.html",
+        "dist/server/index.js",
+        "dist/.openai/hosting.json"
+      ],
+      "warnings": [
+        "main chunk exceeds 500 kB"
+      ]
+    },
+    {
+      "command": "npm run test:sites",
+      "exitCode": 0,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test --test-concurrency=2 tests/release-assets.test.mjs tests/delivery-preview-ui.test.mjs tests/workbench-tabs-ui.test.mjs tests/renderer-slices.test.mjs tests/renderer-durability.test.mjs tests/conversation-resources.test.mjs",
+      "exitCode": 0,
+      "tests": 35,
+      "pass": 35,
+      "fail": 0,
+      "skipped": 0
+    }
+  ],
+  "earlierFocusedRun": {
+    "tests": 50,
+    "pass": 46,
+    "fail": 3,
+    "skipped": 1,
+    "baselineReproductions": "linux-baseline-failures.json",
+    "notOverwrittenByLaterFocusedSuccess": true
+  },
+  "sourceFiles": [
+    {
+      "path": "src/App.jsx",
+      "sha256": "5a52e46d7624f1d64fa868276153bce0927c0f0d2563338cc818802d35067810"
+    },
+    {
+      "path": "src/Workbench.jsx",
+      "sha256": "b7c0e877fa91c3e622b90c4b62b75794cc933dea3007cc0573a7f08e4038d9bb"
+    },
+    {
+      "path": "src/WorkbenchTabs.jsx",
+      "sha256": "caec1076d2435dfa7d6a2bbcf8892df1aeae33433d6129560f80e5e5041673ff"
+    },
+    {
+      "path": "src/workbench-tabs.css",
+      "sha256": "75d6672d8c65aefe505046f4572048b7bf6d3b258ba65dfdacaa900572a5692e"
+    },
+    {
+      "path": "src/DeliveryPreview.jsx",
+      "sha256": "4d95f63f65b30e583498211d16a37deaa9c2c8f78e923854b1a648132f55f311"
+    },
+    {
+      "path": "src/delivery-preview.css",
+      "sha256": "ed159412b84f3c1f01704274c9a8efebe9acc786f4b53816f483ec13b1b07e31"
+    },
+    {
+      "path": "src/use-delivery-preview.js",
+      "sha256": "f64c55c4ee71a6e8d877bf1e47b1e5d020f36897a01e3dec17db2a9b795fd431"
+    },
+    {
+      "path": "tests/delivery-preview-ui.test.mjs",
+      "sha256": "2210771d9ba26178d63cd449e2cbd5143fbb9e9fa49791b921ab220efe669147"
+    },
+    {
+      "path": "tests/fixtures/delivery-preview.jsx",
+      "sha256": "932274a412d4c8e15f6fd02a4ff14d768f455a1c86b4cac95e86b175468e0aa3"
+    },
+    {
+      "path": "tests/workbench-tabs-ui.test.mjs",
+      "sha256": "5ab2372452e08772b0478e116893e25439d8a1f06df1b4998ef0f16187d52ff3"
+    },
+    {
+      "path": "scripts/test-workbench-preview-ui.mjs",
+      "sha256": "584523a4ea0466d0018fccfac3213c64b0648ad9647dfcfbc3a475acef68ecd7"
+    },
+    {
+      "path": "scripts/qa-workbench.mjs",
+      "sha256": "c4020d8af2ec5475534260ee191cc6a0a373393b2493ee8434f12c2c59507c24"
+    },
+    {
+      "path": "scripts/publish-release.mjs",
+      "sha256": "7b0ec093c8eaa68c52cbc007c6d7b3537a2e507cfafcf439e405c601acfea2a6"
+    },
+    {
+      "path": "tests/release-assets.test.mjs",
+      "sha256": "d2ccf8853841a436873a73a8a83cd26fc2343a1e7faa41d9cbbbec934ae55308"
+    }
+  ],
+  "notCovered": [
+    "Windows current package",
+    "user installation lifecycle",
+    "real cloud model",
+    "code signing",
+    "full app browser visual review"
+  ],
+  "releaseCompletionClaimed": false
+}

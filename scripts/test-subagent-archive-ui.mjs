@@ -7,6 +7,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { connectUi } from './qa-cdp.mjs';
+import { selectWorkbenchTab } from './qa-workbench.mjs';
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const root = process.cwd();
@@ -60,7 +61,7 @@ const message = {
 
 const ui = { current: null };
 const invoke = (method, value) => ui.current.evaluate(`window.zhixing.${method}(${JSON.stringify(value) ?? ''})`);
-let child_ = null, main = null, log = null;
+let child_, main = null, log;
 const logfile = path.join(evidence, 'app.log');
 log = await fs.open(logfile, 'a');
 const portsFile = path.join(profile, 'DevToolsActivePort');
@@ -123,8 +124,7 @@ await pause(400);
 
 const panelClosed = await uiRef.evaluate('!![...document.querySelectorAll("button")].find(b=>b.getAttribute("aria-label")==="打开工作面板")');
 if (panelClosed) await uiRef.click('打开工作面板');
-await uiRef.waitFor('!!document.querySelector(\'select[aria-label="工作面板视图"]\')', 30000);
-await uiRef.evaluate('(()=>{const s=document.querySelector(\'select[aria-label="工作面板视图"]\');s.value="activity";s.dispatchEvent(new Event("change",{bubbles:true}));return s.value;})()');
+await selectWorkbenchTab(uiRef, 'activity');
 await uiRef.waitFor('!!document.querySelector(".execution-children")', 30000);
 const hasButton = await uiRef.evaluate('!!document.querySelector(".execution-children button.text-button")');
 assert.equal(hasButton, true, '子任务行出现归档按钮');
