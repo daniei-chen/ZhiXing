@@ -41,44 +41,50 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
     ? COMMANDS.filter(([command]) => command.startsWith(input) || matchesSessionCommandPrefix(command.slice(1), input))
     : [];
   const [mention,setMention]=useState(null),[mentionIndex,setMentionIndex]=useState(0);
-  const mentionCache=useRef(null),mentionDismissed=useRef(''),mentionFetchKey=useRef(''),mentionSession=useRef(0);
+  const mentionCache=useRef(null),mentionDismissed=useRef(''),mentionLoading=useRef(false),mentionEpoch=useRef(0),mentionFailure=useRef('');
   const mentionSignature=token=>token?`${token.start}:${token.prefix}`:'';
   // 索引只服务当前这一个 @ 记号：记号结束时缓存一起失效，下一个 @ 会重新列一遍工作区，
   // 这样新写或删掉的文件、以及换过的项目目录都能反映到候选里。
+  function invalidateMention(){mentionEpoch.current+=1;mentionCache.current=null;mentionFailure.current='';mentionLoading.current=false;}
   function updateMention(value,caret){
     if(disabled||voiceActive||takenOver||menu){setMention(null);return;}
     const token=activeMention(value,caret);
-    if(!token){mentionDismissed.current='';mentionCache.current=null;mentionFetchKey.current='';setMention(null);return;}
+    if(!token){mentionDismissed.current='';invalidateMention();setMention(null);return;}
     const signature=mentionSignature(token);
     if(mentionDismissed.current===signature){setMention(null);return;}
     const cached=mentionCache.current;
     if(cached){setMention(previous=>previous&&mentionSignature(previous.token)===signature?previous:{token,status:'ready',...cached});return;}
     setMentionIndex(0);
-    setMention(previous=>previous&&mentionSignature(previous.token)===signature?previous:{token,status:'loading',workspace:true,entries:[],truncated:false,error:''});
-    if(mentionFetchKey.current===signature)return;
-    mentionFetchKey.current=signature;
-    const session=mentionSession.current;
+    if(mentionFailure.current){
+      setMention({token,status:'error',workspace:false,entries:[],truncated:false,error:mentionFailure.current});
+      return;
+    }
+    setMention(previous=>previous?{...previous,token,status:'loading'}:{token,status:'loading',workspace:true,entries:[],truncated:false,error:''});
+    // 同一次 @ 只留一个在途请求：索引与查询无关，先发的那次回来就能给当前记号用。
+    if(mentionLoading.current)return;
+    mentionLoading.current=true;
+    const epoch=mentionEpoch.current;
     Promise.resolve(window.zhixing?.listWorkspaceReferences?.(referenceScope ?? {})).then(result=>{
-      if(mentionSession.current!==session||mentionFetchKey.current!==signature)return;
+      if(mentionEpoch.current!==epoch)return;
       const source=result&&typeof result==='object'?result:{workspace:false,entries:[],truncated:false};
       mentionCache.current=source;
       setMention(previous=>previous?{...previous,status:'ready',error:'',workspace:source.workspace!==false,entries:Array.isArray(source.entries)?source.entries:[],truncated:source.truncated===true}:previous);
     }).catch(cause=>{
-      if(mentionSession.current!==session||mentionFetchKey.current!==signature)return;
-      setMention(previous=>previous?{...previous,status:'error',error:errorText(cause)||'无法读取项目工作区。'}:previous);
-    });
+      if(mentionEpoch.current!==epoch)return;
+      mentionFailure.current=errorText(cause)||'无法读取项目工作区。';
+      setMention(previous=>previous?{...previous,status:'error',error:mentionFailure.current}:previous);
+    }).finally(()=>{if(mentionEpoch.current===epoch)mentionLoading.current=false;});
   }
   function pickMention(candidate){
     if(!mention)return;
-    const applied=applyMention(input,mention.token,candidate);
+    const applied=applyMention(input,mention.token,candidate,(mention.entries||[]).map(item=>item.path));
     mentionDismissed.current='';
-    mentionCache.current=null;
-    mentionFetchKey.current='';
+    invalidateMention();
     setMention(null);
     setInput(applied.text);
     requestAnimationFrame(()=>{const field=composer.current;if(!field)return;field.focus();field.setSelectionRange(applied.caret,applied.caret);});
   }
-  useEffect(()=>{mentionSession.current+=1;mentionCache.current=null;mentionFetchKey.current='';mentionDismissed.current='';setMention(null);setMentionIndex(0);},[scopeKey,draftKey]);
+  useEffect(()=>{invalidateMention();mentionDismissed.current='';setMention(null);setMentionIndex(0);},[scopeKey,draftKey]);
   const mentionView=mention&&mention.status==='ready'?mentionState(mention,mention.token.query):null;
   const mentionItems=mentionView?.items??[];
   const mentionOpen=!!mention&&!menu;
@@ -161,7 +167,7 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
       <div className="composer-input">
         <textarea ref={composer} aria-label="聊天输入框" aria-describedby="composer-shortcuts" placeholder={running ? '再交代一件，本轮结束后自动发送…' : '交代一件事，或添加要处理的资料…'} value={input} rows={2} maxLength={60000} disabled={disabled || voiceActive || takenOver} onPaste={event => { if (event.clipboardData.files.length && !disabled && !busy && !running && !takenOver) { event.preventDefault(); void addFiles(event.clipboardData.files, 'draft'); } }} onChange={event => {setCommandIndex(0);setInput(event.target.value);updateMention(event.target.value,event.target.selectionStart);}} onSelect={event => updateMention(event.target.value,event.target.selectionStart??event.target.value.length)} onKeyUp={event => updateMention(event.target.value,event.target.selectionStart??event.target.value.length)} onClick={event => updateMention(event.target.value,event.target.selectionStart??event.target.value.length)} onScroll={event => markMoreBelow(event.currentTarget)} onKeyDown={event => {
           if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-          if (mentionOpen && event.key === 'Escape') { event.preventDefault();event.stopPropagation();mentionDismissed.current=mentionSignature(mention.token);mentionCache.current=null;mentionFetchKey.current='';setMention(null);return; }
+          if (mentionOpen && event.key === 'Escape') { event.preventDefault();event.stopPropagation();mentionDismissed.current=mentionSignature(mention.token);invalidateMention();setMention(null);return; }
           if (mentionOpen && mentionItems.length && ['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault();setMentionIndex(previous=>(previous+(event.key==='ArrowDown'?1:-1)+mentionItems.length)%mentionItems.length);return; }
           if (mentionOpen && mentionItems.length && (event.key==='Enter'||event.key==='Tab') && !event.shiftKey) { event.preventDefault();pickMention(mentionItems[mentionIndex%mentionItems.length]);return; }
           if (event.key === 'Escape' && commandOptions.length) { event.preventDefault();event.stopPropagation();setDismissedInput(input);return; }

@@ -95,6 +95,24 @@ async function exerciseWindow(window) {
   );
   console.log('PASS each new @ refetches the index instead of reusing the old one');
 
+  // 索引还在路上时，逐字输入不能为每个按键重新列一次工作区。
+  await run('window.mentionQA.reset()');
+  await settle();
+  await run('window.mentionQA.deferHost(true)');
+  const beforeSlow = (await calls()).filter((call) => call.name === 'list').length;
+  await run('window.mentionQA.typeChars("复核 @src")');
+  await settle();
+  assert.equal(
+    (await calls()).filter((call) => call.name === 'list').length,
+    beforeSlow + 1,
+    '索引未返回时只保留一个在途请求',
+  );
+  assert.match(await run('window.mentionQA.text(".mention-empty")'), /正在读取项目文件/);
+  await run('window.mentionQA.releaseHost()');
+  await settle();
+  assert.deepEqual(await rows(), ['src/', 'src/App.jsx', 'src/app.css']);
+  console.log('PASS a pending index keeps one request even while keys keep coming');
+
   // 光标停在已有引用中间时补全，不能把原路径的后半截留在草稿里。
   await run('window.mentionQA.reset()');
   await settle();
@@ -256,7 +274,7 @@ app.whenReady().then(async()=>{
       const code = await exited;
       assert.equal(spawnError, undefined, String(spawnError));
       assert.equal(code, 0, output);
-      assert.equal((output.match(/PASS /g) || []).length, 9, output);
+      assert.equal((output.match(/PASS /g) || []).length, 10, output);
     } finally {
       if (child && child.exitCode === null) {
         child.kill();

@@ -46,26 +46,31 @@ export function formatMention(candidate, preserveQuote = false) {
   return `@"${path}"`;
 }
 
-// 光标可能停在已有引用的中间：替换范围要覆盖整段记号，否则会留下半截路径。
-// 文件名里本来就有 `-`、`.`、`,`，所以停在哪里的判断只认空白、引号与句子标点。
+// 光标可能停在已有引用的中间，此时替换范围要覆盖整段记号，否则会留下半截路径。
+// 但只在实际后缀能对上工作区里的真实路径时才扩展：紧随其后的正文（中文句子、
+// 另一个引号串）不能被当成路径的一部分删掉。
 const PATH_STOP = /[\s"'，。；：！？、!?;:)\]）】》<>]/u;
 
-function mentionReplaceEnd(source, token) {
-  if (token.quoted) {
-    const close = source.indexOf('"', token.end);
-    if (close >= 0 && !/[\r\n]/u.test(source.slice(token.end, close))) return close + 1;
-  }
+function mentionReplaceEnd(source, token, paths) {
   let end = token.end;
-  while (end < source.length && !PATH_STOP.test(source[end])) end += 1;
+  const offset = token.start + (token.quoted ? 2 : 1);
+  const rest = source.slice(offset);
+  for (const path of paths) {
+    if (typeof path !== 'string' || !path || !rest.startsWith(path)) continue;
+    const after = source[offset + path.length];
+    if (after !== undefined && !PATH_STOP.test(after)) continue;
+    const candidateEnd = offset + path.length + (after === '"' ? 1 : 0);
+    if (candidateEnd > end) end = candidateEnd;
+  }
   return end;
 }
 
 // 用选中的候选替换当前记号；行尾补一个空格方便继续写，其它位置的 `@` 原文不动。
-export function applyMention(text, token, candidate) {
+export function applyMention(text, token, candidate, paths = []) {
   const source = String(text ?? '');
   const mention = token ? formatMention(candidate, token.quoted) : null;
   if (!mention) return { text: source, caret: token ? token.end : source.length };
-  const suffix = source.slice(mentionReplaceEnd(source, token));
+  const suffix = source.slice(mentionReplaceEnd(source, token, paths));
   const spacing = suffix === '' || !/^[\s，。；：！？、,.!?;:)\]）】]/u.test(suffix) ? ' ' : '';
   return {
     text: `${source.slice(0, token.start)}${mention}${spacing}${suffix}`,

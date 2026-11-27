@@ -27,10 +27,14 @@ const workspaceEntries = [
 ];
 
 let hostResponse = { workspace: true, entries: workspaceEntries, truncated: false };
+let deferHost = false;
+const pendingHost = [];
 window.zhixing = {
-  listWorkspaceReferences: async (scope) => {
+  listWorkspaceReferences: (scope) => {
     calls.push({ name: 'list', scope });
-    return hostResponse;
+    if (!deferHost) return Promise.resolve(hostResponse);
+    // 手动放行：用来验证索引还在路上时不会为每个按键重新列一次工作区。
+    return new Promise((resolve) => pendingHost.push(() => resolve(hostResponse)));
   },
   // VoiceInput 挂载时就要订阅语音事件；这个夹具只验证输入区，不需要真实语音。
   onSpeechEvent: () => () => {},
@@ -105,6 +109,20 @@ window.mentionQA = {
   type(value) {
     setNativeValue(value);
   },
+  typeChars(value) {
+    // 逐字输入：模拟真实按键，每次一个 input 事件。
+    let built = '';
+    for (const character of value) {
+      built += character;
+      setNativeValue(built);
+    }
+  },
+  deferHost(value) {
+    deferHost = value;
+  },
+  releaseHost() {
+    for (const resolve of pendingHost.splice(0)) resolve();
+  },
   press(key, init = {}) {
     field().dispatchEvent(
       new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init }),
@@ -155,6 +173,8 @@ window.mentionQA = {
   },
   reset(response = { workspace: true, entries: workspaceEntries, truncated: false }) {
     hostResponse = response;
+    deferHost = false;
+    pendingHost.length = 0;
     // 换一个聊天作用域同时清掉候选缓存，下一次 @ 会重新向主机要索引。
     state.scopeKey = `chat-${Date.now()}`;
     state.input = '';

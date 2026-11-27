@@ -104,7 +104,7 @@ test('光标停在已有引用中间时，替换整段记号而不是只替换�
   const text = '复核 @src/App.jsx 的布局';
   const token = activeMention(text, 9);
   assert.equal(token?.query, 'src/A', '查询仍然只取光标之前的部分');
-  const applied = applyMention(text, token, { path: 'src/App.jsx', kind: 'file' });
+  const applied = applyMention(text, token, { path: 'src/App.jsx', kind: 'file' }, ['src/App.jsx']);
   assert.equal(applied.text, '复核 @src/App.jsx 的布局', '不会留下  p.jsx 这种半截后缀');
   assert.equal(applied.caret, 3 + '@src/App.jsx'.length);
 });
@@ -113,8 +113,42 @@ test('引号形式的引用从中间补全时连结束引号一起替换', () =>
   const text = '看 @"docs/带 空格 的名字.md" 之后';
   const token = activeMention(text, 12);
   assert.equal(token?.quoted, true);
-  const applied = applyMention(text, token, { path: 'docs/带 空格 的名字.md', kind: 'file' });
+  const applied = applyMention(text, token, { path: 'docs/带 空格 的名字.md', kind: 'file' }, [
+    'docs/带 空格 的名字.md',
+  ]);
   assert.equal(applied.text, '看 @"docs/带 空格 的名字.md" 之后');
+});
+
+test('紧随其后的中文正文不会被当成路径的一部分删掉', () => {
+  const text = '帮我看一下 @文件说明';
+  const token = activeMention(text, 7);
+  assert.equal(token?.query, '', '光标就在 @ 之后，查询是空的');
+  const applied = applyMention(text, token, { path: 'src/App.jsx', kind: 'file' }, ['src/App.jsx']);
+  assert.equal(applied.text, '帮我看一下 @src/App.jsx 文件说明');
+});
+
+test('没有对上真实路径时不扩展，引号里的其它引号也不会被吞掉', () => {
+  const text = '看 @"src/a 然后 "b"';
+  const token = activeMention(text, 9);
+  assert.equal(token?.quoted, true);
+  const applied = applyMention(text, token, { path: 'src/App.jsx', kind: 'file' }, ['src/App.jsx']);
+  assert.equal(applied.text, '看 @"src/App.jsx" 然后 "b"');
+});
+
+test('后缀能对上工作区里的真实路径时才扩展替换范围', () => {
+  const text = '@src/App.jsx';
+  const applied = applyMention(
+    text,
+    activeMention(text, 9),
+    { path: 'src/App.jsx', kind: 'file' },
+    ['src/App.jsx'],
+  );
+  assert.equal(applied.text, '@src/App.jsx ');
+  const withoutIndex = applyMention(text, activeMention(text, 9), {
+    path: 'src/App.jsx',
+    kind: 'file',
+  });
+  assert.equal(withoutIndex.text, '@src/App.jsx jsx', '没有索引时不猜，保持只替换到光标');
 });
 
 test('含空格的路径按上游语法加引号，目录保留尾斜杠', () => {
