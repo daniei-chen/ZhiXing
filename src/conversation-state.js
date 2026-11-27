@@ -53,6 +53,7 @@ export function finalizeConversationRun(state, job, outcome = {}) {
           ...message, ...result,
           text: partial || (stopped ? '已停止生成。' : failed ? '本轮未完成，未确认任务结果。' : '内核没有返回正文。'),
           pending: false, progressText: '', stopped, error: failed,
+          ...(outcome.receiptId ? { resultReceiptId: outcome.receiptId } : {}),
           errorMessage, ...(error ? { errorDetail: { code: error.code, stage: error.stage, message: technical } } : {}),
           status: stopped ? 'cancelled' : failed ? 'failed' : 'succeeded',
           finalization,

@@ -1,0 +1,77 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  [
+    {
+      questions: [
+        {
+          id: 'keep-q',
+...
+    },
++   {
++     questions: [
++       {
++         id: 'target-q',
++         options: [],
++         question: 'DELETE_QUESTION_MARKER'
++       }
++     ],
++     requestId: 'target-question',
++     rootSessionId: 'chat',
++     runId: 'removed-run',
++     sessionId: 'chat',
++     type: 'question'
++   }
+  ]
+
+    at file:///workspace/scratch/7464bebaff38/qa-recovery-queue-043/queue-probe.mjs:221:8 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    {
+      type: 'question',
+      runId: 'kept-run',
+      sessionId: 'keep-chat',
+      rootSessionId: 'keep-chat',
+      requestId: 'kept-question',
+      questions: [
+        { id: 'keep-q', question: 'KEEP_QUESTION_MARKER', options: [] }
+      ]
+    },
+    {
+      type: 'question',
+      runId: 'removed-run',
+      sessionId: 'chat',
+      rootSessionId: 'chat',
+      requestId: 'target-question',
+      questions: [
+        {
+          id: 'target-q',
+          question: 'DELETE_QUESTION_MARKER',
+          options: []
+        }
+      ]
+    }
+  ],
+  expected: [
+    {
+      type: 'question',
+      runId: 'kept-run',
+      sessionId: 'keep-chat',
+      rootSessionId: 'keep-chat',
+      requestId: 'kept-question',
+      questions: [
+        { id: 'keep-q', question: 'KEEP_QUESTION_MARKER', options: [] }
+      ]
+    }
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.22.3

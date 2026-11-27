@@ -1,0 +1,51 @@
+{
+  "evidenceLayer": "source-only App hook scheduler with real persistence/receipt modules",
+  "recording": "Recorded from the actual exec tool output; the original pre-fix source snapshot was not copied",
+  "command": "node --test tests/conversation-drafts-ui.test.mjs",
+  "toolChunkId": "0925b9",
+  "exitCode": 1,
+  "counts": {
+    "tests": 25,
+    "passed": 21,
+    "failed": 4,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "existingCases": {
+    "tests": 20,
+    "passed": 20
+  },
+  "failures": [
+    {
+      "name": "完整结果保存失败后主机重试成功必须确认原receipt，ACK失败仍可重试",
+      "assertion": "successful retry must attempt the original receipt acknowledgement",
+      "actual": 0,
+      "expected": 1
+    },
+    {
+      "name": "完整结果保存失败后直接保存兼容路径成功必须确认原receipt，ACK失败仍可重试",
+      "assertion": "successful retry must attempt the original receipt acknowledgement",
+      "actual": 0,
+      "expected": 1
+    },
+    {
+      "name": "正常退出屏障撤销仍被首次保存阻塞的run，保存最后草稿且不晚启动内核",
+      "assertion": "pre-begin cancellation contains original run ID",
+      "actual": [],
+      "expected": [
+        "ceb576b2-b927-4140-9268-c8f335df06e1"
+      ]
+    },
+    {
+      "name": "同宿主重载首次读取失败后重试保留活跃回复，接回完整结果且不重跑",
+      "assertion": "a still-registered handoff must not be persisted as interrupted",
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "controlPassed": "正常退出屏障等待已交给主机的完整结果，不重复取消或用摘要覆盖正文",
+  "limits": [
+    "Not a Windows or packaged application run",
+    "No real cloud service"
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-27T14:46:03.982848+08:00",
+  "version": "0.43.0",
+  "baselineCommit": "7076fe7a694ca772e25fc64f038e3dc909a9baf1",
+  "sourceState": "uncommitted candidate; fingerprints identify verified code before GitHub Windows validation",
+  "checks": [
+    {
+      "command": "node --test --test-concurrency=2 tests/runtime-approvals.test.mjs tests/runtime-approval-bridge.test.mjs tests/runtime-approval-integration.test.mjs tests/runtime-handoffs.test.mjs tests/renderer-lifetime.test.mjs tests/runtime-questions-recovery.test.mjs tests/runtime-approvals-projection.test.mjs",
+      "log": "core.log",
+      "layer": "Host rules, real Cordis/native HTTP, actual Harness with a synthetic model, delivery ownership and projection",
+      "exitCode": 0,
+      "tests": 76,
+      "passed": 76,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test --test-concurrency=2 tests/store.test.mjs tests/conversation-state.test.mjs tests/renderer-durability.test.mjs tests/release-assets.test.mjs",
+      "log": "existing-contracts.log",
+      "layer": "Source persistence, conversation, renderer durability and publication contracts; release message text later clarified without code changes",
+      "exitCode": 0,
+      "tests": 45,
+      "passed": 45,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test --test-concurrency=2 tests/runtime-finalization.test.mjs tests/runtime-policy.test.mjs tests/runtime-launch.test.mjs",
+      "log": "runtime-baseline.log",
+      "layer": "Source runtime finalization, privacy/policy and actual SDK process lifecycle",
+      "exitCode": 0,
+      "tests": 27,
+      "passed": 27,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test tests/runtime-approvals-ui.test.mjs",
+      "log": "approval-renderer.log",
+      "layer": "Isolated actual Electron + React renderer; one test containing multiple interaction checks",
+      "exitCode": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test tests/conversation-drafts-ui.test.mjs",
+      "log": "renderer-race-review/fixture-after.log",
+      "layer": "Source App hook fixture with child components mocked; not full desktop execution",
+      "exitCode": 0,
+      "tests": 26,
+      "passed": 26,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run test:sites",
+      "log": "sites-final.log",
+      "layer": "Sites source routes and packaging outputs",
+      "exitCode": 0,
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  ],
+  "quality": {
+    "command": "npm run quality",
+    "log": "quality.log",
+    "exitCode": 0,
+    "scope": "adopted and changed files only",
+    "errors": 0,
+    "warnings": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "log": "build-final.log",
+    "exitCode": 0,
+    "outputs": [
+      "dist/client/index.html",
+      "dist/server/index.js",
+      "dist/.openai/hosting.json"
+    ],
+    "warnings": [
+      "Existing large-chunk warning remains; no bundle-size reduction claimed"
+    ]
+  },
+  "sourceSha256": {
+    "electron/main.cjs": "939f982ce2ce37b360c78ab6bb5851edeb3da7c4e40c7bd7b0059f48474ceda6",
+    "electron/preload.cjs": "ffa64231933c578133a5fe9925d28dc389a05b0b043cca6c338818f7ba1001df",
+    "electron/renderer-lifetime.mjs": "b7a5e5b94a8aba28458949c18db1a895827f3e95fee0e53af5706627d82a8866",
+    "electron/runtime-approvals.mjs": "5f58d5e68285497fbc06cc65e89bded63c2580745f474532aa55ee00cb37c9ee",
+    "electron/runtime-handoffs.mjs": "623e9a9a4df82e04b2a801baed9a89f8e8b037afbcd602505a82af984c4d0428",
+    "electron/runtime.mjs": "a89fe74e8d4f557dcbc8c3f9e272114d8efa4a744a392d08b4156fade503c63c",
+    "electron/tool-bridge.mjs": "0d469a2f9a480176188250de264f18f68840aa4f379892eb871b9068b8b5f9f9",
+    "harness/approval-bridge.mjs": "a46d0547f23e4771298ccc16e115b9022745ff1cf079b7c0df886ac8f54dc1f3",
+    "scripts/assemble-release.mjs": "ec62fc7ac3b206bd83f3019a38b0cf188ac0c4f68bd468b53b9bf06b57108980",
+    "scripts/collect-packed-evidence.mjs": "1f3ae3d4d597352570275a190102b31876e9be4eae2ef2e481ab2bdb90d9e0a4",
+    "scripts/collect-release-evidence.mjs": "cd4440564938d957c3006fc450f34baa6b1bc78e9fb63e31a70c21e6c3fbcee3",
+    "scripts/release-common.mjs": "a945ccf4985e08c1a53411b4b3cb67ea065b048bd8cd41e6343483284b358300",
+    "scripts/test-approval-recovery-ui.mjs": "7e0354b1b7076a3c8be82defc9fead93a4b2d33effe14b2bff18d5bc6ef86cc1",
+    "scripts/test-native-files-export-ui.mjs": "5e2450340f96081eded334e1b9f4f20cd89fc28f32db171362e47a36e093b363",
+    "scripts/test-packed.mjs": "6bffc35140b941e89aee34e456d723b1102207474d01d81e2e46e39621c83574",
+    "src/AgentQuestion.jsx": "c10e4c29c9bfbe21ff44ebc9bf68a65916c4c075d7151144827080c0a94f5408",
+    "src/App.jsx": "8f71026585f25f04ed47377fe6e457572bca10f920212fb2a2e3ca5ba7539922",
+    "src/ApprovalPanel.jsx": "87a3ec1e965e742fd098ef3549f37d00d9ef59e868cf0cfb51454f98251339cf",
+    "src/Composer.jsx": "c0d9086c0ae8286e3f5de6994789f694203903bb3a152ba179cd4b23b685432c",
+    "src/Dialogs.jsx": "c04d1cbdae64afc4076faf0df60027fa46fa0b82a42c23bd9beca6a57581d5c7",
+    "src/ErrorBoundary.jsx": "1d231bc1d84dec689b5fe6ffae66a0722c58c98ffd759a14ce6316a34097d32d",
+    "src/Settings.jsx": "a473265c5a5a3b3e05dad946f8f23fcbcc91930a6a46c895a0f115cbc2d195a8",
+    "src/agent-question.css": "11585cbb5e23ef507f41981219f3cb2f3854f781de3925902c6d03a4a1e43289",
+    "src/approval-panel.css": "4e3d1f749e89767afc9054ac86dc39111658665a2d54e9b87437895715209523",
+    "src/conversation-state.js": "e75f241a5400a1165926bcb44b7c8f8845966c71d0d349943076e0be0a94b74f",
+    "src/main.jsx": "48e0655bf235d792d2c7bc883d315acc7500556df0af8ca8727c14258ad4ded0",
+    "src/renderer-durability.js": "68df3be4f2feddec87898d9fe43500f89a502497b3263dfcf53ffc583aab0cec",
+    "src/runtime-approvals.js": "7056e6d6d7546b48ad82cce632e8b374ef3e34b9c654fe1e4547f2d5c7e3f5d4",
+    "src/store.js": "5da803c55a6a0a9beeebbe3e1fd2bd91c6d860d4db0412803bd51f49653bf4d8",
+    "src/use-runtime-approvals.js": "9d3888ba7b0c0264434170ac1050376b88d946fb57ba10107a43515fa00e4ebd",
+    "tests/conversation-drafts-ui.test.mjs": "356f830f918dde7960a031c449cd9505e17d077f87100b01ef397b08f4a89dee",
+    "tests/release-assets.test.mjs": "e7535b66e00b0a7e122276a0d807b9e61202cb84925fe5820ce24c4bf9bc5e72",
+    "tests/renderer-durability.test.mjs": "653650bbe739181bdfbfc7ef572a894515fbcfbe5ed71fd9d56e7680660ec93e",
+    "tests/renderer-lifetime.test.mjs": "16840c4bcdaf9ac9fbfac67128632e2e481d878110066312167bef978e0ff28b",
+    "tests/runtime-approval-bridge.test.mjs": "324c0e929fcfb17e8a209d7155632eea7494f384edd769b40b94070cea0f9ff6",
+    "tests/runtime-approval-integration.test.mjs": "b4eec5f6884c92e90b687e568415a555894e1f6c146b791ae3f837b174ee5670",
+    "tests/runtime-approvals-projection.test.mjs": "4fd9d30edcf9f3a4cb3df3138d970ad064fc1daa9c73e468f573aecd79aeacc0",
+    "tests/runtime-approvals-ui.test.mjs": "ba773f5d34db10a41eb5aa2f3fe295b084ea7c9ed3e8757d3356ac5d8db21195",
+    "tests/runtime-approvals.test.mjs": "80105ef0edef56ed2f8b745c1261c07ea7bc6585e6b7a3256809cce475e90628",
+    "tests/runtime-handoffs.test.mjs": "f807540f4d70c05d509e8739e732a8ae96fe56c348f8d6ee4764e65279506864",
+    "tests/runtime-questions-recovery.test.mjs": "0bd3483623d51b91bc4ca6a226a2f4ac7406fcaaf2fa3d0fd9fdc9d72300b2d2",
+    "tests/store.test.mjs": "61340eb73277079d643f3be39685215ca71923f65a95f42779b97a5d05383144"
+  },
+  "limits": [
+    "These are separate runs and must not be added into a full-suite total.",
+    "The App race review identifies mocked child components and distinguishes recorded failed assertions from raw failure logs.",
+    "The full Linux source app attempt failed before any model request because Chromium single-instance Unix sockets were denied.",
+    "No Windows package, user installation, real cloud service or code signature result is claimed here."
+  ],
+  "blockedSourceAppAttempt": {
+    "report": "source-app-development-attempt/result.json",
+    "log": "source-app-development-attempt/app-log-tail.txt",
+    "developmentStage": "Before version bump, package version was 0.42.0 and sourceDirty true; not the final 0.43.0 build",
+    "status": "failed",
+    "modelRequests": 0,
+    "businessCasesPassed": 0,
+    "reason": "Chromium requestSingleInstanceLock Unix socket EPERM before app startup"
+  }
+}

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Archive, ArrowLeft, BellSimple, Briefcase, Check, CircleNotch, Desktop, Eye, FolderOpen, GearSix, Info, Keyboard, LockKey, MagnifyingGlass, Microphone, Moon, Palette, PencilSimple, Plugs, Plus, ShieldCheck, SlidersHorizontal, Sun, Trash, X } from '@phosphor-icons/react';
 import { BrandMark, Modal, Switch, IconButton } from './ui.jsx';
-import { WorkspaceIcon } from './Sidebar.jsx';
 import { PERMISSION_MODES } from './permissions.js';
 import {PRIVACY_TYPES,normalisePrivacyPolicy} from './privacy-policy.js';
 import PrivacyTest from './PrivacyTest.jsx';
@@ -14,7 +13,7 @@ const tabs = [
   ['常规', GearSix], ['通知', BellSimple], ['外观', Palette], ['已归档的聊天', Archive], ['语音', Microphone], ['个性化', SlidersHorizontal], ['键盘快捷键', Keyboard], ['隐私与数据', ShieldCheck], ['项目与工作区', Briefcase], ['供应商', Plugs], ['MCP 连接', Plugs], ['Agent 内核', GearSix], ['权限与工具', LockKey], ['关于知行', Info],
 ];
 
-export function Settings({ modal, close, setModal, state, scope, setSetting, runtime, setRuntime, changeWorkspace, notify }) {
+export function Settings({ modal, close, setModal, state, scope, setSetting, runtime, setRuntime }) {
   const [tab, setTab] = useState(tabs.some(([name]) => name === modal.tab) ? modal.tab : '常规');
   const [query, setQuery] = useState('');
   const page = useRef(null);
@@ -236,7 +235,7 @@ function PrivacySettings({ settings, setSetting, setModal, desktop }) {
       <label className="form-label">自定义密钥前缀<textarea aria-label="自定义密钥前缀" rows={2} value={prefixes} onChange={event=>setPrefixes(event.target.value)} onBlur={()=>updatePolicy({secretPrefixes:prefixes.split(/[\n,，]/)})} placeholder="每行一个，至少 4 个字符"/></label>
     </div>
     <PrivacyTest terms={settings.customTerms} policy={policy} privacyMode={settings.privacyMode}/>
-    <div className="setting-row"><span><strong>保存聊天与资料</strong><small>{desktop ? '保存在本机，使用 Windows 用户加密' : '保存在当前浏览器'}</small></span><Switch label="保存聊天与资料" value={settings.persist} onChange={value => value ? setSetting('persist', true) : setModal({ type: 'disable-history' })}/></div>
+    <div className="setting-row"><span><strong>保存聊天与资料</strong><small>{desktop ? settings.persist ? '保存在本机，使用 Windows 用户加密' : '只保留在当前窗口；重新载入会停止交办，不保留聊天正文' : '保存在当前浏览器'}</small></span><Switch label="保存聊天与资料" value={settings.persist} onChange={value => value ? setSetting('persist', true) : setModal({ type: 'disable-history' })}/></div>
     <div className="setting-row"><span><strong>已归档聊天</strong></span><button className="secondary-button" onClick={() => setModal({ type: 'archive' })}><Archive size={15}/>管理</button></div>
   </>;
 }

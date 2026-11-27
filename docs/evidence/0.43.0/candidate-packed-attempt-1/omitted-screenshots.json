@@ -1,0 +1,102 @@
+{
+  "reason": "Success screenshots remain unchanged in the original artifact. Only failure.png is copied here; no raw visual-review field was changed.",
+  "artifactId": 15178314910,
+  "zipSha256": "b29f4919789da37ff5e98c776cb248ddf6283b7e5a63b42b6fbbe6cb3c076c1c",
+  "files": [
+    {
+      "file": "journeys/errors/run-ZWbY50/connection-refused.png",
+      "bytes": 54199,
+      "sha256": "2e70f0ea7fccad63da2c3b583f5b285a5cbab655821c72ba0f27a62ca528333d"
+    },
+    {
+      "file": "journeys/errors/run-ZWbY50/dns-enotfound.png",
+      "bytes": 54750,
+      "sha256": "226b6167d59eed83094444c942305cb61ae57520e57359f4fb6f35bc00ae41c2"
+    },
+    {
+      "file": "journeys/errors/run-ZWbY50/http-401.png",
+      "bytes": 54600,
+      "sha256": "ab32a9efd6c23c4a841b7855d658ca7a71afbd027050d7367f3f2711f0c305ca"
+    },
+    {
+      "file": "journeys/errors/run-ZWbY50/intercepted-host.png",
+      "bytes": 56543,
+      "sha256": "042f5161d70f77b7160bca4a0bbbbe6ae7a091fdbf72e34f72e55c55584f9ced"
+    },
+    {
+      "file": "journeys/errors/run-ZWbY50/timeout.png",
+      "bytes": 53680,
+      "sha256": "ed803dc66c8bd3f9fd0d0177068ea15670c588e90d614956ece4bd3f2a352930"
+    },
+    {
+      "file": "journeys/phase0a/phase0a-ui-m7QnkY/01-message-light.png",
+      "bytes": 65299,
+      "sha256": "59cca22a1ab6405544bb2431c6d758c06406b34921691165bff156e126686588"
+    },
+    {
+      "file": "journeys/phase0a/phase0a-ui-m7QnkY/02-tools-expanded.png",
+      "bytes": 70321,
+      "sha256": "6f3cbe7e7ee9a7aa39cf6f309699cb02fd7f12037850c2068522bfa5a7b0f6d7"
+    },
+    {
+      "file": "journeys/phase0a/phase0a-ui-m7QnkY/03-feedback-over-limit.png",
+      "bytes": 85032,
+      "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf"
+    },
+    {
+      "file": "journeys/phase0a/phase0a-ui-m7QnkY/04-error-toast-long-input.png",
+      "bytes": 102965,
+      "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a"
+    },
+    {
+      "file": "journeys/phase0a/phase0a-ui-m7QnkY/05-error-toast-short-input.png",
+      "bytes": 69091,
+      "sha256": "56367f47a106b18c9f8f084471023cdcae94e6e130a10ffda4930299d80813cc"
+    },
+    {
+      "file": "journeys/phase0a/phase0a-ui-m7QnkY/06-message-dark-narrow.png",
+      "bytes": 55793,
+      "sha256": "9621f17b1f5efb05c26ead14f82e0037894a09c32420f69cb1df6fd37be3e943"
+    },
+    {
+      "file": "journeys/phase1/phase1-ui-D2KAHq/01-draft-restored.png",
+      "bytes": 48265,
+      "sha256": "56d587b6f2383462f15fee951ffdbdd3b7b758801b4543ae444d11b61ea76b22"
+    },
+    {
+      "file": "journeys/phase1/phase1-ui-D2KAHq/02-live-stream.png",
+      "bytes": 116936,
+      "sha256": "edf78043f88575f57468b6d45970c9a536b77279fea4e252173581c43797c245"
+    },
+    {
+      "file": "journeys/phase1/phase1-ui-D2KAHq/03-final-reply.png",
+      "bytes": 174935,
+      "sha256": "d68f6da0fe3a218644b4e1479c8b5f2ff0df2630c428eeff74f533e6bbd340b7"
+    },
+    {
+      "file": "journeys/workbench/workbench-preview-ui-1m8udA/01-delivery-preview-light.png",
+      "bytes": 76109,
+      "sha256": "d5ebc71104d8eef02c0b96cce87aef99503afdc22d6abdf4c375d5e16a9629f7"
+    },
+    {
+      "file": "journeys/workbench/workbench-preview-ui-1m8udA/02-preview-file-unavailable.png",
+      "bytes": 72510,
+      "sha256": "447d2ee39f10a6920c109fcdc1c7fa4a0776d1d64c05db48d6473eb2cf628356"
+    },
+    {
+      "file": "journeys/workbench/workbench-preview-ui-1m8udA/03-keyboard-tab-navigation.png",
+      "bytes": 78273,
+      "sha256": "81ced75f6c31faf98e8c2fc1cd9e67b4f5532a05e7f8fc1184c94393cc0ed1aa"
+    },
+    {
+      "file": "journeys/workbench/workbench-preview-ui-1m8udA/04-delivery-preview-dark-narrow.png",
+      "bytes": 62534,
+      "sha256": "5f0b1b19eeb8242971240e8b8648d3020413e11f5d7c6be40abe22f4f0a575af"
+    },
+    {
+      "file": "tool-timeline/run-mwymyq6r/tool-timeline.png",
+      "bytes": 46555,
+      "sha256": "9d8ccf3f75ddc3aef7b15128e24251821db353a8c3427b63d7e8a12c11196250"
+    }
+  ]
+}

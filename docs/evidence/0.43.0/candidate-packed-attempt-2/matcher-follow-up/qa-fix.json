@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "post-candidate QA-only matcher repair evidence",
+  "checkoutCommit": "b57539c357f29c21b0246cb2443f2144024eb40b",
+  "candidateContainedFix": false,
+  "modifiedFile": "scripts/test-approval-recovery-ui.mjs",
+  "candidateScriptSha256": "aa984a9c7fe0480b5c3a4ec95667414beba458d13f7cec133196cf3154bcf485",
+  "repairedScriptSha256": "15d87e7a7c9aec606575319d3ff4d1fa7ef9449e1a26a9090dc3dd822c601e44",
+  "patch": {
+    "file": "approval-fixture.patch",
+    "bytes": 5029,
+    "sha256": "8f225f0848a20bf2666e81cc9297295a85850474b01965cc37a1603d9aa13fdc"
+  },
+  "productionCodeChanged": false,
+  "recordBasis": "Actual script SHA, exact git diff against the candidate, preserved local probe artifacts; no new Windows run.",
+  "matcher": {
+    "file": "matcher/matcher-negative-probe.json",
+    "passed": 10,
+    "failed": 0,
+    "layer": "AST-extracted current matcher and scenarios; synthetic matching regression"
+  },
+  "protocol": {
+    "file": "provider-protocol/verification.json",
+    "passedScenarios": 4,
+    "failedScenarios": 0,
+    "acceptedBusinessRequests": 9,
+    "deliberatelyRejectedReplayRequests": 4,
+    "receivedModelRequests": 13,
+    "layer": "Linux source RuntimeManager + real Harness + native approval bridge + extracted loopback provider; no Electron, Windows or UI",
+    "rendererReloadVerified": false
+  },
+  "bootstrapFailure": {
+    "file": "provider-protocol/bootstrap-invalid-probe-config-note.json",
+    "failedAttempts": 4,
+    "actualModelRequests": 0,
+    "scope": "Invalid scratch reasoningMap configuration, corrected to use production resolveProvider; original failed reports retained."
+  },
+  "windowsAfterRepair": "not run at this archive checkpoint",
+  "boundaries": [
+    "Local probes use uncommitted QA repair on the stated checkout, not the original candidate bytes.",
+    "The reload-named probe only verifies write then present then final protocol; it does not reload a renderer or verify a handoff ACK.",
+    "Programmatic host broker decisions do not prove an Electron UI approval journey.",
+    "The original packaged candidate remains failed."
+  ]
+}

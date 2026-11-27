@@ -1,0 +1,1130 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "b57539c357f29c21b0246cb2443f2144024eb40b",
+  "sourceScriptSha256": "15d87e7a7c9aec606575319d3ff4d1fa7ef9449e1a26a9090dc3dd822c601e44",
+  "layer": "Linux source RuntimeManager + real Harness + native approval bridge + extracted loopback provider; no Electron, Windows or UI",
+  "runner": {
+    "platform": "linux",
+    "node": "v24.22.3",
+    "arch": "x64"
+  },
+  "startedAt": "2026-11-27T07:56:10.376Z",
+  "status": "passed",
+  "cases": [
+    {
+      "name": "allow",
+      "startedAt": "2026-11-27T07:56:10.385Z",
+      "status": "passed",
+      "decisions": [
+        {
+          "requestId": "c2da4245-174a-467c-9308-eba4e1572c24",
+          "callId": "qa-approval-allow-write",
+          "toolName": "office_write_file",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "allow-result.txt"
+        }
+      ],
+      "providerRequests": [
+        {
+          "scenario": "allow",
+          "step": 0,
+          "nextTool": "office_write_file",
+          "matchedToolResults": 0
+        },
+        {
+          "scenario": "allow",
+          "step": 1,
+          "nextTool": null,
+          "matchedToolResults": 1
+        }
+      ],
+      "observations": [
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user"
+          ],
+          "tools": []
+        },
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-allow-write",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 100,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            }
+          ]
+        },
+        {
+          "replayNegativeControl": true,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-allow-write",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 100,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            }
+          ]
+        }
+      ],
+      "completeFinalMatched": true,
+      "deliverables": 0,
+      "businessRequestCount": 2,
+      "sideEffectsMatched": true,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "succeeded",
+          "finalization": {
+            "runId": "probe-allow",
+            "executionStatus": "completed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 9,
+            "deliverables": [],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 3,
+      "requestShapes": [
+        {
+          "number": 1,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "allow",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "allow",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "allow",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        }
+      ],
+      "finishedAt": "2026-11-27T07:56:13.351Z"
+    },
+    {
+      "name": "reject",
+      "startedAt": "2026-11-27T07:56:13.353Z",
+      "status": "passed",
+      "decisions": [
+        {
+          "requestId": "6288c16d-1d61-492c-b4b9-b83aacad85bb",
+          "callId": "qa-approval-reject-write",
+          "toolName": "office_write_file",
+          "outcome": "rejected",
+          "staleRejected": true,
+          "target": "reject-result.txt"
+        }
+      ],
+      "providerRequests": [
+        {
+          "scenario": "reject",
+          "step": 0,
+          "nextTool": "office_write_file",
+          "matchedToolResults": 0
+        },
+        {
+          "scenario": "reject",
+          "step": 1,
+          "nextTool": null,
+          "matchedToolResults": 1
+        }
+      ],
+      "observations": [
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user"
+          ],
+          "tools": []
+        },
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-reject-write",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 40,
+              "originalStringRejectionMatch": true,
+              "jsonRejectionMatch": true,
+              "unavailableMatch": false
+            }
+          ]
+        },
+        {
+          "replayNegativeControl": true,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-reject-write",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 40,
+              "originalStringRejectionMatch": true,
+              "jsonRejectionMatch": true,
+              "unavailableMatch": false
+            }
+          ]
+        }
+      ],
+      "completeFinalMatched": true,
+      "deliverables": 0,
+      "businessRequestCount": 2,
+      "sideEffectsMatched": true,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "succeeded",
+          "finalization": {
+            "runId": "probe-reject",
+            "executionStatus": "completed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 9,
+            "deliverables": [],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 3,
+      "requestShapes": [
+        {
+          "number": 1,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "reject",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "reject",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "reject",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        }
+      ],
+      "finishedAt": "2026-11-27T07:56:15.656Z"
+    },
+    {
+      "name": "present",
+      "startedAt": "2026-11-27T07:56:15.658Z",
+      "status": "passed",
+      "decisions": [
+        {
+          "requestId": "bd03997d-6ea3-4413-9a31-841832aa02d5",
+          "callId": "qa-approval-present-one-call",
+          "toolName": "present",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "第一份待交付.txt"
+        },
+        {
+          "requestId": "1938764a-b9f8-4000-8bb1-a0f1125cb80c",
+          "callId": "qa-approval-present-one-call",
+          "toolName": "present",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "第二份待交付.txt"
+        }
+      ],
+      "providerRequests": [
+        {
+          "scenario": "present",
+          "step": 0,
+          "nextTool": "present",
+          "matchedToolResults": 0
+        },
+        {
+          "scenario": "present",
+          "step": 1,
+          "nextTool": null,
+          "matchedToolResults": 1
+        }
+      ],
+      "observations": [
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user"
+          ],
+          "tools": []
+        },
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-present-one-call",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 159,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            }
+          ]
+        },
+        {
+          "replayNegativeControl": true,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-present-one-call",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 159,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            }
+          ]
+        }
+      ],
+      "completeFinalMatched": true,
+      "deliverables": 2,
+      "businessRequestCount": 2,
+      "sideEffectsMatched": true,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "succeeded",
+          "finalization": {
+            "runId": "probe-present",
+            "executionStatus": "completed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 10,
+            "deliverables": [
+              {
+                "path": "/tmp/zx-approval-provider-probe-jzMl3b/outside/第一份待交付.txt",
+                "description": "临时项目外成果，需要分别批准读取和交付"
+              },
+              {
+                "path": "/tmp/zx-approval-provider-probe-jzMl3b/outside/第二份待交付.txt",
+                "description": "临时项目外成果，需要分别批准读取和交付"
+              }
+            ],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 3,
+      "requestShapes": [
+        {
+          "number": 1,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "present",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "present",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "present",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        }
+      ],
+      "finishedAt": "2026-11-27T07:56:17.880Z"
+    },
+    {
+      "name": "reload",
+      "startedAt": "2026-11-27T07:56:17.882Z",
+      "status": "passed",
+      "decisions": [
+        {
+          "requestId": "16009a07-10d8-460b-8b42-722757b8ae2f",
+          "callId": "qa-approval-reload-write",
+          "toolName": "office_write_file",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "reload-result.txt"
+        }
+      ],
+      "providerRequests": [
+        {
+          "scenario": "reload",
+          "step": 0,
+          "nextTool": "office_write_file",
+          "matchedToolResults": 0
+        },
+        {
+          "scenario": "reload",
+          "step": 1,
+          "nextTool": "present",
+          "matchedToolResults": 1
+        },
+        {
+          "scenario": "reload",
+          "step": 2,
+          "nextTool": null,
+          "matchedToolResults": 2
+        }
+      ],
+      "observations": [
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user"
+          ],
+          "tools": []
+        },
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-reload-write",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 101,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            }
+          ]
+        },
+        {
+          "replayNegativeControl": false,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-reload-write",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 101,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            },
+            {
+              "callId": "qa-approval-reload-present",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 74,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            }
+          ]
+        },
+        {
+          "replayNegativeControl": true,
+          "model": "qa-approval-model",
+          "stream": true,
+          "roles": [
+            "system",
+            "user",
+            "user",
+            "user",
+            "user",
+            "assistant",
+            "tool",
+            "assistant",
+            "tool"
+          ],
+          "tools": [
+            {
+              "callId": "qa-approval-reload-write",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 101,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            },
+            {
+              "callId": "qa-approval-reload-present",
+              "contentShape": "string",
+              "contentBlockTypes": [],
+              "contentBytes": 74,
+              "originalStringRejectionMatch": false,
+              "jsonRejectionMatch": false,
+              "unavailableMatch": false
+            }
+          ]
+        }
+      ],
+      "completeFinalMatched": true,
+      "deliverables": 1,
+      "businessRequestCount": 3,
+      "sideEffectsMatched": true,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      },
+      "runtimeEvents": [
+        {
+          "type": "run/terminal",
+          "status": "succeeded",
+          "finalization": {
+            "runId": "probe-reload",
+            "executionStatus": "completed",
+            "persistenceStatus": "saved",
+            "processStatus": "exited",
+            "eventWatermark": 12,
+            "deliverables": [
+              {
+                "path": "/tmp/zx-approval-provider-probe-tzWH79/project/reload-result.txt",
+                "description": "刷新后接续交付成果"
+              }
+            ],
+            "changes": [],
+            "children": []
+          }
+        }
+      ],
+      "receivedModelRequests": 4,
+      "requestShapes": [
+        {
+          "number": 1,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "reload",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "reload",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "reload",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        },
+        {
+          "number": 4,
+          "messages": [
+            {
+              "role": "system",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "user",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            },
+            {
+              "role": "assistant",
+              "contentType": "object"
+            },
+            {
+              "role": "tool",
+              "contentType": "string"
+            }
+          ],
+          "typedMatches": [
+            {
+              "scenario": "reload",
+              "messageIndex": 1,
+              "blockIndex": 0,
+              "lineIndex": 2
+            }
+          ]
+        }
+      ],
+      "finishedAt": "2026-11-27T07:56:20.151Z"
+    }
+  ],
+  "boundaries": [
+    "The current fake provider callback and exact prompt matcher are extracted verbatim; only structural observation is inserted.",
+    "Host broker decisions are made programmatically for synthetic files; no user or UI approval interaction is claimed.",
+    "reload names the original two-tool fixture sequence; no renderer reload or handoff ACK is simulated here.",
+    "Only bounded structural request metadata and synthetic result match booleans are retained; request bodies, credentials and live profile contents are not archived."
+  ],
+  "finishedAt": "2026-11-27T07:56:20.151Z"
+}

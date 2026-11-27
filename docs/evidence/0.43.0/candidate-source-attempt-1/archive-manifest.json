@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "hashAlgorithm": "sha256",
+  "excludes": [
+    "archive-manifest.json"
+  ],
+  "files": {
+    ".gitattributes": {
+      "bytes": 20,
+      "sha256": "e97602ab9cac70102245345c5ab0fc9830df8b17f1072b188265a662a3a547ae"
+    },
+    "README.md": {
+      "bytes": 3373,
+      "sha256": "55eef0f36719df2f07dc93b5d19506e3efe42ee25501a3969bb76002900090a9"
+    },
+    "artifact-download-verification.json": {
+      "bytes": 2462,
+      "sha256": "40035b0c6d91b63ed4cdcb1ab1f378710dac1242e5e68fa29c115b1013ef93c6"
+    },
+    "audit-summary.json": {
+      "bytes": 2444,
+      "sha256": "8716397b670ed359ef2ff615ce33bd874fa98b30590cc8dcc29369071ee05452"
+    },
+    "build.log": {
+      "bytes": 1549,
+      "sha256": "c40ddf1122566ae9346cf66b3ada7ab5862b65ae2426314b7444e4d81d6c9464"
+    },
+    "checkout-identity.json": {
+      "bytes": 2815,
+      "sha256": "93aab4831a5105bf9d14e1db1d331db7dce00782659117f4442abe78b130e280"
+    },
+    "checks.json": {
+      "bytes": 2479,
+      "sha256": "10ae0b60ab31195c421154591aa8019722737a348691f606ed97f69fcb3c59e3"
+    },
+    "components.log": {
+      "bytes": 10987,
+      "sha256": "12b45ad1ef39e2af8ef044494b9c67e35139dff5048f02451ef5701cb3a9e3a4"
+    },
+    "install.log": {
+      "bytes": 2016,
+      "sha256": "106d994a0fb6a3102b023358a93f6161ad3ba422bd13dd984021f92144c19bce"
+    },
+    "job-140357299195.log": {
+      "bytes": 150600,
+      "sha256": "c578fe152c76d3f54746d4254c84b953addfbd26013ca345ca2dc620b293ccb8"
+    },
+    "local-fixture-fix/capture.json": {
+      "bytes": 1688,
+      "sha256": "dc1c41b471e7b9a69f2543666f9aa7d8a025f7c3e3a9ada16dd750ff27bf469b"
+    },
+    "local-fixture-fix/fixture-update.patch": {
+      "bytes": 9677,
+      "sha256": "a5fefbbb043b377c01a1340a51b6846aa2c662d08912f6a9af660df22016d428"
+    },
+    "local-fixture-fix/generated-main.cjs": {
+      "bytes": 24669,
+      "sha256": "7de3dd41fa39d1d665255a406052b488c00c6d11596759566b153a7e74d105ff"
+    },
+    "local-fixture-fix/generated-syntax.log": {
+      "bytes": 160,
+      "sha256": "654c29b5d531a88476b8c83dcdb73d6dd6507a09c0237145d395a036de1cdc77"
+    },
+    "local-fixture-fix/lint.log": {
+      "bytes": 150,
+      "sha256": "9aac3da9a7039a99c345545c32f286aa65c358d571bfce7e00d94625d095c829"
+    },
+    "local-fixture-fix/negative-control.log": {
+      "bytes": 1619,
+      "sha256": "6954f50a12af039a570e8095d05542e16408ce5d9773eaccaeba1d15cf65b6d2"
+    },
+    "local-fixture-fix/queue-probe.mjs": {
+      "bytes": 14417,
+      "sha256": "f2af6c30fc0141af335570fb37312ed4e7cb79ae0e2e25233038c92244150990"
+    },
+    "local-fixture-fix/source-queue-probe.log": {
+      "bytes": 187,
+      "sha256": "f3216d839a0cde336577f0653109e4277edd04675e653de9dd96fe509c8470d3"
+    },
+    "local-fixture-fix/verification.json": {
+      "bytes": 2428,
+      "sha256": "6a68d487257e22c087bc3c1f144bd6743d42e925367eeb6b496161180b0c1c4d"
+    },
+    "quality.log": {
+      "bytes": 2630,
+      "sha256": "bfc169ed774932853718e6ccde89d4baaafe0881bce80ce1a2bb214af25f5688"
+    },
+    "sites.log": {
+      "bytes": 473,
+      "sha256": "6e576c94016fc0ba098945a0c7843ad48f5fda098b8e05f0858f0eeda708dc14"
+    },
+    "unit.log": {
+      "bytes": 69170,
+      "sha256": "a0d3738791ee3a9dc94537047542bf099acfcc86d1d42668a54e28d56de0f590"
+    },
+    "zhixing-drafts-native-WrTq8q-electron.log": {
+      "bytes": 685,
+      "sha256": "36328fa9ab448cf3bc4247d357f14fbde307e400a88ac27b45b23741efecae2e"
+    },
+    "zhixing-drafts-native-WrTq8q-journey.json": {
+      "bytes": 1823,
+      "sha256": "0e0663a99786045feb5600a0d1c7cf4f4c813428b0d1e487e5f3cdc0c7295b02"
+    },
+    "zhixing-drafts-native-WrTq8q-source-hashes.json": {
+      "bytes": 272,
+      "sha256": "05152273d2195ed2d7c19577e3c6055ece78cb8fee46f35a85bb588f74bdb4e9"
+    },
+    "zhixing-drafts-native-WrTq8q-summary.json": {
+      "bytes": 1269,
+      "sha256": "3bde672bfc4cf0aa823318edf470050f9e884d9aa9c24c3cc208ef63c1b9ed83"
+    },
+    "zhixing-recovery-ui-7m6azQ-electron.log": {
+      "bytes": 2107,
+      "sha256": "70815c47b29922abf620663a09eb9994b8761829a7bd506425edbc3ec18effa4"
+    },
+    "zhixing-recovery-ui-7m6azQ-failure.json": {
+      "bytes": 1523,
+      "sha256": "3fdd0ce1c66e6049deb14eaa4ae02d201feaa9b939544cf6eb9d344c6b706577"
+    },
+    "zhixing-recovery-ui-7m6azQ-journey.json": {
+      "bytes": 1376,
+      "sha256": "d511354dd0088e2604569a6013defae1c66cf2614dd906f2f7b1e3e966023524"
+    }
+  }
+}

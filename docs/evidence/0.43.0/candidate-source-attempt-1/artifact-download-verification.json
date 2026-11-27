@@ -1,0 +1,79 @@
+{
+  "artifactId": 15178860365,
+  "zipBytes": 42880,
+  "zipSha256": "1c754c78dffe53246abcc04573bfaa12cec6e343d7a00973ff03d08ca70849e8",
+  "expectedDigestMatched": true,
+  "extractedBytes": 98359,
+  "files": [
+    {
+      "path": "build.log",
+      "bytes": 1549,
+      "sha256": "c40ddf1122566ae9346cf66b3ada7ab5862b65ae2426314b7444e4d81d6c9464"
+    },
+    {
+      "path": "components.log",
+      "bytes": 10987,
+      "sha256": "12b45ad1ef39e2af8ef044494b9c67e35139dff5048f02451ef5701cb3a9e3a4"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 2479,
+      "sha256": "10ae0b60ab31195c421154591aa8019722737a348691f606ed97f69fcb3c59e3"
+    },
+    {
+      "path": "install.log",
+      "bytes": 2016,
+      "sha256": "106d994a0fb6a3102b023358a93f6161ad3ba422bd13dd984021f92144c19bce"
+    },
+    {
+      "path": "quality.log",
+      "bytes": 2630,
+      "sha256": "bfc169ed774932853718e6ccde89d4baaafe0881bce80ce1a2bb214af25f5688"
+    },
+    {
+      "path": "sites.log",
+      "bytes": 473,
+      "sha256": "6e576c94016fc0ba098945a0c7843ad48f5fda098b8e05f0858f0eeda708dc14"
+    },
+    {
+      "path": "unit.log",
+      "bytes": 69170,
+      "sha256": "a0d3738791ee3a9dc94537047542bf099acfcc86d1d42668a54e28d56de0f590"
+    },
+    {
+      "path": "zhixing-drafts-native-WrTq8q-electron.log",
+      "bytes": 685,
+      "sha256": "36328fa9ab448cf3bc4247d357f14fbde307e400a88ac27b45b23741efecae2e"
+    },
+    {
+      "path": "zhixing-drafts-native-WrTq8q-journey.json",
+      "bytes": 1823,
+      "sha256": "0e0663a99786045feb5600a0d1c7cf4f4c813428b0d1e487e5f3cdc0c7295b02"
+    },
+    {
+      "path": "zhixing-drafts-native-WrTq8q-source-hashes.json",
+      "bytes": 272,
+      "sha256": "05152273d2195ed2d7c19577e3c6055ece78cb8fee46f35a85bb588f74bdb4e9"
+    },
+    {
+      "path": "zhixing-drafts-native-WrTq8q-summary.json",
+      "bytes": 1269,
+      "sha256": "3bde672bfc4cf0aa823318edf470050f9e884d9aa9c24c3cc208ef63c1b9ed83"
+    },
+    {
+      "path": "zhixing-recovery-ui-7m6azQ-electron.log",
+      "bytes": 2107,
+      "sha256": "70815c47b29922abf620663a09eb9994b8761829a7bd506425edbc3ec18effa4"
+    },
+    {
+      "path": "zhixing-recovery-ui-7m6azQ-failure.json",
+      "bytes": 1523,
+      "sha256": "3fdd0ce1c66e6049deb14eaa4ae02d201feaa9b939544cf6eb9d344c6b706577"
+    },
+    {
+      "path": "zhixing-recovery-ui-7m6azQ-journey.json",
+      "bytes": 1376,
+      "sha256": "d511354dd0088e2604569a6013defae1c66cf2614dd906f2f7b1e3e966023524"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import http from 'node:http';
 import {once} from 'node:events';
 import {randomBytes} from 'node:crypto';
-export async function startToolBridge({invoke,signal,route='/browser',drain=false}){
+export async function startToolBridge({invoke,signal,route='/browser',drain=false,maxBodyBytes=50000}){
  const token=randomBytes(32).toString('hex');
  const pending=new Set();
  async function handle(req,res){try{
@@ -9,7 +9,7 @@ export async function startToolBridge({invoke,signal,route='/browser',drain=fals
   const connection=new AbortController();
   res.once('close',()=>{if(!res.writableEnded)connection.abort();});
   const requestSignal=AbortSignal.any([signal,connection.signal]);
-  const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>50000)throw new Error('工具请求过长。');chunks.push(chunk);}
+  const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>maxBodyBytes)throw new Error('工具请求过长。');chunks.push(chunk);}
   requestSignal.throwIfAborted();
   const input=JSON.parse(Buffer.concat(chunks).toString());const result=await invoke(input,requestSignal);
   requestSignal.throwIfAborted();

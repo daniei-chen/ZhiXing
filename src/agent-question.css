@@ -1,0 +1,35 @@
+.agent-question-inline {
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.agent-question-inline header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.agent-question-inline h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.agent-question-inline .agent-question-fields {
+  max-height: min(44vh, 420px);
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.agent-question-inline .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

@@ -1,0 +1,65 @@
+diff --git a/tests/conversation-recovery-ui.test.mjs b/tests/conversation-recovery-ui.test.mjs
+index 1001194..62e93ed 100644
+--- a/tests/conversation-recovery-ui.test.mjs
++++ b/tests/conversation-recovery-ui.test.mjs
+@@ -41,7 +41,9 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
+   });
+   // Observation only, in this isolated test bundle: retain the real App/event
+   // implementation while exposing snapshots of otherwise private memory refs.
+-  const observeConversationMemory={name:'observe-conversation-memory',setup(builder){builder.onLoad({filter:/[\\/]src[\\/]App\.jsx$/},async({path:filename})=>{const source=await readFile(filename,'utf8'),anchor='  latest.current = state;';assert.equal(source.split(anchor).length,2);return {loader:'jsx',resolveDir:path.dirname(filename),contents:source.replace(anchor,`  window.__qaConversationMemory = () => ({ jobs: [...runJobs.current], positions: [...transcriptPositions.current], transcriptChatId: transcriptChatId.current, draftScopes: draftScopes.current, events, liveStats, question, active: active.current?.runId || null });\n${anchor}`)};});}};
++  // The selected question now comes from a per-root queue. Normalize only its
++  // absent selection for this observation API; inspect the complete queue too.
++  const observeConversationMemory={name:'observe-conversation-memory',setup(builder){builder.onLoad({filter:/[\\/]src[\\/]App\.jsx$/},async({path:filename})=>{const source=await readFile(filename,'utf8'),anchor='  latest.current = state;';assert.equal(source.split(anchor).length,2);return {loader:'jsx',resolveDir:path.dirname(filename),contents:source.replace(anchor,`  window.__qaConversationMemory = () => ({ jobs: [...runJobs.current], positions: [...transcriptPositions.current], transcriptChatId: transcriptChatId.current, draftScopes: draftScopes.current, events, liveStats, question: question ?? null, questions, active: active.current?.runId || null });\n${anchor}`)};});}};
+   const renderer=await build({stdin:{resolveDir:repository,loader:'jsx',contents:`import{createElement}from'react';import{createRoot}from'react-dom/client';import{App}from'./src/App.jsx';import{flushRendererDurability}from'./src/renderer-durability.js';window.__qaFlushWorkspace=flushRendererDurability;createRoot(document.getElementById('root')).render(createElement(App));`},plugins:[observeConversationMemory],bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'},logLevel:'silent'});
+   await writeFile(path.join(directory,'renderer.js'),renderer.outputFiles[0].text);
+   await writeFile(path.join(directory,'index.html'),'<!doctype html><html><body><div id="root"></div></body></html>');
+@@ -189,7 +191,13 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
+         await waitUI('document.querySelectorAll(".composer .attachment-chip").length===1');
+         await wait(()=>JSON.stringify(stored.drafts).includes('DELETE_ATTACHMENT_MARKER'),'delete marker persisted');
+         await waitUI('window.__qaConversationMemory().positions.some(([id])=>id==="chat")');
++        const keptQuestion={type:'question',runId:completed[0].runId,sessionId:'keep-chat',rootSessionId:'keep-chat',requestId:'kept-question',questions:[{id:'keep-q',question:'KEEP_QUESTION_MARKER',options:[]}]};
++        const targetQuestion={type:'question',runId:completed[1].runId,sessionId:'chat',rootSessionId:'chat',requestId:'target-question',questions:[{id:'target-q',question:'DELETE_QUESTION_MARKER',options:[]}]};
++        window.webContents.send('RuntimeEvent',keptQuestion);window.webContents.send('RuntimeEvent',targetQuestion);
++        await waitUI('window.__qaConversationMemory().questions.length===2');
+         const memoryBeforeDelete=await memory();assert.equal(memoryBeforeDelete.jobs.length,2);assert.match(JSON.stringify(memoryBeforeDelete),/DELETE_JOB_BODY_MARKER/);
++        assert.deepEqual(memoryBeforeDelete.questions,[keptQuestion,targetQuestion]);
++        assert.equal(memoryBeforeDelete.question.requestId,'target-question');
+         saveFailure=true;
+         await click('button[aria-label="合成聊天 的菜单"]');await textClick('[role="menuitem"]','删除聊天');
+         assert.match(await run('document.querySelector("[role=dialog]").textContent'),/独立资料空间中的资料与磁盘原文件保留/);
+@@ -198,10 +206,12 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
+         assert.match(await fs.readFile(workspaceFile,'utf8'),/DELETE_ATTACHMENT_MARKER/);
+         assert.equal(forgotten.length,0,'native forgetting waits for successful workspace persistence');
+         assert.equal((await memory()).jobs.length,2,'workspace save failure must not claim successful cache cleanup');
++        assert.deepEqual((await memory()).questions,[keptQuestion,targetQuestion],'workspace save failure cannot claim that either queued question was cleared');
+         saveFailure=false;forgetFailure=true;await textClick('.deletion-pending button','重试完成删除');
+         await waitUI('document.querySelector(".deletion-pending")?.textContent.includes("SYNTHETIC_FORGET_UNCONFIRMED")');
+         assert.equal(forgotten.length,0);assert.equal((await memory()).jobs.length,2,'unconfirmed host forget must retain retryable job refs');
+         assert((await memory()).positions.some(([id])=>id==='chat'),'unconfirmed host forget must not clear target position');
++        assert.deepEqual((await memory()).questions,[keptQuestion,targetQuestion],'unconfirmed host forget retains both root-scoped questions');
+         forgetFailure=false;await textClick('.deletion-pending button','重试完成删除');
+         await wait(()=>!!forgetRelease,'host forget awaiting confirmation');
+         assert.equal((await memory()).jobs.length,2,'an unresolved host forget is not confirmation');
+@@ -212,14 +222,19 @@ test('Windows App renderer：删除写盘故障重试、失败原地恢复、终
+         assert.deepEqual(memoryAfterDelete.jobs[0],memoryBeforeDelete.jobs.find(([id])=>id===keptRun),'other chat job remains intact');
+         assert(!memoryAfterDelete.positions.some(([id])=>id==='chat'));assert(memoryAfterDelete.positions.some(([id])=>id==='keep-chat'));
+         assert(!Object.hasOwn(memoryAfterDelete.draftScopes,'chat:chat'));assert(Object.hasOwn(memoryAfterDelete.draftScopes,'chat:keep-chat'));
+-        assert.doesNotMatch(JSON.stringify(memoryAfterDelete),/DELETE_JOB_BODY_MARKER/);assert.match(JSON.stringify(memoryAfterDelete),/KEEP_JOB_BODY_MARKER/);
++        assert.deepEqual(memoryAfterDelete.questions,[keptQuestion],'confirmed deletion clears only the deleted root question');
++        assert.doesNotMatch(JSON.stringify(memoryAfterDelete),/DELETE_JOB_BODY_MARKER|DELETE_QUESTION_MARKER/);assert.match(JSON.stringify(memoryAfterDelete),/KEEP_JOB_BODY_MARKER/);
+         for(const session of ['chat',undefined])window.webContents.send('RuntimeEvent',{type:'run/terminal',runId:deletedRun,...(session?{sessionId:session}:{}),status:'succeeded',output:{text:'DELETE_JOB_BODY_MARKER'},finalization:{runId:deletedRun,executionStatus:'completed',persistenceStatus:'saved',processStatus:'exited',eventWatermark:9}});
+         window.webContents.send('RuntimeEvent',{type:'draft',runId:deletedRun,sessionId:'chat',text:'DELETE_JOB_BODY_MARKER'});
+         window.webContents.send('RuntimeEvent',{type:'question',runId:deletedRun,sessionId:'chat',requestId:'deleted-question',questions:[{id:'q',question:'DELETE_JOB_BODY_MARKER',options:[]}]});
+         window.webContents.send('RuntimeEvent',{type:'tool/result',runId:keptRun,sessionId:'keep-chat',label:'KEEP_LATE_EVENT_MARKER'});
+         await waitUI('window.__qaConversationMemory().events.some(event=>event.label==="KEEP_LATE_EVENT_MARKER")');
+-        const afterLate=await memory();assert.equal(afterLate.jobs.length,1);assert.equal(afterLate.question,null);assert.doesNotMatch(JSON.stringify(afterLate),/DELETE_JOB_BODY_MARKER/);assert.match(JSON.stringify(afterLate),/KEEP_LATE_EVENT_MARKER/);
+-        await record('forget失败或未确认不提前清缓存；成功仅清目标job/轨迹/滚动缓存；迟到事件不复活',{retainedRunId:keptRun,removedRunId:deletedRun});
++        const afterLate=await memory();assert.equal(afterLate.jobs.length,1);assert.equal(afterLate.question,null);assert.deepEqual(afterLate.questions,[keptQuestion]);assert.doesNotMatch(JSON.stringify(afterLate),/DELETE_JOB_BODY_MARKER|DELETE_QUESTION_MARKER/);assert.match(JSON.stringify(afterLate),/KEEP_LATE_EVENT_MARKER/);
++        assert.equal(await run('document.querySelectorAll(".agent-question-inline").length'),0,'another root question must not take over the current composer');
++        await click('.chat-row[data-chat-id="keep-chat"] .chat-link');
++        await waitUI('document.querySelector(".agent-question-inline")?.textContent.includes("KEEP_QUESTION_MARKER")');
++        assert.deepEqual((await memory()).question,keptQuestion,'the retained root question remains selectable and visible');
++        await record('forget失败或未确认不提前清缓存；成功仅清目标job/轨迹/滚动及问题；迟到事件不复活且另一root问题可见',{retainedRunId:keptRun,removedRunId:deletedRun,retainedQuestionId:keptQuestion.requestId});
+         const deletedBytes=await fs.readFile(workspaceFile,'utf8');
+         assert.doesNotMatch(deletedBytes,/DELETE_CHAT_MESSAGE_MARKER|DELETE_DRAFT_MARKER|DELETE_ATTACHMENT_MARKER|DELETE_JOB_BODY_MARKER/);
+         assert.match(deletedBytes,/third.txt/);assert.deepEqual(forgotten,['chat']);

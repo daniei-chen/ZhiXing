@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "layer": "Windows hosted runner: source/build and isolated renderer; not packaged EXE, installer lifecycle or real cloud",
+  "runId": 45954359999,
+  "jobId": 140357299195,
+  "runAttempt": 1,
+  "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45954359999",
+  "headSha": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "checkoutSha": "0a69d5c84046b04186ff6fa177e714d8d2e6ec0e",
+  "checkoutTree": "b1e06ca5ae74e154be278286f69d0b33774b28b8",
+  "headTree": "b1e06ca5ae74e154be278286f69d0b33774b28b8",
+  "sameTree": true,
+  "parents": [
+    "7076fe7a694ca772e25fc64f038e3dc909a9baf1",
+    "feaadaeb575671fa326b9eedd6ac631c7e68f1ce"
+  ],
+  "conclusion": "failure",
+  "results": {
+    "quality": {
+      "eslint": {
+        "checked": 106,
+        "inventory": 330
+      },
+      "stylelint": {
+        "checked": 9,
+        "inventory": 9
+      },
+      "prettier": {
+        "checked": 83,
+        "inventory": 581
+      },
+      "errors": 0,
+      "warnings": 0,
+      "scope": "incremental, not whole repository"
+    },
+    "build": {
+      "status": "success",
+      "viteSeconds": 5.77
+    },
+    "sites": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "durationMs": 102.4571
+    },
+    "source": {
+      "tests": 691,
+      "pass": 691,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "durationMs": 325809.3483
+    },
+    "components": {
+      "tests": 45,
+      "pass": 44,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "durationMs": 35412.3086
+    }
+  },
+  "failure": {
+    "test": "tests/conversation-recovery-ui.test.mjs:13:1",
+    "outerAssertion": "tests/conversation-recovery-ui.test.mjs:260:10",
+    "fixtureAssertion": "tests/conversation-recovery-ui.test.mjs:221",
+    "generatedFrame": "main.cjs:167:85",
+    "expression": "assert.equal(afterLate.question,null)",
+    "actual": "undefined",
+    "expected": "null",
+    "precedingJourneyPasses": 7,
+    "classification": "pending owner validation; do not assume environment failure"
+  },
+  "artifactMetadataOnly": {
+    "id": 15178860365,
+    "bytes": 42880,
+    "githubDigest": "sha256:1c754c78dffe53246abcc04573bfaa12cec6e343d7a00973ff03d08ca70849e8",
+    "downloaded": false
+  },
+  "node": "v24.22.3",
+  "rawJobLog": {
+    "path": "job-140357299195.log",
+    "bytes": 150600,
+    "sha256": "c578fe152c76d3f54746d4254c84b953addfbd26013ca345ca2dc620b293ccb8"
+  }
+}

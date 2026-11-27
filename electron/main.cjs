@@ -12,7 +12,7 @@ let windowRef,manager,automations,automationsReady,browserService,terminalServic
 let quitAckResolver;
 let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,pluginService;
 const runtimeEventSequences=new Map();
-let worktreeOperation;
+let worktreeOperation, runtimeApprovals, runtimeHandoffs, rendererLifetime;
 let configuration={model:'deepseek-flash',reasoning:'high',baseUrl:'https://api.deepseek.com/anthropic',credentialRevision:0,contextWindow:128000,maxTokens:8192};
 let normaliseKernel,validateKernel,projectCoreApi,containsCredential;
 const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
@@ -142,20 +142,32 @@ async function initialise(){
   },
   onState:state=>{if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('workspace:save-state',state);},
  });
- manager=new RuntimeManager({root:path.join(ROOT,'harness'),readVault:async id=>JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`))),writeVault:(id,value)=>writeEncrypted(path.join(VAULTS,`${id}.bin`),JSON.stringify(value)),onApproval:async request=>{
-  let detail;try{detail=JSON.parse(request.reason);}catch{return {outcome:'rejected'};}
-  if(!request.toolName.startsWith('mcp__')&&!['office_read_file','office_write_file','office_list_files','office_convert','office_recalculate','write','edit','apply_patch','office_execute','web_search','web_fetch','list_mcp_resources','list_mcp_resource_templates','read_mcp_resource','office_browser','workflow','office_schedule','present'].includes(request.toolName)||typeof detail?.path!=='string')return {outcome:'rejected'};
-  if(request.signal?.aborted)return {outcome:'rejected'};
-  const answer=await dialog.showMessageBox(windowRef,{type:'question',title:detail.command?'批准本次命令':detail.network?'批准本次联网':'批准本次文件操作',message:detail.operation||'操作需要批准',detail:`${detail.path}\n\n${detail.command?`${detail.command}\n\n命令可访问项目外文件和网络，请核对后批准。`:detail.network?`${JSON.stringify(detail.network)}\n\n仅批准本次联网操作。`:detail.overwrite?'此操作会覆盖已有文件。':'只批准本次操作，不改变权限模式。'}`,buttons:['拒绝','仅允许本次'],defaultId:0,cancelId:0,noLink:true,signal:request.signal});
-  return {outcome:answer.response===1?'allowed-once':'rejected'};
+ const {RuntimeApprovals}=await import('./runtime-approvals.mjs');
+ const {RuntimeHandoffs}=await import('./runtime-handoffs.mjs');
+ const {RendererLifetime}=await import('./renderer-lifetime.mjs');
+ runtimeApprovals=new RuntimeApprovals({onChange:snapshot=>{
+  if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('approvals:changed',snapshot);
+ }});
+ runtimeHandoffs=new RuntimeHandoffs({sanitizeError:error=>{
+  let message=String(error?.message||'本轮未完成，请检查执行记录。');
+  if(/dsh profile|ERR_MODULE_NOT_FOUND|stderr tail/i.test(message))return 'DeepSeek 内核启动失败。请打开设置检查内核，或使用最新安装包重新安装。';
+  for(const secret of deliverySecrets())if(typeof secret==='string'&&secret)message=message.replaceAll(secret,'[已隐藏凭据]');
+  return message.replace(/sk-[A-Za-z0-9_-]{12,}/g,'[已隐藏凭据]').slice(0,600);
+ }});
+ manager=new RuntimeManager({root:path.join(ROOT,'harness'),readVault:async id=>JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`))),writeVault:(id,value)=>writeEncrypted(path.join(VAULTS,`${id}.bin`),JSON.stringify(value)),onApproval:request=>{
+  // Scheduled jobs cannot borrow a foreground user's one-time decision.
+  return request.manual===true?runtimeApprovals.request(request):{outcome:'unavailable'};
  },onEvent:e=>{
   const sequence=(runtimeEventSequences.get(e.runId)||0)+1;
   runtimeEventSequences.set(e.runId,sequence);
-  const event={...e,sequence,time:e.time??Date.now()};
+  const event={...e,sequence,time:e.time??Date.now(),...(['question','question-closed'].includes(e.type)?{questionsSnapshot:manager.questionSnapshot()}: {})};
+  runtimeHandoffs.observe(event);
+  void rendererLifetime?.observe(event);
   if(event.type==='run/terminal'&&event.finalization?.processStatus!=='cleanup_pending'){runtimeEventSequences.delete(event.runId);}
   if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('agent:event',event);
   void automations?.recordEvent(event).catch(()=>{});
  }});
+ rendererLifetime=new RendererLifetime({manager,handoffs:runtimeHandoffs,onError:detail=>logEvent('warn','renderer.transient-cancel-pending',detail)});
  const {DeliverableAccess}=await import('./deliverable-access.mjs');
  startupMark('init:kernel');
  deliverableAccess=new DeliverableAccess({root:ROOT,getWorkspace:()=>workspaceContext,readVault:async id=>manager.volatileVaults.get(id)??JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`)))});
@@ -289,6 +301,14 @@ function requestRendererFlush(){
   quitAckResolver=finish;
   windowRef.webContents.send('app:prepare-to-quit');
  });
+}
+function rendererDetached(){
+ // Only a real main-frame document replacement/crash invokes this hook.
+ void rendererLifetime.detach();
+}
+function assertManualRunStart(generation){
+ if(quitting||installingUpdate)throw Object.assign(new Error('知行正在退出或安装更新，这次交办没有启动。'),{code:'RUNTIME_CANCELLED',stage:'prepare'});
+ if(generation!==rendererLifetime.generation)throw Object.assign(new Error('窗口已重新载入，旧交办没有启动。'),{code:'RUNTIME_CANCELLED',stage:'prepare'});
 }
 function validEndpoint(value){let url;try{url=new URL(value);}catch{throw new Error('请输入完整的模型服务地址。');}if(url.username||url.password||url.search||url.hash)throw new Error('服务地址不能包含凭据、查询参数或片段。');if(url.protocol!=='https:'&&!(url.protocol==='http:'&&['127.0.0.1','localhost','[::1]'].includes(url.hostname)))throw new Error('服务地址需要 HTTPS；本机测试服务可用 HTTP。');if(url.hostname==='api.deepseek.com'&&url.pathname==='/')url.pathname='/anthropic';return url.href.replace(/\/$/,'');}
 function route(options={}){
@@ -615,12 +635,43 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
   return manager.preview({...options,visualAttachments,...(visualAttachments.length||visualPrivacy?{customTerms:vision.terms}:{})},{...config,visualPolicyKey,visualPrivacy,manualControls:true});
  });
  handle('agent:run-prepared',async options=>{
+  const generation=rendererLifetime.generation;
   await workspaceSaveQueue.flush();
+  assertManualRunStart(generation);
   return manager.runPrepared(options,config=>{
    if(config.visualPolicyKey&&config.visualPolicyKey!==currentVisionPrivacy().key)throw new Error('隐私规则或凭证已变化，请重新交办。');
    return currentCredential(config);
   });
  });
+ handle('agent:begin',async options=>{
+  const generation=rendererLifetime.generation;
+  await workspaceSaveQueue.flush();
+  assertManualRunStart(generation);
+  const prepared=manager.prepared.get(options?.preparationId);
+  if(!prepared||prepared.expires<Date.now()||!prepared.config.manualControls)throw new Error('发送预览已过期，请重新交办。');
+  const sessionId=prepared.options.sessionId;
+  const workspaceId=prepared.config.automationScope.workspaceId;
+  const persist=prepared.config.persist!==false;
+  const owner=workspaceContext.chats.find(chat=>chat.id===sessionId&&chat.workspaceId===workspaceId);
+  const reply=owner?.messages?.find(message=>message.id===options.replyId&&message.runId===options.runId&&message.role==='assistant'&&message.pending);
+  if(persist&&!reply)throw new Error('交办消息尚未保存，请完成保存后重试。');
+  return runtimeHandoffs.start({runId:options.runId,sessionId,replyId:options.replyId,workspaceId,persist},()=>{
+   assertManualRunStart(generation);
+   return manager.runPrepared(options,config=>{
+    if(config.visualPolicyKey&&config.visualPolicyKey!==currentVisionPrivacy().key)throw new Error('隐私规则或凭证已变化，请重新交办。');
+    return currentCredential(config);
+   });
+  });
+ });
+ handle('agent:handoffs',()=>runtimeHandoffs.snapshot());
+ handle('agent:await-handoff',identity=>runtimeHandoffs.wait(identity));
+ handle('agent:acknowledge-handoff',async identity=>{
+  await workspaceSaveQueue.flush();
+  return runtimeHandoffs.acknowledge(identity,entry=>!entry.binding.persist||workspaceContext.chats.some(chat=>chat.id===entry.binding.sessionId&&chat.workspaceId===entry.binding.workspaceId&&chat.messages?.some(message=>message.id===entry.binding.replyId&&message.runId===entry.binding.runId&&!message.pending&&message.resultReceiptId===entry.receiptId)));
+ });
+ handle('approvals:snapshot',()=>runtimeApprovals.snapshot());
+ handle('approvals:answer',value=>runtimeApprovals.answer(value));
+ handle('agent:questions',()=>manager.questionSnapshot());
  handle('agent:cancel',async({runId})=>manager.cancel(runId));
  handle('agent:cleanup-status',()=>manager.getCleanupStatus());
  handle('agent:retry-cleanup',({runId})=>manager.retryCleanup(runId));
@@ -645,6 +696,7 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
   if(stat){if(stat.isSymbolicLink()||path.dirname(await fs.realpath(target))!==path.join(await fs.realpath(ROOT),'harness'))throw new Error('会话目录不在应用工作区内。');await fs.rm(target,{recursive:true,force:true});}
   await fs.unlink(path.join(VAULTS,`${sessionId}.bin`)).catch(e=>{if(e.code!=='ENOENT')throw e;});
   });
+  runtimeHandoffs.forgetSession(sessionId);
   deliveryService.invalidateAll();
   return true;
  });
@@ -724,8 +776,8 @@ async function createWindow(){
   });
  }
  windowRef.webContents.setWindowOpenHandler(()=>({action:'deny'}));
- windowRef.webContents.on('render-process-gone',()=>{if(speechService?.active)void speechService.cancel(speechService.active.id);});
- windowRef.webContents.on('did-start-navigation',(_event,_url,_inPlace,isMainFrame)=>{if(isMainFrame&&speechService?.active)void speechService.cancel(speechService.active.id);});
+ windowRef.webContents.on('render-process-gone',()=>{rendererDetached();if(speechService?.active)void speechService.cancel(speechService.active.id);});
+ windowRef.webContents.on('did-start-navigation',(_event,_url,inPlace,isMainFrame)=>{if(isMainFrame&&!inPlace){rendererDetached();if(speechService?.active)void speechService.cancel(speechService.active.id);}});
  windowRef.webContents.on('will-navigate',(event,url)=>{if(url!=='zhixing://app/index.html')event.preventDefault();});
  // Reveal on the first paint instead of waiting for the whole document to
  // finish loading; the window background covers the remaining frames.

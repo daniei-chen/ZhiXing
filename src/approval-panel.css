@@ -1,0 +1,162 @@
+.approval-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: min(580px, 72dvh);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.approval-heading,
+.approval-queue,
+.approval-decisions,
+.approval-stop {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+}
+
+.approval-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.approval-heading h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.approval-heading span,
+.approval-origin,
+.approval-policy,
+.approval-stop {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.approval-queue {
+  overflow: auto hidden;
+  overscroll-behavior: contain;
+  border-bottom: 1px solid var(--line);
+}
+
+.approval-queue button {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.approval-queue button[aria-pressed='true'] {
+  background: var(--selected);
+}
+
+.approval-request {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.approval-detail {
+  min-width: 0;
+  min-height: 0;
+  padding: 14px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.approval-detail:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.approval-operation {
+  margin-bottom: 12px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.approval-origin {
+  margin-bottom: 6px;
+}
+
+.approval-fields dt {
+  margin: 10px 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.approval-fields pre {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--field);
+  font:
+    12px/1.65 ui-monospace,
+    Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.approval-overwrite,
+.approval-policy {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+
+.approval-overwrite {
+  font-weight: 600;
+}
+
+.approval-decisions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+}
+
+.approval-decisions button {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.approval-decisions .approval-allow {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.approval-notice {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.approval-notice button,
+.approval-stop button {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.approval-stop {
+  flex-wrap: wrap;
+  padding-top: 0;
+}

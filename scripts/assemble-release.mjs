@@ -27,7 +27,7 @@ async function soleReport(directory, depth = 0) {
     if (entry.isFile() && entry.name === 'result.json') matches.push(target);
     else if (
       entry.isDirectory() &&
-      /^(run-|phase[01][a-z]?-ui-|workbench-preview-ui-)/.test(entry.name)
+      /^(run-|phase[01][a-z]?-ui-|workbench-preview-ui-|approval-recovery-ui-)/.test(entry.name)
     ) {
       matches.push(...(await soleReport(target, depth + 1)));
     }
@@ -131,7 +131,7 @@ const boundaryText = [
   '本轮未在用户 D:\\应用\\知行 环境执行安装、升级或恢复，也未复跑用户安装生命周期。',
   '真实云端模型、真实办公任务评测、跨 Windows 用户解密、签名与 SmartScreen 体验未覆盖。',
   'Windows 界面与真实内核用例使用临时档案及本地合成服务；错误文案用例另含真实网络探测。',
-  '截图由本轮实包生成；自动化断言不代表人工视觉审阅。原生文件用例中的批准与保存选择为合成接管。',
+  '截图由本轮实包生成；自动化断言不代表人工视觉审阅。原生文件用例通过点击实际审批卡作单次决定，文件保存路径选择仍由合成适配器接管。',
   'test:packed 包含从源码读取的测试文件、夹具和部分辅助模块，其分类按测试文件而非断言数统计。',
 ];
 
@@ -184,7 +184,7 @@ export async function assembleRelease({ root, evidence, output, plan, steps, run
   for (const name of ['unit', 'components', 'sites', 'packed', 'quality', 'startup'])
     await recordEvidence(path.join(evidence, 'logs', `${name}.log`), `logs/${name}.log`);
   const journeys = {};
-  for (const name of ['errors', 'native', 'tools', 'phase0a', 'phase1', 'workbench']) {
+  for (const name of ['errors', 'native', 'tools', 'phase0a', 'phase1', 'workbench', 'approvals']) {
     const directory =
       name === 'tools'
         ? path.join(root, `.preview/qa-${version}/tool-timeline`)

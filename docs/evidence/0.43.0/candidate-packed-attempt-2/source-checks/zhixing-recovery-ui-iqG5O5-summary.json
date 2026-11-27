@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "records": 11,
+  "runs": 4,
+  "saveRetries": 1,
+  "cleanupRetries": 1,
+  "forgotten": [
+    "chat"
+  ],
+  "rendererErrors": []
+}

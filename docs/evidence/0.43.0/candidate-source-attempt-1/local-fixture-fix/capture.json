@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "baselineSourceCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "layer": "local source App hook scheduler and simulated IPC; no DOM/layout or new Windows run",
+  "productCodeChangedByFixtureFix": false,
+  "patch": "fixture-update.patch",
+  "probePathAtExecution": "/workspace/scratch/7464bebaff38/qa-recovery-queue-043/queue-probe.mjs",
+  "pathsAreHistorical": true,
+  "filesAtArchiveTime": {
+    "src/App.jsx": {
+      "bytes": 110953,
+      "sha256": "8f71026585f25f04ed47377fe6e457572bca10f920212fb2a2e3ca5ba7539922"
+    },
+    "src/store.js": {
+      "bytes": 14150,
+      "sha256": "5da803c55a6a0a9beeebbe3e1fd2bd91c6d860d4db0412803bd51f49653bf4d8"
+    },
+    "src/renderer-durability.js": {
+      "bytes": 1666,
+      "sha256": "68df3be4f2feddec87898d9fe43500f89a502497b3263dfcf53ffc583aab0cec"
+    },
+    "src/runtime-approvals.js": {
+      "bytes": 7654,
+      "sha256": "7056e6d6d7546b48ad82cce632e8b374ef3e34b9c654fe1e4547f2d5c7e3f5d4"
+    },
+    "electron/workspace-persistence.mjs": {
+      "bytes": 5926,
+      "sha256": "6927fcbee7f9c803c4516ed94d269779c1b4236952a4eefb4be450244cc06705"
+    },
+    "electron/runtime-handoffs.mjs": {
+      "bytes": 9013,
+      "sha256": "623e9a9a4df82e04b2a801baed9a89f8e8b037afbcd602505a82af984c4d0428"
+    },
+    "tests/conversation-recovery-ui.test.mjs": {
+      "bytes": 30458,
+      "sha256": "98631acaa477489082bd5135fbd689d14fcfe80f5f4d422a45468f7155677fef"
+    }
+  },
+  "negativeControl": {
+    "mutation": "omit question queue cleanup in isolated compiled App only",
+    "expectedExitCode": 1,
+    "observedExitCodeFromVerification": 1
+  },
+  "newWindowsRun": "not run at this evidence checkpoint"
+}

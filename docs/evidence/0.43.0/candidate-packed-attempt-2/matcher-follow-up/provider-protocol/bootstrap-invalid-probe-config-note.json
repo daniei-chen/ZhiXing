@@ -1,0 +1,6 @@
+{
+  "scope": "probe setup failure, not a product or provider assertion failure",
+  "cause": "The first scratch config used reasoningMap:true, but the production provider resolver returns a mapping object or false. No model request was sent.",
+  "change": "Use the actual resolveProvider with the same standard OpenAI provider and low effort as the Windows fixture.",
+  "originalReportsPreserved": true
+}

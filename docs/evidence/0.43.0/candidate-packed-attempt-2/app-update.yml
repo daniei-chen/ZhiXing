@@ -1,0 +1,5 @@
+provider: github
+owner: daniei-chen
+repo: ZhiXing
+releaseType: prerelease
+updaterCacheDirName: zhixing-updater

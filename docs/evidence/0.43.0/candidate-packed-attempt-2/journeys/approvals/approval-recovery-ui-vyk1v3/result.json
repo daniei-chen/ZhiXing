@@ -1,0 +1,74 @@
+{
+  "layer": "windows-packaged-app + real-harness + loopback model fixture",
+  "version": "0.43.0",
+  "sourceCommit": "b57539c357f29c21b0246cb2443f2144024eb40b",
+  "sourceDirty": false,
+  "startedAt": "2026-11-27T07:42:49.633Z",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "status": "failed",
+  "cases": [
+    {
+      "name": "application identity and temporary profile are verified",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:42:49.990Z",
+      "finishedAt": "2026-11-27T07:42:51.162Z",
+      "packaged": true,
+      "version": "0.43.0",
+      "versions": {
+        "electron": "44.11.5",
+        "chrome": "152.0.7977.169",
+        "node": "24.22.3"
+      },
+      "isolatedProfile": true,
+      "committedUrl": "zhixing://app/index.html",
+      "workspaceReady": true
+    },
+    {
+      "name": "ask-mode write waits in the card without any file side effect",
+      "status": "failed",
+      "error": "Fixture needs the genuine typed scenario prompt"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "failure.png",
+      "bytes": 56322,
+      "sha256": "20b661509059cc210cb168804620b42d56a225d79174355b6303cb875b98da3c",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    }
+  ],
+  "processExits": [
+    {
+      "launch": 1,
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "providerRequests": [],
+  "visualReview": "pending-human-review",
+  "boundaries": [
+    "Only provider configuration and empty project/chat metadata are seeded through desktop IPC in an isolated temporary profile.",
+    "Each tool call and result uses the real Harness, native approval bridge and production file policy. The loopback model provides deterministic SSE responses.",
+    "Only one-time allow/reject choices are exercised; no session grant, persistent grant, real cloud, installer or user installation is covered.",
+    "Approval and handoff snapshots are observed through production IPC. The expired-response negative case calls the real answer IPC; normal decisions use trusted CDP pointer events.",
+    "The global fallback case injects failed state into the real application ErrorBoundary through CDP to exercise actual App unmount/recovery; it does not establish that a spontaneous exception was caught.",
+    "Recovery is within the same live host with local persistence enabled. Normal host restart must retain saved terminal messages but must not revive pending approvals.",
+    "A separate case disables persistence through the real settings UI and starts a new project chat. Reload must cancel that volatile run instead of restoring its conversation or approval.",
+    "Screenshots are captured separately from assertions and require visual review."
+  ],
+  "exeSha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f",
+  "error": "Error: Fixture needs the genuine typed scenario prompt\n    at until (file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:149:29)\n    at async pending (file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:259:17)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:704:20\n    at async check (file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:160:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:703:3",
+  "cleanup": {
+    "processesExited": true,
+    "temporaryRemoved": true
+  },
+  "fixtureError": "Fixture needs the genuine typed scenario prompt",
+  "finishedAt": "2026-11-27T07:42:55.216Z"
+}

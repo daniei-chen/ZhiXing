@@ -1,0 +1,4 @@
+{"name":"allow","status":"failed","fixtureError":null,"error":"no adapter registered for provider \"zhixing-provider\"","contentShapes":[]}
+{"name":"reject","status":"failed","fixtureError":null,"error":"no adapter registered for provider \"zhixing-provider\"","contentShapes":[]}
+{"name":"present","status":"failed","fixtureError":null,"error":"no adapter registered for provider \"zhixing-provider\"","contentShapes":[]}
+{"name":"reload","status":"failed","fixtureError":null,"error":"no adapter registered for provider \"zhixing-provider\"","contentShapes":[]}

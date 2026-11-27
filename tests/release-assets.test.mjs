@@ -88,7 +88,7 @@ function planApi(f, overrides = {}) {
 
 test('release gate aggregation rejects failed, cancelled, skipped and missing steps', () => {
   requireGates(gates());
-  for (const gate of ['phase1', 'workbench']) {
+  for (const gate of ['phase1', 'workbench', 'approvals']) {
     for (const outcome of ['failure', 'cancelled', 'skipped', undefined]) {
       const rows = gates();
       rows[gate] = { outcome };
@@ -406,7 +406,7 @@ test('asset assembly produces exactly 18 files with a non-self-referential check
     'ESLint 1/2 JS files; Stylelint 1/1 CSS files; Prettier 1/3 text files.\nErrors: 0; warnings: 0.\n',
   );
   await put(path.join(evidence, 'logs/startup.log'), startupLog());
-  for (const name of ['errors', 'native', 'phase0a', 'phase1', 'workbench'])
+  for (const name of ['errors', 'native', 'phase0a', 'phase1', 'workbench', 'approvals'])
     await put(
       path.join(
         evidence,

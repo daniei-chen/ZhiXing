@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "layer": "Linux source RuntimeManager + real Harness + native approval bridge + extracted loopback provider; no Electron, Windows or UI",
+  "sourceCommit": "b57539c357f29c21b0246cb2443f2144024eb40b",
+  "sourceScriptSha256": "15d87e7a7c9aec606575319d3ff4d1fa7ef9449e1a26a9090dc3dd822c601e44",
+  "runner": {
+    "platform": "linux",
+    "node": "v24.22.3",
+    "arch": "x64"
+  },
+  "startedAt": "2026-11-27T07:56:10.376Z",
+  "finishedAt": "2026-11-27T07:56:20.151Z",
+  "scenarios": [
+    {
+      "name": "allow",
+      "status": "passed",
+      "businessRequests": 2,
+      "toolResultSequences": [
+        [],
+        [
+          "qa-approval-allow-write"
+        ]
+      ],
+      "toolContentShapes": [
+        "string"
+      ],
+      "rejectionMatched": false,
+      "decisions": [
+        {
+          "requestId": "c2da4245-174a-467c-9308-eba4e1572c24",
+          "callId": "qa-approval-allow-write",
+          "toolName": "office_write_file",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "allow-result.txt"
+        }
+      ],
+      "finalTextMatched": true,
+      "sideEffectsMatched": true,
+      "deliverables": 0,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      }
+    },
+    {
+      "name": "reject",
+      "status": "passed",
+      "businessRequests": 2,
+      "toolResultSequences": [
+        [],
+        [
+          "qa-approval-reject-write"
+        ]
+      ],
+      "toolContentShapes": [
+        "string"
+      ],
+      "rejectionMatched": true,
+      "decisions": [
+        {
+          "requestId": "6288c16d-1d61-492c-b4b9-b83aacad85bb",
+          "callId": "qa-approval-reject-write",
+          "toolName": "office_write_file",
+          "outcome": "rejected",
+          "staleRejected": true,
+          "target": "reject-result.txt"
+        }
+      ],
+      "finalTextMatched": true,
+      "sideEffectsMatched": true,
+      "deliverables": 0,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      }
+    },
+    {
+      "name": "present",
+      "status": "passed",
+      "businessRequests": 2,
+      "toolResultSequences": [
+        [],
+        [
+          "qa-approval-present-one-call"
+        ]
+      ],
+      "toolContentShapes": [
+        "string"
+      ],
+      "rejectionMatched": false,
+      "decisions": [
+        {
+          "requestId": "bd03997d-6ea3-4413-9a31-841832aa02d5",
+          "callId": "qa-approval-present-one-call",
+          "toolName": "present",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "第一份待交付.txt"
+        },
+        {
+          "requestId": "1938764a-b9f8-4000-8bb1-a0f1125cb80c",
+          "callId": "qa-approval-present-one-call",
+          "toolName": "present",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "第二份待交付.txt"
+        }
+      ],
+      "finalTextMatched": true,
+      "sideEffectsMatched": true,
+      "deliverables": 2,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      }
+    },
+    {
+      "name": "reload",
+      "status": "passed",
+      "businessRequests": 3,
+      "toolResultSequences": [
+        [],
+        [
+          "qa-approval-reload-write"
+        ],
+        [
+          "qa-approval-reload-write",
+          "qa-approval-reload-present"
+        ]
+      ],
+      "toolContentShapes": [
+        "string"
+      ],
+      "rejectionMatched": false,
+      "decisions": [
+        {
+          "requestId": "16009a07-10d8-460b-8b42-722757b8ae2f",
+          "callId": "qa-approval-reload-write",
+          "toolName": "office_write_file",
+          "outcome": "allowed-once",
+          "staleRejected": true,
+          "target": "reload-result.txt"
+        }
+      ],
+      "finalTextMatched": true,
+      "sideEffectsMatched": true,
+      "deliverables": 1,
+      "replayGuard": {
+        "exactRealRequestReplayed": true,
+        "httpStatus": 500,
+        "matchedError": true,
+        "noAcceptedReplay": true
+      },
+      "cleanup": {
+        "pending": 0,
+        "activeRuns": 0,
+        "temporaryRemoved": true
+      }
+    }
+  ],
+  "boundaries": [
+    "The current fake provider callback and exact prompt matcher are extracted verbatim; only structural observation is inserted.",
+    "Host broker decisions are made programmatically for synthetic files; no user or UI approval interaction is claimed.",
+    "reload names the original two-tool fixture sequence; no renderer reload or handoff ACK is simulated here.",
+    "Only bounded structural request metadata and synthetic result match booleans are retained; request bodies, credentials and live profile contents are not archived."
+  ],
+  "bootstrapFailure": "The first scratch configuration supplied reasoningMap:true instead of the production mapping; all four attempts sent zero model requests. Their complete reports/log remain bootstrap-invalid-probe-config-*; corrected probe uses actual resolveProvider.",
+  "artifacts": [
+    {
+      "file": "result.json",
+      "bytes": 29156,
+      "sha256": "9d6a8dbd3efbfc3a30a28bb9f555d5791e79428feea78a9ff5b68c578b4be7fc"
+    },
+    {
+      "file": "run.log",
+      "bytes": 367,
+      "sha256": "4fe4dbff300e1d24013b27871a575c6479e8c9087c12c2d465f1894e27f9ab96"
+    },
+    {
+      "file": "probe.mjs",
+      "bytes": 13102,
+      "sha256": "10287836dde284fcdf399581f9aec4dc4361e8e6b7074c08e6a3be3e1cd25f31"
+    },
+    {
+      "file": "extracted-provider.json",
+      "bytes": 10731,
+      "sha256": "4635aeba39dc4ba681029514a506fea49dee4c7f2d67e70b57bd033a65e47173"
+    },
+    {
+      "file": "bootstrap-invalid-probe-config-result.json",
+      "bytes": 10131,
+      "sha256": "93effacc9921a7805e86664d3d785151203920c34be85ad80b5a15ba9c5a6c7b"
+    },
+    {
+      "file": "bootstrap-invalid-probe-config-run.log",
+      "bytes": 564,
+      "sha256": "599cff32a8bd2266d42ab08968aa5d07a42d70fbe894845dc8e328dbfe8ce8cd"
+    },
+    {
+      "file": "bootstrap-invalid-probe-config-note.json",
+      "bytes": 404,
+      "sha256": "e9f4f5a10f1eb196d12e84c5d4832aa15064b89c9445cda005320cb48251b1b0"
+    }
+  ]
+}

@@ -1,0 +1,1351 @@
+﻿2026-11-27T06:49:45.0484123Z Current runner version: '2.338.2'
+2026-11-27T06:49:45.0511372Z ##[group]Runner Image Provisioner
+2026-11-27T06:49:45.0512277Z Hosted Compute Agent
+2026-11-27T06:49:45.0512832Z Version: 20261111.635
+2026-11-27T06:49:45.0513415Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-27T06:49:45.0514153Z Build Date: 2026-11-11T01:49:01Z
+2026-11-27T06:49:45.0514792Z Worker ID: {0b8491c4-8bfb-4279-9472-86371648675b}
+2026-11-27T06:49:45.0515499Z Region: eastus3
+2026-11-27T06:49:45.0516336Z Cloud: Azure
+2026-11-27T06:49:45.0516863Z ##[endgroup]
+2026-11-27T06:49:45.0518276Z ##[group]Operating System
+2026-11-27T06:49:45.0518882Z Microsoft Windows Server 2025
+2026-11-27T06:49:45.0519447Z 10.0.26100
+2026-11-27T06:49:45.0519950Z Datacenter
+2026-11-27T06:49:45.0520440Z ##[endgroup]
+2026-11-27T06:49:45.0520956Z ##[group]Runner Image
+2026-11-27T06:49:45.0521524Z Image: windows-2025-vs2026
+2026-11-27T06:49:45.0522078Z Version: 20261123.321.1
+2026-11-27T06:49:45.0523734Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261123.321/images/windows/Windows2025-VS2026-Readme.md
+2026-11-27T06:49:45.0525390Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261123.321
+2026-11-27T06:49:45.0526551Z ##[endgroup]
+2026-11-27T06:49:45.0527721Z ##[group]GITHUB_TOKEN Permissions
+2026-11-27T06:49:45.0530009Z Contents: read
+2026-11-27T06:49:45.0530732Z Metadata: read
+2026-11-27T06:49:45.0531365Z ##[endgroup]
+2026-11-27T06:49:45.0534065Z Secret source: Actions
+2026-11-27T06:49:45.0535347Z Cache mode: write
+2026-11-27T06:49:45.0536877Z Prepare workflow directory
+2026-11-27T06:49:45.1073748Z Prepare all required actions
+2026-11-27T06:49:45.1146117Z Getting action download info
+2026-11-27T06:49:45.3334868Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-11-27T06:49:45.4390236Z Download action repository 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-11-27T06:49:45.5784173Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-11-27T06:49:45.7898138Z Complete job name: windows-packed
+2026-11-27T06:49:45.9632029Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-11-27T06:49:45.9633574Z with:
+2026-11-27T06:49:45.9634149Z   ref: feaadaeb575671fa326b9eedd6ac631c7e68f1ce
+2026-11-27T06:49:45.9634780Z   fetch-depth: 0
+2026-11-27T06:49:45.9635568Z   persist-credentials: false
+2026-11-27T06:49:45.9636162Z   repository: daniei-chen/ZhiXing
+2026-11-27T06:49:45.9640410Z   token: ***
+2026-11-27T06:49:45.9640870Z   ssh-strict: true
+2026-11-27T06:49:45.9641408Z   ssh-user: git
+2026-11-27T06:49:45.9641856Z   clean: true
+2026-11-27T06:49:45.9642315Z   sparse-checkout-cone-mode: true
+2026-11-27T06:49:45.9642841Z   fetch-tags: false
+2026-11-27T06:49:45.9643330Z   show-progress: true
+2026-11-27T06:49:45.9643811Z   lfs: false
+2026-11-27T06:49:45.9644209Z   submodules: false
+2026-11-27T06:49:45.9644671Z   set-safe-directory: true
+2026-11-27T06:49:45.9645258Z   allow-unsafe-pr-checkout: false
+2026-11-27T06:49:45.9646060Z env:
+2026-11-27T06:49:45.9646592Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:49:45.9647130Z ##[endgroup]
+2026-11-27T06:49:46.1336699Z Syncing repository: daniei-chen/ZhiXing
+2026-11-27T06:49:46.1339075Z ##[group]Getting Git version info
+2026-11-27T06:49:46.1339743Z Working directory is 'D:\a\ZhiXing\ZhiXing'
+2026-11-27T06:49:46.2117084Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-11-27T06:49:46.5180793Z git version 2.56.1.windows.1
+2026-11-27T06:49:46.5240124Z ##[endgroup]
+2026-11-27T06:49:46.5258225Z Temporarily overriding HOME='D:\a\_temp\2be00d37-a128-47eb-8044-ac973654a1df' before making global git config changes
+2026-11-27T06:49:46.5260476Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-27T06:49:46.5271115Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\ZhiXing\ZhiXing
+2026-11-27T06:49:46.5907317Z Deleting the contents of 'D:\a\ZhiXing\ZhiXing'
+2026-11-27T06:49:46.5912743Z ##[group]Determining repository object format
+2026-11-27T06:49:46.5915340Z ##[endgroup]
+2026-11-27T06:49:46.5916301Z ##[group]Initializing the repository
+2026-11-27T06:49:46.5925382Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\ZhiXing\ZhiXing
+2026-11-27T06:49:46.6626483Z Initialized empty Git repository in D:/a/ZhiXing/ZhiXing/.git/
+2026-11-27T06:49:46.6678283Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/daniei-chen/ZhiXing
+2026-11-27T06:49:46.7328124Z ##[endgroup]
+2026-11-27T06:49:46.7330837Z ##[group]Disabling automatic garbage collection
+2026-11-27T06:49:46.7338936Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-11-27T06:49:46.7833423Z ##[endgroup]
+2026-11-27T06:49:46.7835645Z ##[group]Setting up auth
+2026-11-27T06:49:46.7837098Z Removing SSH command configuration
+2026-11-27T06:49:46.7843813Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-27T06:49:46.8239096Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-27T06:49:48.0865300Z Removing HTTP extra header
+2026-11-27T06:49:48.0881298Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-27T06:49:48.1300709Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-27T06:49:48.6937779Z Removing includeIf entries pointing to credentials config files
+2026-11-27T06:49:48.6952151Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-27T06:49:48.7351713Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-27T06:49:49.2917190Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-11-27T06:49:49.3374338Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/ZhiXing/ZhiXing/.git.path D:\a\_temp\git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:49.3782819Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path D:\a\_temp\git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:49.4236326Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:49.4669492Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:49.5070569Z ##[endgroup]
+2026-11-27T06:49:49.5071257Z ##[group]Fetching the repository
+2026-11-27T06:49:49.5082795Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-11-27T06:49:50.8396381Z From https://github.com/daniei-chen/ZhiXing
+2026-11-27T06:49:50.8397846Z  * [new branch]      diagnostics/phase-0a-ocr -> origin/diagnostics/phase-0a-ocr
+2026-11-27T06:49:50.8398810Z  * [new branch]      feat/0.12.0-kernel-privacy -> origin/feat/0.12.0-kernel-privacy
+2026-11-27T06:49:50.8401909Z  * [new branch]      feat/native-approval-recovery -> origin/feat/native-approval-recovery
+2026-11-27T06:49:50.8403194Z  * [new branch]      feat/workbench-preview-0.42.0 -> origin/feat/workbench-preview-0.42.0
+2026-11-27T06:49:50.8403959Z  * [new branch]      fix/phase-0a-audit    -> origin/fix/phase-0a-audit
+2026-11-27T06:49:50.8404590Z  * [new branch]      hardening/0.11.0-core -> origin/hardening/0.11.0-core
+2026-11-27T06:49:50.8405101Z  * [new branch]      main                  -> origin/main
+2026-11-27T06:49:50.8405605Z  * [new tag]         v0.11.0               -> v0.11.0
+2026-11-27T06:49:50.8406047Z  * [new tag]         v0.11.0-preview.1     -> v0.11.0-preview.1
+2026-11-27T06:49:50.8406492Z  * [new tag]         v0.12.0               -> v0.12.0
+2026-11-27T06:49:50.8406991Z  * [new tag]         v0.12.1               -> v0.12.1
+2026-11-27T06:49:50.8407383Z  * [new tag]         v0.12.10              -> v0.12.10
+2026-11-27T06:49:50.8407765Z  * [new tag]         v0.12.11              -> v0.12.11
+2026-11-27T06:49:50.8408184Z  * [new tag]         v0.12.12              -> v0.12.12
+2026-11-27T06:49:50.8408563Z  * [new tag]         v0.12.2               -> v0.12.2
+2026-11-27T06:49:50.8410727Z  * [new tag]         v0.12.3               -> v0.12.3
+2026-11-27T06:49:50.8411307Z  * [new tag]         v0.12.4               -> v0.12.4
+2026-11-27T06:49:50.8411881Z  * [new tag]         v0.12.5               -> v0.12.5
+2026-11-27T06:49:50.8412401Z  * [new tag]         v0.12.6               -> v0.12.6
+2026-11-27T06:49:50.8412913Z  * [new tag]         v0.12.7               -> v0.12.7
+2026-11-27T06:49:50.8413432Z  * [new tag]         v0.12.8               -> v0.12.8
+2026-11-27T06:49:50.8413966Z  * [new tag]         v0.12.9               -> v0.12.9
+2026-11-27T06:49:50.8414562Z  * [new tag]         v0.13.0               -> v0.13.0
+2026-11-27T06:49:50.8415111Z  * [new tag]         v0.13.1               -> v0.13.1
+2026-11-27T06:49:50.8415611Z  * [new tag]         v0.13.2               -> v0.13.2
+2026-11-27T06:49:50.8416256Z  * [new tag]         v0.13.3               -> v0.13.3
+2026-11-27T06:49:50.8416753Z  * [new tag]         v0.13.4               -> v0.13.4
+2026-11-27T06:49:50.8417268Z  * [new tag]         v0.13.5               -> v0.13.5
+2026-11-27T06:49:50.8418845Z  * [new tag]         v0.13.6               -> v0.13.6
+2026-11-27T06:49:50.8419422Z  * [new tag]         v0.13.7               -> v0.13.7
+2026-11-27T06:49:50.8419965Z  * [new tag]         v0.13.8               -> v0.13.8
+2026-11-27T06:49:50.8420587Z  * [new tag]         v0.13.9               -> v0.13.9
+2026-11-27T06:49:50.8421080Z  * [new tag]         v0.14.0               -> v0.14.0
+2026-11-27T06:49:50.8421980Z  * [new tag]         v0.14.1               -> v0.14.1
+2026-11-27T06:49:50.8422500Z  * [new tag]         v0.14.10              -> v0.14.10
+2026-11-27T06:49:50.8423012Z  * [new tag]         v0.14.11              -> v0.14.11
+2026-11-27T06:49:50.8423527Z  * [new tag]         v0.14.12              -> v0.14.12
+2026-11-27T06:49:50.8424096Z  * [new tag]         v0.14.13              -> v0.14.13
+2026-11-27T06:49:50.8424663Z  * [new tag]         v0.14.2               -> v0.14.2
+2026-11-27T06:49:50.8425165Z  * [new tag]         v0.14.3               -> v0.14.3
+2026-11-27T06:49:50.8425668Z  * [new tag]         v0.14.4               -> v0.14.4
+2026-11-27T06:49:50.8426179Z  * [new tag]         v0.14.5               -> v0.14.5
+2026-11-27T06:49:50.8426709Z  * [new tag]         v0.14.6               -> v0.14.6
+2026-11-27T06:49:50.8427245Z  * [new tag]         v0.14.7               -> v0.14.7
+2026-11-27T06:49:50.8427753Z  * [new tag]         v0.14.8               -> v0.14.8
+2026-11-27T06:49:50.8428297Z  * [new tag]         v0.14.9               -> v0.14.9
+2026-11-27T06:49:50.8428869Z  * [new tag]         v0.15.0               -> v0.15.0
+2026-11-27T06:49:50.8429895Z  * [new tag]         v0.15.1               -> v0.15.1
+2026-11-27T06:49:50.8430324Z  * [new tag]         v0.15.2               -> v0.15.2
+2026-11-27T06:49:50.8430714Z  * [new tag]         v0.16.0               -> v0.16.0
+2026-11-27T06:49:50.8431407Z  * [new tag]         v0.17.0               -> v0.17.0
+2026-11-27T06:49:50.8431814Z  * [new tag]         v0.18.0               -> v0.18.0
+2026-11-27T06:49:50.8432209Z  * [new tag]         v0.19.0               -> v0.19.0
+2026-11-27T06:49:50.8432638Z  * [new tag]         v0.20.0               -> v0.20.0
+2026-11-27T06:49:50.8433012Z  * [new tag]         v0.21.0               -> v0.21.0
+2026-11-27T06:49:50.8433374Z  * [new tag]         v0.22.0               -> v0.22.0
+2026-11-27T06:49:50.8433768Z  * [new tag]         v0.22.1               -> v0.22.1
+2026-11-27T06:49:50.8434134Z  * [new tag]         v0.23.0               -> v0.23.0
+2026-11-27T06:49:50.8434489Z  * [new tag]         v0.24.0               -> v0.24.0
+2026-11-27T06:49:50.8434864Z  * [new tag]         v0.25.0               -> v0.25.0
+2026-11-27T06:49:50.8435226Z  * [new tag]         v0.26.0               -> v0.26.0
+2026-11-27T06:49:50.8435644Z  * [new tag]         v0.27.0               -> v0.27.0
+2026-11-27T06:49:50.8436017Z  * [new tag]         v0.28.0               -> v0.28.0
+2026-11-27T06:49:50.8436370Z  * [new tag]         v0.29.0               -> v0.29.0
+2026-11-27T06:49:50.8436759Z  * [new tag]         v0.30.0               -> v0.30.0
+2026-11-27T06:49:50.8437150Z  * [new tag]         v0.31.0               -> v0.31.0
+2026-11-27T06:49:50.8437524Z  * [new tag]         v0.32.0               -> v0.32.0
+2026-11-27T06:49:50.8437894Z  * [new tag]         v0.33.0               -> v0.33.0
+2026-11-27T06:49:50.8438245Z  * [new tag]         v0.34.0               -> v0.34.0
+2026-11-27T06:49:50.8438717Z  * [new tag]         v0.35.0               -> v0.35.0
+2026-11-27T06:49:50.8439420Z  * [new tag]         v0.36.0               -> v0.36.0
+2026-11-27T06:49:50.8439988Z  * [new tag]         v0.37.0               -> v0.37.0
+2026-11-27T06:49:50.8440525Z  * [new tag]         v0.38.0               -> v0.38.0
+2026-11-27T06:49:50.8441022Z  * [new tag]         v0.39.0               -> v0.39.0
+2026-11-27T06:49:50.8441599Z  * [new tag]         v0.40.0               -> v0.40.0
+2026-11-27T06:49:50.8442108Z  * [new tag]         v0.41.0               -> v0.41.0
+2026-11-27T06:49:50.8442956Z  * [new tag]         v0.42.0               -> v0.42.0
+2026-11-27T06:49:50.8464296Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse --verify --quiet feaadaeb575671fa326b9eedd6ac631c7e68f1ce^{object}
+2026-11-27T06:49:50.8868723Z feaadaeb575671fa326b9eedd6ac631c7e68f1ce
+2026-11-27T06:49:50.8913124Z ##[endgroup]
+2026-11-27T06:49:50.8913970Z ##[group]Determining the checkout info
+2026-11-27T06:49:50.8914781Z ##[endgroup]
+2026-11-27T06:49:50.8921729Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-11-27T06:49:50.9432262Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-11-27T06:49:50.9815468Z ##[group]Checking out the ref
+2026-11-27T06:49:50.9825579Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force feaadaeb575671fa326b9eedd6ac631c7e68f1ce
+2026-11-27T06:49:51.2303545Z Note: switching to 'feaadaeb575671fa326b9eedd6ac631c7e68f1ce'.
+2026-11-27T06:49:51.2304076Z 
+2026-11-27T06:49:51.2304542Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-27T06:49:51.2305749Z changes and commit them, and you can discard any commits you make in this
+2026-11-27T06:49:51.2306747Z state without impacting any branches by switching back to a branch.
+2026-11-27T06:49:51.2307529Z 
+2026-11-27T06:49:51.2307797Z If you want to create a new branch to retain commits you create, you may
+2026-11-27T06:49:51.2308385Z do so (now or later) by using -c with the switch command. Example:
+2026-11-27T06:49:51.2308723Z 
+2026-11-27T06:49:51.2309062Z   git switch -c <new-branch-name>
+2026-11-27T06:49:51.2309313Z 
+2026-11-27T06:49:51.2309598Z Or undo this operation with:
+2026-11-27T06:49:51.2309838Z 
+2026-11-27T06:49:51.2309999Z   git switch -
+2026-11-27T06:49:51.2310147Z 
+2026-11-27T06:49:51.2310677Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-27T06:49:51.2311024Z 
+2026-11-27T06:49:51.2311331Z HEAD is now at feaadae feat: preserve native approvals and results across renderer recovery
+2026-11-27T06:49:51.2424842Z ##[endgroup]
+2026-11-27T06:49:51.2939354Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-11-27T06:49:51.3305650Z feaadaeb575671fa326b9eedd6ac631c7e68f1ce
+2026-11-27T06:49:51.3357174Z ##[group]Removing auth
+2026-11-27T06:49:51.3357692Z Removing SSH command configuration
+2026-11-27T06:49:51.3366201Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-27T06:49:51.3769237Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-27T06:49:51.9686428Z Removing HTTP extra header
+2026-11-27T06:49:51.9695360Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-27T06:49:52.0112511Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-27T06:49:52.5910921Z Removing includeIf entries pointing to credentials config files
+2026-11-27T06:49:52.5917431Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-27T06:49:52.6266250Z includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git.path
+2026-11-27T06:49:52.6267414Z includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path
+2026-11-27T06:49:52.6268164Z includeif.gitdir:/github/workspace/.git.path
+2026-11-27T06:49:52.6268818Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-27T06:49:52.6324759Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git.path
+2026-11-27T06:49:52.6676781Z D:\a\_temp\git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:52.6729833Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git.path D\:\\a\\_temp\\git\-credentials\-fd988c9b\-b908\-4368\-840c\-44a1f8c2fe86\.config
+2026-11-27T06:49:52.7127859Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path
+2026-11-27T06:49:52.7502975Z D:\a\_temp\git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:52.7558506Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/ZhiXing/ZhiXing/.git/worktrees/*.path D\:\\a\\_temp\\git\-credentials\-fd988c9b\-b908\-4368\-840c\-44a1f8c2fe86\.config
+2026-11-27T06:49:52.7973601Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-27T06:49:52.8327351Z /github/runner_temp/git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:52.8375190Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-fd988c9b\-b908\-4368\-840c\-44a1f8c2fe86\.config
+2026-11-27T06:49:52.8768540Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-27T06:49:52.9108939Z /github/runner_temp/git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config
+2026-11-27T06:49:52.9154248Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-fd988c9b\-b908\-4368\-840c\-44a1f8c2fe86\.config
+2026-11-27T06:49:52.9544353Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-27T06:49:53.5265179Z Removing credentials config 'D:\a\_temp\git-credentials-fd988c9b-b908-4368-840c-44a1f8c2fe86.config'
+2026-11-27T06:49:53.5277515Z ##[endgroup]
+2026-11-27T06:49:53.5702660Z ##[group]Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+2026-11-27T06:49:53.5703216Z with:
+2026-11-27T06:49:53.5703574Z   node-version: 24.19.0
+2026-11-27T06:49:53.5703887Z   package-manager-cache: false
+2026-11-27T06:49:53.5704243Z   check-latest: false
+2026-11-27T06:49:53.5706732Z   token: ***
+2026-11-27T06:49:53.5706991Z env:
+2026-11-27T06:49:53.5707295Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:49:53.5707658Z ##[endgroup]
+2026-11-27T06:49:53.7330414Z Attempting to download 24.19.0...
+2026-11-27T06:49:54.5316947Z Acquiring 24.19.0 - x64 from https://github.com/actions/node-versions/releases/download/24.19.0-30872449280/node-24.19.0-win32-x64.7z
+2026-11-27T06:49:54.8828457Z Extracting ...
+2026-11-27T06:49:56.9583006Z Adding to the cache ...
+2026-11-27T06:50:00.5236638Z ##[group]Environment details
+2026-11-27T06:50:01.5110852Z node: v24.19.0
+2026-11-27T06:50:01.5111425Z npm: 11.17.0
+2026-11-27T06:50:01.5111864Z yarn: 1.22.22
+2026-11-27T06:50:01.5113002Z ##[endgroup]
+2026-11-27T06:50:01.5485314Z ##[group]Run New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-packed-logs" | Out-Null
+2026-11-27T06:50:01.5486379Z [36;1mNew-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-packed-logs" | Out-Null[0m
+2026-11-27T06:50:01.5487244Z [36;1mNew-Item -ItemType Directory -Force "$env:RUNNER_TEMP/zhixing-packed-artifact" | Out-Null[0m
+2026-11-27T06:50:01.6352543Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T06:50:01.6353085Z env:
+2026-11-27T06:50:01.6353461Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:50:01.6353870Z ##[endgroup]
+2026-11-27T06:50:02.0831333Z ##[group]Run npm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/install.log"
+2026-11-27T06:50:02.0832438Z [36;1mnpm.cmd ci --no-audit --no-fund 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/install.log"[0m
+2026-11-27T06:50:02.0833388Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T06:50:02.0905168Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T06:50:02.0905663Z env:
+2026-11-27T06:50:02.0906010Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:50:02.0906433Z ##[endgroup]
+2026-11-27T06:50:14.3510421Z [31;1mnpm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported[0m
+2026-11-27T06:50:16.3963107Z [31;1mnpm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.[0m
+2026-11-27T06:50:16.3977414Z [31;1mnpm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.[0m
+2026-11-27T06:50:17.2786838Z [31;1mnpm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me[0m
+2026-11-27T06:50:20.5300418Z [31;1mnpm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.[0m
+2026-11-27T06:50:21.6647827Z [31;1mnpm warn deprecated fstream@1.0.12: This package is no longer supported.[0m
+2026-11-27T06:50:24.6119320Z [31;1mnpm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead[0m
+2026-11-27T06:51:20.7662995Z 
+2026-11-27T06:51:20.7665913Z added 1327 packages in 1m
+2026-11-27T06:51:20.7698533Z [31;1mnpm warn allow-scripts 7 packages have install scripts not yet covered by allowScripts:[0m
+2026-11-27T06:51:20.7705312Z [31;1mnpm warn allow-scripts   @deepseek-ai/dsh-subprocess-local@0.2.2-rc.5 (postinstall: node scripts/ensure-spawn-helper.mjs)[0m
+2026-11-27T06:51:20.7712371Z [31;1mnpm warn allow-scripts   @google/genai@2.21.0 (preinstall: echo 'preinstall: no-op')[0m
+2026-11-27T06:51:20.7718077Z [31;1mnpm warn allow-scripts   electron-winstaller@5.4.0 (install: node ./script/select-7z-arch.js)[0m
+2026-11-27T06:51:20.7724627Z [31;1mnpm warn allow-scripts   esbuild@0.25.12 (postinstall: node install.js)[0m
+2026-11-27T06:51:20.7732517Z [31;1mnpm warn allow-scripts   koffi@3.1.1 (install: node ./cnoke.cjs -P . -D src/koffi --prebuild --release)[0m
+2026-11-27T06:51:20.7740177Z [31;1mnpm warn allow-scripts   node-pty@1.2.0-beta.15 (install: node scripts/prebuild.js || node-gyp rebuild; postinstall: node scripts/post-install.js)[0m
+2026-11-27T06:51:20.7746620Z [31;1mnpm warn allow-scripts   protobufjs@7.6.6 (postinstall: node scripts/postinstall)[0m
+2026-11-27T06:51:20.7779421Z [31;1mnpm warn allow-scripts[0m
+2026-11-27T06:51:20.7788620Z [31;1mnpm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.[0m
+2026-11-27T06:51:21.7791978Z ##[group]Run node node_modules/electron/install.js 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/electron.log"
+2026-11-27T06:51:21.7792998Z [36;1mnode node_modules/electron/install.js 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/electron.log"[0m
+2026-11-27T06:51:21.7793676Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-11-27T06:51:21.7794248Z [36;1mif (-not (Test-Path -LiteralPath 'node_modules/electron/dist/electron.exe' -PathType Leaf)) {[0m
+2026-11-27T06:51:21.7794907Z [36;1m  Write-Error 'The locked Electron installer did not provide the Windows executable.'[0m
+2026-11-27T06:51:21.7795713Z [36;1m  exit 1[0m
+2026-11-27T06:51:21.7795996Z [36;1m}[0m
+2026-11-27T06:51:21.7862642Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T06:51:21.7863159Z env:
+2026-11-27T06:51:21.7863546Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:51:21.7863981Z ##[endgroup]
+2026-11-27T06:51:27.2629207Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T06:51:27.2630024Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T06:51:27.2630969Z [36;1mnpm.cmd run electron:dist 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/package.log"[0m
+2026-11-27T06:51:27.2631546Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T06:51:27.2699056Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T06:51:27.2699574Z env:
+2026-11-27T06:51:27.2699916Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:51:27.2700335Z ##[endgroup]
+2026-11-27T06:51:27.9043857Z 
+2026-11-27T06:51:27.9049473Z > office-agent@0.43.0 electron:dist
+2026-11-27T06:51:27.9052182Z > npm run build && electron-builder --win --x64 --dir --publish never && node scripts/generate-installer-path-policy.mjs && node scripts/write-update-config.mjs
+2026-11-27T06:51:27.9053365Z 
+2026-11-27T06:51:28.0826336Z 
+2026-11-27T06:51:28.0831122Z > office-agent@0.43.0 build
+2026-11-27T06:51:28.0833388Z > vite build && node scripts/prepare-sites-build.mjs
+2026-11-27T06:51:28.0834322Z 
+2026-11-27T06:51:28.5063915Z [36mvite v6.4.6 [32mbuilding for production...[36m[39m
+2026-11-27T06:51:28.5744935Z transforming...
+2026-11-27T06:51:33.9885325Z [32m✓[39m 4911 modules transformed.
+2026-11-27T06:51:34.2073534Z rendering chunks...
+2026-11-27T06:51:34.4201494Z computing gzip size...
+2026-11-27T06:51:34.4492282Z [2mdist/client/[22m[32mindex.html                    [39m[1m[2m  0.57 kB[22m[1m[22m[2m │ gzip:   0.38 kB[22m
+2026-11-27T06:51:34.4494037Z [2mdist/client/[22m[35massets/xterm-DYP7pi_n.css     [39m[1m[2m  4.15 kB[22m[1m[22m[2m │ gzip:   1.68 kB[22m
+2026-11-27T06:51:34.4502540Z [2mdist/client/[22m[35massets/index-B2FkOHKZ.css     [39m[1m[2m 98.70 kB[22m[1m[22m[2m │ gzip:  18.65 kB[22m
+2026-11-27T06:51:34.4506565Z [2mdist/client/[22m[36massets/addon-fit-BEYchpMh.js  [39m[1m[2m  1.81 kB[22m[1m[22m[2m │ gzip:   0.83 kB[22m
+2026-11-27T06:51:34.4508277Z [2mdist/client/[22m[36massets/markdown-BOhPJHrX.js   [39m[1m[2m176.42 kB[22m[1m[22m[2m │ gzip:  54.00 kB[22m
+2026-11-27T06:51:34.4510078Z [2mdist/client/[22m[36massets/xterm-DoU7rZf7.js      [39m[1m[2m291.26 kB[22m[1m[22m[2m │ gzip:  72.66 kB[22m
+2026-11-27T06:51:34.4512515Z [2mdist/client/[22m[36massets/index-CeNg3ev_.js      [39m[1m[33m771.67 kB[39m[22m[2m │ gzip: 224.08 kB[22m
+2026-11-27T06:51:34.5457543Z [31;1m[33m[0m
+2026-11-27T06:51:34.5491935Z [31;1m(!) Some chunks are larger than 500 kB after minification. Consider:[0m
+2026-11-27T06:51:34.5510482Z [31;1m- Using dynamic import() to code-split the application[0m
+2026-11-27T06:51:34.5518268Z [31;1m- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks[0m
+2026-11-27T06:51:34.5523639Z [31;1m- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m[0m
+2026-11-27T06:51:34.5525317Z [32m✓ built in 5.91s[39m
+2026-11-27T06:51:34.6196168Z Prepared Sites build: dist/server/index.js and dist/.openai/hosting.json
+2026-11-27T06:51:35.4684995Z   • electron-builder  version=26.18.0 os=10.0.26100
+2026-11-27T06:51:35.4768293Z   • loaded configuration  file=D:\a\ZhiXing\ZhiXing\electron-builder.yml
+2026-11-27T06:51:36.2692284Z   • skipped dependencies rebuild  reason=npmRebuild is set to false
+2026-11-27T06:51:36.2693545Z   • packaging       platform=win32 arch=x64 electron=44.11.5 appOutDir=release\win-unpacked
+2026-11-27T06:51:36.2702267Z   • using custom unpacked Electron distribution  electronDist=node_modules\electron\dist
+2026-11-27T06:51:36.2704638Z   • copying unpacked Electron  source=D:\a\ZhiXing\ZhiXing\node_modules\electron\dist destination=D:\a\ZhiXing\ZhiXing\release\win-unpacked
+2026-11-27T06:51:36.4168114Z   • asar usage is disabled — this is strongly not recommended  solution=enable asar and use asarUnpack to unpack files that must be externally available
+2026-11-27T06:51:36.4415605Z   • searching for node modules  pm=npm searchDir=D:\a\ZhiXing\ZhiXing
+2026-11-27T06:51:42.3215502Z   • duplicate dependency references  dependencies=["@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","js-yaml@4.3.2","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","node-addon-require-builtin@0.1.9","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis-plugin-include@1.1.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","sharp@0.35.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-speech-to-text@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis-plugin-include@1.1.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/dsh-hmr@0.2.2-rc.5","js-yaml@4.3.2","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","unicode-trie@2.0.0","koffi@3.1.1","saxes@6.0.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/cordis-plugin-include@1.1.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis-plugin-timer@1.2.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","node-addon-require-builtin@0.1.9","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis-plugin-include@1.1.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-settings@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","js-yaml@4.3.2","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-official-bundles@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/dsh-plugin-manager@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-settings@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","execa@10.2.1","hosted-git-info@9.0.3","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-config-editor@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-agent-preset-registry@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-storage-domain@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-compaction-image-offload@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-format@0.2.2-rc.5","@deepseek-ai/dsh-util-time@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-format-v0-to-v1@0.2.2-rc.5","@deepseek-ai/dsh-session-format@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-format-v0-to-v1@0.2.2-rc.5","@deepseek-ai/dsh-session-format-v1-to-v2@0.2.2-rc.5","@deepseek-ai/dsh-session-format@0.2.2-rc.5","@deepseek-ai/dsh-session-format-v3-to-v4@0.2.2-rc.5","@deepseek-ai/dsh-session-format@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session-projection-cache@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tool-todo@0.2.2-rc.5","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-settings@0.2.2-rc.5","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-util-time@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-preset-registry@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session-query@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/dsh-util-time@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-util-time@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-storage-domain@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","koffi@3.1.1","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@js-temporal/polyfill@0.5.1","@deepseek-ai/cordis-plugin-include@1.1.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-mcp-client@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-token-meter@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-preset-registry@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/cordis-plugin-timer@1.2.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-default-model@0.2.2-rc.5","@deepseek-ai/dsh-agent-instructions@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-api-gateway@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-attachment-local@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-compaction-basic@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-compaction-tool-result-pruner@0.2.2-rc.5","@deepseek-ai/dsh-config-editor@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","chokidar@5.0.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-host-webserver@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs-local@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs-local@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-goal@0.2.2-rc.5","@deepseek-ai/dsh-hmr@0.2.2-rc.5","@deepseek-ai/dsh-jobs-local@0.2.2-rc.5","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-deepseek-account@0.2.2-rc.5","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-llm-deepseek@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@aws-sdk/types@3.975.1","@smithy/types@4.20.0","@smithy/core@3.41.0","@smithy/signature-v4@5.7.5","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/fetch-http-handler@5.8.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/credential-provider-env@3.972.84","@aws-sdk/credential-provider-http@3.972.86","@aws-sdk/core@3.981.0","@aws-sdk/nested-clients@3.998.3","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/credential-provider-process@3.972.84","@aws-sdk/credential-provider-sso@3.973.28","@aws-sdk/credential-provider-web-identity@3.972.90","@aws-sdk/nested-clients@3.998.3","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/credential-provider-imds@4.5.2","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/nested-clients@3.998.3","@aws-sdk/core@3.981.0","@aws-sdk/nested-clients@3.998.3","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/nested-clients@3.998.3","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/core@3.41.0","@smithy/types@4.20.0","@smithy/types@4.20.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/fetch-http-handler@5.8.1","@smithy/signature-v4@5.7.5","@smithy/types@4.20.0","@aws-sdk/core@3.981.0","@aws-sdk/core@3.981.0","@aws-sdk/types@3.975.1","@smithy/signature-v4@5.7.5","@smithy/types@4.20.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/fetch-http-handler@5.8.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@smithy/types@4.20.0","@aws-sdk/types@3.975.1","@smithy/core@3.41.0","@smithy/types@4.20.0","@smithy/types@4.20.0","@smithy/types@4.20.0","@smithy/core@3.41.0","@smithy/types@4.20.0","@smithy/node-http-handler@4.12.1","debug@4.4.3","fetch-blob@3.2.0","gaxios@7.3.1","ecdsa-sig-formatter@1.0.11","@types/node@26.6.6","@smithy/core@3.41.0","@smithy/types@4.20.0","debug@4.4.3","debug@4.4.3","@aws-sdk/credential-provider-node@3.972.97","@smithy/core@3.41.0","@smithy/types@4.20.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-mcp-resources@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session@0.2.2-rc.5","@opentelemetry/core@2.11.0","@opentelemetry/otlp-transformer@0.222.0","@opentelemetry/api-logs@0.222.0","@opentelemetry/core@2.11.0","@opentelemetry/resources@2.11.0","@opentelemetry/sdk-logs@0.222.0","@opentelemetry/core@2.11.0","@opentelemetry/resources@2.11.0","@opentelemetry/core@2.11.0","@opentelemetry/resources@2.11.0","@opentelemetry/core@2.11.0","@opentelemetry/api-logs@0.222.0","@opentelemetry/core@2.11.0","@opentelemetry/resources@2.11.0","get-stream@9.0.1","keyv@5.6.0","responselike@4.0.2","@deepseek-ai/dsh-permission-presets@0.2.2-rc.5","@deepseek-ai/dsh-plan-mode@0.2.2-rc.5","@deepseek-ai/dsh-plugin-manager@0.2.2-rc.5","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-preset-registry@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/dsh-win32-process@0.2.2-rc.5","koffi@3.1.1","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-format-catalog@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-format-v2-to-v3@0.2.2-rc.5","@deepseek-ai/dsh-session-format@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/node-addon-system@0.1.2","@deepseek-ai/schemastery@3.19.0","koffi@3.1.1","@deepseek-ai/dsh-session-projection-cache@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session-query@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-command-feedback@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-message-feedback@0.2.2-rc.5","@deepseek-ai/dsh-otel@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@opentelemetry/api-logs@0.222.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-settings@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-skill-filesystem@0.2.2-rc.5","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-token-meter@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-storage-domain@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-subprocess-local@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-token-meter@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-team@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-tool-bash@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-tool-executor-ptc@0.2.2-rc.5","@deepseek-ai/dsh-tool-fs-search@0.2.2-rc.5","@deepseek-ai/dsh-tool-fs@0.2.2-rc.5","@deepseek-ai/dsh-tool-goal@0.2.2-rc.5","@deepseek-ai/dsh-tool-jobs@0.2.2-rc.5","@deepseek-ai/dsh-tool-present@0.2.2-rc.5","@deepseek-ai/dsh-tool-pwsh@0.2.2-rc.5","@deepseek-ai/dsh-tool-skill@0.2.2-rc.5","@deepseek-ai/dsh-tool-subagent-control@0.2.2-rc.5","@deepseek-ai/dsh-tool-subagent@0.2.2-rc.5","@deepseek-ai/dsh-tool-todo@0.2.2-rc.5","@deepseek-ai/dsh-tool-web@0.2.2-rc.5","@deepseek-ai/dsh-tool-workflow@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-registry@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-typert-registry@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/dsh-user-questions@0.2.2-rc.5","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-deepseek-account@0.2.2-rc.5","@deepseek-ai/dsh-llm-deepseek-account@0.2.2-rc.5","@deepseek-ai/dsh-llm-deepseek-api-key@0.2.2-rc.5","@deepseek-ai/dsh-llm-deepseek@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-web@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-web@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-deepseek-account@0.2.2-rc.5","@deepseek-ai/dsh-llm-deepseek@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-web@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-web@0.2.2-rc.5","@deepseek-ai/dsh-workflow-ptc@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-goal@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-compaction-tool-result-pruner@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-token-meter@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-token-meter@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-ptc-runtime-node@0.2.2-rc.5","@deepseek-ai/dsh-storage-domain@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-user-questions@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-deepseek-chat-import@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-instructions@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-permission-presets@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-translator@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-forge@0.2.2-rc.5","@deepseek-ai/dsh-experimental-worktree@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-storage-domain@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-forge@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","execa@10.2.1","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-forge@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-shell-env@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-experimental-tool-worktree@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session-projection-cache@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session-query@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-settings@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","open@11.0.4","debug@4.4.3","mime-types@3.0.2","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-http-proxy@0.2.2-rc.5","@deepseek-ai/dsh-official-bundles@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-plugin-market@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-workflow-ptc@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-query-sqlite@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-query@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-title-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-api-terminal-controller@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-worktree@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-speech-to-text@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-experimental-speech-to-text-sensevoice@0.2.2-rc.5","@deepseek-ai/dsh-experimental-speech-to-text@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","chokidar@5.0.0","koffi@3.1.1","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-goal@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-default-model@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-permission-presets@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-session-query@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-hmr@0.2.2-rc.5","@deepseek-ai/dsh-http-proxy@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-mcp-resources@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-official-bundles@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-action-cards@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-action-cards@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-user-questions@0.2.2-rc.5","@deepseek-ai/dsh-plugin-manager@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-pwsh-local@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-schedule@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-client-connection@0.2.2-rc.5","@deepseek-ai/dsh-client-file-upload@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-office-kit@0.2.2-rc.5","@deepseek-ai/dsh-schedule@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-commands@0.2.2-rc.5","@deepseek-ai/dsh-goal@0.2.2-rc.5","@deepseek-ai/dsh-llm-deepseek-api-key@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-schedule@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/dsh-user-questions@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-skill-office@0.2.2-rc.5","@deepseek-ai/dsh-time-context@0.2.2-rc.5","@deepseek-ai/dsh-tool-ask-user@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-office-kit@0.2.2-rc.5","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-tool-present@0.2.2-rc.5","@deepseek-ai/dsh-tool-workspace-dependencies@0.2.2-rc.5","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-timer@1.2.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-loop@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-attachment-local@0.2.2-rc.5","@deepseek-ai/dsh-compaction-basic@0.2.2-rc.5","@deepseek-ai/dsh-compaction-image-offload@0.2.2-rc.5","@deepseek-ai/dsh-fs-local@0.2.2-rc.5","@deepseek-ai/dsh-jobs-local@0.2.2-rc.5","@deepseek-ai/dsh-llm-deepseek-api-key@0.2.2-rc.5","@deepseek-ai/dsh-llm-retry@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-mcp-resources@0.2.2-rc.5","@deepseek-ai/dsh-plugin-package-inventory-deepseek@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-local@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sdk-app@0.2.2-rc.5","@deepseek-ai/dsh-sdk-jsonrpc-server@0.2.2-rc.5","@deepseek-ai/dsh-session-log-deepseek@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence-jsonl@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subprocess-local@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-terminal-bash@0.2.2-rc.5","@deepseek-ai/dsh-token-meter@0.2.2-rc.5","@deepseek-ai/dsh-tool-bash-persistent@0.2.2-rc.5","@deepseek-ai/dsh-tool-fs@0.2.2-rc.5","@deepseek-ai/dsh-tool-pwsh-persistent@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection-cache@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session-query@0.2.2-rc.5","@deepseek-ai/dsh-session-title@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","chokidar@5.0.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-pwsh-local@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-util-time@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-compaction-image-offload@0.2.2-rc.5","@deepseek-ai/dsh-llm-retry@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-user-questions@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-shell-env@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-goal@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-shell-env@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-user-approval@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-schedule@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-skill@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-preset-registry@0.2.2-rc.5","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-tool-web@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-instructions@0.2.2-rc.5","@deepseek-ai/dsh-agent-preset-registry@0.2.2-rc.5","@deepseek-ai/dsh-agent-preset@0.2.2-rc.5","@deepseek-ai/dsh-agent-tool-presentation@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-api-session-controller@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent-preset-registry@0.2.2-rc.5","@deepseek-ai/dsh-credentials@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-settings@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-api-gateway@0.2.2-rc.5","@deepseek-ai/dsh-client-connection@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-storage-domain@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/dsh-util-ripgrep@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-app-boot@0.2.2-rc.5","@deepseek-ai/dsh-client-connection@0.2.2-rc.5","@deepseek-ai/dsh-client-file-upload@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-compaction-basic@0.2.2-rc.5","@deepseek-ai/dsh-compaction-tool-result-pruner@0.2.2-rc.5","@deepseek-ai/dsh-cordis-host-runner@0.2.2-rc.5","@deepseek-ai/dsh-file-reference-local@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-system-prompt@0.2.2-rc.5","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-client-connection@0.2.2-rc.5","@deepseek-ai/dsh-host-directory-picker-browse@0.2.2-rc.5","@deepseek-ai/dsh-host-directory-picker-native@0.2.2-rc.5","@deepseek-ai/dsh-host-webserver@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","koffi@3.1.1","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-client-connection@0.2.2-rc.5","@deepseek-ai/dsh-host-webserver@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-host-plugin-inventory@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-otel@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@opentelemetry/api-logs@0.222.0","@opentelemetry/otlp-exporter-base@0.222.0","@opentelemetry/sdk-logs@0.222.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis-plugin-loader@1.1.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-mcp-client@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-command-feedback@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-typert-protocol@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-office-kit@0.2.2-rc.5","@deepseek-ai/dsh-persona@0.2.2-rc.5","@deepseek-ai/dsh-plan-mode@0.2.2-rc.5","@deepseek-ai/dsh-plugin-manager@0.2.2-rc.5","@deepseek-ai/dsh-plugin-market@0.2.2-rc.5","@deepseek-ai/dsh-schedule@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-session-format@0.2.2-rc.5","@deepseek-ai/dsh-session-persistence@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-session-reference@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/dsh-session-projection@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-shell-env@0.2.2-rc.5","@deepseek-ai/dsh-skill-filesystem@0.2.2-rc.5","@deepseek-ai/dsh-skill-office@0.2.2-rc.5","@deepseek-ai/dsh-terminal-bash@0.2.2-rc.5","@deepseek-ai/dsh-time-context@0.2.2-rc.5","@deepseek-ai/dsh-tool-ask-user@0.2.2-rc.5","@deepseek-ai/dsh-tool-bash-persistent@0.2.2-rc.5","@deepseek-ai/dsh-tool-bash@0.2.2-rc.5","@deepseek-ai/dsh-tool-executor-ptc@0.2.2-rc.5","@deepseek-ai/dsh-tool-fs-search@0.2.2-rc.5","@deepseek-ai/dsh-tool-fs@0.2.2-rc.5","@deepseek-ai/dsh-tool-goal@0.2.2-rc.5","@deepseek-ai/dsh-tool-jobs@0.2.2-rc.5","@deepseek-ai/dsh-tool-office@0.2.2-rc.5","@deepseek-ai/dsh-tool-present@0.2.2-rc.5","@deepseek-ai/dsh-tool-pwsh-persistent@0.2.2-rc.5","@deepseek-ai/dsh-tool-pwsh@0.2.2-rc.5","@deepseek-ai/dsh-tool-skill@0.2.2-rc.5","@deepseek-ai/dsh-tool-subagent-control@0.2.2-rc.5","@deepseek-ai/dsh-tool-subagent@0.2.2-rc.5","@deepseek-ai/dsh-tool-todo@0.2.2-rc.5","@deepseek-ai/dsh-tool-web@0.2.2-rc.5","@deepseek-ai/dsh-tool-workflow@0.2.2-rc.5","@deepseek-ai/dsh-tool-workspace-dependencies@0.2.2-rc.5","@deepseek-ai/dsh-workflow-ptc@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-fs@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/dsh-workspace@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","is-inside-container@1.0.0","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-agent@0.2.2-rc.5","@deepseek-ai/dsh-llm@0.2.2-rc.5","@deepseek-ai/cordis@4.1.0","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-sandbox-policy@0.2.2-rc.5","@deepseek-ai/dsh-sandbox@0.2.2-rc.5","@deepseek-ai/dsh-session@0.2.2-rc.5","@deepseek-ai/dsh-subagent@0.2.2-rc.5","@deepseek-ai/dsh-tools@0.2.2-rc.5","@deepseek-ai/dsh-working-directory@0.2.2-rc.5","@deepseek-ai/schemastery@3.19.0","@deepseek-ai/schemastery@3.19.0","js-yaml@4.3.2","node-addon-require-builtin@0.1.9","react-dom@19.2.0","@babel/code-frame@7.29.7","@babel/parser@7.29.14","@babel/types@7.29.14","@jridgewell/trace-mapping@0.3.31","browserslist@4.29.6","@babel/core@7.29.13","@babel/traverse@7.29.14","@babel/types@7.29.14","@babel/traverse@7.29.14","@babel/template@7.29.7","@babel/types@7.29.14","@babel/types@7.29.14","@babel/code-frame@7.29.7","@babel/parser@7.29.14","@babel/types@7.29.14","@babel/code-frame@7.29.7","@babel/generator@7.29.14","@babel/parser@7.29.14","@babel/template@7.29.7","@babel/types@7.29.14","debug@4.4.3","@jridgewell/gen-mapping@0.3.13","@jridgewell/trace-mapping@0.3.31","@babel/core@7.29.13","@babel/core@7.29.13","@babel/parser@7.29.14","@babel/types@7.29.14","@babel/types@7.29.14","@babel/parser@7.29.14","@babel/types@7.29.14","@babel/types@7.29.14","vite@6.4.6","debug@4.4.3","js-yaml@4.3.2","once@1.4.0","readable-stream@3.6.2","readable-stream@3.6.2","once@1.4.0","readable-stream@3.6.2","glob@7.2.3","lazystream@1.0.1","readable-stream@3.6.2","readable-stream@3.6.2","readable-stream@3.6.2","readable-stream@3.6.2","call-bound@1.0.4","has-tostringtag@1.0.2","call-bound@1.0.4","call-bound@1.0.4","is-regex@1.2.1","call-bind-apply-helpers@1.0.2","es-object-atoms@1.1.2","get-proto@1.0.1","hasown@2.0.4","define-data-property@1.1.4","get-intrinsic@1.3.0","has-property-descriptors@1.0.2","define-data-property@1.1.4","call-bound@1.0.4","is-array-buffer@3.0.5","array-buffer-byte-length@1.0.2","call-bind@1.0.9","define-properties@1.2.1","es-abstract@1.24.2","get-intrinsic@1.3.0","is-array-buffer@3.0.5","available-typed-arrays@1.0.7","call-bind@1.0.9","call-bound@1.0.4","call-bound@1.0.4","is-data-view@1.0.2","call-bound@1.0.4","is-data-view@1.0.2","call-bound@1.0.4","is-data-view@1.0.2","es-object-atoms@1.1.2","get-intrinsic@1.3.0","has-tostringtag@1.0.2","hasown@2.0.4","es-to-primitive@1.3.4","call-bind@1.0.9","call-bound@1.0.4","has-property-descriptors@1.0.2","hasown@2.0.4","call-bound@1.0.4","get-intrinsic@1.3.0","get-proto@1.0.1","call-bound@1.0.4","get-intrinsic@1.3.0","define-properties@1.2.1","has-property-descriptors@1.0.2","dunder-proto@1.0.1","hasown@2.0.4","call-bound@1.0.4","get-intrinsic@1.3.0","call-bound@1.0.4","get-intrinsic@1.3.0","side-channel-map@1.0.1","call-bind@1.0.9","call-bound@1.0.4","get-intrinsic@1.3.0","call-bound@1.0.4","get-intrinsic@1.3.0","is-typed-array@1.1.15","call-bound@1.0.4","has-tostringtag@1.0.2","hasown@2.0.4","call-bound@1.0.4","call-bound@1.0.4","has-tostringtag@1.0.2","which-typed-array@1.1.24","call-bound@1.0.4","call-bind@1.0.9","call-bound@1.0.4","define-properties@1.2.1","es-object-atoms@1.1.2","call-bound@1.0.4","get-intrinsic@1.3.0","safe-push-apply@1.0.0","call-bind@1.0.9","define-properties@1.2.1","get-proto@1.0.1","define-data-property@1.1.4","has-property-descriptors@1.0.2","call-bind@1.0.9","call-bound@1.0.4","get-intrinsic@1.3.0","safe-regex-test@1.1.0","dunder-proto@1.0.1","es-object-atoms@1.1.2","internal-slot@1.1.0","call-bind@1.0.9","call-bound@1.0.4","define-data-property@1.1.4","define-properties@1.2.1","es-abstract@1.24.2","es-object-atoms@1.1.2","has-property-descriptors@1.0.2","safe-regex-test@1.1.0","call-bind@1.0.9","call-bound@1.0.4","define-properties@1.2.1","es-object-atoms@1.1.2","call-bind@1.0.9","define-properties@1.2.1","es-object-atoms@1.1.2","typed-array-buffer@1.0.3","call-bind@1.0.9","for-each@0.3.5","has-proto@1.2.0","is-typed-array@1.1.15","typed-array-byte-offset@1.0.5","call-bind@1.0.9","for-each@0.3.5","is-typed-array@1.1.15","reflect.getprototypeof@1.0.10","call-bound@1.0.4","call-bound@1.0.4","has-tostringtag@1.0.2","call-bound@1.0.4","has-tostringtag@1.0.2","is-string@1.1.1","is-symbol@1.1.1","which-typed-array@1.1.24","call-bind-apply-helpers@1.0.2","es-object-atoms@1.1.2","call-bound@1.0.4","is-typed-array@1.1.15","available-typed-arrays@1.0.7","call-bind@1.0.9","for-each@0.3.5","is-typed-array@1.1.15","call-bind@1.0.9","define-properties@1.2.1","es-abstract@1.24.2","es-object-atoms@1.1.2","get-intrinsic@1.3.0","get-proto@1.0.1","call-bound@1.0.4","function.prototype.name@1.2.0","has-tostringtag@1.0.2","call-bound@1.0.4","get-proto@1.0.1","has-tostringtag@1.0.2","safe-regex-test@1.1.0","is-date-object@1.1.0","call-bound@1.0.4","call-bound@1.0.4","get-proto@1.0.1","has-tostringtag@1.0.2","safe-regex-test@1.1.0","is-regex@1.2.1","is-weakref@1.1.1","which-boxed-primitive@1.1.1","call-bound@1.0.4","get-intrinsic@1.3.0","which-typed-array@1.1.24","call-bind@1.0.9","call-bind-apply-helpers@1.0.2","get-intrinsic@1.3.0","get-proto@1.0.1","glob@7.2.3","@npmcli/fs@5.0.0","@npmcli/map-workspaces@5.0.3","@npmcli/metavuln-calculator@9.0.3","@npmcli/package-json@7.0.5","@npmcli/run-script@10.0.4","cacache@20.0.4","hosted-git-info@9.0.3","minimatch@10.2.5","nopt@9.0.0","npm-install-checks@8.0.0","npm-package-arg@13.0.2","npm-pick-manifest@11.0.3","npm-registry-fetch@19.1.1","pacote@21.5.2","parse-conflict-json@5.0.1","ssri@13.0.1","@npmcli/map-workspaces@5.0.3","@npmcli/package-json@7.0.5","nopt@9.0.0","@npmcli/package-json@7.0.5","glob@13.0.6","minimatch@10.2.5","cacache@20.0.4","pacote@21.5.2","@npmcli/promise-spawn@9.0.2","npm-pick-manifest@11.0.3","which@6.0.1","glob@13.0.6","hosted-git-info@9.0.3","spdx-expression-parse@4.0.0","which@6.0.1","@npmcli/package-json@7.0.5","@npmcli/promise-spawn@9.0.2","node-gyp@12.4.0","minimatch@10.2.5","make-fetch-happen@15.0.6","@npmcli/fs@5.0.0","fs-minipass@3.0.3","glob@13.0.6","minipass-pipeline@1.2.4","ssri@13.0.1","minimatch@10.2.5","@npmcli/package-json@7.0.5","npm-package-arg@13.0.2","read@5.0.1","read@5.0.1","npm-package-arg@13.0.2","npm-registry-fetch@19.1.1","@npmcli/arborist@9.9.4","@npmcli/installed-package-contents@4.0.0","minimatch@10.2.5","npm-package-arg@13.0.2","pacote@21.5.2","tar@7.5.22","@npmcli/arborist@9.9.4","@npmcli/package-json@7.0.5","@npmcli/run-script@10.0.4","npm-package-arg@13.0.2","pacote@21.5.2","read@5.0.1","@npmcli/arborist@9.9.4","npm-registry-fetch@19.1.1","@npmcli/arborist@9.9.4","@npmcli/run-script@10.0.4","npm-package-arg@13.0.2","pacote@21.5.2","@npmcli/package-json@7.0.5","npm-package-arg@13.0.2","npm-registry-fetch@19.1.1","@sigstore/bundle@4.0.0","make-fetch-happen@15.0.6","@sigstore/tuf@4.0.2","@sigstore/bundle@4.0.0","ssri@13.0.1","npm-registry-fetch@19.1.1","npm-registry-fetch@19.1.1","@npmcli/git@7.0.2","@npmcli/run-script@10.0.4","debug@4.4.3","debug@4.4.3","debug@4.4.3","cacache@20.0.4","minizlib@3.1.0","minipass-flush@1.0.6","minipass-pipeline@1.2.4","ssri@13.0.1","nopt@9.0.0","tar@7.5.22","which@6.0.1","hosted-git-info@9.0.3","npm-install-checks@8.0.0","npm-package-arg@13.0.2","npm-registry-fetch@19.1.1","make-fetch-happen@15.0.6","minipass-fetch@5.0.2","npm-package-arg@13.0.2","@npmcli/git@7.0.2","@npmcli/installed-package-contents@4.0.0","@npmcli/package-json@7.0.5","@npmcli/promise-spawn@9.0.2","@npmcli/run-script@10.0.4","cacache@20.0.4","fs-minipass@3.0.3","npm-package-arg@13.0.2","minimatch@10.2.5","npm-pick-manifest@11.0.3","npm-registry-fetch@19.1.1","sigstore@4.1.1","ssri@13.0.1","tar@7.5.22","minizlib@3.1.0","@types/hast@3.0.5","devlop@1.1.0","@types/hast@3.0.5","@types/hast@3.0.5","@types/mdast@4.0.4","devlop@1.1.0","mdast-util-from-markdown@2.1.0","mdast-util-to-markdown@2.2.3","@types/estree-jsx@1.0.5","@types/hast@3.0.5","@types/mdast@4.0.4","devlop@1.1.0","mdast-util-from-markdown@2.1.0","mdast-util-to-markdown@2.2.3","decode-named-character-reference@1.3.0","vfile-message@4.0.4","@types/estree-jsx@1.0.5","@types/hast@3.0.5","@types/mdast@4.0.4","devlop@1.1.0","mdast-util-from-markdown@2.1.0","mdast-util-to-markdown@2.2.3","unist-util-stringify-position@4.0.0","@types/hast@3.0.5","@types/mdast@4.0.4","devlop@1.1.0","unist-util-position@5.0.0","unist-util-visit@5.2.0","vfile@6.0.3","@types/mdast@4.0.4","@types/mdast@4.0.4","devlop@1.1.0","@types/mdast@4.0.4","decode-named-character-reference@1.3.0","micromark-util-character@2.1.1","micromark-util-decode-numeric-character-reference@2.0.2","debug@4.4.3","decode-named-character-reference@1.3.0","devlop@1.1.0","micromark-core-commonmark@2.0.4","micromark-factory-space@2.1.0","micromark-util-character@2.1.1","micromark-util-chunked@2.0.1","micromark-util-combine-extensions@2.0.1","micromark-util-decode-numeric-character-reference@2.0.2","micromark-util-normalize-identifier@2.0.1","micromark-util-resolve-all@2.0.1","micromark-util-sanitize-uri@2.0.1","devlop@1.1.0","micromark-util-chunked@2.0.1","unist-util-stringify-position@4.0.0","unified@11.0.5","@types/hast@3.0.5","@types/mdast@4.0.4","mdast-util-to-hast@13.2.2","unified@11.0.5","vfile@6.0.3","devlop@1.1.0","vfile@6.0.3","unist-util-is@6.0.1","vfile-message@4.0.4","@types/mdast@4.0.4","mdast-util-from-markdown@2.1.0","@types/mdast@4.0.4","devlop@1.1.0","@types/mdast@4.0.4","unist-util-is@6.0.1","unist-util-visit-parents@6.1.0","micromark-util-character@2.1.1","@types/mdast@4.0.4","devlop@1.1.0","mdast-util-from-markdown@2.1.0","mdast-util-to-markdown@2.2.3","micromark-util-normalize-identifier@2.0.1","@types/mdast@4.0.4","mdast-util-from-markdown@2.1.0","mdast-util-to-markdown@2.2.3","@types/mdast@4.0.4","devlop@1.1.0","mdast-util-from-markdown@2.1.0","mdast-util-to-markdown@2.2.3","mdast-util-to-string@4.0.0","unist-util-visit@5.2.0","@types/mdast@4.0.4","devlop@1.1.0","mdast-util-from-markdown@2.1.0","mdast-util-to-markdown@2.2.3","@types/mdast@4.0.4","@types/mdast@4.0.4","unist-util-is@6.0.1","mdast-util-to-string@4.0.0","micromark-util-character@2.1.1","micromark-util-character@2.1.1","micromark-util-decode-string@2.0.1","unist-util-visit@5.2.0","micromark-util-character@2.1.1","micromark-util-sanitize-uri@2.0.1","devlop@1.1.0","decode-named-character-reference@1.3.0","devlop@1.1.0","micromark-util-character@2.1.1","devlop@1.1.0","micromark-util-character@2.1.1","micromark-factory-space@2.1.0","micromark-factory-space@2.1.0","micromark-util-character@2.1.1","micromark-factory-space@2.1.0","micromark-util-character@2.1.1","micromark-util-character@2.1.1","micromark-util-chunked@2.0.1","micromark-util-classify-character@2.0.1","micromark-util-edit-map@1.0.0","micromark-util-normalize-identifier@2.0.1","micromark-util-resolve-all@2.0.1","micromark-util-subtokenize@2.1.0","micromark-util-character@2.1.1","micromark-util-character@2.1.1","micromark-util-normalize-identifier@2.0.1","micromark-util-sanitize-uri@2.0.1","devlop@1.1.0","micromark-util-classify-character@2.0.1","devlop@1.1.0","micromark-factory-space@2.1.0","micromark-util-character@2.1.1","devlop@1.1.0","micromark-factory-space@2.1.0","micromark-util-character@2.1.1","micromark-util-chunked@2.0.1","remark-parse@11.0.0","@types/mdast@4.0.4","mdast-util-to-markdown@2.2.3","unified@11.0.5","unified@11.0.5","@types/node@26.6.6"]
+2026-11-27T06:53:22.7523036Z   • copied locked production packages without flattening: 1178
+2026-11-27T06:53:43.3888825Z   • pruned sources, maps and foreign binaries: 68051 files, 636 MB
+2026-11-27T06:53:43.6114226Z   • asar usage is disabled — this is strongly not recommended  solution=enable asar and use asarUnpack to unpack files that must be externally available
+2026-11-27T06:53:44.0864929Z   • no code signing certificate configured, signing is skipped  path=release\win-unpacked\知行.exe
+2026-11-27T06:53:45.3873078Z Windows installer root limit: 70 UTF-16 code units. Longest packaged relative path: 188.
+2026-11-27T06:53:45.4469541Z wrote D:\a\ZhiXing\ZhiXing\release\win-unpacked\resources\app-update.yml
+2026-11-27T06:53:45.5233373Z ##[group]Run node scripts/verify-packed-sources.mjs "release/win-unpacked/resources/app" "$env:RUNNER_TEMP/zhixing-packed-artifact/packed-source-manifest.json" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/verify.log"
+2026-11-27T06:53:45.5235089Z [36;1mnode scripts/verify-packed-sources.mjs "release/win-unpacked/resources/app" "$env:RUNNER_TEMP/zhixing-packed-artifact/packed-source-manifest.json" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/verify.log"[0m
+2026-11-27T06:53:45.5236016Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T06:53:45.5308289Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T06:53:45.5308829Z env:
+2026-11-27T06:53:45.5309204Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:53:45.5309582Z ##[endgroup]
+2026-11-27T06:53:46.0617453Z {"version":"0.43.0","sourceCommit":"feaadaeb575671fa326b9eedd6ac631c7e68f1ce","matchedFiles":106,"sourceFingerprint":"f7a5a3ca3fb0b328c0667418b3e4759eb972b3ca334b59865be91c8899f3dac8"}
+2026-11-27T06:53:46.1269196Z ##[group]Run $qaLocalData = "$env:RUNNER_TEMP/zhixing-packed-local-data"
+2026-11-27T06:53:46.1269944Z [36;1m$qaLocalData = "$env:RUNNER_TEMP/zhixing-packed-local-data"[0m
+2026-11-27T06:53:46.1270519Z [36;1m$qaTemporary = "$env:RUNNER_TEMP/zhixing-packed-temp"[0m
+2026-11-27T06:53:46.1271335Z [36;1mNew-Item -ItemType Directory -Force $qaLocalData, $qaTemporary | Out-Null[0m
+2026-11-27T06:53:46.1271986Z [36;1m"LOCALAPPDATA=$qaLocalData" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append[0m
+2026-11-27T06:53:46.1272827Z [36;1m"TEMP=$qaTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append[0m
+2026-11-27T06:53:46.1273392Z [36;1m"TMP=$qaTemporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append[0m
+2026-11-27T06:53:46.1353764Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T06:53:46.1354272Z env:
+2026-11-27T06:53:46.1354597Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:53:46.1354950Z ##[endgroup]
+2026-11-27T06:53:46.5393227Z ##[group]Run npm.cmd run test:packed -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/packed.log"
+2026-11-27T06:53:46.5394175Z [36;1mnpm.cmd run test:packed -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/packed.log"[0m
+2026-11-27T06:53:46.5394703Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T06:53:46.5458865Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T06:53:46.5459256Z env:
+2026-11-27T06:53:46.5459518Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T06:53:46.5459853Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T06:53:46.5460198Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T06:53:46.5460481Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T06:53:46.5460744Z ##[endgroup]
+2026-11-27T06:53:47.2055028Z 
+2026-11-27T06:53:47.2062780Z > office-agent@0.43.0 test:packed
+2026-11-27T06:53:47.2067796Z > node scripts/test-packed.mjs release/win-unpacked/知行.exe
+2026-11-27T06:53:47.2068466Z 
+2026-11-27T06:53:47.2611240Z {"type":"packed-test-scope","unit":"test-files","package-aware":["privacy.test.mjs","credential-boundary.test.mjs","privacy-dynamic-keys.test.mjs","privacy-mcp-native.test.mjs","privacy-gateway.test.mjs","delivery-review.test.mjs","conversation-state.test.mjs","kernel-native.test.mjs","capability-manifest.test.mjs","capability-runtime.test.mjs","office-directory.test.mjs","office-file-policy.test.mjs","privacy-lock-recovery.test.mjs","automation.test.mjs","automation-persistence.test.mjs","runtime.test.mjs","runtime-native-entrypoints.test.mjs","runtime-execution-controls.test.mjs","runtime-approvals.test.mjs","runtime-approval-bridge.test.mjs","runtime-approval-integration.test.mjs","runtime-handoffs.test.mjs","renderer-lifetime.test.mjs","runtime-questions-recovery.test.mjs","runtime-image-ocr.test.mjs","runtime-vision.test.mjs","runtime-cleanup.test.mjs","runtime-finalization.test.mjs","runtime-context.test.mjs","runtime-launch.test.mjs","runtime-lifecycle.test.mjs","document-text.test.mjs","workbench.test.mjs","deliverable-access.test.mjs","assistant-stream.test.mjs","providers.test.mjs","mcp-identity.test.mjs","mcp-destination.test.mjs","workspace-save-queue.test.mjs","workspace-persistence.test.mjs","workspace-atomic-replace.test.mjs","plugins.test.mjs","updater-cache.test.mjs","temp-hygiene.test.mjs","zip-writer.test.mjs","archive-name.test.mjs"],"mixed-source":["composer-runtime.test.mjs","speech-audio.test.mjs","speech-service.test.mjs"],"source-only":["subagent-archive.test.mjs"],"sourceHelpers":{"composer-runtime.test.mjs":["src/model-options.js"],"speech-audio.test.mjs":["src/speech-audio.js"],"speech-service.test.mjs":["src/speech-audio.js","source Electron fixture launcher"],"subagent-archive.test.mjs":["src/subagent-archive.js"]},"boundary":"Packaged EXE runs source test files; fixture generators and test dependencies may come from the checkout. Mixed/source-only helpers do not verify the renderer bundle."}
+2026-11-27T06:53:48.4070344Z ✔ 默认文件名带会话名与日期，扩展名固定为 .md (0.8541ms)
+2026-11-27T06:53:48.4084276Z ✔ 会话名里的 Windows 非法字符被替换，过长会截断 (0.3698ms)
+2026-11-27T06:53:48.4085591Z ✔ 没有标题与非法日期时仍给出可用名字 (0.4163ms)
+2026-11-27T06:53:48.4088006Z ✔ 重名时按序号退让，不改扩展名 (0.1819ms)
+2026-11-27T06:53:48.5399249Z ✔ live assistant previews retain ordered cumulative text and publish the final held suffix (10.2514ms)
+2026-11-27T06:53:48.5401314Z ✔ live assistant previews restore values authorized by the earlier user prompt (1.3325ms)
+2026-11-27T06:53:48.5403409Z ✔ newly detected sensitive output stays masked in streaming and cancelled previews (0.9387ms)
+2026-11-27T06:53:48.5405112Z ✔ arbitrary long API keys remain buffered until they can be blocked (0.4451ms)
+2026-11-27T06:53:48.5406608Z ✔ live assistant previews block credentials and discard delayed or out-of-order frames (0.4478ms)
+2026-11-27T06:53:48.5408088Z ✔ live assistant preview decodes fragmented OpenAI and Anthropic text events only (1.3673ms)
+2026-11-27T06:53:48.5416692Z ✔ live assistant decoder handles standalone CR and refuses to commit truncated transport output (0.2492ms)
+2026-11-27T06:53:48.5418494Z ✔ live assistant preview assembles attempts without exposing held text or losing the final suffix (0.6722ms)
+2026-11-27T06:53:48.5419695Z ✔ failed model retries roll back abandoned partial output before the final attempt (2.1086ms)
+2026-11-27T06:53:48.6017191Z ✔ the local privacy gateway forwards live provider text while preserving the wire response (67.086ms)
+2026-11-27T06:53:49.0350049Z ✔ R04 成功结果终态 ENOSPC 后可读、暂停；并发重试只落盘一次且重启保留正文 (29.6227ms)
+2026-11-27T06:53:49.0411091Z ✔ R04 提醒失败保存同样保留 outcome；close flush 不再执行提醒或模型 (6.2946ms)
+2026-11-27T06:53:49.0458424Z ✔ R04 执行失败与状态保存失败分开，恢复写入只保存同一 runId/错误 (4.8427ms)
+2026-11-27T06:53:49.0503631Z ✔ R04 内核退出未确认的已验证正文仍可保存/重试，执行次数始终为一 (4.5537ms)
+2026-11-27T06:53:49.0564101Z ✔ R04 后到的清理完成事件更新pending/已存终态；其写盘失败也可仅保存重试 (5.861ms)
+2026-11-27T06:53:49.0648536Z ✔ R04 首次/重试写入期间到达的 exit 证据不会被旧 outcome 覆盖 (8.3894ms)
+2026-11-27T06:53:49.0686736Z ✔ R04 内核已完成而取消未受理时，不把完成结果改成 stopped 或清空正文 (3.9612ms)
+2026-11-27T06:53:49.0735605Z ✔ R04 未成功写盘即强制中断的旧 running 台账重启后暂停，不自动重复工具 (4.5349ms)
+2026-11-27T06:53:49.4864058Z ✔ R04 超过120条历史与容量清理均保留 pending/running 行，retrySave仍找到原 runId (412.2313ms)
+2026-11-27T06:53:50.1166771Z ✔ R04 单份结果超过容量时明确失败并保留 outcome，不能删本次终态后伪报保存成功 (630.4489ms)
+2026-11-27T06:53:50.5459915Z ✔ 过期隐私引擎授权在重启时暂停，规范化后的模型凭证不能进入自动化预览 (7.2159ms)
+2026-11-27T06:53:50.5462005Z ✔ Agent 定时任务工具复用同一调度器、草稿暂停及项目隔离 (1.5497ms)
+2026-11-27T06:53:50.5462729Z ✔ 日期计算遵守未来起始日、工作日、单次、月末和闰年 (0.3458ms)
+2026-11-27T06:53:50.5463973Z ✔ 资料与项目限定在同一工作空间，任务包含实际选定资料 (0.5263ms)
+2026-11-27T06:53:50.5464622Z ✔ 主机审阅单次使用，资料、模型连接或发送方式变更使授权失效 (3.1678ms)
+2026-11-27T06:53:50.6159692Z ✔ 到期任务先持久化再执行，重开仅补最近一次，单次执行后关闭 (6.9685ms)
+2026-11-27T06:53:50.6183451Z ✔ 运行可取消、禁止运行时编辑，失败与中断不会伪装成功 (1.6289ms)
+2026-11-27T06:53:50.6185662Z ✔ 写入失败不会启用计划或调用模型 (0.6498ms)
+2026-11-27T06:53:50.6186508Z ✔ Harness Cron 核对指定时区和夏令时，RRULE 只预览剩余有效日期 (45.9599ms)
+2026-11-27T06:53:50.6188221Z ✔ RRULE 到期只补最近一次，固定间隔保留节拍，延迟规则只执行一次 (12.3347ms)
+2026-11-27T06:53:50.6199665Z ✔ 同一条任务聊天使用同一 Harness 会话，材料变更重新审阅后隔离旧会话 (4.8748ms)
+2026-11-27T06:53:50.6295403Z ✔ 已有聊天把审阅过的消息纳入指令，结果按次送达，新增上下文使计划暂停 (16.153ms)
+2026-11-27T06:53:50.7156333Z ✔ 未检查目录时不能把配置开关当作已注册或可执行 (1.3095ms)
+2026-11-27T06:53:50.7157868Z ✔ 真实目录存在不掩盖路由、项目、执行权限和桥接门槛 (0.5448ms)
+2026-11-27T06:53:50.7158801Z ✔ 开关关闭、规划模式和禁止联网立即反映在有效能力上 (1.0474ms)
+2026-11-27T06:53:50.7159370Z ✔ 工具缺失和未接入范围不可被伪造的同名目录开启 (0.2392ms)
+2026-11-27T06:53:50.7160017Z ✔ 完整目录与满足门槛仅证明可调度，保留逐次审批及证据语义 (0.7552ms)
+2026-11-27T06:53:50.7161029Z ✔ 清单只输出固定元数据，不包含工具参数、目录、模型或凭据 (0.4104ms)
+2026-11-27T06:54:00.1482246Z ✔ 真实 Harness 能力清单按项目、协议、权限与开关变化，诊断没有模型请求 (8944.497ms)
+2026-11-27T06:54:00.7419555Z ✔ 模型目录使用真实内核 ID；配置模型保留；思考强度只提供内核档位 (2.2388ms)
+2026-11-27T06:54:00.7647329Z ✔ 刷新目录只请求配置服务；拒绝重定向；不把凭据转发到其他地址 (43.0476ms)
+2026-11-27T06:54:00.7648277Z ✔ 个人偏好进入正常脱敏链；本机语音校验会话、语言和音频 (5.1727ms)
+2026-11-27T06:54:12.4193327Z ✔ 同一聊天切换模型和四档思考强度，规划草稿随附件自动脱敏 (11655.3237ms)
+2026-11-27T06:54:26.2290162Z ✔ 中文原生命令保留动词，原生状态和拒绝原因跨会话重开，且不调用模型 (13809.6313ms)
+2026-11-27T06:54:26.2414246Z ✔ Windows SenseVoice Provider can inspect local model state without recording or downloading (12.3162ms)
+2026-11-27T06:54:26.3374663Z ✔ R05 删除单聊及归档聊天后正文和解析附件从持久字节消失，共享资料及其他草稿保留 (11.294ms)
+2026-11-27T06:54:26.3402521Z ✔ R05 项目删除按最新聊天归属级联，已移出的聊天和过时归属草稿不误删 (3.4086ms)
+2026-11-27T06:54:26.3446057Z ✔ R05 历史孤儿草稿保持原字节且有可列举恢复/删除入口，正常归档草稿不误分类 (2.9154ms)
+2026-11-27T06:54:26.3446902Z ✔ R08 去重追加保留原附件，Windows路径忽略大小写，超过12个明确返回未加入数量 (0.5217ms)
+2026-11-27T06:54:26.3448479Z ✔ R08 失败恢复须匹配提交revision和空正文/空附件，不能覆盖新输入或用户清空后的新版 (0.3938ms)
+2026-11-27T06:54:26.3494967Z ✔ 多份新草稿保留独立键和归属，列举所有有效草稿而非仅最近一份，排除空草稿/孤儿/待删除项目 (5.142ms)
+2026-11-27T06:54:26.3555135Z ✔ 首次发送消费新草稿时绑定实际聊天，失败正文/附件可恢复并随聊天删除，重载无残留 (4.53ms)
+2026-11-27T06:54:26.3557067Z ✔ 发送只消费匹配revision，不覆盖prepare期间的新编辑或目标已有草稿；普通聊天保持原键 (0.2541ms)
+2026-11-27T06:54:26.3558083Z ✔ 浏览器localStorage不保存草稿正文/附件，浏览器初始化也不恢复注入的旧草稿 (0.4852ms)
+2026-11-27T06:54:26.3584430Z ✔ R07 NETWORK_DISCONNECTED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (3.7026ms)
+2026-11-27T06:54:26.3609345Z ✔ R07 QUOTA_EXCEEDED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (2.4835ms)
+2026-11-27T06:54:26.3633565Z ✔ R07 PERMISSION_DENIED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (2.3839ms)
+2026-11-27T06:54:26.3662911Z ✔ R07 RUNTIME_CANCELLED terminal先到仍归档受保护正文/轨迹/成果/子任务，并可重启恢复 (2.3295ms)
+2026-11-27T06:54:26.3664019Z ✔ R07 已验证输出完成但close失败时归档terminal.result，不将completed误标成执行失败 (0.3423ms)
+2026-11-27T06:54:26.3665007Z ✔ R07 displayRedacted终态摘要不能覆盖validated-result draft正文，仅无正文时用保护后摘要 (0.1783ms)
+2026-11-27T06:54:26.8364666Z ✔ 凭证检测覆盖短值、Unicode 变体和 JSON 转义；可用模型密钥至少八字符 (1.6576ms)
+2026-11-27T06:54:26.8365508Z ✔ 非脱敏模式强制凭证拦截且不改写存储策略；旧引擎审阅版本失效 (2.6926ms)
+2026-11-27T06:54:26.8366183Z ✔ 短凭证所有分块边界、Unicode 分块和本机还原均不能进入流式预览 (15.6526ms)
+2026-11-27T06:54:26.9307475Z ✔ openai/redact 实际网关：已知短密钥和通用凭证在收件前检查 (98.6106ms)
+2026-11-27T06:54:26.9714259Z ✔ openai/raw 实际网关：已知短密钥和通用凭证在收件前检查 (40.6863ms)
+2026-11-27T06:54:27.0256549Z ✔ anthropic/redact 实际网关：已知短密钥和通用凭证在收件前检查 (54.1398ms)
+2026-11-27T06:54:27.0714717Z ✔ anthropic/raw 实际网关：已知短密钥和通用凭证在收件前检查 (42.0628ms)
+2026-11-27T06:54:27.0715874Z ✔ 真实预览保留发送前的凭证检查依据，脱敏不能把已知密钥隐藏成可发送占位符 (3.3136ms)
+2026-11-27T06:54:27.0891497Z ✔ 交互提问的正文、说明与选项在还原后再次检查当前 Key (17.8809ms)
+2026-11-27T06:54:27.2806334Z ✔ Harness Markdown 逐模式审阅，主机历史不接受替代正文，交付只使用审阅后的 UTF-8 字节 (29.8816ms)
+2026-11-27T06:54:27.2988753Z ✔ Harness Markdown 阻断当前凭据，拒绝活动会话、关闭持久化、坏日志和重定向目录 (18.7605ms)
+2026-11-27T06:54:28.0279488Z ✔ 项目外真实 present 文件可由专用引用读取，渲染端伪造路径不授予访问 (728.7868ms)
+2026-11-27T06:54:28.0403621Z ✔ 引用拒绝跨会话、工作模式、项目以及签名或事件索引篡改 (12.4549ms)
+2026-11-27T06:54:28.0505619Z ✔ 重建访问模块仍可验证引用，普通文件更新读取当前位置的内容 (9.9935ms)
+2026-11-27T06:54:28.0759917Z ✔ raw 与 redact 历史保持独立，子会话须有完整原生归属链 (25.4237ms)
+2026-11-27T06:54:28.0894565Z ✔ 加密历史身份、版本、序号或密文损坏均拒绝交付访问 (13.3241ms)
+2026-11-27T06:54:28.0952470Z ✔ 没有主机密钥或原生日志时不从消息路径补造交付授权 (5.6733ms)
+2026-11-27T06:54:28.1020187Z ✔ 缺失文件、目录、私密路径和应用数据保留不可用状态 (6.9766ms)
+2026-11-27T06:54:28.1128043Z ✔ 目录链接重定向后旧引用失效，日志目录链接不能跨应用根读取 (10.6504ms)
+2026-11-27T06:54:28.1222648Z ✔ 交付文件预览受大小限制，读取中归属变化拒绝返回内容 (9.2135ms)
+2026-11-27T06:54:31.7022098Z ✔ 真实 Harness 在完全访问下 present 项目外文件后可用主机引用预览 (3580.2123ms)
+2026-11-27T06:54:32.0832815Z ✔ 交付快照继承当前规则，旧 masked 不能复活自定义秘密；raw/self 也不能绕过凭据 (10.1012ms)
+2026-11-27T06:54:32.1786628Z ✔ TXT/DOCX/XLSX 与剪贴板的真实内容来自同一主机策略快照 (94.5059ms)
+2026-11-27T06:54:32.1787766Z ✔ 本人版普通个人信息允许保留，显式禁止类别继续阻止全部交付入口 (1.1863ms)
+2026-11-27T06:54:32.1788473Z ✔ 审阅绑定内容、策略、格式、接收范围与动作；修改规则/模式/凭据后禁止复用 (0.9504ms)
+2026-11-27T06:54:32.1789934Z ✔ 原生对话框期间规则更新二次检查；取消可重用，过期与返回对象篡改无效 (0.7845ms)
+2026-11-27T06:54:33.2491135Z ✔ Word 提取正文、页眉页脚、修订和批注，图片只记录范围 (449.7173ms)
+2026-11-27T06:54:33.7408597Z ✔ Excel 包含隐藏区域、合并单元格、批注和公式缓存，避免误报重算 (497.9006ms)
+2026-11-27T06:54:34.1887332Z ✔ PPTX 按真实目录顺序读取幻灯片、隐藏页与演讲者备注 (440.9596ms)
+2026-11-27T06:54:37.4012059Z ✔ 文字 PDF 在独立进程本机读取，链接和文档脚本不会访问网络 (3221.3232ms)
+2026-11-27T06:54:39.1313117Z ✔ 异常压缩包、DTD、宏及取消均拒绝；UTF-16 文本可本机读取 (1730.0706ms)
+2026-11-27T06:54:39.7602611Z ✔ 中文 PDF 的 ToUnicode 文字映射可本机读取 (628.3836ms)
+2026-11-27T06:54:40.2034854Z ✔ 图片型 PPTX 不会把生成的页码误当作已提取正文 (445.4234ms)
+2026-11-27T06:54:41.9153975Z ✔ Windows 图片 OCR 返回本机文字覆盖范围，不返回原始图片字节 (1712.6487ms)
+2026-11-27T06:54:49.0801032Z ✔ 真实 Harness 非脱敏模式在工具返回和流式/最终回复中仍拦截凭证 (6472.8098ms)
+2026-11-27T06:54:51.9324616Z run.turn-failed {"finishReason":"error","hint":"HTTP 400","reason":{"kind":"error","error":{"message":"本机隐私边界未完成请求，请检查脱敏规则和连接。","code":"INVALID_REQUEST","status":400}}}
+2026-11-27T06:54:52.0671935Z ✔ 真实 Harness 的工作计划事件不能显示当前模型凭证 (2986.7571ms)
+2026-11-27T06:55:07.5131959Z ✔ 真实 Harness 转换并重算 Office 文档，受审批的成果字节留在项目 (15446.1146ms)
+2026-11-27T06:55:20.7997247Z ✔ 真实 Harness 渲染办公页面，只向视觉模型发送本机遮罩副本并可重开会话 (13286.7037ms)
+2026-11-27T06:55:27.6817093Z ✔ 官方原生文件读写和编辑遵守项目范围、版本检查及脱敏占位符 (6882.175ms)
+2026-11-27T06:55:31.2523641Z ✔ 官方多文件补丁先审批整批，真实内容变更保留结果和原始文件边界 (3570.7265ms)
+2026-11-27T06:55:34.4072741Z ✔ 原生补丁中途停止后，磁盘、模型回执和重新载入的执行轨迹均保留实际结果 (3154.371ms)
+2026-11-27T06:55:37.9001952Z ✔ 官方 glob 和 grep 运行随包 ripgrep，排除私密文件与项目外链接并保护匹配文本 (3493.2395ms)
+2026-11-27T06:55:47.1607156Z ✔ 官方工作目录限定在项目内，相对文件操作与搜索随会话重开保留 (9260.5383ms)
+2026-11-27T06:56:04.3752238Z ✔ 同一原生会话降回请求批准后，下一次命令使用同步的工作区沙箱 (17214.5436ms)
+2026-11-27T06:56:12.4919051Z ✔ 官方原生 read_image 使用 Windows 遮罩的 PNG 和 JPEG 工作区副本，并拒绝不支持的格式 (8116.9141ms)
+2026-11-27T06:56:21.2414015Z ✔ 原生 Agent Teams 创建、CAS 领取/完成、列表及加密重启恢复 (8749.3509ms)
+2026-11-27T06:56:27.6142810Z ✔ 原生 PTC run_code 实际编排办公工具、保留受控环境并遵守规划模式 (6371.7661ms)
+2026-11-27T06:56:27.6143811Z ✔ 共享任务展示去除新生成的凭证和个人信息，不修改原生记录 (1.1002ms)
+2026-11-27T06:56:27.6144510Z ✔ 命令环境按白名单清除新增秘密，规划只读检查按实际操作判断 (0.2412ms)
+2026-11-27T06:56:33.3086347Z ✔ 全角当前模型凭证在最终回复、流式草稿与执行预览中均被阻断 (5694.1199ms)
+2026-11-27T06:56:37.8623575Z ✔ 真实多供应商适配器对 429 和 503 有界重试，保持脱敏请求 (4553.6577ms)
+2026-11-27T06:56:48.9881522Z ✔ 真实 Windows 沙箱在 ask/auto 拒绝项目外写入，full 明确放行且命令无内核秘密 (11126.2427ms)
+2026-11-27T06:56:52.4448051Z ✔ 真实 Harness 同时连接 HTTP MCP A/B，A/B bearer 各到原目的地且不调用模型 (2961.5265ms)
+2026-11-27T06:57:01.0880645Z ✔ 真实 HTTP MCP 更改 port 后留空不继承 A bearer，明确清空后 B 收到无鉴权请求，重填 B 后恢复 (8644.4724ms)
+2026-11-27T06:57:09.6881885Z ✔ 真实 HTTP MCP 更改 path 后留空不继承 A bearer，明确清空后 B 收到无鉴权请求，重填 B 后恢复 (8600.0025ms)
+2026-11-27T06:57:18.3834420Z ✔ 真实 HTTP MCP 更改 host 后留空不继承 A bearer，明确清空后 B 收到无鉴权请求，重填 B 后恢复 (8695.2231ms)
+2026-11-27T06:57:24.5652501Z ✔ 真实 HTTP MCP 仅切换 enabled 保留凭据，禁用时不连接，重新启用仍只到 A (6181.7445ms)
+2026-11-27T06:57:30.7204516Z ✔ 真实 HTTP MCP 显式 {} 清空同目的地凭据，匿名端点也确实不收到旧 bearer (6155.1486ms)
+2026-11-27T06:57:36.6480091Z ✔ 真实 Harness 从 HTTP 改 stdio 不继承凭据，显式空 env 后复用仓库 stdio fixture 正常连接 (5927.6035ms)
+2026-11-27T06:57:42.5982392Z ✔ 真实 Harness 从含环境凭据的 stdio 改 HTTP，B 不收到旧 env bearer (5943.7708ms)
+2026-11-27T06:57:42.7486519Z ✔ 合成模型仅当前用户输入 QA_ERROR 返回确定性 400，历史与其他角色不误触发 (152.2122ms)
+2026-11-27T06:57:52.3175250Z ✔ 本机模型经真实 Harness 连续交办保留历史，QA_MCP 实际调用 A 工具并返回结果 (9573.3088ms)
+2026-11-27T06:57:55.4047808Z ✔ 本机长流经真实 Harness 首段输出后可停止，服务收件记录确认连接中止 (3086.7074ms)
+2026-11-27T06:57:55.4190752Z ✔ 收件接口有递增序号、计数和合成配置，A bearer 从未进入 B 或变更后的地址 (12.9535ms)
+2026-11-27T06:57:55.5096882Z ✔ HTTP MCP 身份规范化并绑定 scheme、host、port 和 path (1.7288ms)
+2026-11-27T06:57:55.5103188Z ✔ 公开 MCP helper 导出固定摘要身份，且身份不受凭据值影响 (0.3213ms)
+2026-11-27T06:57:55.5119840Z ✔ stdio MCP 身份绑定 transport、command、args 与 cwd (0.2974ms)
+2026-11-27T06:57:55.5120902Z ✔ 同一 MCP 目标保留秘密，显式空映射清除秘密 (0.8064ms)
+2026-11-27T06:57:55.5122880Z ✔ HTTP 目的地变化不继承旧 header，等待新凭据 (0.3937ms)
+2026-11-27T06:57:55.5125765Z ✔ stdio 目标变化不继承旧环境秘密 (0.404ms)
+2026-11-27T06:57:55.5128547Z ✔ 无凭据公共视图和格式错误不得回显 secret (0.226ms)
+2026-11-27T06:57:55.9480322Z ✔ R10 真实目录 0 项：旧调用保持兼容并明确完整性 (39.8688ms)
+2026-11-27T06:57:55.9688800Z ✔ R10 真实目录 1 项：旧调用保持兼容并明确完整性 (20.6421ms)
+2026-11-27T06:57:56.0398384Z ✔ R10 真实目录 119 项：旧调用保持兼容并明确完整性 (71.0857ms)
+2026-11-27T06:57:56.1099301Z ✔ R10 真实目录 120 项：旧调用保持兼容并明确完整性 (70.0006ms)
+2026-11-27T06:57:56.1782445Z ✔ R10 真实目录 121 项：旧调用保持兼容并明确完整性 (68.1734ms)
+2026-11-27T06:57:56.6345193Z ✔ R10 真实 1000 项目录逐页完整、稳定、无重漏，末页不伪称截断 (455.8416ms)
+2026-11-27T06:57:56.6830935Z ✔ R10 UTF-16 顺序独立于创建顺序、语言与文件类型；自定义页大小可连续遍历 (48.7288ms)
+2026-11-27T06:57:56.6883674Z ✔ R10 页参数严格校验，拒绝时不读映射、不扫描、不发起审批 (5.2364ms)
+2026-11-27T06:57:56.9704242Z ✔ R10 10000 个直接条目可完整统计；最后偏移量 10000 返回空终页 (281.8337ms)
+2026-11-27T06:57:57.0523869Z ✔ R10 超大可见目录显式拒绝，最多探测 10001 项且关闭句柄 (82.0186ms)
+2026-11-27T06:57:57.1066620Z ✔ R10 超大隐藏目录显式拒绝，最多探测 10001 项且关闭句柄 (53.984ms)
+2026-11-27T06:57:59.5005324Z ✔ R10 真实 10001 项目录达到扫描上限，明确报错且不返回截断页 (2393.7101ms)
+2026-11-27T06:57:59.5165824Z ✔ R10 排除隐藏项、禁止位置与链接；不递归且不读取文件内容 (16.2912ms)
+2026-11-27T06:57:59.5255067Z ✔ R10 非普通目录项不伪装成文件 (8.9267ms)
+2026-11-27T06:57:59.5304111Z ✔ R10 只接受目录，路径错误不回显原始绝对路径或敏感文件名 (4.8615ms)
+2026-11-27T06:57:59.5409293Z ✔ R10 ask 模式保留外部真实目录主机审批 (10.5578ms)
+2026-11-27T06:57:59.5502828Z ✔ R10 auto 模式保留外部真实目录主机审批 (9.2169ms)
+2026-11-27T06:57:59.5599931Z ✔ R10 full 模式保留外部真实目录主机审批 (9.4878ms)
+2026-11-27T06:57:59.5641202Z ✔ R10 拒绝审批后不打开外部目录 (4.1866ms)
+2026-11-27T06:57:59.5803697Z ✔ R10 工作区内的外链按真实外部路径审批；脱敏目录可用于续页 (16.1396ms)
+2026-11-27T06:57:59.5847594Z ✔ R10 审批等待时目录改成外链，拒绝使用旧批准位置 (4.5155ms)
+2026-11-27T06:57:59.5898945Z ✔ R10 扫描期间目录变化则拒绝声称得到完整页 (5.0435ms)
+2026-11-27T06:57:59.5935913Z ✔ R10 调用前取消不读映射、不请求审批或扫描 (3.5946ms)
+2026-11-27T06:57:59.5972720Z ✔ R10 等待主机审批时取消，获批后也不会扫描 (3.7353ms)
+2026-11-27T06:57:59.6016019Z ✔ R10 扫描中取消立即停止，关闭目录句柄且不发布局部页 (4.2567ms)
+2026-11-27T06:57:59.6057035Z ✔ R10 扫描读取错误关闭句柄，保留安全错误码并隐藏路径 (4.1115ms)
+2026-11-27T06:57:59.6146175Z ✔ R10 结果隐私处理期间取消，不向调用方返回已取消的页 (8.7406ms)
+2026-11-27T06:57:59.6324321Z ✔ R10 文件名与目录经现有隐私桥保护；分页按原名排序并可还原 (17.6646ms)
+2026-11-27T06:57:59.6436519Z ✔ R10 raw 允许普通个人信息原文，仍保留精确分页 (10.7908ms)
+2026-11-27T06:57:59.6652055Z ✔ R10 redact 拒绝文件名中的凭据，不因分页或审批放行 (21.8471ms)
+2026-11-27T06:57:59.6872164Z ✔ R10 raw 拒绝文件名中的凭据，不因分页或审批放行 (21.926ms)
+2026-11-27T06:57:59.6971177Z ✔ R10 显式 block 隐私策略仍阻止敏感文件名返回 (9.8897ms)
+2026-11-27T06:58:00.1404430Z ✔ 嵌套输出先解析最近存在祖先，解析期间不创建任何目录 (18.0229ms)
+2026-11-27T06:58:00.1798326Z ✔ ask 获批后创建嵌套目录并写入真实文件；审批时目录尚不存在 (39.1631ms)
+2026-11-27T06:58:00.2112301Z ✔ auto 的既有工作区写入授权支持嵌套目录 (31.7468ms)
+2026-11-27T06:58:00.2383534Z ✔ full 的既有工作区写入授权支持嵌套目录 (26.7571ms)
+2026-11-27T06:58:00.2449452Z ✔ 拒绝审批不创建目录或文件 (6.6347ms)
+2026-11-27T06:58:00.2514205Z ✔ 调用前或审批期间取消不创建目录 (6.3384ms)
+2026-11-27T06:58:00.2792579Z ✔ 工作区链接指向外部时按真实外部目标审批，不能继承 auto 的内部授权 (27.7521ms)
+2026-11-27T06:58:00.2857469Z ✔ 外部嵌套目录拒绝批准后保持不存在 (6.4704ms)
+2026-11-27T06:58:00.3109785Z ✔ 现有成果自动编号另存，原件内容不变 (24.9576ms)
+2026-11-27T06:58:00.3193456Z ✔ 审批期间 link 置换导致原授权失效 (8.6237ms)
+2026-11-27T06:58:00.3271759Z ✔ 审批期间 directory 置换导致原授权失效 (7.7701ms)
+2026-11-27T06:58:00.3350862Z ✔ 审批期间 root 置换导致原授权失效 (7.778ms)
+2026-11-27T06:58:00.3421547Z ✔ 审批期间原本缺少的目录出现，不采用未知目录继续写入 (7.0348ms)
+2026-11-27T06:58:00.3499243Z ✔ 非目录祖先、断链与目标链接均拒绝，不伪装成可创建目录 (7.6478ms)
+2026-11-27T06:58:00.3546511Z ✔ 禁止位置在创建缺失目录和审批之前被拒绝 (4.7168ms)
+2026-11-27T06:58:00.3654907Z ✔ mkdir 后立即检查链接置换，不向替换目录写入成果 (10.4993ms)
+2026-11-27T06:58:00.3758596Z ✔ mkdir 期间取消停止后续层级和文件写入 (10.4905ms)
+2026-11-27T06:58:00.3913363Z ✔ 审批后同名竞争保留竞争者与原件（自动编号=false） (15.3991ms)
+2026-11-27T06:58:00.4032197Z ✔ 审批后同名竞争保留竞争者与原件（自动编号=true） (11.7353ms)
+2026-11-27T06:58:00.4142321Z ✔ 最后一次校验后出现同名文件仍由 wx 拒绝，不覆盖或改名重试 (10.9037ms)
+2026-11-27T06:58:00.4239864Z ✔ 排他打开后目标被替换，拒绝写入且失败清理不删除竞争者 (9.8423ms)
+2026-11-27T06:58:00.4297998Z ✔ 路径系统错误保留代码但不向工具泄露绝对路径 (5.0623ms)
+2026-11-27T06:58:37.4010603Z ✔ Harness 原生目录与 pnpm 隔离管理，可安装、启用、更新并移除插件 (36469.6042ms)
+2026-11-27T06:58:37.8322105Z ✔ R01 数据键拒绝而不改名；固定 schema 关键字、required 和引用保持一致 (9.5623ms)
+2026-11-27T06:58:37.8323684Z ✔ R01 raw 保留允许的普通键；禁止规则、SECRET=mask 的动态键以及动态自定义词不能改名放行 (1.2709ms)
+2026-11-27T06:58:37.9111615Z {"protocol":"openai","kind":"arguments","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-27T06:58:37.9181065Z ✔ R01 openai/arguments 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (90.3803ms)
+2026-11-27T06:58:37.9526537Z {"protocol":"openai","kind":"schema","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-27T06:58:37.9561184Z ✔ R01 openai/schema 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (38.055ms)
+2026-11-27T06:58:37.9828424Z {"protocol":"openai","kind":"extension","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-27T06:58:37.9859607Z ✔ R01 openai/extension 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (29.7995ms)
+2026-11-27T06:58:38.0117788Z {"protocol":"anthropic","kind":"arguments","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-27T06:58:38.0143744Z ✔ R01 anthropic/arguments 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (28.4148ms)
+2026-11-27T06:58:38.0424415Z {"protocol":"anthropic","kind":"schema","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-27T06:58:38.0449262Z ✔ R01 anthropic/schema 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (30.4452ms)
+2026-11-27T06:58:38.0765802Z {"protocol":"anthropic","kind":"extension","rejected":3,"rejectedReceiverDelta":0,"ordinaryReceipts":1}
+2026-11-27T06:58:38.0795159Z ✔ R01 anthropic/extension 两类PII及自定义秘密：拒绝时真实收件增量为零，普通键正常 (34.2797ms)
+2026-11-27T06:58:38.1287922Z ✔ R01 协议键不会因自定义词改名；扩展参数值继承策略并在收件前拦截 (49.0522ms)
+2026-11-27T06:58:38.1635037Z ✔ R01 openai 顶层及消息扩展字段同样检查动态键；raw 仍拒绝自定义秘密 (34.9039ms)
+2026-11-27T06:58:38.1969413Z ✔ R01 anthropic 顶层及消息扩展字段同样检查动态键；raw 仍拒绝自定义秘密 (33.2562ms)
+2026-11-27T06:58:38.2130930Z {"boundary":"MCP + extension pre-execute -> loopback JSON-RPC","rejected":6,"preApprovalRejected":6,"rejectedReceiverDelta":0,"ordinaryReceipts":2,"ordinaryExecutions":2}
+2026-11-27T06:58:38.2149725Z ✔ R01 MCP 与扩展工具共用真实 pre-execute 边界：拒绝零收件，普通参数只执行一次 (18.1372ms)
+2026-11-27T06:58:38.4159193Z ✔ openai 实际 HTTP 边界：Unicode 脱敏及伪造占位符凭证在外发前阻断 (93.5417ms)
+2026-11-27T06:58:38.4545039Z ✔ anthropic 实际 HTTP 边界：Unicode 脱敏及伪造占位符凭证在外发前阻断 (38.207ms)
+2026-11-27T06:58:38.5223045Z ✔ 网关隔离父子流式预览、同步新映射，并区分隐私阻断、上游状态与连接故障 (68.1149ms)
+2026-11-27T06:58:38.7196548Z ✔ R09 lock: kill child after mkdir and before owner publication, then recover (102.8129ms)
+2026-11-27T06:58:38.7866558Z ✔ R09 guard: kill child after mkdir and before owner publication, then recover (66.9068ms)
+2026-11-27T06:58:38.8649384Z ✔ R09 lock: real child crash at partial-owner remains recoverable (78.2415ms)
+2026-11-27T06:58:38.9347244Z ✔ R09 lock: real child crash at before-publish remains recoverable (69.7331ms)
+2026-11-27T06:58:39.0075996Z ✔ R09 lock: real child crash at published remains recoverable (72.858ms)
+2026-11-27T06:58:39.0738487Z ✔ R09 guard: real child crash at partial-owner remains recoverable (66.0348ms)
+2026-11-27T06:58:39.1404129Z ✔ R09 guard: real child crash at before-publish remains recoverable (66.6374ms)
+2026-11-27T06:58:39.2097433Z ✔ R09 guard: real child crash at published remains recoverable (69.1419ms)
+2026-11-27T06:58:39.3471111Z ✔ R09 lock: live published owner is never reclaimed on timeout (137.2267ms)
+2026-11-27T06:58:39.4817659Z ✔ R09 guard: live published owner is never reclaimed on timeout (134.3547ms)
+2026-11-27T06:58:39.5586552Z ✔ R09 live unpublished guard does not block another writer or overwrite its result (77.0785ms)
+2026-11-27T06:58:39.6861821Z ✔ R09 live main-lock initializer retains the guard until owner publication (127.4361ms)
+2026-11-27T06:58:39.8331167Z ✔ R09 EEXIST: a rename loser retries after the competing guard has already retired (146.9906ms)
+2026-11-27T06:58:39.9789168Z ✔ R09 ENOTEMPTY: a rename loser retries after the competing guard has already retired (145.6147ms)
+2026-11-27T06:58:40.0450791Z ✔ R09 EPERM: publication permission failures without a competing lock are not swallowed (66.222ms)
+2026-11-27T06:58:40.1110131Z ✔ R09 EACCES: publication permission failures without a competing lock are not swallowed (65.7079ms)
+2026-11-27T06:58:42.5629858Z ✔ R09 simultaneous real writers preserve all updates and exclusive callback entry (2451.8142ms)
+2026-11-27T06:58:44.2018153Z ✔ R09 stale guard reaper cannot remove a replacement live token (1638.9324ms)
+2026-11-27T06:58:44.3239146Z ✔ R09 killing a guard reaper after unlink leaves a safely recoverable empty V2 guard (122.0821ms)
+2026-11-27T06:58:44.3968078Z ✔ R09 killing main-lock release after owner removal cannot strand the canonical lock (72.8383ms)
+2026-11-27T06:58:44.5257940Z ✔ R09 killing normal guard release after unlink remains recoverable without stealing a live main lock (128.8756ms)
+2026-11-27T06:58:44.5777965Z ✔ R09 same-process reentry times out without stealing the outer lock (52.0252ms)
+2026-11-27T06:58:44.7680451Z ✔ R09 parallel same-process callers queue instead of treating the PID as reentrant ownership (190.053ms)
+2026-11-27T06:58:44.7747951Z ✔ R09 release preserves an owner whose token no longer matches (7.0522ms)
+2026-11-27T06:58:44.7839960Z ✔ R09 release preserves an owner whose pid no longer matches (8.9984ms)
+2026-11-27T06:58:44.9245696Z ✔ R09 main-lock recovery restores a changed live owner instead of deleting its token (140.2393ms)
+2026-11-27T06:58:44.9935883Z ✔ R09 empty-guard observer cannot delete a newly published nonempty live guard (69.0018ms)
+2026-11-27T06:58:45.0366438Z ✔ R09 uncertain PID probe (EPERM) never authorizes reclamation (43.2329ms)
+2026-11-27T06:58:45.0821009Z ✔ R09 uncertain PID probe (EACCES) never authorizes reclamation (45.3091ms)
+2026-11-27T06:58:45.1454608Z ✔ R09 uncertain PID probe (EIO) never authorizes reclamation (63.0707ms)
+2026-11-27T06:58:45.1946918Z ✔ R09 anonymous/malformed legacy .lock stays fail-closed (undefined) (49.2039ms)
+2026-11-27T06:58:45.2426517Z ✔ R09 anonymous/malformed legacy .lock stays fail-closed ({partial) (48.0914ms)
+2026-11-27T06:58:45.2882910Z ✔ R09 anonymous/malformed legacy .lock stays fail-closed ({"pid":0,"token":""}) (45.4723ms)
+2026-11-27T06:58:45.3262448Z ✔ R09 anonymous/malformed legacy .lock.guard stays fail-closed (undefined) (37.9608ms)
+2026-11-27T06:58:45.3692842Z ✔ R09 anonymous/malformed legacy .lock.guard stays fail-closed ({partial) (42.8596ms)
+2026-11-27T06:58:45.4227273Z ✔ R09 anonymous/malformed legacy .lock.guard stays fail-closed ({"pid":0,"token":""}) (53.3075ms)
+2026-11-27T06:58:45.4790331Z ✔ R09 .lock directory symlink/junction is not followed or removed (56.4104ms)
+2026-11-27T06:58:45.5426791Z ✔ R09 .lock.guard directory symlink/junction is not followed or removed (63.6204ms)
+2026-11-27T06:58:45.6054149Z ✔ R09 .lock.guard.v2 directory symlink/junction is not followed or removed (62.5094ms)
+2026-11-27T06:58:45.6529192Z ✔ R09 guard owner-entry junction and malformed names cannot authorize external cleanup (47.3656ms)
+2026-11-27T06:58:45.6997859Z ✔ R09 malformed V2 guard entry stays fail-closed: owner.json (46.9505ms)
+2026-11-27T06:58:45.7478677Z ✔ R09 malformed V2 guard entry stays fail-closed: 1-not-a-token.owner (48.0053ms)
+2026-11-27T06:58:45.8113559Z ✔ R09 malformed V2 guard entry stays fail-closed: 9007199254740992-00000000-0000-4000-8000-000000000000.owner (63.2746ms)
+2026-11-27T06:58:45.8610025Z ✔ R09 owner.json symlink is rejected without reading or deleting its target (49.6275ms)
+2026-11-27T06:58:45.9063752Z ✔ R09 owner.json junction is rejected and its external contents survive (45.3142ms)
+2026-11-27T06:58:45.9448814Z ✔ R09 owner-file symlink metadata fails closed before owner content is read (38.3036ms)
+2026-11-27T06:58:45.9495877Z ✔ R09 lock owner write failure cleans only its private candidate (5.0804ms)
+2026-11-27T06:58:45.9534032Z ✔ R09 guard owner write failure cleans only its private candidate (3.6421ms)
+2026-11-27T06:58:45.9574853Z ✔ R09 lock publication failure does not run the producer or delete another path (4.2694ms)
+2026-11-27T06:58:45.9606051Z ✔ R09 guard publication failure does not run the producer or delete another path (2.9223ms)
+2026-11-27T06:58:45.9857102Z ✔ R09 Windows delete-pending readdir retries acquisition before the callback (24.8007ms)
+2026-11-27T06:58:46.0109369Z ✔ R09 Windows delete-pending rename retries acquisition before the callback (25.1387ms)
+2026-11-27T06:58:46.0808923Z ✔ R09 persistent Windows guard access failure remains bounded without invoking the callback (69.8966ms)
+2026-11-27T06:58:46.1917223Z ✔ R09 abort while waiting leaves the live owner unchanged and never calls update (110.9453ms)
+2026-11-27T06:58:49.7695447Z run.turn-failed {"finishReason":"error","hint":"HTTP 400","reason":{"kind":"error","error":{"message":"结构化字段或工具约束包含需保护的信息，请使用不含敏感值的字段和约束。","code":"INVALID_REQUEST","status":400}}}
+2026-11-27T06:58:52.9649260Z {"boundary":"native Harness -> official MCP client -> loopback","unsafeTypes":["phone","email","custom-secret"],"unsafeToolCallReceipts":0,"ordinaryToolCallReceipts":1,"unsafeModelReceipts":1,"ordinaryModelReceipts":2,"synthetic":true}
+2026-11-27T06:58:52.9711668Z ✔ R01 原生 Harness → 官方 MCP client → loopback：三种敏感动态键 tools/call 为零，普通调用恰好一次 (6311.6799ms)
+2026-11-27T06:58:53.0859788Z ✔ 同任务复用、跨任务隔离、可保存映射 (6.364ms)
+2026-11-27T06:58:53.0864773Z ✔ 扩展规则、校验位、排除词、大小写和分类动作 (9.3621ms)
+2026-11-27T06:58:53.0866220Z ✔ 嵌套请求和 JSON 字段逐值脱敏，保持结构和占位符完整 (3.0946ms)
+2026-11-27T06:58:53.0868385Z ✔ 逐字符流及所有分块边界不暴露残缺占位符 (0.7281ms)
+2026-11-27T06:58:53.0870344Z ✔ 凭证阻止发送且永不还原；既有占位符不被二次破坏 (0.6031ms)
+2026-11-27T06:58:53.0875341Z ✔ 全角、零宽和方向控制字符以原始位置替换并精确还原 (1.9435ms)
+2026-11-27T06:58:53.0877623Z ✔ 伪造占位符不能隐藏凭证和手机号，只有本任务签发的占位符受保留 (1.1105ms)
+2026-11-27T06:58:53.0883413Z ✔ 重叠自定义词不能降低内部实体的拦截动作，凭证永不还原 (0.3539ms)
+2026-11-27T06:58:53.0884798Z ✔ 结构化字段识别大小写别名及数字凭证，不改变非敏感值的类型 (0.9556ms)
+2026-11-27T06:58:53.0886166Z ✔ IBAN 通过 MOD-97 才作为无字段账户识别，错误校验不误报 (1.0066ms)
+2026-11-27T06:58:53.6320392Z ✔ 模型目录不回传明文或 Unicode 凭证，旧短密钥必须重配且不发起请求 (33.4819ms)
+2026-11-27T06:58:53.6323678Z ✔ 同名模型按供应商和凭据区分，换地址不能沿用原密钥 (1.3001ms)
+2026-11-27T06:58:53.6326996Z ✔ 显式失效供应商与型号、未知能力和不支持档位均阻止解析 (0.9693ms)
+2026-11-27T06:58:53.6328363Z ✔ 界面模型查找不跨供应商或静默改选 (0.1854ms)
+2026-11-27T06:58:53.6329067Z ✔ 非推理模型、硅基流动与明确不覆盖推理的自定义路由可正常发送 (0.4249ms)
+2026-11-27T06:58:53.6330281Z ✔ 视觉模态只继承实际供应商声明或官方 DeepSeek 目录 (1.3102ms)
+2026-11-27T06:59:06.1390726Z ✔ 真实 Harness 对接自定义 Chat Completions / Messages，收件端核对模型、档位、脱敏与恢复 (12508.3289ms)
+2026-11-27T06:59:06.2357529Z ✔ document generation advances synchronously and only volatile runs are cancelled (2.5444ms)
+2026-11-27T06:59:06.2359120Z ✔ confirmed cleanup retires a detached receipt even when its cloned finalization is stale (0.831ms)
+2026-11-27T06:59:06.2360291Z ✔ an exited event cannot release a run that the manager still retains (0.4806ms)
+2026-11-27T06:59:06.2361408Z ✔ repeated detach and terminal events share one cancellation and are idempotent (0.3243ms)
+2026-11-27T06:59:06.2362893Z ✔ a previous renderer acknowledgement during detachment is handled without a second discard (1.6478ms)
+2026-11-27T06:59:06.2367293Z ✔ failed cancellation retains the result and a later detach retries without leaking the error (0.6809ms)
+2026-11-27T06:59:06.2368973Z ✔ retiring one volatile run preserves a different persistent receipt in the same session (0.5562ms)
+2026-11-27T06:59:06.2370228Z ✔ discard failure keeps the detached record retryable and diagnostics cannot interrupt retirement (0.5211ms)
+2026-11-27T06:59:06.7099386Z ✔ native approval audits two separate decisions for the same tool call (76.2919ms)
+2026-11-27T06:59:06.7157376Z ✔ native turn enclosure, never policy and pre-cancellation still precede the bridge (10.1513ms)
+2026-11-27T06:59:06.7328087Z ✔ native cancellation aborts real HTTP and a late allow cannot change its audited decision (17.9189ms)
+2026-11-27T06:59:06.7452223Z ✔ disposing only the answerer cancels a pending native request without a caller signal (9.3103ms)
+2026-11-27T06:59:06.7572676Z ✔ foreign roots, stale Agent identities and orphaned child metadata fall through (7.7453ms)
+2026-11-27T06:59:06.7574787Z ✔ unexpected native ownership failures are unavailable without invoking later answerers (6.9014ms)
+2026-11-27T06:59:06.7673089Z ✔ a live Agent replacement while approval waits cannot consume the old allow (9.8665ms)
+2026-11-27T06:59:06.7772103Z ▶ invalid outcomes, authentication failure and transport exceptions fail closed without logging contents
+2026-11-27T06:59:06.7773199Z   ✔ unknown outcome (8.724ms)
+2026-11-27T06:59:06.7865670Z   ✔ wrong envelope (10.1139ms)
+2026-11-27T06:59:06.7949981Z   ✔ wrong token (8.8607ms)
+2026-11-27T06:59:06.8014450Z   ✔ host rejection (8.2866ms)
+2026-11-27T06:59:06.8051735Z ✔ invalid outcomes, authentication failure and transport exceptions fail closed without logging contents (36.9821ms)
+2026-11-27T06:59:06.8147898Z ▶ the loopback answerer refuses redirects, malformed JSON and oversized replies
+2026-11-27T06:59:06.8148889Z   ✔ redirect (9.3311ms)
+2026-11-27T06:59:06.8232784Z   ✔ malformed (9.6337ms)
+2026-11-27T06:59:06.8328151Z   ✔ oversized (9.205ms)
+2026-11-27T06:59:06.8401004Z ✔ the loopback answerer refuses redirects, malformed JSON and oversized replies (29.8868ms)
+2026-11-27T06:59:06.8683056Z ▶ endpoint configuration stays local and invalid configuration is consumed and fails closed
+2026-11-27T06:59:06.8684373Z   ✔ /approval / invalid configuration (5.6327ms)
+2026-11-27T06:59:06.8820740Z   ✔ /approval / invalid configuration (5.0144ms)
+2026-11-27T06:59:06.8822507Z   ✔ /another-route / invalid configuration (5.424ms)
+2026-11-27T06:59:06.8823341Z   ✔ /approval / invalid configuration (5.5743ms)
+2026-11-27T06:59:06.8824096Z   ✔ /approval / invalid configuration (13.1921ms)
+2026-11-27T06:59:06.8824789Z   ✔ /approval / invalid configuration (6.0881ms)
+2026-11-27T06:59:06.8827166Z   ✔ /approval / invalid configuration (5.9542ms)
+2026-11-27T06:59:06.8828822Z ✔ endpoint configuration stays local and invalid configuration is consumed and fails closed (47.8328ms)
+2026-11-27T06:59:06.8914505Z ✔ full approval reasons are transported without truncation and oversized requests are refused (13.9929ms)
+2026-11-27T06:59:10.7311283Z ✔ 真实 Harness 文件审批经本机桥和主机 broker 得到 allowed-once (3369.936ms)
+2026-11-27T06:59:13.9551843Z ✔ 真实 Harness 文件审批经本机桥和主机 broker 得到 rejected (3223.9402ms)
+2026-11-27T06:59:17.1343534Z ✔ 真实 Harness 等待文件审批时取消，撤回主机请求且迟到批准不能写文件 (3179.0537ms)
+2026-11-27T06:59:20.6000694Z ✔ 真实子 Agent 保留上游 delegated never 策略，需审批的写入直接拒绝且不弹主机审批 (3465.8094ms)
+2026-11-27T06:59:20.7039857Z ✔ approval waits for an explicit one-shot answer and publishes immutable full snapshots (3.7088ms)
+2026-11-27T06:59:20.7041584Z ✔ rejection and duplicate replies cannot turn one decision into a later grant (0.5581ms)
+2026-11-27T06:59:20.7051118Z ✔ host epoch, run and root identities are checked without consuming another request (1.1987ms)
+2026-11-27T06:59:20.7054287Z ✔ same call id can ask twice and concurrent child sessions never share a grant (0.6579ms)
+2026-11-27T06:59:20.7057184Z ✔ native cancellation withdraws exactly its own request and ignores late approval (0.3988ms)
+2026-11-27T06:59:20.7062038Z ✔ abort before publication and during its synchronous observer both fail closed (2.9596ms)
+2026-11-27T06:59:20.7066353Z ✔ a completed approval remains one-shot when cancellation arrives afterward (0.3317ms)
+2026-11-27T06:59:20.7067612Z ✔ close cancels all outstanding promises and cannot admit a later request (0.4881ms)
+2026-11-27T06:59:20.7071782Z ✔ the previous tool allowlist and JSON path requirement remain fail closed (0.6812ms)
+2026-11-27T06:59:20.7074625Z ✔ commands and network values are displayed completely without truncation or mutable objects (0.7843ms)
+2026-11-27T06:59:20.7076309Z ✔ oversized command or UTF-8 reason is rejected rather than approved from a partial view (0.6122ms)
+2026-11-27T06:59:20.7077544Z ✔ renderer notification failure leaves snapshot recovery and decision settlement intact (1.2183ms)
+2026-11-27T06:59:21.1862923Z ✔ 运行失败与 SDK 关闭失败保留各自原因，关闭未确认时保留恢复文件 (29.612ms)
+2026-11-27T06:59:26.2055739Z ✔ 目录等待超时后 SDK 关闭也失败时保留 context 和 close 两层诊断 (5019.3394ms)
+2026-11-27T06:59:26.2152320Z ✔ 只有 SDK 关闭失败时返回单一分层原因，不误报交办成功或删除临时恢复文件 (9.6611ms)
+2026-11-27T06:59:26.2196432Z ✔ 目录检查启动失败与关闭失败均可诊断，未确认退出时保留独立检查目录 (4.4563ms)
+2026-11-27T06:59:26.2245729Z ✔ SDK close resolution records process termination even when the exit status is nonzero (4.9968ms)
+2026-11-27T06:59:26.3292959Z ✔ 子会话的后续快照保留父会话完整的工具与技能目录 (14.0897ms)
+2026-11-27T06:59:26.3353764Z ✔ 技能目录延迟时 session flush 等待全部已排队的父子快照 (6.3296ms)
+2026-11-27T06:59:27.4872516Z ✔ 一次快照写入失败不会永久阻断后续目录保存 (1151.5481ms)
+2026-11-27T06:59:27.5175103Z ✔ 加密桥 Windows EPERM 短暂占用只重试同一密文 temp，旧目标保持可读 (30.1107ms)
+2026-11-27T06:59:27.5491905Z ✔ 加密桥 Windows EACCES 短暂占用只重试同一密文 temp，旧目标保持可读 (31.6753ms)
+2026-11-27T06:59:27.5783675Z ✔ 加密桥 Windows EBUSY 短暂占用只重试同一密文 temp，旧目标保持可读 (28.966ms)
+2026-11-27T06:59:28.7370677Z ✔ 加密桥 Windows 持续占用有界失败，保留原错误与旧文件且仅清理 temp (1158.7797ms)
+2026-11-27T06:59:29.8934346Z ✔ 加密桥 Windows 第八次重试仍可提交，不重新序列化或写密文 (1156.1507ms)
+2026-11-27T06:59:29.8976061Z ✔ 加密桥非暂时 rename 错误立即失败，不删除或覆盖旧目标 (3.9366ms)
+2026-11-27T06:59:29.9011086Z ✔ 加密桥写 temp 失败不重试写入或 rename，清理半成品并保留旧目标 (3.7319ms)
+2026-11-27T06:59:29.9652435Z ✔ 加密桥 rename 重试期间保持跨调用锁独占，更新回调仅执行一次 (64.1285ms)
+2026-11-27T06:59:30.5313756Z ✔ child creation is starting; only native running grants interrupt, idle and end revoke it (112.1694ms)
+2026-11-27T06:59:34.5487963Z ✔ missing control bridge fails startup within four seconds and never admits a turn (4017.6483ms)
+2026-11-27T06:59:34.6452606Z ✔ control waits for atomic bridge publication instead of rejecting the first ENOENT (96.2582ms)
+2026-11-27T06:59:34.6874882Z ✔ bridge readiness stops on caller cancellation without sending a request (42.324ms)
+2026-11-27T06:59:34.6917410Z ✔ corrupt encrypted control record fails immediately and is not treated as starting (4.2575ms)
+2026-11-27T06:59:38.7062631Z ✔ readiness and HTTP share the original four-second control budget (4014.1592ms)
+2026-11-27T06:59:38.7103896Z ✔ Cordis plugin initialization does not finish before its encrypted control record (4.6297ms)
+2026-11-27T06:59:39.2146643Z ✔ R03 未确认退出保留 handle/会话互斥/恢复文件，重试只清理不再创建内核 (32.0134ms)
+2026-11-27T06:59:39.2606227Z ✔ R03 真实合成子进程 exit 证据触发释放；独立会话可运行，旧会话恢复后可新建 (45.8567ms)
+2026-11-27T06:59:39.3393762Z ✔ R03 不返回的关闭有界结束且隔离；拿到退出证据前不删除临时资料 (78.6912ms)
+2026-11-27T06:59:39.3475053Z ✔ RunFinalization 分开记录完成/保存/退出，terminal、返回值与 settlement 一致 (8.0702ms)
+2026-11-27T06:59:39.3525975Z ✔ R03 check 关闭失败同样保留实例并参与关窗，确认退出后删除独立检查目录 (5.1582ms)
+2026-11-27T06:59:39.3879278Z ✔ R03 check 仍在启动时也纳入 close join，不能等到失败后才注册 handle (35.1634ms)
+2026-11-27T06:59:39.4735990Z ✔ R03 后台清理有次数上限，失败不会释放互斥，手动重试和取消不新建内核 (85.4277ms)
+2026-11-27T06:59:39.5735060Z ✔ R03 空重试计划自动清理为零次，手动重试失败仍隔离且可继续恢复 (99.6537ms)
+2026-11-27T06:59:39.5809122Z ✔ R03 对外隔离诊断可序列化且不会携带配置 Key/任意 code 或 stage (7.5695ms)
+2026-11-27T06:59:39.5865907Z ✔ RunFinalization 取消与关闭失败可同时呈现，重试清理不改执行终态 (5.7515ms)
+2026-11-27T06:59:39.5936812Z ✔ RunFinalization 内核已退出而映射写盘失败保留恢复文件，不能误报 saved (7.0923ms)
+2026-11-27T06:59:39.6001360Z ✔ RunFinalization 输出凭证绝不标 completed 或附 result (6.4982ms)
+2026-11-27T06:59:39.6042450Z privacy.restore-unknown {"count":1}
+2026-11-27T06:59:39.6068358Z ✔ RunFinalization 无法归属的占位符保留正文、不还原、并记下处数 (6.698ms)
+2026-11-27T06:59:39.6146287Z ✔ R03 有效最终正文完成但 close 失败时，经 terminal/error.result 保留同一安全结果 (7.6413ms)
+2026-11-27T06:59:39.6227475Z ✔ R03 终态摘要不含已还原PII，私有result和可靠validated-result保留完整正文 (8.0047ms)
+2026-11-27T06:59:39.6363237Z ✔ R05 忘记会话清目标volatile/原文预览/settlement，不等待或清理其他活动会话 (13.5438ms)
+2026-11-27T06:59:39.6478541Z ✔ R05 忘记回调持有目标互斥，并发旧预览拒绝且内核创建数0；回调失败保留缓存 (11.5092ms)
+2026-11-27T06:59:39.6547326Z ✔ R05 活跃/隔离会话不能忘记，磁盘回调不执行且恢复缓存保持完整 (6.8119ms)
+2026-11-27T06:59:39.6677197Z ✔ R05 删除前已开始的异步预览不能在成功删除后复活缓存；删除失败仍可恢复 (13.1135ms)
+2026-11-27T06:59:40.3772703Z ✔ forget uses exact run ownership, waits for settlement and preserves other receipts in the same session (2.8736ms)
+2026-11-27T06:59:40.3774242Z ✔ detached callers reconnect to one registered execution and independent complete receipts (0.7669ms)
+2026-11-27T06:59:40.3776044Z ✔ execution failure retains the complete validated result and separate finalization (0.5451ms)
+2026-11-27T06:59:40.3777646Z ✔ error sanitization failure or invalid return cannot strand a private receipt (0.5676ms)
+2026-11-27T06:59:40.3778875Z ✔ uncloneable output becomes a settled failure without an unhandled private promise (1.3187ms)
+2026-11-27T06:59:40.3779907Z ✔ pre-begin cancellation stays cancelled without inventing a process finalization (0.2539ms)
+2026-11-27T06:59:40.3781179Z ✔ only exact receipt identity and synchronous positive host save proof release a result (0.7323ms)
+2026-11-27T06:59:40.3782281Z ✔ pending operations cannot be acknowledged and duplicate begin never reruns work (0.2797ms)
+2026-11-27T06:59:40.3786955Z ✔ acknowledgement-cache eviction does not permit a host-lifetime run ID to execute again (5.8942ms)
+2026-11-27T06:59:40.3788726Z ✔ sixteen unacknowledged results apply backpressure without evicting or admitting work (0.8945ms)
+2026-11-27T06:59:40.3792533Z ✔ snapshots retain only bounded public summaries for the correct root session (11.3422ms)
+2026-11-27T06:59:40.3795466Z ✔ deleting a settled session revokes pending reads and leaves other and running sessions intact (0.5581ms)
+2026-11-27T06:59:40.3797038Z ✔ invalid ownership or non-callable operations never enter the delivery table (0.1189ms)
+2026-11-27T06:59:44.4549194Z ✔ Windows OCR image is read by office_read_file, protected before wire, and restored locally (3628.7281ms)
+2026-11-27T06:59:55.0987946Z ✔ SDK 内核使用指定独立 Node，连续目录检查均确认 exit 和 close (10181.521ms)
+2026-11-27T06:59:58.2706477Z ✔ 停止保留已生成正文，重复取消与关闭等待最终保存后仅发出一次终态 (2718.6635ms)
+2026-11-27T07:00:03.6356645Z ✔ 再次执行在真实模型请求与加密历史中追加相同交办和附件并保留原回答 (5365.0289ms)
+2026-11-27T07:00:06.3028273Z ✔ 原生取消通道失效时强制收尾标记 interrupted 并释放运行 (2666.8099ms)
+2026-11-27T07:00:09.8015804Z ✔ openai 首个流式 chunk 后取消保留原生前缀并等待保存、连接及运行收尾 (3498.9859ms)
+2026-11-27T07:00:13.0864051Z ✔ deepseek 首个流式 chunk 后取消保留原生前缀并等待保存、连接及运行收尾 (3284.9137ms)
+2026-11-27T07:00:16.6972663Z ✔ 原生技能手势在界面组装与任务模式前缀后仍注入完整技能，无需模型调用 skill (3151.2404ms)
+2026-11-27T07:00:19.9467722Z ✔ 原生子 Agent 继承 openai 自定义路由，真实发出请求并保留独立会话输出 (3249.0922ms)
+2026-11-27T07:00:23.1814953Z ✔ 原生子 Agent 继承 anthropic 自定义路由，真实发出请求并保留独立会话输出 (3235.2136ms)
+2026-11-27T07:00:23.6650517Z ✔ two root questions recover independent safe snapshots and scoped answers map back to native choices (17.8639ms)
+2026-11-27T07:00:23.6713187Z ✔ native abort withdraws only its own root and stale recovery replies cannot consume another question (6.4166ms)
+2026-11-27T07:00:23.6756502Z ✔ abort during question publication advances revision and invalidates the already observed older snapshot (4.4051ms)
+2026-11-27T07:00:23.6792825Z ✔ disabled and already aborted question paths publish nothing and do not read a missing bridge (3.513ms)
+2026-11-27T07:00:28.1675472Z ✔ Windows image privacy masks the actual pixels, removes metadata with zero hits, and handles no-text images (4013.0107ms)
+2026-11-27T07:00:31.0327690Z ✔ Windows WebP 和单帧 GIF 复用同一遮罩链，动图与伪装扩展名被拒绝 (2865.0591ms)
+2026-11-27T07:00:32.0131287Z ✔ Windows 项目图片路径接受 WebP 与单帧 GIF，副本仍统一为 PNG (980.5079ms)
+2026-11-27T07:00:44.5404714Z ✔ Windows real Harness sends only approved pixels and retains approved visual history on reopen (12527.3014ms)
+2026-11-27T07:00:45.0537380Z ✔ model gateway forwards only the approved image representation in both wire formats (513.5096ms)
+2026-11-27T07:00:45.1612212Z [runtime-integration] module-loading
+2026-11-27T07:00:45.7903074Z [runtime-integration] fixture-start
+2026-11-27T07:00:45.8050244Z [runtime-integration] catalog-and-redacted-turn
+2026-11-27T07:00:51.6307996Z [runtime-integration] raw-turn
+2026-11-27T07:00:54.5978790Z [runtime-integration] automation-turn
+2026-11-27T07:00:57.6414335Z [runtime-integration] plan-and-skill-tools
+2026-11-27T07:01:03.7109262Z [runtime-integration] interactive-question
+2026-11-27T07:01:06.7057113Z [runtime-integration] subagent-turn
+2026-11-27T07:01:09.8553507Z [runtime-integration] subagent-interrupt
+2026-11-27T07:01:12.7211732Z [runtime-integration] subagent-control-request
+2026-11-27T07:01:12.7392252Z [runtime-integration] subagent-control-accepted
+2026-11-27T07:01:12.9150932Z [runtime-integration] history-resume
+2026-11-27T07:01:15.9123932Z [runtime-integration] mcp-catalog
+2026-11-27T07:01:18.8366096Z [runtime-integration] mcp-tool
+2026-11-27T07:01:21.9950894Z [runtime-integration] mcp-resource
+2026-11-27T07:01:25.1438028Z [runtime-integration] goal-image-preparation
+2026-11-27T07:01:25.6275203Z [runtime-integration] goal-turn
+2026-11-27T07:01:28.8713456Z [runtime-integration] workflow-turn
+2026-11-27T07:01:32.2155629Z [runtime-integration] background-workflow-stop
+2026-11-27T07:01:35.3199605Z [runtime-integration] plan-mode-and-review
+2026-11-27T07:01:41.1476591Z [runtime-integration] compact-and-goal-status
+2026-11-27T07:01:46.8723480Z [runtime-integration] web-search-and-browser
+2026-11-27T07:01:52.9081033Z [runtime-integration] network-denial
+2026-11-27T07:01:58.9836968Z [runtime-integration] office-read-text-and-pdf
+2026-11-27T07:02:10.0176177Z [runtime-integration] office-write-permissions
+2026-11-27T07:02:22.4542893Z [runtime-integration] terminal-permissions
+2026-11-27T07:02:29.0941307Z [runtime-integration] approval-cancel
+2026-11-27T07:02:32.0838672Z [runtime-integration] ephemeral-and-privacy-switch
+2026-11-27T07:02:38.0857366Z [runtime-integration] credential-block
+2026-11-27T07:02:38.0871214Z [runtime-integration] model-cancel
+2026-11-27T07:02:41.0008329Z [runtime-integration] cleanup-runtime
+2026-11-27T07:02:41.0009071Z [runtime-integration] cleanup-server
+2026-11-27T07:02:41.0013891Z [runtime-integration] cleanup-runtime-complete
+2026-11-27T07:02:41.0014568Z [runtime-integration] cleanup-files
+2026-11-27T07:02:41.0230342Z [runtime-integration] cleanup-complete
+2026-11-27T07:02:41.0245843Z ✔ 真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原 (115236.4495ms)
+2026-11-27T07:02:41.2182993Z ✔ mono 16 kHz PCM16 WAV is canonical and survives host validation (1.084ms)
+2026-11-27T07:02:41.2184786Z ✔ stereo audio downmixes; non-16kHz recordings are resampled without clipping (0.9505ms)
+2026-11-27T07:02:41.2190575Z ✔ MediaRecorder output can be decoded and converted with the browser audio API contract (0.3442ms)
+2026-11-27T07:02:41.2193283Z ✔ invalid payloads and recordings over two minutes are refused locally (0.4766ms)
+2026-11-27T07:02:41.3838588Z ✔ speech capture permission requires an armed main-window audio request (0.7779ms)
+2026-11-27T07:02:41.8464230Z ✔ real Electron speech subprocess starts its Windows Job runner as Node and restores the host environment (461.3929ms)
+2026-11-27T07:02:41.8466570Z ✔ simultaneous recording admissions reserve one local recognizer (1.7594ms)
+2026-11-27T07:02:41.8572074Z ✔ cancellation joins inference cleanup, rejects duplicate audio and publishes one terminal event (2.7304ms)
+2026-11-27T07:02:41.8599982Z ✔ closing during actual local provider startup disposes initialization and refuses later work (12.3124ms)
+2026-11-27T07:02:41.8612115Z ✔ prepare waits for initial cache inspection and starts once its upstream slot is released (1.6294ms)
+2026-11-27T07:02:41.8628505Z ✔ cancel during initial inspection never starts a late model preparation (0.7743ms)
+2026-11-27T07:02:41.8630257Z ✔ invalid audio and a failed inference release admission and permit a successful retry (0.8907ms)
+2026-11-27T07:02:41.9397479Z ✔ 归档包含会话、编号、状态、时间与正文 (0.9736ms)
+2026-11-27T07:02:41.9400623Z ✔ 截断的消息在归档里标注清楚，不冒充完整内容 (0.1747ms)
+2026-11-27T07:02:41.9403683Z ✔ 没有消息、没有子会话时拒绝归档 (0.3709ms)
+2026-11-27T07:02:41.9408411Z ✔ 空消息占位而不是留下空标题 (0.1467ms)
+2026-11-27T07:02:41.9410349Z ✔ 批量归档把多个子任务合成一份，跳过没有对话的 (0.5089ms)
+2026-11-27T07:02:41.9413843Z ✔ 没有可归档子任务时批量归档直接拒绝 (0.139ms)
+2026-11-27T07:02:42.0185909Z ✔ 只有字节里带产品名的卸载器副本才算知行的 (0.8793ms)
+2026-11-27T07:02:42.0187956Z ✔ 三条判据缺一不可：目录存在、够旧、字节能证明是我们 (0.3497ms)
+2026-11-27T07:02:42.0264189Z ✔ 过期且带产品名的 ~nsu.tmp 会被整体删除 (10.2906ms)
+2026-11-27T07:02:42.0330341Z ✔ 别家应用的同名目录不动，刚写入的也不动 (6.6708ms)
+2026-11-27T07:02:42.0344786Z ✔ 目录不存在或没有临时目录时安静返回 (1.3345ms)
+2026-11-27T07:02:42.0345745Z ✔ NSIS 临时目录名：~nsu.tmp 与 nsXXXX.tmp 两种形状 (0.1818ms)
+2026-11-27T07:02:42.0422472Z ✔ 安装过程留下的 nsXXXX.tmp 也会按同一套判据处理 (7.8687ms)
+2026-11-27T07:02:42.1198053Z ✔ 文件名里的版本号能取出来，取不出来就返回空串 (0.8079ms)
+2026-11-27T07:02:42.1199768Z ✔ 版本比较：预发布版低于同号正式版，补齐位数 (0.2539ms)
+2026-11-27T07:02:42.1205620Z ✔ 装着的东西删掉：版本不高于当前版本的缓存一律清理，含同号 (0.9447ms)
+2026-11-27T07:02:42.1207674Z ✔ 正在等的更新不删：比当前版本新、而且是刚写入的 (0.1381ms)
+2026-11-27T07:02:42.1210624Z ✔ 解析不出版本又过了保留期的陈旧文件也会清掉，连同它的元数据 (0.2253ms)
+2026-11-27T07:02:42.1213709Z ✔ 没有待装安装包时元数据一起清，有就一起留 (0.1815ms)
+2026-11-27T07:02:42.1290678Z ✔ 真删：目录不存在不报错，空掉的 pending 目录一起收走 (12.0072ms)
+2026-11-27T07:02:42.1334770Z ✔ 缓存目录名只认 app-update.yml，不按应用名猜 (4.7369ms)
+2026-11-27T07:02:54.0348026Z ✔ 原生 Harness 从本地提交创建和恢复独立工作树 (11197.1079ms)
+2026-11-27T07:02:54.0348914Z ✔ 浏览器仅允许网页协议，排除凭据并限制视图范围 (1.5356ms)
+2026-11-27T07:02:54.4759199Z ✔ 项目文件浏览与预览限制在工作区，私密文件不展示 (440.9247ms)
+2026-11-27T07:02:57.7869709Z ✔ 原生 OfficeKit 生成版面和 PDF，重算另存且保留原公式缓存 (3311.0048ms)
+2026-11-27T07:02:58.5912915Z ✔ 官方 DeepSeek 导入识别当前分支，保留附件记录、图片和历史思考 (804.1065ms)
+2026-11-27T07:03:00.4463746Z ✔ 真实 Windows OCR 读取 Office 版面的文字，并记录页面范围 (1845.7633ms)
+2026-11-27T07:03:04.3089015Z ✔ 真实 Harness PTY：输入、屏幕恢复、范围校验与退出 (3871.8737ms)
+2026-11-27T07:03:04.7451203Z ✔ Windows real no-delete-share handle releases during atomic replacement without rewriting either file (345.9844ms)
+2026-11-27T07:03:04.7454017Z ℹ {"case":"temporary-no-delete-sharing","firstErrorCode":"EPERM","lastObservedErrorCode":"EPERM","renameAttempts":2,"holderReleasedNormally":true,"originalBytesPreservedWhileHeld":true,"replacementBytesMatched":true,"temporaryRemovedAfterCommit":true}
+2026-11-27T07:03:06.2334014Z ✔ Windows persistent no-delete-share handle exhausts retries and preserves bytes for an explicit retry (1488.8892ms)
+2026-11-27T07:03:06.2337070Z ℹ {"case":"persistent-no-delete-sharing","firstErrorCode":"EPERM","lastObservedErrorCode":"EPERM","failedRenameAttempts":9,"renameAttemptsIncludingExplicitRetry":10,"holderReleasedNormally":true,"originalBytesPreservedWhileHeld":true,"replacementBytesMatched":true,"temporaryRemovedAfterCommit":true}
+2026-11-27T07:03:06.3325260Z ✔ legacy workspace drafts retain their keys, attachments and revisions without reading a sidecar (3.1287ms)
+2026-11-27T07:03:06.3327733Z ✔ matching overlay restores edits while an empty overlay does not resurrect baseline drafts (1.0379ms)
+2026-11-27T07:03:06.3331138Z ✔ a superseded epoch cannot restore deleted drafts after a full commit (0.5143ms)
+2026-11-27T07:03:06.3337265Z ✔ missing overlays use the durable baseline and missing workspaces do not adopt orphan overlays (0.2835ms)
+2026-11-27T07:03:06.3341459Z ✔ corrupt matching overlays fail closed without returning or exposing baseline content (0.9851ms)
+2026-11-27T07:03:06.3342650Z ✔ overlay reads crossing a baseline commit retry instead of returning a mixed snapshot (0.2599ms)
+2026-11-27T07:03:06.3343865Z ✔ draft-only saves leave baseline bytes unchanged and expose only draft payload to the writer (0.6269ms)
+2026-11-27T07:03:06.3345077Z ✔ the first legacy draft save migrates once and later edits only write the overlay (0.3426ms)
+2026-11-27T07:03:06.3346394Z ✔ coalescing drafts after two structural saves retains the latest structural intent (0.8819ms)
+2026-11-27T07:03:06.3348335Z ✔ coalescing a pending full save behind an active draft write preserves both stores (0.322ms)
+2026-11-27T07:03:06.3349552Z ✔ a failed active full save cannot let a newer draft incorrectly commit as an overlay (0.3056ms)
+2026-11-27T07:03:06.3350858Z ✔ failed overlay saves retain their revision and retry persistence without repeating any task (0.3733ms)
+2026-11-27T07:03:06.3494181Z ✔ shared atomic replacement keeps the draft commit and following full save in one queue (21.1815ms)
+2026-11-27T07:03:07.4921152Z ✔ exhausted shared replacement retains the durable draft and requires an explicit persistence retry (1141.9855ms)
+2026-11-27T07:03:07.4923550Z ✔ a crash after full baseline replacement leaves the stale overlay harmless and retryable (0.5457ms)
+2026-11-27T07:03:07.5128755Z ✔ turning persistence off suppresses raw draft persistence and waits for the pending clear (1.1879ms)
+2026-11-27T07:03:07.5129894Z ✔ no-persistence loading never restores draft content from an otherwise matching overlay (0.3104ms)
+2026-11-27T07:03:07.5130870Z ✔ invalid and oversized draft submissions cannot replace durable records (19.1013ms)
+2026-11-27T07:03:07.5916932Z ✔ concurrent workspace snapshots coalesce and flush the newest revision (1.7332ms)
+2026-11-27T07:03:07.5922049Z ✔ write failures remain visible and retry the same revision (0.6158ms)
+2026-11-27T07:03:07.5950853Z ✔ shutdown flush waits for an active write and propagates persistent failure (4.2663ms)
+2026-11-27T07:03:07.5953192Z ✔ older out-of-order snapshots cannot overwrite the newest persisted state (0.505ms)
+2026-11-27T07:03:07.5958069Z ✔ concurrent flush calls reject when the active write fails (0.8785ms)
+2026-11-27T07:03:07.6007988Z ✔ retry after an active-write failure lets new flush calls await durable recovery (3.2223ms)
+2026-11-27T07:03:07.6010428Z ✔ failure of an older active write keeps flush waiting for the coalesced newer revision (0.6893ms)
+2026-11-27T07:03:07.6013778Z ✔ flush rejects if the newest revision fails after an older revision is persisted (0.485ms)
+2026-11-27T07:03:07.6015046Z ✔ a newer save replaces the failed snapshot and older acknowledgements cannot overwrite it (0.6993ms)
+2026-11-27T07:03:07.6016105Z ✔ a state listener retry cannot hide failure from flush callers already waiting (0.5131ms)
+2026-11-27T07:03:07.6824844Z ✔ CRC32 与标准向量一致 (0.7482ms)
+2026-11-27T07:03:07.6887387Z ✔ 打出来的 zip 能被系统同一套解析库读回，中文名与空文件都在 (12.0211ms)
+2026-11-27T07:03:07.6911349Z ✔ 不压缩模式同样可读 (1.0096ms)
+2026-11-27T07:03:07.6912215Z ✔ 归档路径必须相对、不许穿越、不许重名 (1.1924ms)
+2026-11-27T07:03:07.7065876Z ✔ 目录收集：跳过私密文件、保持稳定顺序、按上限拒绝 (15.6901ms)
+2026-11-27T07:03:07.7205310Z ℹ tests 476
+2026-11-27T07:03:07.7205768Z ℹ suites 0
+2026-11-27T07:03:07.7207063Z ℹ pass 476
+2026-11-27T07:03:07.7207644Z ℹ fail 0
+2026-11-27T07:03:07.7208061Z ℹ cancelled 0
+2026-11-27T07:03:07.7208761Z ℹ skipped 0
+2026-11-27T07:03:07.7209162Z ℹ todo 0
+2026-11-27T07:03:07.7209557Z ℹ duration_ms 559403.7521
+2026-11-27T07:03:07.8459077Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T07:03:07.8460019Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T07:03:07.8461014Z [36;1mnpm.cmd run test:errors -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/errors.log"[0m
+2026-11-27T07:03:07.8461646Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:03:07.8537901Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:03:07.8538391Z env:
+2026-11-27T07:03:07.8538718Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:03:07.8539230Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:03:07.8539659Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:03:07.8540062Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:03:07.8540525Z   ZHIXING_QA_EVIDENCE: D:\a\_temp/zhixing-packed-journeys/errors
+2026-11-27T07:03:07.8540980Z ##[endgroup]
+2026-11-27T07:03:08.5123097Z 
+2026-11-27T07:03:08.5129374Z > office-agent@0.43.0 test:errors
+2026-11-27T07:03:08.5133897Z > node scripts/test-error-copy-ui.mjs release/win-unpacked/知行.exe
+2026-11-27T07:03:08.5134715Z 
+2026-11-27T07:03:08.9232908Z Evidence: D:\a\_temp\zhixing-packed-journeys\errors\run-ZWbY50
+2026-11-27T07:03:10.1738577Z PASS 实包运行时报告 0.43.0
+2026-11-27T07:03:11.9348693Z PASS 真实 401 的 API Key 被换成可行动的文案（HTTP_401）显示「API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。」
+2026-11-27T07:03:12.9325943Z PASS 解析不到的主机显示「解析不到服务地址」（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」
+2026-11-27T07:03:13.9021198Z PASS 被本机网络接住时按实际错误码 ENOTFOUND 给文案（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」
+2026-11-27T07:03:14.8717892Z PASS 拒绝连接的端口显示连接被拒绝（ECONNREFUSED）显示「服务地址拒绝连接，请确认地址和端口是否正确。」
+2026-11-27T07:03:27.7134336Z PASS 无响应的服务地址按 12 秒超时给出超时文案（TIMEOUT）显示「请求超时，请检查网络后重试。」
+2026-11-27T07:03:28.1297325Z PASS 主进程保留真实错误码，每条界面文案都与技术原文不同
+2026-11-27T07:04:08.2118051Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T07:04:08.2119119Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T07:04:08.2120033Z [36;1mnode scripts/test-native-files-export-ui.mjs "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/native.log"[0m
+2026-11-27T07:04:08.2120731Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:04:08.2188563Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:04:08.2189127Z env:
+2026-11-27T07:04:08.2189409Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:04:08.2189866Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:04:08.2190300Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:08.2190699Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:08.2191122Z   ZHIXING_QA_EVIDENCE: D:\a\_temp/zhixing-packed-journeys/native
+2026-11-27T07:04:08.2191622Z ##[endgroup]
+2026-11-27T07:04:08.9979234Z Evidence: D:\a\_temp\zhixing-packed-journeys\native\run-1W1AaD
+2026-11-27T07:04:14.4937788Z PASS Windows 当前执行权限触发原生 write 审批卡片，真实点击拒绝后未写入
+2026-11-27T07:04:18.1803183Z PASS 实际批准的多文件补丁停在第 1/3 步，已写文件保留、后续文件不变
+2026-11-27T07:04:22.7123136Z PASS Office 转换的审批卡片真实点击仅允许本次，源文件保持原字节
+2026-11-27T07:04:25.0688627Z PASS 重启后保留补丁终态；Markdown 按所选历史和已审阅快照保存准确字节，零新增出站
+2026-11-27T07:04:25.7696797Z PASS 保存对话框打开期间移动会话，旧快照不再允许写盘
+2026-11-27T07:04:25.9489629Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T07:04:25.9490311Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T07:04:25.9491088Z [36;1mnpm.cmd run test:tools-ui -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/tools.log"[0m
+2026-11-27T07:04:25.9492304Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:04:25.9560969Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:04:25.9561404Z env:
+2026-11-27T07:04:25.9561694Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:04:25.9562076Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:04:25.9562469Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:25.9562808Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:25.9563115Z ##[endgroup]
+2026-11-27T07:04:26.5611911Z 
+2026-11-27T07:04:26.5615341Z > office-agent@0.43.0 test:tools-ui
+2026-11-27T07:04:26.5618526Z > node scripts/test-tool-timeline-ui.mjs release/win-unpacked/知行.exe
+2026-11-27T07:04:26.5621593Z 
+2026-11-27T07:04:26.9805165Z Evidence: D:\a\ZhiXing\ZhiXing\.preview\qa-0.43.0\tool-timeline\run-mwymyq6r
+2026-11-27T07:04:28.2219411Z PASS 假服务已保存，工作区指向它
+2026-11-27T07:04:31.8964861Z PASS 调用与结果合为一次工具调用，保留完成状态
+2026-11-27T07:04:32.1929994Z PASS 刷新后从保存轨迹恢复一次调用
+2026-11-27T07:04:32.1933756Z {
+2026-11-27T07:04:32.1935656Z   "status": "passed",
+2026-11-27T07:04:32.1937210Z   "cases": 3,
+2026-11-27T07:04:32.1938822Z   "rows": [
+2026-11-27T07:04:32.1943652Z     "更新工作计划 · 完成"
+2026-11-27T07:04:32.1945720Z   ],
+2026-11-27T07:04:32.1947685Z   "evidence": "D:\\a\\ZhiXing\\ZhiXing\\.preview\\qa-0.43.0\\tool-timeline\\run-mwymyq6r"
+2026-11-27T07:04:32.1948678Z }
+2026-11-27T07:04:40.2754912Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T07:04:40.2755626Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T07:04:40.2756391Z [36;1mnpm.cmd run test:phase0a -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/phase0a.log"[0m
+2026-11-27T07:04:40.2757028Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:04:40.2824920Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:04:40.2825397Z env:
+2026-11-27T07:04:40.2825692Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:04:40.2826123Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:04:40.2826562Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:40.2826952Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:40.2827449Z   ZHIXING_QA_EVIDENCE: D:\a\_temp/zhixing-packed-journeys/phase0a
+2026-11-27T07:04:40.2827872Z ##[endgroup]
+2026-11-27T07:04:40.9030935Z 
+2026-11-27T07:04:40.9034593Z > office-agent@0.43.0 test:phase0a
+2026-11-27T07:04:40.9038377Z > node scripts/test-phase0a-ui.mjs release/win-unpacked/知行.exe
+2026-11-27T07:04:40.9038853Z 
+2026-11-27T07:04:40.9961754Z Evidence: D:\a\_temp\zhixing-packed-journeys\phase0a\phase0a-ui-m7QnkY
+2026-11-27T07:04:42.7503949Z PASS packaged EXE uses only the isolated QA profile
+2026-11-27T07:04:43.7520243Z PASS project, pinned, independent and orphan chats each have one selectable entry
+2026-11-27T07:04:47.4839363Z PASS real Harness writes and presents both files and retains three linked calls
+2026-11-27T07:04:47.5325861Z PASS body precedes changes and deliverables; all assistant sections share a baseline
+2026-11-27T07:04:47.9059094Z PASS tool steps expand as three completed styled rows
+2026-11-27T07:04:48.1911430Z PASS reload preserves real message order, linked tool count and sidebar ownership
+2026-11-27T07:04:49.1285260Z PASS feedback over 8192 bytes disables save while Clear remains usable
+2026-11-27T07:04:50.0266245Z PASS failed file action shows a persistent top toast without covering long input controls
+2026-11-27T07:04:50.9663579Z PASS actual dark appearance keeps the assistant baseline at a narrower window
+2026-11-27T07:04:51.1232821Z {"status":"passed","passed":9,"failed":0,"screenshots":6,"visualReview":"pending-human-review","evidence":"D:\\a\\_temp\\zhixing-packed-journeys\\phase0a\\phase0a-ui-m7QnkY"}
+2026-11-27T07:04:59.0456172Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T07:04:59.0457054Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T07:04:59.0457846Z [36;1mnpm.cmd run test:phase1 -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/phase1.log"[0m
+2026-11-27T07:04:59.0458456Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:04:59.0526915Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:04:59.0527451Z env:
+2026-11-27T07:04:59.0527747Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:04:59.0528222Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:04:59.0528608Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:59.0528972Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:04:59.0529385Z   ZHIXING_QA_EVIDENCE: D:\a\_temp/zhixing-packed-journeys/phase1
+2026-11-27T07:04:59.0529984Z ##[endgroup]
+2026-11-27T07:04:59.6733910Z 
+2026-11-27T07:04:59.6741593Z > office-agent@0.43.0 test:phase1
+2026-11-27T07:04:59.6745355Z > node scripts/test-phase1-ui.mjs release/win-unpacked/知行.exe
+2026-11-27T07:04:59.6746693Z 
+2026-11-27T07:04:59.7648157Z Evidence: D:\a\_temp\zhixing-packed-journeys\phase1\phase1-ui-D2KAHq
+2026-11-27T07:05:01.2908619Z PASS packaged EXE opens the isolated profile
+2026-11-27T07:05:03.0984884Z PASS real dropped attachment is parsed into the project chat draft
+2026-11-27T07:05:11.9564603Z PASS 100 continuous characters write bounded drafts without rewriting workspace.bin
+2026-11-27T07:05:12.2482907Z PASS reload and explicit chat selection restore draft text, attachment and ownership
+2026-11-27T07:05:20.1978980Z PASS real slow SSE grows visible text without per-chunk workspace writes
+2026-11-27T07:05:20.7325247Z PASS the final reply is persisted once complete and remains readable after reload
+2026-11-27T07:05:22.9199327Z PASS closing before debounce flushes the last draft and normal restart restores it
+2026-11-27T07:05:23.0510149Z {"status":"passed","passed":7,"failed":0,"screenshots":3,"visualReview":"pending-human-review","evidence":"D:\\a\\_temp\\zhixing-packed-journeys\\phase1\\phase1-ui-D2KAHq"}
+2026-11-27T07:05:42.9976515Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T07:05:42.9977176Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T07:05:42.9977982Z [36;1mnpm.cmd run test:workbench-preview -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/workbench.log"[0m
+2026-11-27T07:05:42.9978636Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:05:43.0045194Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:05:43.0045662Z env:
+2026-11-27T07:05:43.0045948Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:05:43.0046816Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:05:43.0047418Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:05:43.0047764Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:05:43.0048195Z   ZHIXING_QA_EVIDENCE: D:\a\_temp/zhixing-packed-journeys/workbench
+2026-11-27T07:05:43.0048687Z ##[endgroup]
+2026-11-27T07:05:43.6155773Z 
+2026-11-27T07:05:43.6160229Z > office-agent@0.43.0 test:workbench-preview
+2026-11-27T07:05:43.6163151Z > node scripts/test-workbench-preview-ui.mjs release/win-unpacked/知行.exe
+2026-11-27T07:05:43.6163792Z 
+2026-11-27T07:05:43.7212418Z Evidence: D:\a\_temp\zhixing-packed-journeys\workbench\workbench-preview-ui-1m8udA
+2026-11-27T07:05:45.2423444Z PASS packaged EXE uses only the isolated QA profile
+2026-11-27T07:05:49.3705104Z PASS real Harness writes and presents both files and creates inline references
+2026-11-27T07:05:49.9566181Z PASS delivery card opens safe text in the output tab while the chat draft remains editable
+2026-11-27T07:05:50.6656614Z PASS returning to outputs and activating an inline reference by keyboard preserves the text limit
+2026-11-27T07:05:51.0272220Z PASS explicit enlargement uses the existing document modal and returns to the same side preview
+2026-11-27T07:05:51.7838269Z PASS missing real delivery stays as an inline error and retries after the same file is restored
+2026-11-27T07:05:53.3604650Z PASS all nine visible tabs select their real panels including browser and terminal
+2026-11-27T07:05:53.6425366Z PASS arrow keys wrap and Home and End activate tabs with one focused selected control
+2026-11-27T07:05:55.0327331Z PASS switching chats clears the old file preview without losing the original chat draft
+2026-11-27T07:05:57.0007489Z PASS dark narrow layout keeps preview, keyboard tabs and the ordinary composer usable
+2026-11-27T07:05:57.1585219Z {"status":"passed","passed":10,"failed":0,"screenshots":4,"evidence":"D:\\a\\_temp\\zhixing-packed-journeys\\workbench\\workbench-preview-ui-1m8udA"}
+2026-11-27T07:06:17.0783267Z ##[group]Run Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+2026-11-27T07:06:17.0784252Z [36;1mRemove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue[0m
+2026-11-27T07:06:17.0785022Z [36;1mnpm.cmd run test:approvals -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/approvals.log"[0m
+2026-11-27T07:06:17.0785640Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:06:17.0850753Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:06:17.0851238Z env:
+2026-11-27T07:06:17.0851534Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:06:17.0851961Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:06:17.0852415Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:06:17.0852808Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:06:17.0853276Z   ZHIXING_QA_EVIDENCE: D:\a\_temp/zhixing-packed-journeys/approvals
+2026-11-27T07:06:17.0853749Z ##[endgroup]
+2026-11-27T07:06:17.6954227Z 
+2026-11-27T07:06:17.6959437Z > office-agent@0.43.0 test:approvals
+2026-11-27T07:06:17.6962446Z > node scripts/test-approval-recovery-ui.mjs release/win-unpacked/知行.exe
+2026-11-27T07:06:17.6966098Z 
+2026-11-27T07:06:17.7949700Z Evidence: D:\a\_temp\zhixing-packed-journeys\approvals\approval-recovery-ui-V7ElSh
+2026-11-27T07:06:19.4266622Z [31;1mFAIL application identity and temporary profile are verified: Expected values to be strictly equal:[0m
+2026-11-27T07:06:19.4288386Z [31;1m+ actual - expected[0m
+2026-11-27T07:06:19.4304376Z [31;1m[0m
+2026-11-27T07:06:19.4313083Z [31;1m+ ''[0m
+2026-11-27T07:06:19.4333822Z [31;1m- 'zhixing://app/index.html'[0m
+2026-11-27T07:06:19.4340772Z [31;1m[0m
+2026-11-27T07:06:44.3483259Z ##[error]Process completed with exit code 1.
+2026-11-27T07:06:44.3672152Z ##[group]Run npx.cmd --no-install electron-builder --win nsis --x64 --prepackaged release/win-unpacked --publish never 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/nsis.log"
+2026-11-27T07:06:44.3673518Z [36;1mnpx.cmd --no-install electron-builder --win nsis --x64 --prepackaged release/win-unpacked --publish never 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/zhixing-packed-logs/nsis.log"[0m
+2026-11-27T07:06:44.3674314Z [36;1mexit $LASTEXITCODE[0m
+2026-11-27T07:06:44.3742903Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:06:44.3743382Z env:
+2026-11-27T07:06:44.3743675Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:06:44.3744136Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:06:44.3744621Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:06:44.3744965Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:06:44.3745285Z ##[endgroup]
+2026-11-27T07:06:45.9132135Z   • electron-builder  version=26.18.0 os=10.0.26100
+2026-11-27T07:06:45.9135887Z   • loaded configuration  file=D:\a\ZhiXing\ZhiXing\electron-builder.yml
+2026-11-27T07:06:46.7588301Z   • building        target=nsis file=release\ZhiXing-0.43.0-x64.exe archs=x64 oneClick=false perMachine=false
+2026-11-27T07:06:46.9304682Z   • downloaded      label=7zip-win-x64.tar.gz progress=100%
+2026-11-27T07:09:47.5217303Z   • downloaded      label=nsis-3.0.4.1.7z progress=100%
+2026-11-27T07:09:47.7903810Z   • no code signing certificate configured, signing is skipped  path=D:\a\_temp\zhixing-packed-temp\t-arQho5\elevate-staging-0\resources\elevate.exe
+2026-11-27T07:09:59.2007376Z   • downloaded      label=nsis-resources-3.4.1.7z progress=100%
+2026-11-27T07:10:00.7984480Z   • no code signing certificate configured, signing is skipped  path=release\ZhiXing-0.43.0-x64.__uninstaller.exe
+2026-11-27T07:10:04.5395182Z   • no code signing certificate configured, signing is skipped  path=release\ZhiXing-0.43.0-x64.exe
+2026-11-27T07:10:04.5397672Z   • building block map  blockMapFile=release\ZhiXing-0.43.0-x64.exe.blockmap
+2026-11-27T07:10:17.1267481Z ##[group]Run $candidateVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+2026-11-27T07:10:17.1268300Z [36;1m$candidateVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version[0m
+2026-11-27T07:10:17.1269161Z [36;1m$candidateInstaller = "release/ZhiXing-$candidateVersion-x64.exe"[0m
+2026-11-27T07:10:17.1269573Z [36;1m@{[0m
+2026-11-27T07:10:17.1269975Z [36;1m  installer = (Get-AuthenticodeSignature $candidateInstaller).Status.ToString()[0m
+2026-11-27T07:10:17.1270603Z [36;1m  executable = (Get-AuthenticodeSignature 'release/win-unpacked/知行.exe').Status.ToString()[0m
+2026-11-27T07:10:17.1271118Z [36;1m  installationLifecycle = 'not run'[0m
+2026-11-27T07:10:17.1271456Z [36;1m  realCloud = 'not run'[0m
+2026-11-27T07:10:17.1271996Z [36;1m} | ConvertTo-Json | Set-Content -Encoding utf8 "$env:RUNNER_TEMP/zhixing-packed-artifact/signature-status.json"[0m
+2026-11-27T07:10:17.1346425Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:10:17.1347298Z env:
+2026-11-27T07:10:17.1347639Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:10:17.1348105Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:10:17.1348509Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:17.1348881Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:17.1349218Z ##[endgroup]
+2026-11-27T07:10:20.5108428Z ##[group]Run node scripts/collect-packed-evidence.mjs
+2026-11-27T07:10:20.5108954Z [36;1mnode scripts/collect-packed-evidence.mjs[0m
+2026-11-27T07:10:20.5173786Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:10:20.5174273Z env:
+2026-11-27T07:10:20.5174656Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:10:20.5175119Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:10:20.5175567Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:20.5175958Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:20.5179065Z   CI_STEP_RESULTS: {
+  "install": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "electron": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "package": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "verify": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "packed": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "errors": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "native": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "tools": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "phase0a": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "phase1": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "workbench": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "approvals": {
+    "outputs": {},
+    "outcome": "failure",
+    "conclusion": "failure"
+  },
+  "nsis": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  }
+}
+2026-11-27T07:10:20.5182228Z ##[endgroup]
+2026-11-27T07:10:25.3662862Z {
+2026-11-27T07:10:25.3663410Z   "evidence": "D:\\a\\_temp\\zhixing-packed-artifact",
+2026-11-27T07:10:25.3664214Z   "retainedBytes": 1633504,
+2026-11-27T07:10:25.3664578Z   "files": 46,
+2026-11-27T07:10:25.3664877Z   "binaries": [
+2026-11-27T07:10:25.3665170Z     {
+2026-11-27T07:10:25.3665580Z       "file": "release/ZhiXing-0.43.0-x64.exe",
+2026-11-27T07:10:25.3665979Z       "bytes": 338737147,
+2026-11-27T07:10:25.3666447Z       "sha256": "bb112d43799802408cb990a10891527856d881edeb018bddf062dc8a8a1149cb"
+2026-11-27T07:10:25.3666895Z     },
+2026-11-27T07:10:25.3667141Z     {
+2026-11-27T07:10:25.3667462Z       "file": "release/ZhiXing-0.43.0-x64.exe.blockmap",
+2026-11-27T07:10:25.3667863Z       "bytes": 314859,
+2026-11-27T07:10:25.3668291Z       "sha256": "97cb3a5a0019ff61de52a96a6d94c64ed2c2f784d779db5095661c08a468940a"
+2026-11-27T07:10:25.3668721Z     },
+2026-11-27T07:10:25.3668977Z     {
+2026-11-27T07:10:25.3669567Z       "file": "release/win-unpacked/知行.exe",
+2026-11-27T07:10:25.3670174Z       "bytes": 246511104,
+2026-11-27T07:10:25.3670647Z       "sha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f"
+2026-11-27T07:10:25.3671072Z     },
+2026-11-27T07:10:25.3671328Z     {
+2026-11-27T07:10:25.3671684Z       "file": "release/win-unpacked/resources/app/runtime/node.exe",
+2026-11-27T07:10:25.3672082Z       "bytes": 92825416,
+2026-11-27T07:10:25.3672516Z       "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+2026-11-27T07:10:25.3672977Z     }
+2026-11-27T07:10:25.3673212Z   ]
+2026-11-27T07:10:25.3673457Z }
+2026-11-27T07:10:25.4929781Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-11-27T07:10:25.4930397Z with:
+2026-11-27T07:10:25.4930686Z   name: windows-packed-evidence-1
+2026-11-27T07:10:25.4931200Z   path: D:\a\_temp/zhixing-packed-artifact/
+2026-11-27T07:10:25.4931698Z   retention-days: 14
+2026-11-27T07:10:25.4932000Z   if-no-files-found: error
+2026-11-27T07:10:25.4932335Z   include-hidden-files: false
+2026-11-27T07:10:25.4932675Z   compression-level: 6
+2026-11-27T07:10:25.4932976Z   overwrite: false
+2026-11-27T07:10:25.4933258Z   archive: true
+2026-11-27T07:10:25.4933560Z env:
+2026-11-27T07:10:25.4933862Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:10:25.4934246Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:10:25.4934645Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:25.4935001Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:25.4935310Z ##[endgroup]
+2026-11-27T07:10:25.7078056Z With the provided path, there will be 49 files uploaded
+2026-11-27T07:10:25.7082797Z Artifact name is valid!
+2026-11-27T07:10:25.7084129Z Root directory input is valid!
+2026-11-27T07:10:25.9744304Z Uploading artifact: windows-packed-evidence-1.zip
+2026-11-27T07:10:25.9781877Z Beginning upload of artifact content to blob storage
+2026-11-27T07:10:26.4134958Z Uploaded bytes 1410853
+2026-11-27T07:10:26.4350970Z Finished uploading artifact content to blob storage!
+2026-11-27T07:10:26.4352522Z SHA256 digest of uploaded artifact is b29f4919789da37ff5e98c776cb248ddf6283b7e5a63b42b6fbbe6cb3c076c1c
+2026-11-27T07:10:26.4353640Z Finalizing artifact upload
+2026-11-27T07:10:26.8269982Z Artifact windows-packed-evidence-1 successfully finalized. Artifact ID 15178314910
+2026-11-27T07:10:26.8279433Z Artifact windows-packed-evidence-1 has been successfully uploaded! Final size is 1410853 bytes. Artifact ID is 15178314910
+2026-11-27T07:10:26.8281017Z Artifact download URL: https://github.com/daniei-chen/ZhiXing/actions/runs/45954360110/artifacts/15178314910
+2026-11-27T07:10:26.8779025Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-11-27T07:10:26.8779720Z with:
+2026-11-27T07:10:26.8780158Z   name: windows-unsigned-candidate-feaadaeb575671fa326b9eedd6ac631c7e68f1ce
+2026-11-27T07:10:26.8780843Z   path: release/ZhiXing-*-x64.exe
+release/ZhiXing-*-x64.exe.blockmap
+release/SHA256SUMS-candidate.txt
+
+2026-11-27T07:10:26.8781394Z   compression-level: 0
+2026-11-27T07:10:26.8781748Z   retention-days: 7
+2026-11-27T07:10:26.8782203Z   if-no-files-found: error
+2026-11-27T07:10:26.8782608Z   include-hidden-files: false
+2026-11-27T07:10:26.8782922Z   overwrite: false
+2026-11-27T07:10:26.8783267Z   archive: true
+2026-11-27T07:10:26.8783520Z env:
+2026-11-27T07:10:26.8783818Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:10:26.8784212Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:10:26.8784663Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:26.8785016Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:26.8785475Z ##[endgroup]
+2026-11-27T07:10:27.0642501Z With the provided path, there will be 3 files uploaded
+2026-11-27T07:10:27.0647073Z Artifact name is valid!
+2026-11-27T07:10:27.0647995Z Root directory input is valid!
+2026-11-27T07:10:27.2931936Z Uploading artifact: windows-unsigned-candidate-feaadaeb575671fa326b9eedd6ac631c7e68f1ce.zip
+2026-11-27T07:10:27.2972897Z Beginning upload of artifact content to blob storage
+2026-11-27T07:10:27.7371994Z Uploaded bytes 8388608
+2026-11-27T07:10:27.8082222Z Uploaded bytes 16777216
+2026-11-27T07:10:27.8617958Z Uploaded bytes 25165824
+2026-11-27T07:10:27.9033961Z Uploaded bytes 33554432
+2026-11-27T07:10:27.9934643Z Uploaded bytes 41943040
+2026-11-27T07:10:28.0095041Z Uploaded bytes 50331648
+2026-11-27T07:10:28.0632811Z Uploaded bytes 58720256
+2026-11-27T07:10:28.1035081Z Uploaded bytes 67108864
+2026-11-27T07:10:28.1674548Z Uploaded bytes 75497472
+2026-11-27T07:10:28.2838253Z Uploaded bytes 83886080
+2026-11-27T07:10:28.3229609Z Uploaded bytes 92274688
+2026-11-27T07:10:28.3525744Z Uploaded bytes 100663296
+2026-11-27T07:10:28.3705264Z Uploaded bytes 109051904
+2026-11-27T07:10:28.4432519Z Uploaded bytes 117440512
+2026-11-27T07:10:28.5249356Z Uploaded bytes 125829120
+2026-11-27T07:10:28.5653307Z Uploaded bytes 134217728
+2026-11-27T07:10:28.6378943Z Uploaded bytes 142606336
+2026-11-27T07:10:28.6632806Z Uploaded bytes 150994944
+2026-11-27T07:10:28.7139094Z Uploaded bytes 159383552
+2026-11-27T07:10:28.8330440Z Uploaded bytes 167772160
+2026-11-27T07:10:28.8490679Z Uploaded bytes 176160768
+2026-11-27T07:10:28.8936487Z Uploaded bytes 184549376
+2026-11-27T07:10:28.9838364Z Uploaded bytes 192937984
+2026-11-27T07:10:29.0871075Z Uploaded bytes 201326592
+2026-11-27T07:10:29.0967909Z Uploaded bytes 209715200
+2026-11-27T07:10:29.1103353Z Uploaded bytes 218103808
+2026-11-27T07:10:29.2838047Z Uploaded bytes 226492416
+2026-11-27T07:10:29.3396195Z Uploaded bytes 234881024
+2026-11-27T07:10:29.4078747Z Uploaded bytes 243269632
+2026-11-27T07:10:29.4168567Z Uploaded bytes 251658240
+2026-11-27T07:10:29.4719775Z Uploaded bytes 260046848
+2026-11-27T07:10:29.5313154Z Uploaded bytes 268435456
+2026-11-27T07:10:29.6168054Z Uploaded bytes 276824064
+2026-11-27T07:10:29.7375161Z Uploaded bytes 285212672
+2026-11-27T07:10:29.7529140Z Uploaded bytes 293601280
+2026-11-27T07:10:29.8075359Z Uploaded bytes 301989888
+2026-11-27T07:10:29.9197599Z Uploaded bytes 310378496
+2026-11-27T07:10:29.9313144Z Uploaded bytes 318767104
+2026-11-27T07:10:30.0002097Z Uploaded bytes 327155712
+2026-11-27T07:10:30.0716703Z Uploaded bytes 335544320
+2026-11-27T07:10:30.1781665Z Uploaded bytes 339052645
+2026-11-27T07:10:30.2006065Z Finished uploading artifact content to blob storage!
+2026-11-27T07:10:30.2009986Z SHA256 digest of uploaded artifact is b93dbd9794c1b7b5b1e882f81e963cd7d477514480c7b97a55efabb92f2a8ad0
+2026-11-27T07:10:30.2012495Z Finalizing artifact upload
+2026-11-27T07:10:30.6016830Z Artifact windows-unsigned-candidate-feaadaeb575671fa326b9eedd6ac631c7e68f1ce successfully finalized. Artifact ID 15179281376
+2026-11-27T07:10:30.6018395Z Artifact windows-unsigned-candidate-feaadaeb575671fa326b9eedd6ac631c7e68f1ce has been successfully uploaded! Final size is 339052645 bytes. Artifact ID is 15179281376
+2026-11-27T07:10:30.6027880Z Artifact download URL: https://github.com/daniei-chen/ZhiXing/actions/runs/45954360110/artifacts/15179281376
+2026-11-27T07:10:30.6459006Z ##[group]Run if (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {
+2026-11-27T07:10:30.6460198Z [36;1mif (($env:CI_REQUIRED_OUTCOMES -split ' ' | Where-Object { $_ -ne 'success' }).Count -gt 0) {[0m
+2026-11-27T07:10:30.6461552Z [36;1m  Write-Error "A packaged check failed or did not run: $env:CI_REQUIRED_OUTCOMES"[0m
+2026-11-27T07:10:30.6462285Z [36;1m  exit 1[0m
+2026-11-27T07:10:30.6462680Z [36;1m}[0m
+2026-11-27T07:10:30.6539590Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-27T07:10:30.6540097Z env:
+2026-11-27T07:10:30.6540419Z   CSC_IDENTITY_AUTO_DISCOVERY: false
+2026-11-27T07:10:30.6540959Z   LOCALAPPDATA: D:\a\_temp/zhixing-packed-local-data
+2026-11-27T07:10:30.6541405Z   TEMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:30.6542360Z   TMP: D:\a\_temp/zhixing-packed-temp
+2026-11-27T07:10:30.6543161Z   CI_REQUIRED_OUTCOMES: success success success success success success success success success success success failure success
+2026-11-27T07:10:30.6544002Z ##[endgroup]
+2026-11-27T07:10:31.2737913Z [31;1mWrite-Error: [31;1mA packaged check failed or did not run: success success success success success success success success success success success failure success[0m
+2026-11-27T07:10:31.3305920Z ##[error]Process completed with exit code 1.
+2026-11-27T07:10:31.3970550Z Post job cleanup.
+2026-11-27T07:10:31.5843741Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-11-27T07:10:31.6202769Z git version 2.56.1.windows.1
+2026-11-27T07:10:31.6269946Z Temporarily overriding HOME='D:\a\_temp\0d16254d-3ef1-4373-97f3-fdeaedb9be4e' before making global git config changes
+2026-11-27T07:10:31.6271256Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-27T07:10:31.6281343Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\ZhiXing\ZhiXing
+2026-11-27T07:10:31.6667410Z Removing SSH command configuration
+2026-11-27T07:10:31.6679006Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-27T07:10:31.7067243Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-27T07:10:32.2732545Z Removing HTTP extra header
+2026-11-27T07:10:32.2743459Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-27T07:10:32.3135253Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-27T07:10:32.8853811Z Removing includeIf entries pointing to credentials config files
+2026-11-27T07:10:32.8865963Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-27T07:10:32.9262797Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-27T07:10:33.5168242Z Cleaning up orphan processes

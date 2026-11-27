@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "runId": 45958375606,
+  "jobId": 140370072233,
+  "runAttempt": 1,
+  "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45958375606",
+  "layer": "Windows hosted runner: source/build and isolated renderer; not packaged EXE, installer lifecycle or real cloud",
+  "conclusion": "success",
+  "headSha": "b57539c357f29c21b0246cb2443f2144024eb40b",
+  "headTree": "6e996afdbdf4b2d5eb39034d304cad2e081b46aa",
+  "checkoutSha": "b8ac25431513b02c5dd9ffdbaf8b6fb9e5545f6b",
+  "checkoutTree": "6e996afdbdf4b2d5eb39034d304cad2e081b46aa",
+  "sameTree": true,
+  "parents": [
+    "7076fe7a694ca772e25fc64f038e3dc909a9baf1",
+    "b57539c357f29c21b0246cb2443f2144024eb40b"
+  ],
+  "node": "v24.22.3",
+  "quality": {
+    "eslint": {
+      "checked": 106,
+      "inventory": 330
+    },
+    "stylelint": {
+      "checked": 9,
+      "inventory": 9
+    },
+    "prettier": {
+      "checked": 83,
+      "inventory": 581
+    },
+    "errors": 0,
+    "warnings": 0,
+    "scope": "incremental, not whole repository"
+  },
+  "build": {
+    "status": "success",
+    "viteSeconds": 5.52
+  },
+  "sites": {
+    "tests": 4,
+    "suites": 0,
+    "pass": 4,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 111.1008
+  },
+  "source": {
+    "tests": 691,
+    "suites": 0,
+    "pass": 691,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 331829.1127
+  },
+  "components": {
+    "tests": 45,
+    "suites": 0,
+    "pass": 45,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 46170.4059
+  },
+  "recoveryJourney": {
+    "businessCheckpoints": 11,
+    "successLine": "2026-11-27T07:33:06.5934436Z 11 business checkpoints passed; isolated temporary files are removed after verification.",
+    "testPassLine": "2026-11-27T07:33:06.6113223Z ✔ Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试 (3175.6009ms)",
+    "fixtureDirectoryBasename": "zhixing-recovery-ui-iqG5O5",
+    "afterHook": "Test completed successfully after its awaited context.after hook, which validates the temporary directory boundary and awaits recursive removal. No independent remote filesystem inventory was performed.",
+    "artifactJourneyInspected": false
+  },
+  "artifactDownloadedByThisAgent": false,
+  "rawJobLog": {
+    "path": "job-140370072233.log",
+    "bytes": 145956,
+    "sha256": "19cbd184835182c9e4ad10dbd226aa7fb60a42ade13bda9537d07cc8e9981825"
+  }
+}

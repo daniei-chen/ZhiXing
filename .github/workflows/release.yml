@@ -232,6 +232,17 @@ jobs:
           Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
           npm.cmd run test:workbench-preview -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/workbench.log"
           exit $LASTEXITCODE
+      - name: Packaged native approvals and renderer recovery
+        id: approvals
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        timeout-minutes: 10
+        env:
+          ZHIXING_QA_EVIDENCE: ${{ runner.temp }}/zhixing-release-evidence/journeys/approvals
+        run: |
+          Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+          npm.cmd run test:approvals -- "release/win-unpacked/知行.exe" 2>&1 | Tee-Object -FilePath "$env:RELEASE_EVIDENCE/logs/approvals.log"
+          exit $LASTEXITCODE
+
       - name: Audit shipped dependency paths
         id: dependencies
         if: ${{ !cancelled() && steps.verify.outcome == 'success' }}

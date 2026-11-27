@@ -85,7 +85,7 @@ async function waitContext(directory,key,sessionId,{planning}={}){
  error.details={sessionId,reportCount:reports?Object.keys(reports).length:0,sessionPresent:Boolean(reports?.[sessionId]),skillsReady:Array.isArray(reports?.[sessionId]?.skills),readErrorCode:readError?.code};
  throw error;
 }
-export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',protocol='deepseek',reasoningMap=false,compat,inputModalities=['text'],models:modelRows=[],pluginRoot=sourceRoot,workspaceRoot,permission='ask',nodeExecutable,contextWindow=128000,maxTokens=8192,kernel:kernelValue,controls,cancellation,projectWorktree,officeVision}={}){
+export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',protocol='deepseek',reasoningMap=false,compat,inputModalities=['text'],models:modelRows=[],pluginRoot=sourceRoot,workspaceRoot,permission='ask',nodeExecutable,contextWindow=128000,maxTokens=8192,kernel:kernelValue,controls,cancellation,projectWorktree,officeVision,approvalBridge}={}){
  const kernel=normaliseKernel(kernelValue);
  const compaction = compactionPolicy({contextWindow,maxTokens});
  const ptcEnabled=kernel.ptcEnabled&&permission==='full'&&Boolean(workspaceRoot);
@@ -153,6 +153,7 @@ export async function prepareRuntime(directory,{baseUrl,model,reasoning='high',p
  const omitted=new Set([...(kernel.webEnabled?[]:['web','web-fetch-http','web-search-deepseek','tool-web']),...(kernel.workflowEnabled?[]:['workflow-engine','tool-workflow','zhixing-jobs','tool-jobs',...(ptcEnabled?[]:['ptc-runtime'])]),...(kernel.subagentDepth?[]:['tool-subagent','tool-subagent-fork']),...(kernel.teamEnabled&&kernel.subagentDepth?[]:['tool-agent-team'])]);
  const insertion=rows.find(row=>row.insert);insertion.insert=insertion.insert.filter(row=>!omitted.has(row.id));
  if(controls)insertion.insert.push({id:'zhixing-execution-controls',name:path.join(pluginRoot,'harness','execution-controls.mjs').replaceAll('\\','/')});
+ if(approvalBridge)insertion.insert.push({id:'zhixing-approval-bridge',name:path.join(pluginRoot,'harness','approval-bridge.mjs').replaceAll('\\','/')});
  if(cancellation)insertion.insert.push({id:'zhixing-runtime-cancellation',name:path.join(pluginRoot,'electron','runtime-cancellation.mjs').replaceAll('\\','/')});
  if(projectWorktree){
   const bundledNode=path.join(pluginRoot,'runtime','node.exe');
@@ -187,6 +188,7 @@ export async function makeHarness(directory,configuration,apiKey){
  env.ZHIXING_MODEL_PROTOCOL=configuration.protocol||'deepseek';
  env.ZHIXING_INPUT_MODALITIES=JSON.stringify(Array.isArray(configuration.inputModalities)?configuration.inputModalities:['text']);
  env.ZHIXING_VISUAL_BRIDGE=configuration.visualAttachments?.length?'true':'false';
+ if(configuration.approvalBridge)Object.assign(env,{ZHIXING_APPROVAL_URL:configuration.approvalBridge.url,ZHIXING_APPROVAL_TOKEN:configuration.approvalBridge.token,ZHIXING_APPROVAL_SESSION:configuration.approvalBridge.sessionId});
  if(configuration.officeVision)Object.assign(env,{ZHIXING_OFFICE_VISION_URL:configuration.officeVision.url,ZHIXING_OFFICE_VISION_TOKEN:configuration.officeVision.token});
  env.ZHIXING_CAPABILITY_SCOPE=configuration.capabilityScope==='diagnostic'?'diagnostic':'run';
  if(configuration.requiredCommand)env.ZHIXING_REQUIRED_COMMAND=configuration.requiredCommand;
@@ -195,7 +197,7 @@ export async function makeHarness(directory,configuration,apiKey){
  if(configuration.cancellation)Object.assign(env,{ZHIXING_CANCEL_FILE:configuration.cancellation.file,ZHIXING_CANCEL_KEY:configuration.cancellation.key,ZHIXING_CANCEL_SESSION:configuration.cancellation.sessionId});
  if(configuration.projectWorktree)env.ZHIXING_WORKTREE_KEY=configuration.projectWorktree.key;
  Object.assign(env,{ELECTRON_RUN_AS_NODE:'1',DEEPSEEK_API_KEY:apiKey,DSH_HOME:directory,AGENTS_HOME:path.join(directory,'instructions'),DSH_PERMISSION_MODE:configuration.workspaceRoot?permissionMode(configuration.permission).sandbox:'read-only',ZHIXING_PRIVACY_MODE:configuration.privacyMode==='raw'?'raw':'redact',ZHIXING_PERMISSION_MODE:configuration.permission||'ask',ZHIXING_WEB_SEARCH_AVAILABLE:configuration.protocol==='openai'||configuration.protocol==='anthropic'?'false':'true',ZHIXING_WORKSPACE_ROOT:configuration.workspaceRoot||'',ZHIXING_BRIDGE_FILE:configuration.bridgeFile||'',ZHIXING_BRIDGE_KEY:configuration.bridgeKey||'',ZHIXING_MCP_FILE:configuration.mcpFile||'',ZHIXING_CONTEXT_FILE:path.join(directory,'context.bin'),ZHIXING_HISTORY_DIR:path.join(directory,`history-${configuration.privacyMode==='raw'?'raw':'redact'}`),ZHIXING_HISTORY_KEY:configuration.historyKey||configuration.bridgeKey||'',ZHIXING_CUSTOM_TERMS:JSON.stringify(configuration.customTerms||[]),ZHIXING_PRIVACY_POLICY:JSON.stringify(configuration.privacyPolicy||{}),ZHIXING_BROWSER_BRIDGE:configuration.browserBridge||'',ZHIXING_BROWSER_TOKEN:configuration.browserToken||'',ZHIXING_AUTOMATION_BRIDGE:configuration.automationBridge||'',ZHIXING_AUTOMATION_TOKEN:configuration.automationToken||'',ZHIXING_ALLOW_NETWORK:configuration.allowNetwork===false?'false':'true',NO_COLOR:'1'});
- const options={dshBin:require.resolve('@deepseek-ai/dsh/lib/bin.js'),dshHome:directory,profile:'sdk-minimal',patches:[patch],cwd:configuration.workspaceRoot||directory,processCwd:directory,provider:configuration.protocol&&configuration.protocol!=='deepseek'?'zhixing-provider':'deepseek-official',model:configuration.model||'deepseek-flash',reasoningEffort:configuration.protocol && configuration.protocol!=='deepseek' && configuration.reasoningMap===false ? undefined : configuration.reasoning||'high',maxTokens:configuration.maxTokens||8192,approvalRequests:true,onUserQuestion:configuration.onUserQuestion,env,initializeTimeoutMs:20000,disposeEofGraceMs:750,disposeGraceMs:6000};
+ const options={dshBin:require.resolve('@deepseek-ai/dsh/lib/bin.js'),dshHome:directory,profile:'sdk-minimal',patches:[patch],cwd:configuration.workspaceRoot||directory,processCwd:directory,provider:configuration.protocol&&configuration.protocol!=='deepseek'?'zhixing-provider':'deepseek-official',model:configuration.model||'deepseek-flash',reasoningEffort:configuration.protocol && configuration.protocol!=='deepseek' && configuration.reasoningMap===false ? undefined : configuration.reasoning||'high',maxTokens:configuration.maxTokens||8192,approvalRequests:!configuration.approvalBridge,onUserQuestion:configuration.onUserQuestion,env,initializeTimeoutMs:20000,disposeEofGraceMs:750,disposeGraceMs:6000};
  const bundledNode=path.join(configuration.pluginRoot||sourceRoot,'runtime','node.exe');
  const executable=configuration.nodeExecutable||(fsSyncExists(bundledNode)?bundledNode:process.execPath);
  // The pinned rc.5 SDK accepts its generic process descriptor through these
@@ -297,7 +299,7 @@ export async function waitForStoppedJobs(jobs,timeoutMs,onTimeout){
 }
 
 export class RuntimeManager{
- constructor({root,readVault,writeVault,onEvent,onApproval,createHarness=makeHarness,createGateway=startPrivacyGateway,cleanupTimeoutMs=10000,cleanupRetryDelays=[1000,3000,10000]}){this.root=root;this.readVault=readVault;this.writeVault=writeVault;this.onEvent=onEvent;this.onApproval=onApproval;this.createHarness=createHarness;this.createGateway=createGateway;this.cleanupTimeoutMs=Math.min(30000,Math.max(20,cleanupTimeoutMs));this.cleanupRetryDelays=cleanupRetryDelays.slice(0,3);this.runs=new Map();this.runSettlements=new Map();this.runSettlementSessions=new Map();this.sessionStateVersions=new Map();this.busy=new Set();this.prepared=new Map();this.cancelled=new Map();this.questions=new Map();this.volatileVaults=new Map();}
+ constructor({root,readVault,writeVault,onEvent,onApproval,createHarness=makeHarness,createGateway=startPrivacyGateway,cleanupTimeoutMs=10000,cleanupRetryDelays=[1000,3000,10000]}){this.root=root;this.readVault=readVault;this.writeVault=writeVault;this.onEvent=onEvent;this.onApproval=onApproval;this.createHarness=createHarness;this.createGateway=createGateway;this.cleanupTimeoutMs=Math.min(30000,Math.max(20,cleanupTimeoutMs));this.cleanupRetryDelays=cleanupRetryDelays.slice(0,3);this.runs=new Map();this.runSettlements=new Map();this.runSettlementSessions=new Map();this.sessionStateVersions=new Map();this.busy=new Set();this.prepared=new Map();this.cancelled=new Map();this.questions=new Map();this.questionRevision=0;this.volatileVaults=new Map();}
  emitEvent(event){const active=this.runs.get(event.runId);if(active){active.eventWatermark=(active.eventWatermark||0)+1;if(event.finalization)event.finalization.eventWatermark=active.eventWatermark;}try{this.onEvent?.(event);}catch{/* A detached UI observer must not interrupt runtime settlement. */}}
  resultFields(active){
   if(!active.output)return {};
@@ -361,8 +363,10 @@ export class RuntimeManager{
   })().finally(()=>{active.cleanupPromise=null;});
   return active.cleanupPromise;
  }
- answerQuestion({requestId,answers,cancelled=false}){
+ questionSnapshot(){return {revision:this.questionRevision,pending:[...this.questions.values()].map(entry=>structuredClone(entry.public))};}
+ answerQuestion({requestId,answers,cancelled=false,runId,rootSessionId}){
   const entry=this.questions.get(requestId);if(!entry)throw new Error('问题已结束或任务已停止。');
+  if(runId!==undefined&&entry.public.runId!==runId||rootSessionId!==undefined&&entry.public.rootSessionId!==rootSessionId)throw new Error('问题不属于当前交办。');
   if(cancelled){entry.finish({cancelled:true});return true;}
   if(!Array.isArray(answers)||answers.length!==entry.questions.length||new Set(answers.map(answer=>answer.id)).size!==answers.length)throw new Error('请完整填写本次问题。');
   for(const question of entry.questions){const answer=answers.find(value=>value.id===question.id);if(!answer||!Array.isArray(answer.selected)||answer.selected.some(label=>!question.options?.some(option=>option.label===label))||(!question.multiSelect&&answer.selected.length>1)||(answer.custom!==undefined&&(typeof answer.custom!=='string'||answer.custom.length>4000)))throw new Error('问题答案格式无效。');}
@@ -374,7 +378,22 @@ export class RuntimeManager{
   const show=value=>{const text=vault.restore(String(value||'')).text;return containsCredential(text,context.providerKey)?'【检测到凭证，已隐藏此段】':text.replace(/⟦ZX-[^⟧]+⟧/g,'【已保护信息】').slice(0,16000);};
   const translated=value=>({'Approve':'批准并执行','Keep planning':'继续完善方案','Plan review':'方案审批','Approve this plan and leave plan mode?':'是否批准此方案并开始执行？','Leave plan mode; the plan is carried out from the next step.':'批准后离开规划模式，从下一步开始执行。','Stay in plan mode; feedback goes back to the model.':'保留规划模式，把补充要求交回模型。'})[value]||show(value);
   const questions=request.questions.map(question=>({id:question.id,question:translated(question.question),detail:show(question.detail),header:translated(question.header),multiSelect:!!question.multiSelect,options:question.options?.slice(0,8).map(option=>({label:translated(option.label),description:translated(option.description)}))}));
-  return new Promise(resolve=>{const finish=value=>{if(!this.questions.delete(request.requestId))return;signal.removeEventListener('abort',abort);this.emitEvent({runId:context.runId,sessionId:request.sessionId,type:'question-closed',requestId:request.requestId});if(value.answers)value={answers:value.answers.map(answer=>({...answer,selected:answer.selected.map(label=>request.questions.find(question=>question.id===answer.id)?.options?.find(option=>translated(option.label)===label)?.label||label)}))};resolve(value);};const abort=()=>finish({cancelled:true});this.questions.set(request.requestId,{questions,finish});signal.addEventListener('abort',abort,{once:true});this.emitEvent({runId:context.runId,sessionId:request.sessionId,type:'question',requestId:request.requestId,questions});if(signal.aborted)abort();});
+  const identity={runId:context.runId,rootSessionId:context.rootSessionId||request.sessionId,sessionId:request.sessionId,requestId:request.requestId};
+  return new Promise(resolve=>{
+   const finish=value=>{
+    if(!this.questions.delete(request.requestId))return;
+    signal.removeEventListener('abort',abort);this.questionRevision++;
+    this.emitEvent({...identity,type:'question-closed'});
+    if(value.answers)value={answers:value.answers.map(answer=>({...answer,selected:answer.selected.map(label=>request.questions.find(question=>question.id===answer.id)?.options?.find(option=>translated(option.label)===label)?.label||label)}))};
+    resolve(value);
+   };
+   const abort=()=>finish({cancelled:true});
+   this.questions.set(request.requestId,{questions,finish,public:{...identity,questions}});
+   this.questionRevision++;
+   signal.addEventListener('abort',abort,{once:true});
+   this.emitEvent({...identity,type:'question',questions});
+   if(signal.aborted)abort();
+  });
  }
  async check(config,key){
   if(this.closing)throw new Error('内核管理器正在关闭。');
@@ -471,11 +490,11 @@ export class RuntimeManager{
   if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');
   if(!key)throw new Error('尚未配置所选供应商的 API Key。');
   assertModelCredential(key);
-  if((this.cancelled.get(runId)||0)>Date.now()){this.cancelled.delete(runId);throw new Error('任务已停止。');}
+  if((this.cancelled.get(runId)||0)>Date.now()){this.cancelled.delete(runId);throw Object.assign(new Error('任务已停止。'),{code:'RUNTIME_CANCELLED',stage:'prepare'});}
   if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
   if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error(this.sessionBusyMessage(sessionId));
   for(const [id,p] of this.prepared)if(p.options.sessionId===sessionId)this.prepared.delete(id);
-  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,officeVision,persistKey,persistBridgeKey,failure;const visualHistory={};const active={runId,sessionId,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128){const oldest=this.runSettlements.keys().next().value;this.runSettlements.delete(oldest);this.runSettlementSessions.delete(oldest);}this.runSettlements.set(runId,active.settled);this.runSettlementSessions.set(runId,sessionId);this.runs.set(runId,active);
+  this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,officeVision,approvalBridge,persistKey,persistBridgeKey,failure;const visualHistory={};const active={runId,sessionId,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128){const oldest=this.runSettlements.keys().next().value;this.runSettlements.delete(oldest);this.runSettlementSessions.delete(oldest);}this.runSettlements.set(runId,active.settled);this.runSettlementSessions.set(runId,sessionId);this.runs.set(runId,active);
   const connection={endpoint:config.baseUrl,providerId:config.providerId,protocol:config.protocol};
   const visualState=()=>Object.keys(visualHistory).length?{visualHistory}:{};
   try{
@@ -565,7 +584,15 @@ export class RuntimeManager{
    const transcripts=new Map();
    active.cancellation={file:path.join(directory,`cancel-${runId}.bin`),key:createBridgeKey(),sessionId};
    if(config.manualControls)active.controls={file:path.join(directory,`control-${runId}.bin`),key:createBridgeKey(),sessionId,targets:new Map(),transcripts,bridgeFile,bridgeKey,privacyMode,customTerms,privacyPolicy:effectivePolicy,providerKey:key};
-   h=await this.createHarness(directory,{...config,requiredCommand:request.commandName||(options.startInPlanMode===true?'plan':undefined),visualAttachments:approvedVisuals,officeVision,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,bridgeFile,bridgeKey,providerKey:key,allowQuestions:config.allowQuestions}),onApproval:params=>!active.controller.signal.aborted&&this.onApproval?this.onApproval({...params,runId,signal:active.controller.signal}):Promise.resolve({outcome:'rejected'})},gateway.apiKey);active.h=h;
+   const approve=(params,signal=active.controller.signal)=>!signal.aborted&&this.onApproval
+    ?this.onApproval({...params,runId,rootSessionId:sessionId,manual:config.manualControls===true,signal})
+    :Promise.resolve({outcome:'cancelled'});
+   approvalBridge=await startToolBridge({route:'/approval',signal:active.controller.signal,drain:true,maxBodyBytes:256*1024,invoke:(params,signal)=>{
+    if(!params||typeof params.sessionId!=='string'||!SAFE_ID.test(params.sessionId)||typeof params.toolName!=='string'||Object.keys(params).some(key=>!['sessionId','toolName','callId','reason'].includes(key)))return {outcome:'unavailable'};
+    return approve(params,signal);
+   }});
+   approvalBridge.sessionId=sessionId;
+   h=await this.createHarness(directory,{...config,approvalBridge,requiredCommand:request.commandName||(options.startInPlanMode===true?'plan':undefined),visualAttachments:approvedVisuals,officeVision,controls:active.controls,cancellation:active.cancellation,baseUrl:gateway.baseUrl,privacyMode,customTerms,bridgeFile,bridgeKey,historyKey,mcpFile,browserBridge:toolBridge?.url,browserToken:toolBridge?.token,automationBridge:automationBridge?.url,automationToken:automationBridge?.token,onUserQuestion:(request,{signal})=>this.askQuestion(request,AbortSignal.any([signal,active.controller.signal]),{runId,rootSessionId:sessionId,bridgeFile,bridgeKey,providerKey:key,allowQuestions:config.allowQuestions}),onApproval:approve},gateway.apiKey);active.h=h;
    this.watchHarness(active,h);
    if(active.cancelled)throw new Error('任务已停止。');
    const timeout=setTimeout(()=>{active.timedOut=true;active.controller.abort();void (active.readyForCancel?interruptHarness(active,h):closeHarness(active,h)).catch(()=>{});},kernel.taskTimeoutSeconds*1000);
@@ -760,7 +787,7 @@ const restoredChanges=mergeEntries((privacyMode==='redact'?changes.map(entry=>{c
   finally{
    active.controller.abort();
    const harnessClosing=await Promise.allSettled([closeHarness(active,h)]);
-   const closing=await Promise.allSettled([toolBridge,automationBridge,officeVision,gateway].filter(Boolean).map(bridge=>bounded(()=>bridge.close(),this.cleanupTimeoutMs)));if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}active.assistantTextBuffer='';await active.draftTail;
+   const closing=await Promise.allSettled([approvalBridge,toolBridge,automationBridge,officeVision,gateway].filter(Boolean).map(bridge=>bounded(()=>bridge.close(),this.cleanupTimeoutMs)));if(active.assistantFlushTimer){clearTimeout(active.assistantFlushTimer);active.assistantFlushTimer=null;}active.assistantTextBuffer='';await active.draftTail;
    let cleanupError=harnessClosing[0].status==='rejected'?harnessClosing[0].reason:closing.find(result=>result.status==='rejected')?.reason;
    const harnessClosed=harnessClosing[0].status==='fulfilled'||active.processExited===true;
    active.finishCleanup=async exited=>{

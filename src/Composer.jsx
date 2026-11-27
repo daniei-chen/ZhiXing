@@ -21,18 +21,19 @@ function markMoreBelow(field) {
   field.toggleAttribute('data-more-below', field.scrollHeight - field.clientHeight - field.scrollTop > 1);
 }
 
-export function Composer({ settings, files: initialFiles, input: initialInput, draftStore, draftKey, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended }) {
+export function Composer({ settings, files: initialFiles, input: initialInput, draftStore, draftKey, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended, takeover = null }) {
   const draft = useKeyedValue(draftStore, draftKey);
   const input = draft?.text ?? initialInput;
   const files = draft?.files ?? initialFiles;
   const [voiceActive, setVoiceActive] = useState(false);
   const [connections, setConnections] = useState([]);
   const [commandIndex,setCommandIndex]=useState(0),[dismissedInput,setDismissedInput]=useState(null);
-  const ready = (input.trim() || files.length) && !running && !disabled && !busy && !voiceActive;
+  const takenOver = Boolean(takeover);
+  const ready = (input.trim() || files.length) && !running && !disabled && !busy && !voiceActive && !takenOver;
   const redacted = settings.privacyMode === 'redact';
   const PrivacyIcon = redacted ? ShieldCheck : ShieldWarning;
   const selectedPermission = permissionMode(settings.permission);
-  const commandOptions = /^\/[a-z\p{Script=Han}]*$/u.test(input) && dismissedInput !== input && !menu && !voiceActive
+  const commandOptions = /^\/[a-z\p{Script=Han}]*$/u.test(input) && dismissedInput !== input && !menu && !voiceActive && !takenOver
     ? COMMANDS.filter(([command]) => command.startsWith(input) || matchesSessionCommandPrefix(command.slice(1), input))
     : [];
   function chooseCommand(command) {
@@ -47,17 +48,20 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
 
   useLayoutEffect(() => { markMoreBelow(composer.current); }, [composer, input]);
   useEffect(() => {
+    if (takenOver) closeMenu();
+  }, [takenOver]);
+  useEffect(() => {
     const field = composer.current;
     const observer = new ResizeObserver(() => markMoreBelow(field));
     observer.observe(field);
     return () => observer.disconnect();
   }, [composer]);
   useEffect(() => {
-    if (menu?.name !== 'attach') return;
+    if (takenOver || menu?.name !== 'attach') return;
     let live = true;
     window.zhixing?.listMcp().then(rows => { if (live) setConnections(rows); }).catch(() => {});
     return () => { live = false; };
-  }, [menu?.name]);
+  }, [menu?.name, takenOver]);
   function menuKeys(event) {
     if (!['ArrowDown','ArrowUp','Home','End'].includes(event.key) || event.target.matches('input,textarea,select')) return;
     const items = [...event.currentTarget.querySelectorAll('[role^="menuitem"]:not(:disabled)')];
@@ -79,9 +83,10 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
   }
 
   return <div className="composer-area">
-    <form className="composer" onSubmit={event => { event.preventDefault(); if (ready) onSubmit(); }} onDragOver={event => event.preventDefault()} onDrop={event => {
+    {takeover}
+    <form className="composer" hidden={takenOver} inert={takenOver} onSubmit={event => { event.preventDefault(); if (ready) onSubmit(); }} onDragOver={event => event.preventDefault()} onDrop={event => {
       event.preventDefault();
-      if (!disabled && !busy && !running) void addFiles(event.dataTransfer.files, 'draft');
+      if (!disabled && !busy && !running && !takenOver) void addFiles(event.dataTransfer.files, 'draft');
     }}>
       {!!commandOptions.length && <div className="dropdown composer-dropdown command-palette" role="listbox" aria-label="内核与界面命令"><div className="dropdown-label">命令</div>{commandOptions.map(([command,label,description,Icon],index)=><button type="button" role="option" aria-selected={index===commandIndex%commandOptions.length} key={command} onClick={()=>chooseCommand(command)}><Icon size={16}/><span><strong>{command}<small>{label}</small></strong><small>{description}</small></span></button>)}</div>}
       {!!files.length && <div className="attachment-chips">{files.map(file => <div className={`attachment-chip ${file.status !== 'ready' ? 'invalid' : ''}`} key={file.id}>
@@ -89,7 +94,7 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
         <IconButton icon={X} label={`移除附件 ${file.name}`} onClick={() => setFiles(previous => previous.filter(item => item.id !== file.id))}/>
       </div>)}</div>}
       <div className="composer-input">
-        <textarea ref={composer} aria-label="聊天输入框" aria-describedby="composer-shortcuts" placeholder="交代一件事，或添加要处理的资料…" value={input} rows={2} maxLength={60000} disabled={disabled || voiceActive} onPaste={event => { if (event.clipboardData.files.length && !disabled && !busy && !running) { event.preventDefault(); void addFiles(event.clipboardData.files, 'draft'); } }} onChange={event => {setCommandIndex(0);setInput(event.target.value);}} onScroll={event => markMoreBelow(event.currentTarget)} onKeyDown={event => {
+        <textarea ref={composer} aria-label="聊天输入框" aria-describedby="composer-shortcuts" placeholder="交代一件事，或添加要处理的资料…" value={input} rows={2} maxLength={60000} disabled={disabled || voiceActive || takenOver} onPaste={event => { if (event.clipboardData.files.length && !disabled && !busy && !running && !takenOver) { event.preventDefault(); void addFiles(event.clipboardData.files, 'draft'); } }} onChange={event => {setCommandIndex(0);setInput(event.target.value);}} onScroll={event => markMoreBelow(event.currentTarget)} onKeyDown={event => {
           if (event.nativeEvent.isComposing || event.keyCode === 229) return;
           if (event.key === 'Escape' && commandOptions.length) { event.preventDefault();event.stopPropagation();setDismissedInput(input);return; }
           if (commandOptions.length && ['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault();setCommandIndex(previous=>(previous+(event.key==='ArrowDown'?1:-1)+commandOptions.length)%commandOptions.length);return; }
@@ -105,7 +110,7 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
         <div className="composer-tools">
           <div className="menu-anchor attachment-menu-anchor">
             <IconButton icon={Plus} label="添加内容" aria-expanded={menu?.name === 'attach'} className="add-attachment" disabled={disabled || running || busy} onClick={event => toggleMenu('attach', event)}/>
-            {menu?.name === 'attach' && <div className="dropdown composer-dropdown attachment-menu" role="menu" aria-label="添加内容" onKeyDown={menuKeys}>
+            {!takenOver && menu?.name === 'attach' && <div className="dropdown composer-dropdown attachment-menu" role="menu" aria-label="添加内容" onKeyDown={menuKeys}>
               <div className="dropdown-label">添加</div>
               <button type="button" role="menuitem" className="attachment-action" onClick={() => chooseFiles()}><Paperclip size={16}/><span>文件<small>从本机添加资料</small></span><kbd>Ctrl O</kbd></button>
               <button type="button" role="menuitem" className="attachment-action" onClick={() => { closeMenu(); openWorkbench('files'); }}><FolderOpen size={16}/><span>项目文件夹<small>浏览当前工作区文件</small></span><CaretRight size={13}/></button>
@@ -122,7 +127,7 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
           </div>
           <div className="menu-anchor">
             <button type="button" className={`permission-trigger ${selectedPermission.id === 'full' ? 'full' : ''}`} aria-label="更改权限" aria-expanded={menu?.name === 'permissions'} title="选择文件操作的批准方式" onClick={event => toggleMenu('permissions', event)}>{selectedPermission.id === 'full' ? <ShieldWarning size={14}/> : selectedPermission.id === 'ask' ? <Hand size={14}/> : <ShieldCheck size={14}/>}<span>{selectedPermission.short}</span></button>
-            {menu?.name === 'permissions' && <div className="dropdown composer-dropdown permission-dropdown" role="menu" aria-label="更改权限" onKeyDown={event => {
+            {!takenOver && menu?.name === 'permissions' && <div className="dropdown composer-dropdown permission-dropdown" role="menu" aria-label="更改权限" onKeyDown={event => {
               const buttons=[...event.currentTarget.querySelectorAll('[role="menuitemradio"]')];
               const index=buttons.indexOf(document.activeElement);
               if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();buttons[(index+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus();}
@@ -138,9 +143,9 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
         <div className="composer-tools">
           {busy && <span className="composer-status" role="status" title="正在读取资料或准备发送"><CircleNotch size={14}/><span className="screen-reader-only">正在读取资料或准备发送</span></span>}
           <ModelControls settings={settings} runtime={runtime} setRuntime={setRuntime} setSetting={setSetting}
-            disabled={disabled || busy || voiceActive} menu={menu?.name} toggleMenu={toggleMenu} closeMenu={closeMenu}
+            disabled={disabled || busy || voiceActive || takenOver} menu={takenOver ? null : menu?.name} toggleMenu={toggleMenu} closeMenu={closeMenu}
             openConnection={() => openModal({ type: 'settings', tab: '供应商' })}/>
-          <VoiceInput key={scopeKey} scopeKey={scopeKey} language={settings.voiceLanguage} disabled={disabled || running || busy || suspended} onActiveChange={setVoiceActive} onAccept={text => { setInput(previous => (previous + (previous && !/\s$/.test(previous) ? '\n' : '') + text).slice(0, 60000)); requestAnimationFrame(() => composer.current?.focus()); }} openSettings={() => openModal({type:'settings',tab:'语音'})}/>
+          <VoiceInput key={scopeKey} scopeKey={scopeKey} language={settings.voiceLanguage} disabled={disabled || running || busy || suspended || takenOver} onActiveChange={setVoiceActive} onAccept={text => { setInput(previous => (previous + (previous && !/\s$/.test(previous) ? '\n' : '') + text).slice(0, 60000)); requestAnimationFrame(() => composer.current?.focus()); }} openSettings={() => openModal({type:'settings',tab:'语音'})}/>
           {running ? <button type="button" className="send-button" aria-label="停止生成" title="停止生成" onClick={onStop}><Stop size={14} weight="fill"/></button> : <button type="submit" className="send-button" aria-label="发送消息" title="发送消息（Enter）" disabled={!ready}><ArrowUp size={15} weight="regular"/></button>}
         </div>
       </div>

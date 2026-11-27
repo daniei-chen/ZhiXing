@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 1,
+  "layer": "Windows hosted packaging workflow; only successful steps below establish their respective coverage",
+  "notCovered": [
+    "installer execution and upgrade lifecycle",
+    "user installation or D drive",
+    "real cloud model tasks",
+    "code signing",
+    "manual visual review unless separately recorded"
+  ],
+  "sourceRef": "refs/pull/3/merge",
+  "checkoutCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "workflowSha": "0a69d5c84046b04186ff6fa177e714d8d2e6ec0e",
+  "runId": "45954360110",
+  "node": "v24.19.0",
+  "version": "0.43.0",
+  "steps": {
+    "install": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "electron": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "package": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "verify": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "packed": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "errors": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "native": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "tools": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "phase0a": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "phase1": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "workbench": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    },
+    "approvals": {
+      "outputs": {},
+      "outcome": "failure",
+      "conclusion": "failure"
+    },
+    "nsis": {
+      "outputs": {},
+      "outcome": "success",
+      "conclusion": "success"
+    }
+  },
+  "coverage": {
+    "directoryPackageBuilt": true,
+    "packagedSourceMatched": true,
+    "packagedRegressionPassed": true,
+    "networkErrorUiPassed": true,
+    "nativeFilesUiPassed": true,
+    "toolTimelineUiPassed": true,
+    "phase0aUiPassed": true,
+    "phase1UiPassed": true,
+    "workbenchUiPassed": true,
+    "approvalsUiPassed": false,
+    "uninstalledNsisBuilt": true
+  },
+  "packedDirectory": {
+    "files": 48972,
+    "directories": 8237,
+    "symbolicLinks": 0,
+    "bytes": 1244630161
+  },
+  "binaries": [
+    {
+      "file": "release/ZhiXing-0.43.0-x64.exe",
+      "bytes": 338737147,
+      "sha256": "bb112d43799802408cb990a10891527856d881edeb018bddf062dc8a8a1149cb"
+    },
+    {
+      "file": "release/ZhiXing-0.43.0-x64.exe.blockmap",
+      "bytes": 314859,
+      "sha256": "97cb3a5a0019ff61de52a96a6d94c64ed2c2f784d779db5095661c08a468940a"
+    },
+    {
+      "file": "release/win-unpacked/知行.exe",
+      "bytes": 246511104,
+      "sha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f"
+    },
+    {
+      "file": "release/win-unpacked/resources/app/runtime/node.exe",
+      "bytes": 92825416,
+      "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+    }
+  ],
+  "files": [
+    {
+      "file": "logs/install.log",
+      "originalBytes": 2009,
+      "bytes": 2009,
+      "truncated": false,
+      "sha256": "bd7d89622fb73bde7c23e46488f610830cbb44abb6a286ef3f36854f4772a233"
+    },
+    {
+      "file": "logs/package.log",
+      "originalBytes": 68091,
+      "bytes": 68091,
+      "truncated": false,
+      "sha256": "0dddb2fcdf945ee125a0ce9b1e195f8170fc48c7d64d12d5015d82328d1dfd0c"
+    },
+    {
+      "file": "logs/verify.log",
+      "originalBytes": 186,
+      "bytes": 186,
+      "truncated": false,
+      "sha256": "5173e87c8e24a5f8c5dbcc083bbfd11109a0f94b253b8f856e8abd8999d932c4"
+    },
+    {
+      "file": "logs/packed.log",
+      "originalBytes": 51625,
+      "bytes": 51625,
+      "truncated": false,
+      "sha256": "940c9350c994e304a7a9fc093812c75645db43c80c648868a2e8246d4cddfa08"
+    },
+    {
+      "file": "logs/errors.log",
+      "originalBytes": 1051,
+      "bytes": 1051,
+      "truncated": false,
+      "sha256": "70fe687061d046103e1775a2a22224a1bf8190bfe0d00daea95844bc7ea03b99"
+    },
+    {
+      "file": "logs/native.log",
+      "originalBytes": 537,
+      "bytes": 537,
+      "truncated": false,
+      "sha256": "83f1a6980ddfaeb7474ddd6b334ceb0bfdd560fd28ebfd46ccc398f3cca7993b"
+    },
+    {
+      "file": "logs/tools.log",
+      "originalBytes": 545,
+      "bytes": 545,
+      "truncated": false,
+      "sha256": "17e825cc6cc6c42e00af2e09172875d2a49fa5fa5f65224767ca16ece746d5f6"
+    },
+    {
+      "file": "logs/phase0a.log",
+      "originalBytes": 1039,
+      "bytes": 1039,
+      "truncated": false,
+      "sha256": "5effa7c3c689e1c71435a69dd7e264c3f8fc3eb719f952c0401199e75aa4c35a"
+    },
+    {
+      "file": "logs/phase1.log",
+      "originalBytes": 876,
+      "bytes": 876,
+      "truncated": false,
+      "sha256": "9b6597ad41fef4f2b69af63866207f3ddbef8499b91d7372a8b73ec0e12421f6"
+    },
+    {
+      "file": "logs/workbench.log",
+      "originalBytes": 1228,
+      "bytes": 1228,
+      "truncated": false,
+      "sha256": "03419a1ac5092506e5e2e710cf1a0a15c6b51f112f3caee95f78d383f46d60bf"
+    },
+    {
+      "file": "logs/approvals.log",
+      "originalBytes": 366,
+      "bytes": 366,
+      "truncated": false,
+      "sha256": "986eeb92431755f7c7659090bd7fc806c6e0c53a5f2849b6bf84858d748d2b30"
+    },
+    {
+      "file": "logs/nsis.log",
+      "originalBytes": 885,
+      "bytes": 885,
+      "truncated": false,
+      "sha256": "30b2cb54982272531baeb308a258e34c5807d8946f38587c712e0db1748afd50"
+    },
+    {
+      "file": "journeys\\approvals\\approval-recovery-ui-V7ElSh\\app-log-tail.txt",
+      "originalBytes": 415,
+      "bytes": 415,
+      "truncated": false,
+      "sha256": "0eb04baf1103c07e24c96030415f51d450810932f91b787dfcfa957cdb93eb30"
+    },
+    {
+      "file": "journeys\\approvals\\approval-recovery-ui-V7ElSh\\failure.png",
+      "originalBytes": 42499,
+      "bytes": 42499,
+      "truncated": false,
+      "sha256": "8d665777a20919dd8c76e945417ee5450c28e5fdaa142e7fa680df2291bc7e00"
+    },
+    {
+      "file": "journeys\\approvals\\approval-recovery-ui-V7ElSh\\result.json",
+      "originalBytes": 3163,
+      "bytes": 3163,
+      "truncated": false,
+      "sha256": "eb27fcca252f3a68b139ba5eb8c8e0bb9042a1878f71b2b57b079c22833751bd"
+    },
+    {
+      "file": "journeys\\errors\\run-ZWbY50\\connection-refused.png",
+      "originalBytes": 54199,
+      "bytes": 54199,
+      "truncated": false,
+      "sha256": "2e70f0ea7fccad63da2c3b583f5b285a5cbab655821c72ba0f27a62ca528333d"
+    },
+    {
+      "file": "journeys\\errors\\run-ZWbY50\\dns-enotfound.png",
+      "originalBytes": 54750,
+      "bytes": 54750,
+      "truncated": false,
+      "sha256": "226b6167d59eed83094444c942305cb61ae57520e57359f4fb6f35bc00ae41c2"
+    },
+    {
+      "file": "journeys\\errors\\run-ZWbY50\\http-401.png",
+      "originalBytes": 54600,
+      "bytes": 54600,
+      "truncated": false,
+      "sha256": "ab32a9efd6c23c4a841b7855d658ca7a71afbd027050d7367f3f2711f0c305ca"
+    },
+    {
+      "file": "journeys\\errors\\run-ZWbY50\\intercepted-host.png",
+      "originalBytes": 56543,
+      "bytes": 56543,
+      "truncated": false,
+      "sha256": "042f5161d70f77b7160bca4a0bbbbe6ae7a091fdbf72e34f72e55c55584f9ced"
+    },
+    {
+      "file": "journeys\\errors\\run-ZWbY50\\result.json",
+      "originalBytes": 4805,
+      "bytes": 4805,
+      "truncated": false,
+      "sha256": "c74d5ba9f38d1655356fd117ab6237e748f5b4ebd5a94e78f2b6be0b012783df"
+    },
+    {
+      "file": "journeys\\errors\\run-ZWbY50\\timeout.png",
+      "originalBytes": 53680,
+      "bytes": 53680,
+      "truncated": false,
+      "sha256": "ed803dc66c8bd3f9fd0d0177068ea15670c588e90d614956ece4bd3f2a352930"
+    },
+    {
+      "file": "journeys\\native\\run-1W1AaD\\result.json",
+      "originalBytes": 3952,
+      "bytes": 3952,
+      "truncated": false,
+      "sha256": "c167e06cf2c8c1c006ff89795a5e253727c81b07f5f6a3b85448a9506686335d"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\01-message-light.png",
+      "originalBytes": 65299,
+      "bytes": 65299,
+      "truncated": false,
+      "sha256": "59cca22a1ab6405544bb2431c6d758c06406b34921691165bff156e126686588"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\02-tools-expanded.png",
+      "originalBytes": 70321,
+      "bytes": 70321,
+      "truncated": false,
+      "sha256": "6f3cbe7e7ee9a7aa39cf6f309699cb02fd7f12037850c2068522bfa5a7b0f6d7"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\03-feedback-over-limit.png",
+      "originalBytes": 85032,
+      "bytes": 85032,
+      "truncated": false,
+      "sha256": "54c5d8be12fb5f1eb0b46832097db10a3ae35d82cd5ad9a5c9d46a5e522657bf"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\04-error-toast-long-input.png",
+      "originalBytes": 102965,
+      "bytes": 102965,
+      "truncated": false,
+      "sha256": "68463a66d937f86b021118e3f22f7773835dce7a87fb3bbb6c151faf7655a94a"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\05-error-toast-short-input.png",
+      "originalBytes": 69091,
+      "bytes": 69091,
+      "truncated": false,
+      "sha256": "56367f47a106b18c9f8f084471023cdcae94e6e130a10ffda4930299d80813cc"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\06-message-dark-narrow.png",
+      "originalBytes": 55793,
+      "bytes": 55793,
+      "truncated": false,
+      "sha256": "9621f17b1f5efb05c26ead14f82e0037894a09c32420f69cb1df6fd37be3e943"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\app-log-tail.txt",
+      "originalBytes": 1518,
+      "bytes": 1518,
+      "truncated": false,
+      "sha256": "1c4ba8f778c9c547d435395ab8dd56f0bcbc165df893b59b9bc2dbdf78979ae9"
+    },
+    {
+      "file": "journeys\\phase0a\\phase0a-ui-m7QnkY\\result.json",
+      "originalBytes": 10833,
+      "bytes": 10833,
+      "truncated": false,
+      "sha256": "6ec22353c5c4a136980c809c53fd2ef5128196f818c73e862ba2525ea15c54fd"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-D2KAHq\\01-draft-restored.png",
+      "originalBytes": 48265,
+      "bytes": 48265,
+      "truncated": false,
+      "sha256": "56d587b6f2383462f15fee951ffdbdd3b7b758801b4543ae444d11b61ea76b22"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-D2KAHq\\02-live-stream.png",
+      "originalBytes": 116936,
+      "bytes": 116936,
+      "truncated": false,
+      "sha256": "edf78043f88575f57468b6d45970c9a536b77279fea4e252173581c43797c245"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-D2KAHq\\03-final-reply.png",
+      "originalBytes": 174935,
+      "bytes": 174935,
+      "truncated": false,
+      "sha256": "d68f6da0fe3a218644b4e1479c8b5f2ff0df2630c428eeff74f533e6bbd340b7"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-D2KAHq\\app-log-tail.txt",
+      "originalBytes": 925,
+      "bytes": 925,
+      "truncated": false,
+      "sha256": "ecc69f306c4766f039e9030425362d5afcd22ca1806dbb6be86e7564e71ffcb4"
+    },
+    {
+      "file": "journeys\\phase1\\phase1-ui-D2KAHq\\result.json",
+      "originalBytes": 27549,
+      "bytes": 27549,
+      "truncated": false,
+      "sha256": "8f77df69ff8d7f182ca63ec0cdd83297bbe52f75d7b2b226117c6c9d939c1a5a"
+    },
+    {
+      "file": "journeys\\workbench\\workbench-preview-ui-1m8udA\\01-delivery-preview-light.png",
+      "originalBytes": 76109,
+      "bytes": 76109,
+      "truncated": false,
+      "sha256": "d5ebc71104d8eef02c0b96cce87aef99503afdc22d6abdf4c375d5e16a9629f7"
+    },
+    {
+      "file": "journeys\\workbench\\workbench-preview-ui-1m8udA\\02-preview-file-unavailable.png",
+      "originalBytes": 72510,
+      "bytes": 72510,
+      "truncated": false,
+      "sha256": "447d2ee39f10a6920c109fcdc1c7fa4a0776d1d64c05db48d6473eb2cf628356"
+    },
+    {
+      "file": "journeys\\workbench\\workbench-preview-ui-1m8udA\\03-keyboard-tab-navigation.png",
+      "originalBytes": 78273,
+      "bytes": 78273,
+      "truncated": false,
+      "sha256": "81ced75f6c31faf98e8c2fc1cd9e67b4f5532a05e7f8fc1184c94393cc0ed1aa"
+    },
+    {
+      "file": "journeys\\workbench\\workbench-preview-ui-1m8udA\\04-delivery-preview-dark-narrow.png",
+      "originalBytes": 62534,
+      "bytes": 62534,
+      "truncated": false,
+      "sha256": "5f0b1b19eeb8242971240e8b8648d3020413e11f5d7c6be40abe22f4f0a575af"
+    },
+    {
+      "file": "journeys\\workbench\\workbench-preview-ui-1m8udA\\app-log-tail.txt",
+      "originalBytes": 415,
+      "bytes": 415,
+      "truncated": false,
+      "sha256": "4775dc5810be349cd943e1eca5c3633ebc13813cec46dc728903a78de09c29bb"
+    },
+    {
+      "file": "journeys\\workbench\\workbench-preview-ui-1m8udA\\result.json",
+      "originalBytes": 8381,
+      "bytes": 8381,
+      "truncated": false,
+      "sha256": "44aadf0e9fc4eb202102a02731c2275677600fbe15097eb1f85ac3573a84ff33"
+    },
+    {
+      "file": "tool-timeline\\run-mwymyq6r\\result.json",
+      "originalBytes": 1636,
+      "bytes": 1636,
+      "truncated": false,
+      "sha256": "404212ba85af5c346f4fb4884321d1cd49660303faee0ad552423806a1934e89"
+    },
+    {
+      "file": "tool-timeline\\run-mwymyq6r\\tool-timeline.png",
+      "originalBytes": 46555,
+      "bytes": 46555,
+      "truncated": false,
+      "sha256": "9d8ccf3f75ddc3aef7b15128e24251821db353a8c3427b63d7e8a12c11196250"
+    },
+    {
+      "file": "build-provenance.json",
+      "originalBytes": 287,
+      "bytes": 287,
+      "truncated": false,
+      "sha256": "039a43266cf232c88c149d5043ccfc9aa3c6bedc187a1e85e6b3e76ceb76e598"
+    },
+    {
+      "file": "app-update.yml",
+      "originalBytes": 111,
+      "bytes": 111,
+      "truncated": false,
+      "sha256": "4f1b8da276060c800e09d2c87b550511fe48afb1ff3480bdde14af876862ec30"
+    },
+    {
+      "file": "SHA256SUMS-candidate.txt",
+      "originalBytes": 187,
+      "bytes": 187,
+      "truncated": false,
+      "sha256": "0218eaeed5d32bf6095b9a9c5c5d8e6faea1392371d22fe6f27eb51ae38528c8"
+    }
+  ]
+}

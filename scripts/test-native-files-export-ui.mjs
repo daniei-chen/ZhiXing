@@ -24,7 +24,7 @@ const chatId='qa-native-files', projectId='qa-files-project', workspaceId='offic
 const input='textarea[aria-label="聊天输入框"]', markdown='.privacy-text pre', phone='13800000000';
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const report={version:provenance.version,sourceCommit:provenance.sourceCommit,exeSha256:hash(await fs.readFile(exe)),
- status:'running',records:[],receipts:[],exits:[],dialogSelection:'synthetic approval and save selection only'};
+ status:'running',records:[],receipts:[],approvals:[],exits:[],dialogSelection:'synthetic save selection only; approvals use trusted CDP pointer clicks on the real inline cards'};
 const reportFile=path.join(evidence,'result.json');
 const persist=()=>fs.writeFile(reportFile,JSON.stringify(report,null,2)+'\n');
 async function record(name,details={}){report.records.push({name,status:'passed',details});await persist();console.log(`PASS ${name}`);}
@@ -38,6 +38,12 @@ const patch=['*** Begin Patch','*** Add File: committed.txt','+committed','*** D
 const expects=[['write',{file_path:'denied.txt',content:'denied'}],'QA_DENIED_END',
  ['read',{file_path:'large.txt',limit:1}],['apply_patch',{input:patch}],'QA_PARTIAL_END',
  ['office_convert',{input:'memo.docx',format:'pdf'}],'QA_OFFICE_END'];
+const canonicalProject=await fs.realpath(project);
+const expectedApprovals=[
+ {toolName:'write',callId:'native-1',operation:'写入项目文本文件',path:path.join(canonicalProject,'denied.txt'),overwrite:false,outcome:'rejected'},
+ {toolName:'apply_patch',callId:'native-4',operation:'应用项目文件补丁',path:'写入 committed.txt\n删除 large.txt\n写入 skipped.txt',overwrite:true,outcome:'allowed-once'},
+ {toolName:'office_convert',callId:'native-6',operation:'转换办公文档',path:path.join(canonicalProject,'memo.pdf'),overwrite:false,outcome:'allowed-once'},
+];
 const server=http.createServer(async(req,res)=>{
  try{
   if(req.method==='GET'&&req.url==='/v1/models')return res.writeHead(200,{'content-type':'application/json'}).end(JSON.stringify({object:'list',data:[{id:model}]}));
@@ -88,14 +94,7 @@ async function launch(){
  const activeProfile=await main.evaluate("process.mainModule.require('electron').app.getPath('userData')");
  assert.equal(path.resolve(activeProfile),path.resolve(profile));
  await main.evaluate(`(()=>{
-  const {dialog}=process.mainModule.require('electron');const observations=[];globalThis.__qaNativeDialogs=observations;
-  const original=dialog.showMessageBox;dialog.showMessageBox=async (owner, options)=>{
-   if(options?.title!=='批准本次文件操作')return original(owner,options);
-   assertUnused();
-   const response=options.detail.includes('denied.txt')?0:1;
-   observations.push({operation:options.message,response});return {response};
-  };
-  function assertUnused(){if(observations.length>4)throw new Error('unexpected repeated approval');}
+  const {dialog}=process.mainModule.require('electron');
   dialog.showSaveDialog=async (_owner,options)=>{
    if(!options.filters?.some(filter=>filter.extensions.includes('md')))throw new Error('Unexpected export format');
    if(globalThis.__qaNativeHold)return new Promise(resolve=>{globalThis.__qaNativeResolve=resolve;});
@@ -121,10 +120,48 @@ async function openChat(){
  await ui.click(await ui.evaluate(`document.querySelector(${JSON.stringify(selector)}).textContent.trim()`),selector);
  await ready();
 }
-async function send(text,marker){
+async function decideExpectedApproval(expected){
+ assert.equal(expected,expectedApprovals[report.approvals.length],'Only the three prescribed approval requests may be decided');
+ await ui.waitFor('!!document.querySelector(".approval-panel .approval-request")',65000);
+ assert.equal(report.fixtureError,undefined);
+ const snapshot=await invoke('approvalSnapshot');
+ assert.equal(snapshot.pending.length,1,'Exactly one native approval is expected');
+ const request=snapshot.pending[0];
+ assert.equal(request.rootSessionId,chatId);
+ assert.equal(request.sourceSessionId,chatId);
+ assert.equal(request.toolName,expected.toolName);
+ assert.equal(request.callId,expected.callId);
+ assert.deepEqual(request.presentation,{operation:expected.operation,path:expected.path,overwrite:expected.overwrite});
+ assert(!report.approvals.some(row=>row.requestId===request.requestId),'An approval request must not be replayed');
+ const active=(await invoke('runHandoffs')).runs.filter(row=>row.runId===request.runId&&row.sessionId===chatId);
+ assert.equal(active.length,1,'Approval must belong to the live original run');
+ assert.equal(active[0].status,'running');
+ const card=`.approval-panel .approval-request[data-approval-request="${request.requestId}"]`;
+ const selector=`${card} .approval-decisions button`;
+ await ui.waitFor(`(()=>{const buttons=[...document.querySelectorAll(${JSON.stringify(selector)})];return buttons.length===2&&buttons.every(button=>!button.disabled);})()`);
+ const shown=await ui.evaluate(`(()=>{
+  const card=document.querySelector(${JSON.stringify(card)});
+  return {operation:card.querySelector('.approval-operation').textContent,
+   path:card.querySelector('[data-approval-field="path"]').textContent,
+   decisions:[...card.querySelectorAll('.approval-decisions button')].map(button=>button.textContent.trim()),
+   modal:!!document.querySelector('.modal')};
+ })()`);
+ assert.deepEqual(shown,{operation:expected.operation,path:expected.path,decisions:['拒绝','仅允许本次'],modal:false});
+ await ui.click(expected.outcome==='rejected'?'拒绝':'仅允许本次',selector);
+ await ui.waitFor(`!document.querySelector(${JSON.stringify(card)})`);
+ assert.equal((await invoke('approvalSnapshot')).pending.some(row=>row.requestId===request.requestId),false);
+ report.approvals.push({hostEpoch:snapshot.hostEpoch,requestId:request.requestId,runId:request.runId,
+  rootSessionId:request.rootSessionId,sourceSessionId:request.sourceSessionId,toolName:request.toolName,
+  callId:request.callId,outcome:expected.outcome,expectedTargetMatched:true,decisionTransport:'trusted CDP pointer',decidedAt:new Date().toISOString()});
+ await persist();
+}
+async function send(text,marker,approval){
+ assert.deepEqual((await invoke('approvalSnapshot')).pending,[],'A previous approval must be settled before sending');
  await ui.fill(input,text);await ui.click('发送消息','.composer button');
+ await decideExpectedApproval(approval);
  await ui.waitFor(`document.querySelector('.transcript')?.textContent.includes(${JSON.stringify(marker)})&&!document.querySelector('button[aria-label=停止生成]')`,65000);
  await saveSettled();assert.equal(report.fixtureError,undefined);
+ assert.deepEqual((await invoke('approvalSnapshot')).pending,[],'No unaccounted approval may remain after a turn');
 }
 const chooseMarkdown=async()=>{
  await ui.click('会话操作');await ui.click('导出聊天文件…','.session-actions-menu button');
@@ -143,25 +180,28 @@ try{
  state.chats.push({id:chatId,workspaceId,projectId,title:'原生文件实包验收',createdAt:Date.now(),messages:[]});
  await invoke('saveWorkspace',state);await ui.send('Page.reload');await ready();await openChat();
 
- await send(`记录拒绝审批；电话 ${phone}`,'QA_DENIED_END');
+ await send(`记录拒绝审批；电话 ${phone}`,'QA_DENIED_END',expectedApprovals[0]);
  assert.equal(report.receipts.length,2);
  await assert.rejects(fs.stat(path.join(project,'denied.txt')), {code:'ENOENT'});
- assert.deepEqual(await main.evaluate('__qaNativeDialogs.map(item=>item.response)'),[0]);
- await record('Windows 当前执行权限触发原生 write 审批，拒绝后未写入',{receipts:2});
+ assert.deepEqual(report.approvals.map(item=>item.outcome),['rejected']);
+ await record('Windows 当前执行权限触发原生 write 审批卡片，真实点击拒绝后未写入',{receipts:2});
 
- await send('批准这一批演练，检查文件停下的位置。','QA_PARTIAL_END');
+ await send('批准这一批演练，检查文件停下的位置。','QA_PARTIAL_END',expectedApprovals[1]);
  assert.equal(report.receipts.length,5);
  assert.match(await fs.readFile(path.join(project,'committed.txt'),'utf8'),/^committed\r?\n?$/);
  assert.deepEqual(await fs.readFile(path.join(project,'large.txt')),large);
  await assert.rejects(fs.stat(path.join(project,'skipped.txt')), {code:'ENOENT'});
- assert.deepEqual(await main.evaluate('__qaNativeDialogs.map(item=>item.response)'),[0,1]);
+ assert.deepEqual(report.approvals.map(item=>item.outcome),['rejected','allowed-once']);
  await record('实际批准的多文件补丁停在第 1/3 步，已写文件保留、后续文件不变',{receipts:5});
 
- await send('把项目里的合成 Word 另存为 PDF。','QA_OFFICE_END');
+ await send('把项目里的合成 Word 另存为 PDF。','QA_OFFICE_END',expectedApprovals[2]);
+ assert.equal(report.receipts.length,7);
  const pdf=await fs.readFile(path.join(project,'memo.pdf'));
  assert.equal(pdf.subarray(0,5).toString(),'%PDF-');assert.deepEqual(await fs.readFile(path.join(project,'memo.docx')),original);
- assert.deepEqual(await main.evaluate('__qaNativeDialogs.map(item=>item.response)'),[0,1,1]);
- await record('Office 转换的真实桌面审批可批准，源文件保持原字节',{receipts:7,pdfSha256:hash(pdf),pdfBytes:pdf.length});
+ assert.deepEqual(report.approvals.map(item=>item.outcome),['rejected','allowed-once','allowed-once']);
+ assert.equal(new Set(report.approvals.map(item=>item.requestId)).size,3);
+ assert.equal(new Set(report.approvals.map(item=>item.runId)).size,3);
+ await record('Office 转换的审批卡片真实点击仅允许本次，源文件保持原字节',{receipts:7,pdfSha256:hash(pdf),pdfBytes:pdf.length});
 
  await closeApp();await launch();await openChat();
  const reopened=await invoke('loadWorkspace');
@@ -194,6 +234,7 @@ try{
  assert.equal(report.receipts.length,7);
  await record('保存对话框打开期间移动会话，旧快照不再允许写盘');
 
+ assert.equal(report.records.length,5);assert.equal(report.receipts.length,7);assert.equal(report.approvals.length,3);
  await closeApp();report.status='passed';await persist();
 }catch(error){report.status='failed';report.error=error.message;await persist();throw error;}
 finally{

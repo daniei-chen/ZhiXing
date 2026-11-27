@@ -134,3 +134,47 @@ test('browser-only initialization does not create a native quit subscription', a
   assert.equal(bindRendererDurability(undefined), undefined);
   assert.equal(bindRendererDurability({}), undefined);
 });
+
+test('global recovery stops live manual runs before awaiting their result and save barrier', async () => {
+  const { registerRendererDurability, recoverRenderer } = await fresh();
+  const pendingApproval = deferred();
+  const order = [];
+  registerRendererDurability(async ({ reason }) => {
+    assert.equal(reason, 'recovery');
+    await pendingApproval.promise;
+    order.push('saved');
+  });
+  await recoverRenderer({
+    runHandoffs: async () => ({
+      runs: [
+        { runId: 'active', status: 'running' },
+        { runId: 'done', status: 'settled' },
+      ],
+    }),
+    cancelRun: async (id) => {
+      assert.equal(id, 'active');
+      order.push('cancelled');
+      pendingApproval.resolve();
+    },
+  });
+  assert.deepEqual(order, ['cancelled', 'saved']);
+});
+
+test('failed host cancellation does not report recovery or discard the durability barrier', async () => {
+  const { registerRendererDurability, recoverRenderer } = await fresh();
+  let saved = 0;
+  registerRendererDurability(async () => {
+    saved++;
+  });
+  const desktop = {
+    runHandoffs: async () => ({ runs: [{ runId: 'active', status: 'running' }] }),
+    cancelRun: async () => {
+      throw new Error('still pending');
+    },
+  };
+  await assert.rejects(recoverRenderer(desktop), /still pending/);
+  assert.equal(saved, 0);
+  desktop.cancelRun = async () => {};
+  await recoverRenderer(desktop);
+  assert.equal(saved, 1);
+});

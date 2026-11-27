@@ -1,0 +1,137 @@
+
+> office-agent@0.43.0 test:components
+> node --test --test-concurrency=1 tests/conversation-resources-ui.test.mjs tests/speech-input.test.mjs tests/delivery-review-ui.test.mjs tests/conversation-recovery-ui.test.mjs tests/conversation-drafts-ui.test.mjs tests/conversation-drafts-native.test.mjs tests/capability-ui.test.mjs tests/sidebar-ui.test.mjs tests/provider-settings-ui.test.mjs tests/error-boundary-ui.test.mjs tests/delivery-preview-ui.test.mjs tests/workbench-tabs-ui.test.mjs tests/qa-cdp-ui.test.mjs tests/runtime-approvals-ui.test.mjs
+
+Error occurred in handler for 'inspect': Error: SYNTHETIC_CHECK_FAILED
+    at C:\Users\runneradmin\AppData\Local\Temp\zhixing-capability-ui-qWC9Hi\main.cjs:4:94
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+{"result":"PASS capability renderer","checks":7,"inspectionCalls":4,"layer":"Windows Electron renderer with synthetic IPC; not final installer/cloud"}
+✔ Windows 内核设置能力状态：真实层级文案、检查失败清空旧结果、配置变化拒绝迟到目录 (3148.944ms)
+PASS 三份新草稿经真实DOM逐份回切，正文/独立附件/原归属和三个顶栏入口正确
+PASS 重新载入持久JSON文件后，三份草稿仍可逐份打开且使用原键
+Error occurred in handler for 'draft-fixture': Error: SYNTHETIC_DRAFT_FAILURE
+    at nativeJourney (C:\Users\runneradmin\AppData\Local\Temp\zhixing-drafts-native-WrTq8q\main.cjs:204:17)
+PASS 首次发送失败无需导航，同页恢复正文附件并绑定实际chat，原new键已消费
+PASS 空项目草稿解析附件期间删除项目，迟到附件不复活，重载后仍无孤儿/删除marker
+PASS 当前目标直接调用原生指令，历史按钮已收起，原草稿和附件保留
+Layer: Windows Electron real App/React/Chromium DOM + synthetic IPC and JSON file; not production main, encrypted vault, installer, Harness or cloud
+Checkpoints: 5; draft opens: 7; page loads: 4; model executions: 0; synthetic runPrepared: 2
+Isolated temporary files are removed after verification.
+Text evidence: D:\a\_temp\zhixing-ci-native\zhixing-drafts-native-WrTq8q
+✔ Windows Electron真实App/DOM：三份新草稿回切及文件重载、首次失败chat归属、删除项目迟到附件 (2112.8942ms)
+✔ 连续新建三份未发送草稿均有可见入口，切回保留正文附件与较新编辑 (38.1561ms)
+✔ 新草稿首次发送失败后归属实际聊天，原地可见，删除聊天不会留下一份新草稿 (9.8719ms)
+✔ 真实JSON文件重载后每份草稿可打开，空间/项目及附件原归属不变，旧键不复制 (9.0135ms)
+✔ 发送失败期间在当前聊天新输入或编辑后清空，旧草稿不能覆盖 (9.9259ms)
+✔ prepareRun期间的新编辑保留在原草稿，失败不能搬走或清空它 (5.0209ms)
+✔ 已打开列表中的旧回调在项目删除后不复活草稿，其他项目和较新编辑保留 (5.8913ms)
+✔ 空项目草稿尚在读取附件时删除项目，迟到解析结果不能恢复已删除草稿 (4.2151ms)
+✔ 关闭持久保存时新草稿仍可在本轮切回，发送到主机的快照无草稿，重载不恢复 (5.6709ms)
+✔ 助手正文先于改动与交付卡片，工具摘要和操作栏各在对应一侧 (4.6491ms)
+✔ 反馈超过备注上限后仍能清除，只禁止保存超限内容 (4.9226ms)
+✔ 连续编辑同一草稿不重新渲染 App 或保存整库，空闲后只提交草稿 (11.1737ms)
+✔ 流式正文不重新渲染 App 或写入工作空间，结束后保存最终正文 (6.2872ms)
+✔ 全局恢复等待旧任务completed完整交接，正文和交付物保存后才可重挂 (7.0118ms)
+✔ 全局恢复等待旧任务failed完整交接，正文和交付物保存后才可重挂 (7.3894ms)
+✔ 全局恢复等待旧任务cancelled完整交接，正文和交付物保存后才可重挂 (6.2237ms)
+✔ App卸载后的旧运行失败不能将恢复草稿写回新App的较新输入 (6.4639ms)
+✔ App卸载后的迟到附件不能覆盖新App的草稿和附件 (5.4875ms)
+✔ App卸载后迟到的prepare结果不得启动旧交办 (5.5061ms)
+✔ 首轮绑定保存尚未完成时卸载App撤销生产者，保存完成也不能启动内核 (4.059ms)
+✔ 首轮绑定保存尚未完成时全局恢复先撤销待启动run，保存完成也不能启动内核 (5.4721ms)
+✔ 完整结果保存失败后主机重试成功必须确认原receipt，ACK失败仍可重试 (7.9875ms)
+✔ 完整结果保存失败后直接保存兼容路径成功必须确认原receipt，ACK失败仍可重试 (6.4084ms)
+✔ 正常退出屏障撤销仍被首次保存阻塞的run，保存最后草稿且不晚启动内核 (5.7481ms)
+✔ 正常退出屏障等待已交给主机的完整结果，不重复取消或用摘要覆盖正文 (7.8346ms)
+✔ 同宿主重载首次读取失败后重试保留活跃回复，接回完整结果且不重跑 (5.5608ms)
+✔ 读取重试期间App已卸载，迟到快照不再接回旧App或覆盖新草稿 (8.5864ms)
+Text evidence: D:\a\_temp\zhixing-ci-native\zhixing-recovery-ui-7m6azQ
+✖ Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试 (2637.3848ms)
+✔ 独立 Windows renderer 验证资源浮层导航、滚动、键盘关闭和焦点恢复 (1060.2619ms)
+✔ 交付预览真实 renderer：安全引用、选择竞态、关闭、会话隔离、重试与提取边界 (1054.3952ms)
+Error occurred in handler for 'delivery:prepare': Error: SYNTHETIC_PREPARE_FAILED
+    at C:\Users\runneradmin\AppData\Local\Temp\zhixing-delivery-review-6ny2NI\main.cjs:9:122
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'delivery:execute': Error: SYNTHETIC_SAVE_FAILED
+    at C:\Users\runneradmin\AppData\Local\Temp\zhixing-delivery-review-6ny2NI\main.cjs:10:108
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+{"result":"PASS delivery renderer","fileAdapters":[{"action":"export","format":"txt","bytes":51},{"action":"export","format":"docx","bytes":9649},{"action":"export","format":"xlsx","bytes":6601},{"action":"share","format":"txt","bytes":51}],"prepareRequests":21,"hostTextAuthorization":false,"synthetic":true}
+✔ R02 真实 Windows renderer：主机快照、四路径文件字节、失效/错误恢复与 demo 范围 (2980.5579ms)
+✔ 真实 React renderer 验证全局/面板异常隔离、隐藏状态、安全诊断及实际恢复 (645.0741ms)
+✔ 供应商全部模型已隐藏时仍可批量恢复，单次IPC完成且更新目录 (4.4739ms)
+▶ 真实 Electron/CDP 点击遵守文字片段、遮挡与控件约束
+  ✔ 换行引用的整体中心未命中时，实际片段仍收到可信鼠标点击 (172.8287ms)
+  ✔ 首片段被真实覆盖时使用仍可命中的下一片段 (157.6171ms)
+  ✔ 覆盖全部片段时拒绝点击且覆盖层也收不到鼠标事件 (5.0827ms)
+  ✔ 视口裁剪后只点击可见部分，完全在视口外时拒绝 (161.5909ms)
+  ✔ 禁用控件保持拒绝且没有鼠标事件 (2.9939ms)
+  ✔ 多个可见同名控件保持拒绝且没有鼠标事件 (2.4065ms)
+✔ 真实 Electron/CDP 点击遵守文字片段、遮挡与控件约束 (938.7215ms)
+✔ 真实 React 审批卡：作用域、一次性决定、重订阅、IME、完整详情与输入保留 (12104.7772ms)
+✔ 项目、置顶、独立及悬空项目聊天分别出现一次，不重复高亮或隐藏旧会话 (18.7699ms)
+✔ mounted VoiceInput isolates stale microphone callbacks and cleans scope, suspension and unmount (1771.4907ms)
+✔ 真实 React 工作面板：九视图、键盘、窄栏焦点、浏览器标签与交付预览插槽 (5165.249ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 44
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35412.3086
+
+✖ failing tests:
+
+test at tests\conversation-recovery-ui.test.mjs:13:1
+✖ Windows App renderer：删除写盘故障重试、失败原地恢复、终态归档、附件追加及自动化仅保存重试 (2637.3848ms)
+  AssertionError [ERR_ASSERTION]: 
+  Error occurred in handler for 'qa': Error: protected synthetic IPC rejection
+      at emitFailure (C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:46:1020)
+      at async C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:55:24
+  PASS 失败后不导航即恢复正文和2个附件，terminal前归档轨迹/成果/子任务
+  PASS 内核清理重试只调用cleanup，不重新执行
+  PASS 从实际合成存储文件重新载入后失败正文/轨迹/清理终态仍在
+  Error occurred in handler for 'qa': Error: protected synthetic IPC rejection
+      at emitFailure (C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:46:1020)
+      at async C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:79:9
+  PASS 失败期间的新输入及空附件不被旧草稿覆盖
+  PASS 资料空间加入第三份资料保留原正文和前2个附件，再次加入不重复
+  PASS 附件读取期间正常打字不使附件generation过期
+  PASS 12个附件满额时明确提示未加入数量且原附件全部保留
+  Error occurred in handler for 'qa': Error: SYNTHETIC_DISK_WRITE_FAILED
+      at C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:15:55
+      at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+      at Session.emit (node:events:514:28)
+  Error occurred in handler for 'qa': Error: SYNTHETIC_DISK_WRITE_FAILED
+      at C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:15:55
+      at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+      at Session.emit (node:events:514:28)
+  Error occurred in handler for 'qa': Error: SYNTHETIC_FORGET_UNCONFIRMED
+      at C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:23:57
+      at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+      at Session.emit (node:events:514:28)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - null
+  
+      at C:\Users\runneradmin\AppData\Local\Temp\zhixing-recovery-ui-7m6azQ\main.cjs:167:85
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/a/ZhiXing/ZhiXing/tests/conversation-recovery-ui.test.mjs:260:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

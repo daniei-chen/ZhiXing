@@ -1,0 +1,40 @@
+{
+  "sha": "0a69d5c84046b04186ff6fa177e714d8d2e6ec0e",
+  "node_id": "C_kwDOV0f3htoAKDBhNjlkNWM4NDA0NmIwNDE4NmZmNmZhMTc3ZTcxNGQ4ZDJlNmVjMGU",
+  "url": "https://api.github.com/repos/daniei-chen/ZhiXing/git/commits/0a69d5c84046b04186ff6fa177e714d8d2e6ec0e",
+  "html_url": "https://github.com/daniei-chen/ZhiXing/commit/0a69d5c84046b04186ff6fa177e714d8d2e6ec0e",
+  "author": {
+    "name": "daniei-chen",
+    "email": "2421873411@qq.com",
+    "date": "2026-11-27T06:49:38Z"
+  },
+  "committer": {
+    "name": "GitHub",
+    "email": "noreply@github.com",
+    "date": "2026-11-27T06:49:38Z"
+  },
+  "tree": {
+    "sha": "b1e06ca5ae74e154be278286f69d0b33774b28b8",
+    "url": "https://api.github.com/repos/daniei-chen/ZhiXing/git/trees/b1e06ca5ae74e154be278286f69d0b33774b28b8"
+  },
+  "message": "Merge feaadaeb575671fa326b9eedd6ac631c7e68f1ce into 7076fe7a694ca772e25fc64f038e3dc909a9baf1",
+  "parents": [
+    {
+      "sha": "7076fe7a694ca772e25fc64f038e3dc909a9baf1",
+      "url": "https://api.github.com/repos/daniei-chen/ZhiXing/git/commits/7076fe7a694ca772e25fc64f038e3dc909a9baf1",
+      "html_url": "https://github.com/daniei-chen/ZhiXing/commit/7076fe7a694ca772e25fc64f038e3dc909a9baf1"
+    },
+    {
+      "sha": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+      "url": "https://api.github.com/repos/daniei-chen/ZhiXing/git/commits/feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+      "html_url": "https://github.com/daniei-chen/ZhiXing/commit/feaadaeb575671fa326b9eedd6ac631c7e68f1ce"
+    }
+  ],
+  "verification": {
+    "verified": true,
+    "reason": "valid",
+    "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJrCSgCCRC1aQ7uu5UhlAAAzFkQAHS/Ub8xBHtUau76T8/R1lI9\nDX7IYmdkZCRNvQA64UMjW2pF/plkag7Pn2SXUN1evy1Dnwfm7foFGf36WXrDqOeC\ne+Z/A++NhiS91KrFszqeJOfKhd7PgidB5k+krHjq0JUc7Ja2XG7Wid3u5cJ1ReUn\njgh8BOa6KTfU+Tm0GwbqHxxVi0LpwZMTSYo2Y4FGY9G3Dn/3emvCsGFeFOiRZCiB\nW7olweHp5zSdAsxPKE/2TUZ9vGTxH55RnOoUlnLkRcDNsSxqTEHenl9wj3aZQ54b\nB7Sgw8LvNNvhhXzFyaqvS0LYI+uHMZlD9R90iNgt2VsPkZqhzeqx0vUoKKp33bMd\n4HTDem4wf/KkKDhYgVymDN4a9yqAPe8StXX3oY/5cYEX2Rigj2QCYLKnbE+ljQCd\nRfULlERzp0aIujPUtJxmHvZOGJVUrkbkQN+7E9E4Bb8BzfGIfhjlTy3ZMBJEm/Fx\nRH+Y7lA36DJhi0DDCR8Qk5hrwqCUYzI6mLx1s+OD0DyKACk3dKSpYSowazvc4ED3\nV19XwzcrxlVOyfuHSnmmWUlt0Q6WT22hqjA3qOGH6V9U4qZKn5EaX0MhXG2+ax42\nAmImZoQzT+tbV7NwEgMoEikNtDGZu175QtYOCeAwlqLEquw5YfdIDCR89fIVF/PN\n73i8wnvtLhPjVCMy6zc5\n=rpjp\n-----END PGP SIGNATURE-----\n",
+    "payload": "tree b1e06ca5ae74e154be278286f69d0b33774b28b8\nparent 7076fe7a694ca772e25fc64f038e3dc909a9baf1\nparent feaadaeb575671fa326b9eedd6ac631c7e68f1ce\nauthor daniei-chen <2421873411@qq.com> 1795762178 +0800\ncommitter GitHub <noreply@github.com> 1795762178 +0800\n\nMerge feaadaeb575671fa326b9eedd6ac631c7e68f1ce into 7076fe7a694ca772e25fc64f038e3dc909a9baf1\n",
+    "verified_at": "2026-11-27T06:49:39Z"
+  }
+}

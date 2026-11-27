@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "version": "0.43.0",
+  "sourceCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "sourceDirty": false,
+  "runId": 45954360110,
+  "jobId": 140357299267,
+  "workflowSha": "0a69d5c84046b04186ff6fa177e714d8d2e6ec0e",
+  "layer": "Windows packaged candidate with real Harness and loopback model fixtures; not a published or installed release",
+  "overallConclusion": "failure",
+  "packedTests": {
+    "tests": 476,
+    "pass": 476,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "durationMs": 559403.7521,
+    "sourceClassificationUnit": "test-files",
+    "sourceClassification": {
+      "package-aware": 46,
+      "mixed-source": 3,
+      "source-only": 1
+    },
+    "boundary": "Packaged EXE runs source test files; fixture generators and test dependencies may come from the checkout. Mixed/source-only helpers do not verify the renderer bundle."
+  },
+  "journeys": {
+    "errors": {
+      "report": "journeys/errors/run-ZWbY50/result.json",
+      "status": "passed",
+      "casesByStatus": {
+        "passed": 7,
+        "observed": 5
+      }
+    },
+    "native": {
+      "report": "journeys/native/run-1W1AaD/result.json",
+      "status": "passed",
+      "casesByStatus": {
+        "passed": 5
+      }
+    },
+    "tools": {
+      "report": "tool-timeline/run-mwymyq6r/result.json",
+      "status": "passed",
+      "casesByStatus": {
+        "passed": 3
+      }
+    },
+    "phase0a": {
+      "report": "journeys/phase0a/phase0a-ui-m7QnkY/result.json",
+      "status": "passed",
+      "casesByStatus": {
+        "passed": 9
+      }
+    },
+    "phase1": {
+      "report": "journeys/phase1/phase1-ui-D2KAHq/result.json",
+      "status": "passed",
+      "casesByStatus": {
+        "passed": 7
+      }
+    },
+    "workbench": {
+      "report": "journeys/workbench/workbench-preview-ui-1m8udA/result.json",
+      "status": "passed",
+      "casesByStatus": {
+        "passed": 10
+      }
+    },
+    "approvals": {
+      "report": "journeys/approvals/approval-recovery-ui-V7ElSh/result.json",
+      "status": "failed",
+      "casesByStatus": {
+        "failed": 1
+      },
+      "passed": 0,
+      "executed": 1,
+      "planned": 13,
+      "notExecuted": 12,
+      "providerRequests": 0,
+      "observedFailure": "Window URL was empty; the launch probe expected zhixing://app/index.html.",
+      "processExits": [
+        {
+          "launch": 1,
+          "code": 0,
+          "signal": null
+        }
+      ],
+      "cleanup": {
+        "processesExited": true,
+        "temporaryRemoved": true
+      },
+      "businessApprovalFlowVerified": false
+    }
+  },
+  "nsisBuilt": true,
+  "signature": {
+    "realCloud": "not run",
+    "executable": "NotSigned",
+    "installer": "NotSigned",
+    "installationLifecycle": "not run"
+  },
+  "artifact": {
+    "id": 15178314910,
+    "zipBytes": 1410853,
+    "zipSha256": "b29f4919789da37ff5e98c776cb248ddf6283b7e5a63b42b6fbbe6cb3c076c1c",
+    "expectedDigestMatchedInDownloadMetadata": true,
+    "checksEntriesIndependentlyVerified": 46,
+    "copiedUnchanged": [
+      "SHA256SUMS-candidate.txt",
+      "app-update.yml",
+      "build-provenance.json",
+      "checks.json",
+      "journeys/approvals/approval-recovery-ui-V7ElSh/app-log-tail.txt",
+      "journeys/approvals/approval-recovery-ui-V7ElSh/failure.png",
+      "journeys/approvals/approval-recovery-ui-V7ElSh/result.json",
+      "journeys/errors/run-ZWbY50/result.json",
+      "journeys/native/run-1W1AaD/result.json",
+      "journeys/phase0a/phase0a-ui-m7QnkY/app-log-tail.txt",
+      "journeys/phase0a/phase0a-ui-m7QnkY/result.json",
+      "journeys/phase1/phase1-ui-D2KAHq/app-log-tail.txt",
+      "journeys/phase1/phase1-ui-D2KAHq/result.json",
+      "journeys/workbench/workbench-preview-ui-1m8udA/app-log-tail.txt",
+      "journeys/workbench/workbench-preview-ui-1m8udA/result.json",
+      "logs/approvals.log",
+      "logs/errors.log",
+      "logs/install.log",
+      "logs/native.log",
+      "logs/nsis.log",
+      "logs/package.log",
+      "logs/packed.log",
+      "logs/phase0a.log",
+      "logs/phase1.log",
+      "logs/tools.log",
+      "logs/verify.log",
+      "logs/workbench.log",
+      "packed-source-manifest.json",
+      "signature-status.json",
+      "tool-timeline/run-mwymyq6r/result.json"
+    ],
+    "successScreenshotsDeferred": 19
+  },
+  "notCovered": [
+    "approval business cases after launch-identity failure",
+    "new Windows run after fixture correction",
+    "installer execution and user installation lifecycle",
+    "real cloud office tasks",
+    "human visual review"
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "version": "0.43.0",
+  "sourceCommit": "b57539c357f29c21b0246cb2443f2144024eb40b",
+  "sourceDirty": false,
+  "runId": 45958375578,
+  "jobId": 140370072465,
+  "workflowSha": "b8ac25431513b02c5dd9ffdbaf8b6fb9e5545f6b",
+  "overallConclusion": "failure",
+  "layer": "Windows packaged candidate with real Harness and synthetic loopback provider; no installer lifecycle or real cloud",
+  "packedTests": {
+    "tests": 476,
+    "pass": 476,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 578542.919,
+    "classificationUnit": "test-files",
+    "sourceClassification": {
+      "package-aware": 46,
+      "mixed-source": 3,
+      "source-only": 1
+    },
+    "boundary": "Packaged EXE runs source test files; fixture generators and test dependencies may come from the checkout. Mixed/source-only helpers do not verify the renderer bundle."
+  },
+  "approvalJourney": {
+    "identityPassed": true,
+    "passedCases": 1,
+    "failedCases": 1,
+    "notExecutedCases": 11,
+    "businessCasesPassed": 0,
+    "failure": "Fixture needs the genuine typed scenario prompt",
+    "transport": {
+      "actualModelPostObserved": true,
+      "minimumActualModelPosts": 1,
+      "totalActualModelPosts": null,
+      "acceptedScenarioRecords": 0,
+      "explanation": "providerRequests is appended only after the scenario matcher. The model POST handler was reached and model/stream checks passed before this failure; an empty accepted list is not zero actual HTTP requests."
+    },
+    "processExits": [
+      {
+        "launch": 1,
+        "code": 0,
+        "signal": null
+      }
+    ],
+    "cleanup": {
+      "processesExited": true,
+      "temporaryRemoved": true
+    }
+  },
+  "journeyReports": {
+    "tool-timeline/run-mwyo9p63/result.json": {
+      "status": "passed",
+      "recordStatuses": {
+        "passed": 3
+      }
+    },
+    "journeys/workbench/workbench-preview-ui-dsPBXO/result.json": {
+      "status": "passed",
+      "recordStatuses": {
+        "passed": 10
+      }
+    },
+    "journeys/phase0a/phase0a-ui-1kfN3I/result.json": {
+      "status": "passed",
+      "recordStatuses": {
+        "passed": 9
+      }
+    },
+    "journeys/native/run-YMGM3q/result.json": {
+      "status": "passed",
+      "recordStatuses": {
+        "passed": 5
+      }
+    },
+    "journeys/errors/run-YZqi4N/result.json": {
+      "status": "passed",
+      "recordStatuses": {
+        "passed": 7,
+        "observed": 5
+      }
+    },
+    "journeys/approvals/approval-recovery-ui-vyk1v3/result.json": {
+      "status": "failed",
+      "recordStatuses": {
+        "passed": 1,
+        "failed": 1
+      }
+    },
+    "journeys/phase1/phase1-ui-eZFqAH/result.json": {
+      "status": "passed",
+      "recordStatuses": {
+        "passed": 7
+      }
+    }
+  },
+  "sourceChecks": {
+    "runId": 45958375606,
+    "jobId": 140370072233,
+    "head": "b57539c357f29c21b0246cb2443f2144024eb40b",
+    "checkout": "b8ac25431513b02c5dd9ffdbaf8b6fb9e5545f6b",
+    "source": {
+      "pass": 691,
+      "tests": 691
+    },
+    "components": {
+      "pass": 45,
+      "tests": 45
+    },
+    "sites": {
+      "pass": 4,
+      "tests": 4
+    },
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "recoveryJourneyRecordsInspected": 11,
+    "layer": "separate Windows source and isolated renderer; does not pass the packaged approval journey"
+  },
+  "archiveVerification": {
+    "packedArtifactId": 15180897073,
+    "packedZipSha256": "e5406d740512503b2859908b1d30a07700a1aceab3dbf517f59cf60eece60431",
+    "packedZipBytes": 1423465,
+    "packedChecksFilesVerified": 46,
+    "sourceArtifactId": 15180250939,
+    "sourceZipSha256": "afd03eba093ea20c4c75b988398e69fff4ce262ece4ba94bd98fae7a7e4f6982",
+    "sourceZipBytes": 41983,
+    "sourceArtifactFilesVerified": 14
+  },
+  "followUp": {
+    "identity": "matcher-follow-up/qa-fix.json",
+    "checkoutCommit": "b57539c357f29c21b0246cb2443f2144024eb40b",
+    "candidateContainedRepair": false,
+    "repairedScriptSha256": "15d87e7a7c9aec606575319d3ff4d1fa7ef9449e1a26a9090dc3dd822c601e44",
+    "matcher": {
+      "passed": 10,
+      "failed": 0,
+      "evidence": "matcher-follow-up/matcher/matcher-negative-probe.json"
+    },
+    "protocol": {
+      "passedScenarios": 4,
+      "failedScenarios": 0,
+      "businessRequests": 9,
+      "rejectedReplayRequests": 4,
+      "receivedModelRequests": 13,
+      "layer": "Linux source RuntimeManager + real Harness + native approval bridge + extracted loopback provider; no Electron, Windows or UI",
+      "evidence": "matcher-follow-up/provider-protocol/verification.json",
+      "rendererReloadVerified": false
+    },
+    "scratchBootstrap": {
+      "failedAttempts": 4,
+      "actualModelRequests": 0,
+      "evidence": "matcher-follow-up/provider-protocol/bootstrap-invalid-probe-config-note.json",
+      "cause": "Scratch reasoningMap was boolean true instead of production mapping; subsequently corrected using actual resolveProvider."
+    },
+    "subsequentWindowsRun": "not run at this archive checkpoint",
+    "originalPackagedConclusionChanged": false
+  }
+}
