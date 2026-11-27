@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import { pid as processId } from 'node:process';
 
 const WINDOWS_RENAME_ERRORS = new Set(['EPERM', 'EACCES', 'EBUSY']);
-async function renameBridgeTemp(temp, file) {
+export async function renameEncryptedTemp(temp, file) {
   let delay = 20;
   for (let retries = 0; ; retries++) {
     try { await fs.rename(temp, file); return; }
@@ -23,7 +23,7 @@ export async function writeBridge(file, key, value) {
   const temp = `${file}.${randomUUID()}.tmp`;
   try {
     await fs.writeFile(temp, Buffer.concat([iv, cipher.getAuthTag(), body]),{mode:0o600});
-    await renameBridgeTemp(temp, file);
+    await renameEncryptedTemp(temp, file);
   } finally { await fs.unlink(temp).catch(()=>{}); }
 }
 

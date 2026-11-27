@@ -1,0 +1,15 @@
+
+Debugger listening on ws://127.0.0.1:49762/51e1c99a-de70-40d3-be43-8eb878cd7dc4
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:49763/devtools/browser/a70cb8e6-0d41-47aa-b96d-dc07799b3c1e
+Debugger attached.
+Error occurred in handler for 'data:save-drafts': Error: EPERM: operation not permitted, rename 'D:\a\_temp\zhixing-release-temp\zhixing-phase1-ui-k4wxfw\profile\zhixing\drafts.bin.e64d63c8-92e5-4d88-a23f-f7abf441813a.tmp' -> 'D:\a\_temp\zhixing-release-temp\zhixing-phase1-ui-k4wxfw\profile\zhixing\drafts.bin'
+    at D:\a\ZhiXing\ZhiXing\release\win-unpacked\resources\app\electron\main.cjs:278:8
+    at async Session.<anonymous> (node:electron/js2c/browser_init:1:119108)
+Error occurred in handler for 'data:load': Error: 工作空间保存失败，仍有更改尚未写入。
+    at D:\a\ZhiXing\ZhiXing\release\win-unpacked\resources\app\electron\main.cjs:278:8
+    at async Session.<anonymous> (node:electron/js2c/browser_init:1:119108)
+Debugger ending on ws://127.0.0.1:49762/51e1c99a-de70-40d3-be43-8eb878cd7dc4
+For help, see: https://nodejs.org/learn/getting-started/debugging
+ZX_PHASE1_QUIT_ACK {"saved":true}

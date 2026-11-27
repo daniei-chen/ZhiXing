@@ -1,0 +1,3 @@
+# Keep the downloaded evidence bytes, including Windows line endings.
+*.json -text -whitespace
+phase1/** -text -whitespace

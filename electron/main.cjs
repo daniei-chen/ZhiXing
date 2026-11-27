@@ -31,10 +31,10 @@ const VOLATILE_TERMS=Symbol('volatileTerms');
 const stagedVisuals=new Map();
 const pendingVisualDeletes=new Set();
 let visualApi,volatileTerms=[];
-async function writeEncrypted(target,text){
+async function writeEncrypted(target,text,replace=fs.rename){
  if(!safeStorage.isEncryptionAvailable())throw new Error('Windows 用户加密不可用，数据没有写入磁盘。');
  const temp=`${target}.${randomUUID()}.tmp`;
- try{await fs.writeFile(temp,safeStorage.encryptString(text));await fs.rename(temp,target);}finally{await fs.unlink(temp).catch(()=>{});}
+ try{await fs.writeFile(temp,safeStorage.encryptString(text));await replace(temp,target);}finally{await fs.unlink(temp).catch(()=>{});}
 }
 async function readEncrypted(target){
  try{return safeStorage.decryptString(await fs.readFile(target));}catch(e){
@@ -99,6 +99,7 @@ async function initialise(){
  const {DeliveryService}=await import('./delivery-service.mjs');
  deliveryService=new DeliveryService({getSettings:()=>workspaceContext.settings,getSecrets:deliverySecrets});
  const {WorkspacePersistence}=await import('./workspace-persistence.mjs');
+ const {renameEncryptedTemp}=await import('../harness/privacy-bridge.mjs');
  workspaceSaveQueue=new WorkspacePersistence({
   initialState:workspaceContext,initialEpoch:persistedWorkspace.epoch,
   write:async({kind,state,body,revision})=>{
@@ -117,7 +118,9 @@ async function initialise(){
     await fs.mkdir(VISUAL_ROOT,{recursive:true});
     await writeEncrypted(visualFile(id),JSON.stringify(record));
    }
-   await writeEncrypted(kind==='workspace'?WORKSPACE_FILE:DRAFTS_FILE,body);
+   // Only retry committing these serialized, already-encrypted snapshots.
+   // The old file stays intact; persistent errors still reach the save queue.
+   await writeEncrypted(kind==='workspace'?WORKSPACE_FILE:DRAFTS_FILE,body,renameEncryptedTemp);
    workspaceContext=kind==='workspace'?JSON.parse(body):{...workspaceContext,drafts:JSON.parse(body).drafts};
    delete workspaceContext.draftEpoch;
    volatileTerms=state.settings?.persist?[]:state[VOLATILE_TERMS]??volatileTerms;

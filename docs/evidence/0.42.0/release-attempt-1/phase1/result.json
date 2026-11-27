@@ -1,0 +1,158 @@
+{
+  "layer": "windows-packaged-app + real-harness + loopback SSE model fixture",
+  "version": "0.42.0",
+  "sourceCommit": "33b36f5d6799001f13a5c946e6331732c8df2709",
+  "sourceDirty": false,
+  "startedAt": "2026-11-27T04:10:55.899Z",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "status": "failed",
+  "cases": [
+    {
+      "name": "packaged EXE opens the isolated profile",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:10:56.174Z",
+      "finishedAt": "2026-11-27T04:10:57.409Z",
+      "version": "0.42.0",
+      "packaged": true,
+      "isolatedProfile": true,
+      "versions": {
+        "electron": "44.11.5",
+        "chrome": "152.0.7977.169",
+        "node": "24.22.3"
+      }
+    },
+    {
+      "name": "real dropped attachment is parsed into the project chat draft",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:10:57.713Z",
+      "finishedAt": "2026-11-27T04:10:59.282Z",
+      "attachmentName": "会议资料.txt",
+      "parsedTextSha256": "b66abd488abfc599f049a9d8fbc5852a4628be86237cf963685eaa6cde0b5abb",
+      "projectId": "qa-phase1-project",
+      "workspaceId": "qa-phase1-workspace"
+    },
+    {
+      "name": "100 continuous characters write bounded drafts without rewriting workspace.bin",
+      "status": "failed",
+      "error": "Error: Error invoking remote method 'data:load': Error: 工作空间保存失败，仍有更改尚未写入。"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "failure.png",
+      "bytes": 64273,
+      "sha256": "baaf600525ddd2f1808ef08256de48d1ff70dfffbdacc3edee9f6e087f4efebb",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    }
+  ],
+  "processExits": [
+    {
+      "launch": 1,
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "providerRequests": [],
+  "visualReview": "pending-human-review",
+  "timing": {
+    "productDebounceMs": 400,
+    "productMaxWaitMs": 2000,
+    "requestedInterKeyMs": 70,
+    "firstWriteToleranceMs": [
+      1500,
+      2500
+    ],
+    "purpose": "CI observation tolerances, not a product latency guarantee."
+  },
+  "boundaries": [
+    "Empty project/chat metadata and provider configuration are seeded through real desktop IPC; text is entered one character at a time through CDP Input.insertText.",
+    "A real temporary text file is dropped through CDP and parsed by the production attachment path.",
+    "All assistant text comes from slow loopback SSE through the real Harness and privacy gateway; no assistant or progress state is injected.",
+    "Read-only observers record prepare-to-quit and its saved acknowledgement; they do not acknowledge or flush on behalf of the application.",
+    "File fingerprints establish observed writes in this bounded fixture, not a benchmark for large databases or all concurrent workloads.",
+    "No installer, upgrade, real cloud model quality, user installation, cross-account migration or complete visual audit is covered."
+  ],
+  "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3",
+  "error": "Error: Error: Error invoking remote method 'data:load': Error: 工作空间保存失败，仍有更改尚未写入。\n    at Object.evaluate (file:///D:/a/ZhiXing/ZhiXing/scripts/qa-cdp.mjs:34:42)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase1-ui.mjs:567:24\n    at async until (file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase1-ui.mjs:115:20)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase1-ui.mjs:566:21\n    at async check (file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase1-ui.mjs:100:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-phase1-ui.mjs:523:3",
+  "persistenceEvents": [
+    {
+      "time": "2026-11-27T04:10:57.317Z",
+      "kind": "workspace",
+      "bytes": 1244,
+      "revision": 1
+    },
+    {
+      "time": "2026-11-27T04:10:57.438Z",
+      "kind": "workspace",
+      "bytes": 1867,
+      "revision": 2
+    },
+    {
+      "time": "2026-11-27T04:10:57.511Z",
+      "kind": "workspace",
+      "bytes": 1901,
+      "revision": 3
+    },
+    {
+      "time": "2026-11-27T04:10:57.561Z",
+      "kind": "workspace",
+      "bytes": 1901,
+      "revision": 4
+    },
+    {
+      "time": "2026-11-27T04:10:58.606Z",
+      "kind": "drafts",
+      "bytes": 553,
+      "revision": 5
+    },
+    {
+      "time": "2026-11-27T04:11:01.946Z",
+      "kind": "drafts",
+      "bytes": 632,
+      "revision": 6
+    },
+    {
+      "time": "2026-11-27T04:11:03.978Z",
+      "kind": "drafts",
+      "bytes": 710,
+      "revision": 7
+    },
+    {
+      "time": "2026-11-27T04:11:03.982Z",
+      "kind": "drafts",
+      "bytes": 713,
+      "revision": 8
+    },
+    {
+      "time": "2026-11-27T04:11:06.072Z",
+      "kind": "drafts",
+      "bytes": 791,
+      "revision": 9
+    },
+    {
+      "time": "2026-11-27T04:11:07.759Z",
+      "kind": "drafts",
+      "bytes": 855,
+      "revision": 11
+    },
+    {
+      "time": "2026-11-27T04:11:07.762Z",
+      "kind": "workspace",
+      "bytes": 2679,
+      "revision": 12
+    }
+  ],
+  "cleanup": {
+    "processesExited": true,
+    "temporaryRemoved": true
+  },
+  "fixtureError": null,
+  "finishedAt": "2026-11-27T04:11:07.877Z"
+}

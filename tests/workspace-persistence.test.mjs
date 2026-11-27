@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -8,6 +9,11 @@ const { WorkspacePersistence, loadWorkspacePersistence } = await import(
   packed
     ? pathToFileURL(path.join(packed, 'electron/workspace-persistence.mjs')).href
     : '../electron/workspace-persistence.mjs'
+);
+const { renameEncryptedTemp } = await import(
+  packed
+    ? pathToFileURL(path.join(packed, 'harness/privacy-bridge.mjs')).href
+    : '../harness/privacy-bridge.mjs'
 );
 
 const draft = (text, revision = 1) => ({
@@ -294,6 +300,142 @@ test('failed overlay saves retain their revision and retry persistence without r
   assert.equal(app.writes[0].body, app.writes[1].body);
   assert.equal(app.writes[1].revision, 1);
   assert.equal((await app.read()).state.drafts.one.text, 'retry me');
+});
+
+test('shared atomic replacement keeps the draft commit and following full save in one queue', async (t) => {
+  const entered = deferred(),
+    releaseFirst = deferred(),
+    retried = deferred(),
+    releaseRetry = deferred();
+  const attempts = [];
+  const fault = Object.assign(new Error('Synthetic temporary Windows sharing violation'), {
+    code: 'EPERM',
+  });
+  t.mock.method(fs, 'rename', async (temp, target) => {
+    attempts.push({ temp, target });
+    if (attempts.length === 1) {
+      entered.resolve();
+      await releaseFirst.promise;
+      if (process.platform === 'win32') throw fault;
+    } else if (target === 'drafts.bin') {
+      retried.resolve();
+      await releaseRetry.promise;
+    }
+  });
+  const app = fixture({
+    beforeWrite: (commit) =>
+      renameEncryptedTemp(`encrypted-${commit.kind}.tmp`, `${commit.kind}.bin`),
+  });
+  const baseline = app.baseline;
+  const first = app.persistence.saveDrafts({ one: draft('first', 2) });
+  await entered.promise;
+  const full = app.persistence.saveWorkspace(
+    workspace({ one: draft('middle', 3) }, { projects: [{ id: 'must-survive' }] }),
+  );
+  const latest = app.persistence.saveDrafts({ one: draft('latest', 4) });
+  let acknowledged = false;
+  const flushing = app.persistence.flush().then(() => {
+    acknowledged = true;
+  });
+  const pending = Promise.all([first, full, latest, flushing]);
+  try {
+    assert.equal(app.writes.length, 1);
+    assert.equal(app.baseline, baseline);
+    assert.equal(app.overlay, null);
+    assert.equal(app.persistence.epoch, 'baseline');
+    assert.equal(app.persistence.state().persistedRevision, 0);
+    assert.equal(acknowledged, false);
+    releaseFirst.resolve();
+    if (process.platform === 'win32') {
+      await retried.promise;
+      assert.equal(app.writes.length, 1, 'a rename retry must not rerun the commit producer');
+      assert.equal(app.persistence.epoch, 'baseline');
+      assert.equal(app.persistence.state().persistedRevision, 0);
+      assert.equal(acknowledged, false);
+      assert.deepEqual(attempts[1], attempts[0], 'retry commits the same encrypted temporary file');
+    }
+    releaseRetry.resolve();
+    await pending;
+    assert.deepEqual(
+      app.writes.map((commit) => [commit.kind, commit.revision]),
+      [
+        ['drafts', 1],
+        ['workspace', 3],
+      ],
+    );
+    assert.equal(attempts.length, process.platform === 'win32' ? 3 : 2);
+    assert.equal(app.persistence.epoch, 'epoch-1');
+    assert.deepEqual(app.persistence.state(), {
+      status: 'saved',
+      requestedRevision: 3,
+      persistedRevision: 3,
+    });
+    assert.equal(acknowledged, true);
+    const loaded = (await app.read()).state;
+    assert.deepEqual(loaded.projects, [{ id: 'must-survive' }]);
+    assert.equal(loaded.drafts.one.text, 'latest');
+  } finally {
+    releaseFirst.resolve();
+    releaseRetry.resolve();
+    await Promise.allSettled([pending]);
+  }
+});
+
+test('exhausted shared replacement retains the durable draft and requires an explicit persistence retry', async (t) => {
+  const fault = Object.assign(new Error('Synthetic persistent Windows sharing violation'), {
+    code: 'EPERM',
+  });
+  let occupied = true;
+  const attempts = [];
+  t.mock.method(fs, 'rename', async (temp, target) => {
+    attempts.push({ temp, target });
+    if (occupied) throw fault;
+  });
+  const app = fixture({
+    state: workspace({ one: draft('durable baseline') }),
+    beforeWrite: (commit) =>
+      renameEncryptedTemp(`encrypted-${commit.kind}.tmp`, `${commit.kind}.bin`),
+  });
+  const previous = JSON.stringify({
+    version: 1,
+    draftEpoch: 'baseline',
+    drafts: { one: draft('durable overlay') },
+  });
+  app.overlay = previous;
+  const baseline = app.baseline;
+  await assert.rejects(
+    app.persistence.saveDrafts({ one: draft('pending edit', 2) }),
+    (error) => error === fault,
+  );
+  await assert.rejects(app.persistence.flush(), { code: 'EPERM' });
+  assert.equal(app.baseline, baseline);
+  assert.equal(app.overlay, previous);
+  assert.equal((await app.read()).state.drafts.one.text, 'durable overlay');
+  assert.equal(app.persistence.epoch, 'baseline');
+  assert.deepEqual(app.persistence.state(), {
+    status: 'failed',
+    requestedRevision: 1,
+    persistedRevision: 0,
+    errorCode: 'EPERM',
+  });
+  assert.equal(app.writes.length, 1);
+  assert.equal(attempts.length, process.platform === 'win32' ? 9 : 1);
+  for (const attempt of attempts) assert.deepEqual(attempt, attempts[0]);
+  occupied = false;
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(app.writes.length, 1, 'releasing the handle does not silently retry a failed save');
+  assert.equal(app.persistence.state().status, 'failed');
+  await app.persistence.retry();
+  assert.equal(app.writes.length, 2);
+  assert.equal(app.writes[1].body, app.writes[0].body);
+  assert.equal(app.writes[1].revision, 1);
+  assert.equal(app.baseline, baseline);
+  assert.equal((await app.read()).state.drafts.one.text, 'pending edit');
+  assert.deepEqual(app.persistence.state(), {
+    status: 'saved',
+    requestedRevision: 1,
+    persistedRevision: 1,
+  });
 });
 
 test('a crash after full baseline replacement leaves the stale overlay harmless and retryable', async () => {
