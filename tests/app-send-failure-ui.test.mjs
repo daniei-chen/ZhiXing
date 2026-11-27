@@ -26,7 +26,10 @@ async function exerciseWindow(window) {
         JSON.stringify(field) +
         ')?.value,toast:document.querySelector(".toast.error span")?.textContent||"",save:document.querySelector(".workspace-save-banner")?.dataset.saveStatus})',
     );
-    throw new Error('Timeout: ' + label + '\n' + tail);
+    const extra = await run(
+      'window.zhixing.appQA.snapshot().then(v=>JSON.stringify({queued:(v.saved.queuedMessages||[]).map(i=>i.text),prepares:v.prepares.length,runs:v.runs.length,held:v.held}))',
+    );
+    throw new Error('Timeout: ' + label + '\n' + tail + '\n' + extra);
   };
   const field = 'textarea[aria-label="聊天输入框"]';
   const q = (expression) => 'window.zhixing.appQA.snapshot().then(v=>' + expression + ')';
@@ -109,7 +112,7 @@ async function exerciseWindow(window) {
   assert.match(await chips(), /合成附件\.pdf/);
   assert.deepEqual(await bubbles(), ['上一轮交办']);
   state = await qa();
-  assert.equal(state.prepares.length, 2, 'both direct sends reached the host preflight');
+  assert.equal(state.prepares.length, 2, 'both rejected direct sends reached the host preflight');
   assert.equal(state.runs.length, 0, 'a rejected begin must not leave a run behind');
   console.log('PASS 宿主拒绝启动时直发草稿同样回到输入框，不静默丢失');
 
@@ -131,6 +134,36 @@ async function exerciseWindow(window) {
   );
   console.log('PASS 两次失败之后发送恢复正常，记录里只有真正被接受的那件交办');
 
+  await wait(
+    '!document.querySelector(\'button[aria-label="停止生成"]\')',
+    'the accepted run settles before the next submission',
+  );
+
+  // E. 保存还没落定就继续输入，随后保存被拒：原始交办不能连文本一起消失。
+  await run('window.zhixing.appQA.holdSaveOnText(' + JSON.stringify('保存期间打字') + ')');
+  await type('保存期间打字');
+  await pressEnter();
+  await wait(q('v.held===true'), 'the anchoring save is still pending');
+  await type('后来打的字');
+  await wait(
+    'document.querySelector(' + JSON.stringify(field) + ').value===' + JSON.stringify('后来打的字'),
+    'typing during the save stays in the composer',
+  );
+  await run('window.zhixing.appQA.releaseSave()');
+  await wait(
+    '(document.querySelector(' + JSON.stringify(field) + ').value||"").includes("保存期间打字")',
+    'the rejected submission rejoins the composer',
+  );
+  assert.match(await value(), /后来打的字/, 'what the user typed meanwhile is kept');
+  assert.match(await toast(), /未发送/);
+  assert.match(await toast(), /接回输入框/, 'the toast says where the text went');
+  assert.deepEqual(
+    await bubbles(),
+    ['上一轮交办', '恢复后的交办'],
+    'the rejected submission leaves no bubble behind',
+  );
+  console.log('PASS 保存期间继续输入、随后保存被拒：原始交办接回输入框，不连文本一起消失');
+
   // D. 新聊天里的第一条交办被拒：草稿键会从 new: 换到 chat:，文字同样要回来。
   await run(
     '(()=>{if(!document.querySelector(".sidebar"))document.querySelector(\'[aria-label="展开侧栏"]\')?.click();})()',
@@ -141,7 +174,7 @@ async function exerciseWindow(window) {
   await run('window.zhixing.appQA.failNextBegin()');
   await type('新聊天里的失败');
   await pressEnter();
-  await wait(q('v.prepares.length===3'), 'the third preflight ran');
+  await wait(q('v.prepares.length===5'), 'the fifth preflight ran');
   await wait(
     'document.querySelector(' +
       JSON.stringify(field) +
@@ -186,7 +219,7 @@ test('直发失败：草稿与附件回到输入框，失败可见', { timeout: 
       `const {contextBridge,ipcRenderer}=require('electron');
 const methods=['loadWorkspace','saveWorkspace','saveDrafts','runtimeStatus','runtimeCleanupStatus','retryRuntimeCleanup','listAutomations','retryAutomationSave','forgetSession','removeAutomation','prepareRun','runPrepared','beginRun','runHandoffs','awaitRunHandoff','acknowledgeRunHandoff','questionSnapshot','workspaceSaveStatus','retryWorkspaceSave','loadFeedback','listMcp','browserState','browserLayout','windowControl','speechStatus','pickFiles','approvalSnapshot','runStatus'];
 const api=Object.fromEntries(methods.map(name=>[name,(...args)=>ipcRenderer.invoke('qa',name,args)]));
-api.appQA={snapshot:()=>ipcRenderer.invoke('qa','snapshot'),finish:index=>ipcRenderer.invoke('qa','finish',index),failNextBegin:()=>ipcRenderer.invoke('qa','failNextBegin'),failSaveOnText:text=>ipcRenderer.invoke('qa','failSaveOnText',[text]),clearFailSave:()=>ipcRenderer.invoke('qa','clearFailSave')};
+api.appQA={snapshot:()=>ipcRenderer.invoke('qa','snapshot'),finish:index=>ipcRenderer.invoke('qa','finish',index),failNextBegin:()=>ipcRenderer.invoke('qa','failNextBegin'),failSaveOnText:text=>ipcRenderer.invoke('qa','failSaveOnText',[text]),clearFailSave:()=>ipcRenderer.invoke('qa','clearFailSave'),holdSaveOnText:text=>ipcRenderer.invoke('qa','holdSaveOnText',[text]),releaseSave:()=>ipcRenderer.invoke('qa','releaseSave')};
 for(const name of ['RuntimeEvent','WorkspaceSaveState','PrepareToQuit','AutomationChange','BrowserChange','SpeechEvent','ApprovalsChanged'])api['on'+name]=callback=>{const listener=(_,value)=>callback(value);ipcRenderer.on(name,listener);return()=>ipcRenderer.removeListener(name,listener);};
 contextBridge.exposeInMainWorld('zhixing',api);`,
     );
@@ -203,6 +236,8 @@ const seed={version:2,workspaceId:'office-home',workspaces:[{id:'office-home',na
 let stored=structuredClone(seed);
 let failBegin=false;
 let failSaveText='';
+let holdSaveText='';
+let releaseHeld=null;
 const prepares=[],runs=[];
 // 合成宿主自己负责落盘：串行化写入并保证原子替换，退出前再确认一次，
 // 否则并发写入与 app.exit 重叠时读到的可能是被截断的空文件。
@@ -220,8 +255,14 @@ ipcMain.handle('qa',async(_,name,args)=>{
  if(name==='loadWorkspace')return stored;
  if(name==='saveWorkspace'){
   const snapshot=args[0];
-  const rejected=failSaveText&&(snapshot.chats||[]).some(chat=>(chat.messages||[]).some(message=>message.role==='user'&&message.text===failSaveText));
-  if(rejected)throw new Error('合成工作空间保存失败：EPERM');
+  const carries=text=>!!text&&(snapshot.chats||[]).some(chat=>(chat.messages||[]).some(message=>message.role==='user'&&message.text===text));
+  if(carries(holdSaveText)){
+    holdSaveText='';
+    await new Promise(resolve=>{releaseHeld=resolve;});
+    releaseHeld=null;
+    throw new Error('合成工作空间保存失败：EPERM');
+  }
+  if(carries(failSaveText))throw new Error('合成工作空间保存失败：EPERM');
   stored=structuredClone(snapshot);await persist(stored);return {saved:true};
  }
  if(name==='saveDrafts')return {saved:true};
@@ -246,6 +287,8 @@ ipcMain.handle('qa',async(_,name,args)=>{
  if(name==='failNextBegin'){failBegin=true;return true;}
  if(name==='failSaveOnText'){failSaveText=String(args[0]||'');return true;}
  if(name==='clearFailSave'){failSaveText='';return true;}
+ if(name==='holdSaveOnText'){holdSaveText=String(args[0]||'');return true;}
+ if(name==='releaseSave'){releaseHeld?.();return true;}
  if(name==='beginRun'){
    if(failBegin){failBegin=false;throw new Error('合成主机拒绝了本次启动。');}
    const entry={identity:{hostEpoch:'qa',runId:args[0].runId,sessionId:prepares.at(-1).sessionId,replyId:args[0].replyId,receiptId:'receipt-'+args[0].runId},settled:false};
@@ -260,7 +303,7 @@ ipcMain.handle('qa',async(_,name,args)=>{
  }
  if(name==='acknowledgeRunHandoff')return {acknowledged:true};
  if(name==='runPrepared')return {text:'合成答复',masked:'合成答复',privacyMode:'redact'};
- if(name==='snapshot')return {prepares:prepares.map(item=>({sessionId:item.sessionId,prompt:item.prompt})),runs:runs.map(item=>({settled:item.settled})),saved:stored};
+ if(name==='snapshot')return {prepares:prepares.map(item=>({sessionId:item.sessionId,prompt:item.prompt})),runs:runs.map(item=>({settled:item.settled})),held:releaseHeld!==null,saved:stored};
  if(name==='finish'){const index=Array.isArray(args)?args[0]:args;const entry=runs[index];if(!entry)throw new Error('run not found');if(entry.settled)return true;entry.settled=true;entry.release();return true;}
  return {};
 });
@@ -304,7 +347,7 @@ app.whenReady().then(async()=>{
     const code = await exited;
     assert.equal(spawnError, undefined, String(spawnError));
     assert.equal(code, 0, output);
-    assert.equal((output.match(/PASS /g) || []).length, 4, output);
+    assert.equal((output.match(/PASS /g) || []).length, 5, output);
     // 失败的两段交办一次都不能落进记录，只有被接受的那件留在聊天里。
     const saved = JSON.parse(await readFile(path.join(directory, 'workspace.json'), 'utf8'));
     const chat = saved.chats.find((item) => item.id === 'chat-a');
@@ -314,7 +357,12 @@ app.whenReady().then(async()=>{
       ['上一轮交办', '上一轮答复', '恢复后的交办', '合成答复'],
     );
     const restored = saved.drafts['chat:chat-a'];
-    assert.equal(restored?.text, '', 'the accepted submission consumes the draft');
+    assert.match(
+      restored?.text || '',
+      /保存期间打字/,
+      'the recovered text is persisted in the chat draft',
+    );
+    assert.match(restored?.text || '', /后来打的字/, 'the typing made during the save is kept too');
   } finally {
     if (child && child.exitCode === null) {
       child.kill();

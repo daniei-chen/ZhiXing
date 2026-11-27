@@ -1157,8 +1157,31 @@ export function App() {
             inputRef.current = next.text; filesRef.current = next.files;
             setInputValue(next.text); setFilesValue(next.files);
           }
+          return next;
         }
       }
+      return null;
+  }
+
+  // 保存还没落定，草稿槽就可能被这段新输入占用（再打一段字或按回车排队），
+  // recoverSubmittedDraft 的 revision 守卫因此拒绝还原。这里把没送出的那段接到
+  // 当前草稿后面，与「编辑排队消息」同一做法：用户正在打的内容在前，原交办在后。
+  function rejoinRejectedDraft(draft, recovery) {
+    const current = draftMap.current[recovery.draftKey];
+    if (!current) return null;
+    const text = draft.restoreText ?? draft.text ?? '';
+    const files = (draft.attachments || []).filter(file => !(current.files || []).some(row => row.id === file.id));
+    if (!String(text).trim() && !files.length) return null;
+    const next = persistDraft(recovery.draftKey, {
+      text: [current.text, text].filter(value => value && value.trim()).join('\n'),
+      files: [...(current.files || []), ...files],
+    }, current.revision);
+    if (!next) return null;
+    if (activeDraftKey.current === recovery.draftKey) {
+      inputRef.current = next.text; filesRef.current = next.files;
+      setInputValue(next.text); setFilesValue(next.files);
+    }
+    return next;
   }
 
   async function startReply(draft, preview, demo = false, { silent = false, onAccepted, reportFailure = true } = {}) {
@@ -1236,7 +1259,8 @@ export function App() {
           // 宿主从未接手（保存失败、begin 被拒）：草稿在被消费的那一刻就没了，
           // 先把它还给输入框，再撤回这次乐观追加的用户/助手双气泡。排队消息也
           // 一律撤回，否则队列重试时同一段交办会在记录里出现两次。
-          restoreFailedSubmission(draft, recovery, job);
+          let restored = restoreFailedSubmission(draft, recovery, job);
+          if (!restored && recovery) restored = rejoinRejectedDraft(draft, recovery);
           const rollback = {
             ...latest.current,
             chats: latest.current.chats
@@ -1247,7 +1271,10 @@ export function App() {
           if (draftProducersLive.current) setState(rollback);
           // 气泡被撤回了，失败原因必须另外呈现。排队消息由队列自己带着上下文报，
           // 直接发送没有别的出口，就在这里给出与发送失败一致的提示。
-          if (reportFailure) setToast(`未发送：${job.failureMessage}`, 'error');
+          // 内容没能接回输入框时必须直说，不能让「未发送」听上去像什么都在。
+          if (reportFailure) setToast(restored
+            ? `未发送：${job.failureMessage}刚才没送出的内容已接回输入框。`
+            : `未发送：${job.failureMessage}刚才输入的内容没能恢复，请重新输入。`, 'error');
         }
       } else {
         const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;
