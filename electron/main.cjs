@@ -359,7 +359,7 @@ function registerHandlers(){
  });
  handle('terminal:action',async options=>{await workspaceSaveQueue.flush();const scope=workScope(options);if(!scope.workspaceRoot)throw new Error('请先在项目设置中选择工作区，再打开终端。');return terminalService.request({...options,scope:scope.key,cwd:await fs.realpath(scope.workspaceRoot)});});
  handle('workspace:list-files',async options=>{await workspaceSaveQueue.flush();const {listWorkspaceFiles}=await import('./workspace-files.mjs');return listWorkspaceFiles(workScope(options).workspaceRoot,options.path||'');});
- handle('workspace:list-references',async options=>{const {listReferenceFiles}=await import('./file-references.mjs');return listReferenceFiles(workScope(options).workspaceRoot);});
+ handle('workspace:list-references',async options=>{await workspaceSaveQueue.flush();const {listReferenceFiles}=await import('./file-references.mjs');return listReferenceFiles(workScope(options).workspaceRoot);});
  handle('workspace:watch',async options=>{await ensureServices();const scope=workScope(options);
   if(!scope.workspaceRoot)return {watching:false,scope:scope.key};
   return {watching:fileWatcher.watch(scope.key,scope.workspaceRoot),scope:scope.key};});

@@ -116,6 +116,13 @@ window.mentionQA = {
   caret() {
     return field().selectionStart;
   },
+  setCaret(index) {
+    // 真实用户是点一下或按方向键移动光标，这里派发同一条 keyup 路径。
+    const element = field();
+    element.focus();
+    element.setSelectionRange(index, index);
+    element.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft', bubbles: true }));
+  },
   rows() {
     return [...document.querySelectorAll('.mention-palette [role="option"]')].map(
       (node) => node.textContent,

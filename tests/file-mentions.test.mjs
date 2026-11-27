@@ -100,6 +100,23 @@ test('没有记号时插入不改动草稿，重复插入同一记号不叠加',
   );
 });
 
+test('光标停在已有引用中间时，替换整段记号而不是只替换到光标', () => {
+  const text = '复核 @src/App.jsx 的布局';
+  const token = activeMention(text, 9);
+  assert.equal(token?.query, 'src/A', '查询仍然只取光标之前的部分');
+  const applied = applyMention(text, token, { path: 'src/App.jsx', kind: 'file' });
+  assert.equal(applied.text, '复核 @src/App.jsx 的布局', '不会留下  p.jsx 这种半截后缀');
+  assert.equal(applied.caret, 3 + '@src/App.jsx'.length);
+});
+
+test('引号形式的引用从中间补全时连结束引号一起替换', () => {
+  const text = '看 @"docs/带 空格 的名字.md" 之后';
+  const token = activeMention(text, 12);
+  assert.equal(token?.quoted, true);
+  const applied = applyMention(text, token, { path: 'docs/带 空格 的名字.md', kind: 'file' });
+  assert.equal(applied.text, '看 @"docs/带 空格 的名字.md" 之后');
+});
+
 test('含空格的路径按上游语法加引号，目录保留尾斜杠', () => {
   assert.equal(formatMention({ path: 'src/App.jsx', kind: 'file' }, false), '@src/App.jsx');
   assert.equal(

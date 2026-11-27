@@ -83,6 +83,30 @@ async function exerciseWindow(window) {
   assert.equal(await run('window.mentionQA.caret()'), '复核 @src/App.jsx '.length);
   console.log('PASS arrow keys move the highlight and Enter inserts the relative path');
 
+  // 索引只服务一次 @ 记号：插入候选后新打一个 @ 必须重新向主机要索引，
+  // 这样交办中新写或删掉的文件不会永远停留在旧列表里。
+  const listedBeforeSecond = (await calls()).filter((call) => call.name === 'list').length;
+  await type('复核 @src/App.jsx 之后再看 @sr');
+  assert.equal(await palette(), true);
+  assert.equal(
+    (await calls()).filter((call) => call.name === 'list').length,
+    listedBeforeSecond + 1,
+    '新开一个 @ 记号重新列一次工作区',
+  );
+  console.log('PASS each new @ refetches the index instead of reusing the old one');
+
+  // 光标停在已有引用中间时补全，不能把原路径的后半截留在草稿里。
+  await run('window.mentionQA.reset()');
+  await settle();
+  await type('复核 @src/App.jsx 的布局');
+  assert.equal(await palette(), false, '光标在文本末尾时记号已结束');
+  await run('window.mentionQA.setCaret(9)');
+  await settle();
+  assert.equal(await palette(), true, '光标移进已有引用时重新给出候选');
+  await press('Enter');
+  assert.equal(await value(), '复核 @src/App.jsx 的布局', '整段记号被替换，没有残留 .jsx');
+  console.log('PASS completing inside an existing mention replaces the whole token');
+
   // Esc 关闭；继续打同一个记号会重新展开；插入后仍可继续编辑。
   await run('window.mentionQA.reset()');
   await settle();
@@ -232,7 +256,7 @@ app.whenReady().then(async()=>{
       const code = await exited;
       assert.equal(spawnError, undefined, String(spawnError));
       assert.equal(code, 0, output);
-      assert.equal((output.match(/PASS /g) || []).length, 7, output);
+      assert.equal((output.match(/PASS /g) || []).length, 9, output);
     } finally {
       if (child && child.exitCode === null) {
         child.kill();
