@@ -39,6 +39,8 @@ import { restoreNotice, exportNote, sumUnrestored } from './privacy-warning.js';
 import { applyAutomationResults } from './automation-core.js';
 import { acceptsGoalImages, formatSessionCommand, parseSessionCommand } from './session-commands.js';
 import { FEEDBACK_CATEGORIES, FEEDBACK_NOTE_MAX_BYTES, feedbackFor, feedbackLabel, noteBytes } from './message-feedback.js';
+import { enqueueMessage, nextQueued, patchQueued, queuedFor, removeQueued } from './message-queue.js';
+import { fallbackTitle } from './session-title.js';
 
 const desktop = window.zhixing;
 const uuid = () => crypto.randomUUID();
@@ -78,6 +80,9 @@ export function App() {
   const [settingsPage, setSettingsPage] = useState(null);
   const [questions,setQuestions]=useState([]);
   const approvals = useRuntimeApprovals();
+  const [queue,setQueue]=useState([]);
+  const queueRef = useRef([]);
+  const queueBusy = useRef(false);
   const [toast, setToastState] = useState(null);
   const [deliverableBusy, setDeliverableBusy] = useState({});
   const [reviewPath, setReviewPath] = useState("");
@@ -143,7 +148,7 @@ export function App() {
 
   function workspaceSnapshot(current = latest.current) {
     return current.settings.persist ? { ...current, drafts: draftMap.current }
-      : { ...current, chats: [], documents: [], drafts: {}, automations: [], settings: { ...current.settings, customTerms: [] } };
+      : { ...current, chats: [], documents: [], drafts: {}, queuedMessages: [], automations: [], settings: { ...current.settings, customTerms: [] } };
   }
 
   function publishDrafts() {
@@ -253,6 +258,10 @@ export function App() {
     latest.current = initial;
     draftMap.current = initial.settings.persist ? initial.drafts || {} : {};
     draftSlices.replace(draftMap.current);
+    // A save-retry reload keeps locally queued messages; a normal load adopts the saved queue.
+    initial.queuedMessages = preserveLocalDrafts ? queueRef.current : initial.settings.persist ? initial.queuedMessages || [] : [];
+    queueRef.current = initial.queuedMessages;
+    setQueue(initial.queuedMessages);
     const restored = liveChat
       ? { section: 'home', chatId: liveChat.id, projectId: liveChat.projectId || null }
       : restoredDraftView(initial) ||
@@ -638,6 +647,15 @@ export function App() {
     return () => window.removeEventListener('keydown', shortcut);
   });
 
+  // 本轮结束后自动发送当前聊天的队头。只处理正在看的聊天；用户切走后
+  // 队列保留，回来时继续，避免在后台对看不见的会话连续执行。
+  useEffect(() => {
+    if (!loaded || storageFailed.current || busy || queueBusy.current || active.current || running) return;
+    const head = nextQueued(queueRef.current, { chatId, workspaceId: state.workspaceId });
+    if (head) void dispatchQueued(head.id);
+    // dispatchQueued 读的是最新 refs；真正需要触发重算的是队列、运行态与当前聊天。
+  }, [queue, running, busy, loaded, chatId, state.workspaceId]);
+
   function setSetting(name, value) {
     if(name==='persist'&&!value&&active.current){setToast('请先停止正在运行的任务，再关闭本地保存。');return;}
     setState(current => {
@@ -918,8 +936,130 @@ export function App() {
     else if(command==='/skills'){setCustomTab('skills');navigate('skills');}
   }
 
+  function publishQueue(next) {
+    queueRef.current = next;
+    setQueue(next);
+    // 排队内容与聊天同属加密工作空间；先更新内存快照，再走现有保存队列，
+    // 避免刷新或退出后把已经排好的交办静默丢掉。
+    const snapshot = { ...latest.current, queuedMessages: next };
+    latest.current = snapshot;
+    setState(current => ({ ...current, queuedMessages: next }));
+    if (!loadedRef.current || storageFailed.current || !snapshot.settings?.persist) return;
+    void persistWorkspaceSnapshot(snapshot).catch(error => setWorkspaceSave(previous => ({ ...previous, status: 'failed', errorCode: errorText(error) || 'WORKSPACE_SAVE_FAILED' })));
+  }
+
+  // 运行中按发送先落到队里，不打断当前交办。队列按聊天隔离并随加密工作空间保存；
+  // 恢复后条目带「上次退出时未发送」标记，必须由用户确认才重试，不会静默重放。
+  function queueCurrentDraft() {
+    const key = activeDraftKey.current;
+    const draft = draftMap.current[key] || { text: inputRef.current, files: filesRef.current };
+    const text = (inputRef.current || draft.text || '').trim();
+    const files = filesRef.current.length ? filesRef.current : draft.files || [];
+    if (!text && !files.length) return;
+    if (files.some(file => file.status !== 'ready')) { setToast('请移除无法解析的附件后再排队。', 'error'); return; }
+    const nativeCommand = parseSessionCommand(text || '');
+    if (nativeCommand?.error) { setToast(nativeCommand.error, 'error'); return; }
+    const next = { id: uuid(), chatId, workspaceId: state.workspaceId, projectId: project?.id || null, text, files, mode, createdAt: Date.now() };
+    const result = enqueueMessage(queueRef.current, next);
+    if (result.error) { setToast(result.error, 'error'); return; }
+    publishQueue(result.queue);
+    if (key && draftMap.current[key]) persistDraft(key, { text: '', files: [] }, draftMap.current[key].revision);
+    inputRef.current = ''; filesRef.current = [];
+    setInputValue(''); setFilesValue([]);
+    setToast(`已排队 ${queuedFor(result.queue, chatId).length} 条消息，本轮结束后按顺序发送。`, 'success');
+  }
+
+  function discardQueued(id) {
+    publishQueue(removeQueued(queueRef.current, id));
+  }
+
+  function retryQueued(id) {
+    publishQueue(patchQueued(queueRef.current, id, { error: '', sending: false }));
+  }
+
+  function editQueued(item) {
+    setInput(previous => (previous.trim() ? `${previous.trimEnd()}\n${item.text}` : item.text));
+    if (item.files.length) setFiles(previous => [...previous, ...item.files.filter(file => !previous.some(row => row.id === file.id))]);
+    discardQueued(item.id);
+    requestAnimationFrame(() => composer.current?.focus());
+  }
+
+  async function dispatchQueued(itemId) {
+    const item = queueRef.current.find(row => row.id === itemId);
+    if (!item || item.sending || item.error || active.current || queueBusy.current) return;
+    const current = latest.current;
+    const targetChat = current.chats.find(chat => chat.id === item.chatId && !chat.archived && chat.workspaceId === current.workspaceId);
+    if (!targetChat) {
+      publishQueue(patchQueued(queueRef.current, itemId, { error: '这段聊天已删除或不在当前工作空间。' }));
+      return;
+    }
+    queueBusy.current = true;
+    publishQueue(patchQueued(queueRef.current, itemId, { sending: true, error: '' }));
+    try {
+      const settings = current.settings;
+      const targetProject = current.projects.find(project => project.id === targetChat.projectId) || null;
+      const selection = selectedModel(runtime, settings);
+      if (!settings.demo && !selection) throw new Error('所选供应商或型号当前不可用。请选择目录中的有效模型后再发送。');
+      if (!settings.demo && selection.reasoningCapability === 'unknown') throw new Error('当前模型的思考能力尚未确认，请刷新模型目录后再发送。');
+      if (!settings.demo && selection && !selection.levels.includes(settings.reasoning)) throw new Error('所选模型不支持当前的思考档位，请重新选择。');
+      const targetProvider = runtime.providers?.find(provider => provider.id === selection?.providerId);
+      if (!settings.demo && targetChat.messages.length && targetProvider
+        && ((targetChat.providerId || 'deepseek') !== targetProvider.id || (targetChat.providerUrl && targetChat.providerUrl !== targetProvider.baseUrl))) {
+        throw new Error('这段聊天使用了另一个模型服务。请先在聊天中继续发送，再排队新的交办。');
+      }
+      if (!settings.demo && targetChat.automationTaskId && parseSessionCommand(item.text || '')) throw new Error('任务聊天里的命令需要回到原聊天执行。');
+      const nativeCommand = parseSessionCommand(item.text || '');
+      const planText = nativeCommand?.name === 'plan' && !nativeCommand.verb ? nativeCommand.argument : '';
+      const startInPlanMode = Boolean(nativeCommand?.name === 'plan' && !nativeCommand.verb && (planText || item.files.length));
+      const command = nativeCommand && !startInPlanMode ? formatSessionCommand(nativeCommand) : undefined;
+      if (command && item.files.length && (!acceptsGoalImages(nativeCommand) || item.files.some(file => !file.visual?.visualId))) throw new Error('命令附件仅支持创建或编辑目标时添加的图片。');
+      const preferences = settings.personalizationEnabled ? settings.personalInstructions : '';
+      const history = targetChat.messages.filter(message => !message.pending);
+      const taskText = startInPlanMode ? planText || '' : item.text;
+      const prompt = composePrompt(taskText, item.files, history, targetProject?.instructions, preferences);
+      const chatMode = targetChat.mode || item.mode || mode;
+      const draft = {
+        sessionId: item.chatId, workspaceId: current.workspaceId, projectId: targetChat.projectId || null,
+        text: item.text || '请处理附件。', restoreText: '', attachments: item.files, files: [],
+        prompt, repeatExecution: false, draftKey: null, submittedRevision: 0,
+        mode: chatMode, model: selection?.id || settings.model, reasoning: settings.reasoning,
+        privacyMode: settings.privacyMode, startInPlanMode, sideScope: null, queued: true,
+      };
+      if (settings.demo) {
+        const local = new PrivacySession(item.chatId).protect(prompt, settings.customTerms, privacyPolicyForMode(settings.privacyPolicy, settings.privacyMode));
+        if (local.blocked) throw new Error('排队消息包含疑似凭证，请修改后再发送。');
+        const demoJob = await startReply(draft, { text: settings.privacyMode === 'raw' ? prompt : local.text, privacyMode: settings.privacyMode }, true, { silent: true, onAccepted: () => publishQueue(removeQueued(queueRef.current, itemId)) });
+        if (!demoJob) throw new Error('当前无法开始新的交办，请稍后重试。');
+        queueBusy.current = false;
+        return;
+      }
+      if (!desktop || !runtime.configured) throw new Error('尚未连接模型，请先在设置中配置供应商。');
+      const visualIds = item.files.flatMap(file => (file.visual?.visualId ? [file.visual.visualId] : []));
+      const preview = await desktop.prepareRun({
+        sessionId: item.chatId, prompt, bootstrapPrompt: prompt, command, startInPlanMode, mode: chatMode,
+        model: selection.id, modelProviderId: selection.providerId, reasoning: settings.reasoning,
+        permission: settings.permission, workspaceId: current.workspaceId, projectId: targetChat.projectId || null,
+        customTerms: settings.customTerms, privacyMode: settings.privacyMode, privacyPolicy: settings.privacyPolicy, visualIds,
+      });
+      if (preview.blocked) throw new Error('排队消息包含疑似凭证，请修改后再发送。');
+      if (active.current || latest.current.workspaceId !== current.workspaceId) throw new Error('工作空间或运行状态已变化，请稍后重试。');
+      // 先确认内核已接手本轮，再从队列删除；否则消息会既不在队列也没有运行。
+      const job = await startReply(draft, preview, false, { silent: true, onAccepted: () => publishQueue(removeQueued(queueRef.current, itemId)) });
+      if (!job) throw new Error('当前无法开始新的交办，请稍后重试。');
+      queueBusy.current = false;
+    } catch (error) {
+      queueBusy.current = false;
+      publishQueue(patchQueued(queueRef.current, itemId, { sending: false, error: errorText(error) }));
+      setToast(`排队消息未发送：${errorText(error)}`, 'error');
+    }
+  }
+
   async function submit(repeatMessageId = null, sideTarget = null, actionCommand = null) {
-    if (!loaded || storageFailed.current || active.current || busy) return;
+    if (!loaded || storageFailed.current || busy || queueBusy.current) return;
+    if (active.current) {
+      if (!sideTarget && !repeatMessageId && !actionCommand && active.current.chatId === chatId) queueCurrentDraft();
+      return;
+    }
     const targetChat = sideTarget ? state.chats.find(item => item.id === sideTarget.chatId && item.workspaceId === workspace.id && (item.projectId||null) === (project?.id||null) && !item.archived) : chat;
     if(sideTarget&&(!targetChat||targetChat.id===chatId||sideTarget.scope!==workScopeKey)) { setToast('侧边聊天已变更，请重新选择有效会话。'); return; }
     const targetMessages = targetChat?.messages || [];
@@ -972,7 +1112,9 @@ export function App() {
     if (demo) {
       const local = new PrivacySession(sessionId).protect(prompt, customTerms,privacyPolicyForMode(privacyPolicy,privacyMode));
       if (local.blocked) { openModal({ type: 'privacy', original: prompt, preview: local, blocked: true }); return; }
-      await startReply(draft, { text: privacyMode === 'raw' ? prompt : local.text, privacyMode }, true);
+      // 不在提交里等整轮运行结束：busy 只表示「正在准备发送」，
+      // 否则运行中的输入框会被一直占住，排队和后续操作都无法进行。
+      void startReply(draft, { text: privacyMode === 'raw' ? prompt : local.text, privacyMode }, true);
       return;
     }
     if (!desktop || !runtime.configured) { openModal({ type: 'settings', tab: '供应商' }); return; }
@@ -990,7 +1132,7 @@ export function App() {
         else {
           if (providerChanged) setToast('已为新供应商开启聊天，上一段聊天留在原处。');
           else if (forkScheduled) setToast('已从任务聊天另开交办。');
-          await startReply(draft,preview);
+          void startReply(draft,preview);
         }
       }
     } catch (error) { setToast(`未发送：${errorText(error)}`); }
@@ -1011,8 +1153,8 @@ export function App() {
       }
   }
 
-  async function startReply(draft, preview, demo = false) {
-    if (!draftProducersLive.current || active.current || draft.workspaceId !== latest.current.workspaceId) return;
+  async function startReply(draft, preview, demo = false, { silent = false, onAccepted } = {}) {
+    if (!draftProducersLive.current || active.current || draft.workspaceId !== latest.current.workspaceId) return null;
     const recovery = draft.draftKey ? clearSubmittedDraft(draft) : null;
     const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [], awaitingInitialSave: true };
     runJobs.current.set(job.runId, job);
@@ -1028,19 +1170,19 @@ export function App() {
       if (!target) return { ...current, chats: [...current.chats, {
         id: draft.sessionId, projectId: draft.projectId, workspaceId: draft.workspaceId,
         providerId: preview.providerId, providerUrl: preview.baseUrl,
-        title: draft.text.replace(/\s+/g, ' ').slice(0, 42), mode: draft.mode, createdAt: now, updatedAt: now, messages: [user, assistant],
+        title: fallbackTitle(draft.text) || '新的交办', mode: draft.mode, createdAt: now, updatedAt: now, messages: [user, assistant],
       }] };
       const history = [...target.messages];
       history.push(user);
       const binding = !demo&&(!target.messages.length||target.importedFrom==='deepseek'&&!target.providerId) ? {providerId:preview.providerId,providerUrl:preview.baseUrl} : {};
-      if(!target.messages.length)binding.title=draft.text.replace(/\s+/g,' ').slice(0,42);
+      if(!target.messages.length)binding.title=fallbackTitle(draft.text)||'新的交办';
       return { ...current, chats: current.chats.map(item => item.id === target.id ? { ...item,...binding, updatedAt: now, messages: [...history, assistant] } : item) };
     };
     const submittedState = appendSubmission({ ...latest.current, drafts: draftMap.current });
     latest.current = submittedState;
     setState(submittedState);
     if (draft.sideScope) setSideSelection({scope:draft.sideScope,id:draft.sessionId});
-    else navigate('home', draft.sessionId, draft.projectId);
+    else if (!silent) navigate('home', draft.sessionId, draft.projectId);
     let releaseSettlement;
     const settled = new Promise(resolve => { releaseSettlement = resolve; });
     pendingRunSettlements.current.add(settled);
@@ -1049,6 +1191,8 @@ export function App() {
       // This is the anchor used after a renderer reload, never a second run.
       await persistWorkspaceSnapshot(submittedState);
       job.awaitingInitialSave = false;
+      // 消息锚点已落盘、内核即将接手：此时才把排队项从界面上移走。
+      try { onAccepted?.(); } catch { /* A queue bookkeeping error cannot block the run. */ }
       if (!draftProducersLive.current || job.preflightCancelled) {
         job.terminalStatus = 'cancelled';
         throw Object.assign(new Error('交办已停止，未启动新的内核。'), { code: 'RUNTIME_CANCELLED', stage: 'prepare' });
@@ -1070,6 +1214,7 @@ export function App() {
       pendingRunSettlements.current.delete(settled);
       releaseSettlement();
     }
+    return job;
   }
 
   async function stop(runId) {
@@ -1571,7 +1716,7 @@ export function App() {
                 <div className="quick-workflows">{workflows[mode].slice(0, 3).map(([label, prompt]) => <button key={label} onClick={() => applyTemplate(prompt)}>{label}<ArrowUpRight size={13}/></button>)}</div>
                 {project && <button className="text-button" onClick={() => openModal({ type: 'project-settings', value: project })}>项目说明</button>}
               </section></div>}
-              <Composer takeover={chatApprovals.length ? <ApprovalPanel hostEpoch={approvals.hostEpoch} requests={chatApprovals} connection={approvals.connection} onStop={()=>stop(chatApprovals[0].runId)}/> : question ? <AgentQuestion key={question.requestId} inline request={question} count={questions.filter(item=>(item.rootSessionId||item.sessionId)===chatId).length} onStop={()=>stop(question.runId)} onAnswer={value=>desktop.answerQuestion({...value,runId:question.runId,rootSessionId:question.rootSessionId||question.sessionId})}/> : null} settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage}/>
+              <Composer takeover={chatApprovals.length ? <ApprovalPanel hostEpoch={approvals.hostEpoch} requests={chatApprovals} connection={approvals.connection} onStop={()=>stop(chatApprovals[0].runId)}/> : question ? <AgentQuestion key={question.requestId} inline request={question} count={questions.filter(item=>(item.rootSessionId||item.sessionId)===chatId).length} onStop={()=>stop(question.runId)} onAnswer={value=>desktop.answerQuestion({...value,runId:question.runId,rootSessionId:question.rootSessionId||question.sessionId})}/> : null} queue={queuedFor(queue, chatId)} onRemoveQueued={discardQueued} onRetryQueued={retryQueued} onEditQueued={editQueued} settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage}/>
             </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={applyTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
           </div>
           {room&&<ErrorBoundary key={workScopeKey} scope="workbench" hidden={!panel}><Workbench deliveryPreview={deliveryPreview.preview && <DeliveryPreview preview={deliveryPreview.preview} onBack={deliveryPreview.close} onRetry={deliveryPreview.retry} onEnlarge={value => openModal({type:'document',value})}/>} draftStore={draftSlices} liveReplies={liveReplies} key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!menu} onClose={closeWorkPanel} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/></ErrorBoundary>}

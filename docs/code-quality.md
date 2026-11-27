@@ -35,7 +35,8 @@
 
 1. `--effort-position` 在 `src/ModelControls.jsx` 的 React inline style 中定义。`quality/runtime-properties.css` 只供静态检查参考，不被应用导入；门禁会核对源文件仍有这个具名绑定。不存在绑定时失败，不能把静态参考当作运行时样式。
 2. `tests/runtime-lifecycle.test.mjs` 有两处清理目录范围保护：发现路径不属于临时夹具时，在 `finally` 中抛错以阻止删除。保持该控制流，对两条 `throw` 使用带理由的 `no-unsafe-finally` 行内豁免。0.41.0 将主进程收编后，另保留 `electron/main.cjs` 的五条 `preserve-caught-error` 精确豁免：加密读取、IPC 错误转换两条、Office 另存和归档重名错误有意只返回安全文案，不附回可能含凭据、stderr 或私有路径的原始 `cause`。子任务控制修复将 `electron/runtime.mjs` 收编后，另保留三条 `no-unsafe-finally`（内核关闭未确认、诊断目录删除失败、交办收尾失败必须拒绝）和三条 `preserve-caught-error`（Office 私有路径、超时与取消的底层错误不跨公开边界）。仅这三个文件允许行内配置，失效豁免仍报错；规则没有对整份文件关闭。合计十三条精确豁免，以当次 JSON 报告和控制台实际计数为准。
-3. Stylelint 18.1.0 的 CSSTree 值匹配器在 `src/model-controls.css` 中最高思考档位亮点的九层 `radial-gradient` 背景（`.effort-fill::after`）达到 15,000 次迭代限制，输出 `[csstree-match] BREAK after 15000 iterations`。已用逐声明检查定位；没有关闭规则、隐藏输出或改动该视觉。这一条复杂背景值的匹配未完整覆盖，Stylelint 返回零规则诊断不能消除该限制，也不能代替浏览器视觉验收。
+3. `src/session-title.js` 的四条控制序列正则（OSC／CSI／ESC／C0-C1 与方向控制符）定义就是「匹配控制字符」，与上游 `dsh-session-title` 的同一组模式逐条一致；只有该文件允许带理由的 `no-control-regex` 行内豁免，豁免失效仍报错。会话标题先清控制符再按 UTF-8 字节截断，避免粘贴的终端输出或方向控制符在侧栏显示成另一句话。
+4. Stylelint 18.1.0 的 CSSTree 值匹配器在 `src/model-controls.css` 中最高思考档位亮点的九层 `radial-gradient` 背景（`.effort-fill::after`）达到 15,000 次迭代限制，输出 `[csstree-match] BREAK after 15000 iterations`。已用逐声明检查定位；没有关闭规则、隐藏输出或改动该视觉。这一条复杂背景值的匹配未完整覆盖，Stylelint 返回零规则诊断不能消除该限制，也不能代替浏览器视觉验收。
 
 本轮确实由 Stylelint 找到并修复一处 CSS 问题：`.question-detail` 的 `font: 13px/1.75 inherit` 不是有效的字号/行高/字体简写，改为 `font-size: 13px; line-height: 1.75; font-family: inherit`。其余旧 CSS 没有整文件格式化。
 
