@@ -193,13 +193,21 @@ app.setAppLogsPath(path.join(profile, 'logs'));
 const WORKSPACE_FILE = path.join(directory, 'workspace.bin');
 const DRAFTS_FILE = path.join(directory, 'drafts.bin');
 
+const TRANSIENT = new Set(['ENOENT', 'EPERM', 'EACCES', 'EBUSY']);
 const readStore = async file => {
-  try { return codec.decode(await fs.readFile(file)); } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+  try { return codec.decode(await fs.readFile(file)); } catch (error) { if (TRANSIENT.has(error.code)) return null; throw error; }
 };
+// 与真实主进程同一条提交路径：Windows 上 rename 覆盖一个正在被读取的目标会
+// 返回 EPERM（本仓库 0.42.0 发布时在 drafts.bin 上真遇到过），所以复用产品里的
+// 有界重试，而不是让测试夹具自己发明一个更弱的写盘方式。
 const writeStore = async (file, text) => {
   const temporary = file + '.' + Math.random().toString(36).slice(2) + '.tmp';
-  await fs.writeFile(temporary, codec.encode(text, options.encrypted));
-  await fs.rename(temporary, file);
+  try {
+    await fs.writeFile(temporary, codec.encode(text, options.encrypted));
+    await renameEncryptedTemp(temporary, file);
+  } finally {
+    await fs.unlink(temporary).catch(() => {});
+  }
 };
 
 // 真实强杀：没有退出钩子、没有 flush，等价于任务管理器结束进程。
@@ -214,7 +222,7 @@ const runtime = {
   models: [{ id: 'synthetic-model', name: 'Synthetic', providerId: 'synthetic-provider', providerName: 'Synthetic', levels: ['high'], reasoningCapability: 'supported' }],
 };
 const prepares = [], runs = [];
-let window = null, persistence = null, persistenceApi = null, mergeState = null;
+let window = null, persistence = null, persistenceApi = null, mergeState = null, renameEncryptedTemp = null;
 
 const readWorkspaceState = () => persistenceApi.loadWorkspacePersistence({
   readWorkspace: () => readStore(WORKSPACE_FILE),
@@ -225,6 +233,7 @@ async function boot() {
   const store = await import(pathToFileURL(path.join(REPOSITORY, 'src/store.js')).href);
   mergeState = store.mergeState;
   persistenceApi = await import(pathToFileURL(path.join(REPOSITORY, 'electron/workspace-persistence.mjs')).href);
+  ({ renameEncryptedTemp } = await import(pathToFileURL(path.join(REPOSITORY, 'harness/privacy-bridge.mjs')).href));
   const persisted = await readWorkspaceState();
   persistence = new persistenceApi.WorkspacePersistence({
     initialState: mergeState(persisted.state),
