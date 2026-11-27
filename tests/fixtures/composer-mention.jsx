@@ -104,7 +104,18 @@ const setNativeValue = (value) => {
 window.mentionQA = {
   calls,
   settle() {
-    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    // 隐藏窗口在 Windows 上会把 rAF 节流到约 1 秒一帧，只等两帧会让整个用例超时。
+    // 这里让两帧与一个短定时器竞速：两者谁先到都算这次渲染已经落定。
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        resolve();
+      };
+      requestAnimationFrame(() => requestAnimationFrame(finish));
+      setTimeout(finish, 120);
+    });
   },
   type(value) {
     setNativeValue(value);

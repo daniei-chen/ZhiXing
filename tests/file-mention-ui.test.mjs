@@ -42,6 +42,7 @@ async function exerciseWindow(window) {
 
   await wait('!!window.mentionReady');
   await wait('!!document.querySelector("textarea[aria-label=\\"聊天输入框\\"]")');
+  console.log('PASS the mention fixture renders its composer');
 
   // 打出 @：候选来自主机列出的工作区索引，一次 @ 只请求一次。
   await type('复核 @');
@@ -214,7 +215,8 @@ async function exerciseWindow(window) {
 
 test(
   '@ 文件引用：真实 renderer 里的候选、键盘、空态与切聊天',
-  { timeout: 45000 },
+  // Windows CI 的隐藏窗口渲染比 Linux 慢一个数量级，用例有 10 个场景，留足余量。
+  { timeout: 120000 },
   async (context) => {
     const temporaryRoot = await realpath(os.tmpdir());
     const directory = await mkdtemp(path.join(temporaryRoot, 'zhixing-composer-mention-'));
@@ -274,7 +276,7 @@ app.whenReady().then(async()=>{
       const code = await exited;
       assert.equal(spawnError, undefined, String(spawnError));
       assert.equal(code, 0, output);
-      assert.equal((output.match(/PASS /g) || []).length, 10, output);
+      assert.equal((output.match(/PASS /g) || []).length, 11, output);
     } finally {
       if (child && child.exitCode === null) {
         child.kill();
