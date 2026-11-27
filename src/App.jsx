@@ -1038,7 +1038,7 @@ export function App() {
       if (settings.demo) {
         const local = new PrivacySession(item.chatId).protect(prompt, settings.customTerms, privacyPolicyForMode(settings.privacyPolicy, settings.privacyMode));
         if (local.blocked) throw new Error('排队消息包含疑似凭证，请修改后再发送。');
-        const demoJob = await startReply(draft, { text: settings.privacyMode === 'raw' ? prompt : local.text, privacyMode: settings.privacyMode }, true, { silent: true, onAccepted: () => acceptQueued(itemId) });
+        const demoJob = await startReply(draft, { text: settings.privacyMode === 'raw' ? prompt : local.text, privacyMode: settings.privacyMode }, true, { silent: true, reportFailure: false, onAccepted: () => acceptQueued(itemId) });
         if (!demoJob?.accepted) throw new Error(demoJob?.failureMessage || '当前无法开始新的交办，请稍后重试。');
         return;
       }
@@ -1053,7 +1053,7 @@ export function App() {
       if (preview.blocked) throw new Error('排队消息包含疑似凭证，请修改后再发送。');
       if (active.current || latest.current.workspaceId !== current.workspaceId) throw new Error('工作空间或运行状态已变化，请稍后重试。');
       // 先确认内核已接手本轮，再从队列删除；否则消息会既不在队列也没有运行。
-      const job = await startReply(draft, preview, false, { silent: true, onAccepted: () => acceptQueued(itemId) });
+      const job = await startReply(draft, preview, false, { silent: true, reportFailure: false, onAccepted: () => acceptQueued(itemId) });
       if (!job?.accepted) throw new Error(job?.failureMessage || '当前无法开始新的交办，请稍后重试。');
     } catch (error) {
       queueBusy.current = false;
@@ -1161,7 +1161,7 @@ export function App() {
       }
   }
 
-  async function startReply(draft, preview, demo = false, { silent = false, onAccepted } = {}) {
+  async function startReply(draft, preview, demo = false, { silent = false, onAccepted, reportFailure = true } = {}) {
     if (!draftProducersLive.current || active.current || draft.workspaceId !== latest.current.workspaceId) return null;
     const recovery = draft.draftKey ? clearSubmittedDraft(draft) : null;
     const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [], awaitingInitialSave: true, accepted: false };
@@ -1229,17 +1229,26 @@ export function App() {
     } catch (error) {
       job.failureMessage = errorText(error);
       if (!accepted) {
-        // 宿主从未接手（保存失败、预检取消、begin 被拒）：撤回这次乐观追加的
-        // 用户/助手双气泡。否则调用方会把消息重新放回队列，重试时同一段交办
-        // 会在记录里出现两次。失败原因由调用方（队列或提示）负责呈现。
-        const rollback = {
-          ...latest.current,
-          chats: latest.current.chats
-            .map(chat => (chat.id === job.chatId ? { ...chat, messages: chat.messages.filter(message => message.id !== user.id && message.id !== assistant.id) } : chat))
-            .filter(chat => !(createdChat && chat.id === job.chatId && chat.messages.length === 0)),
-        };
-        latest.current = rollback;
-        if (draftProducersLive.current) setState(rollback);
+        if (reportFailure && job.terminalStatus === 'cancelled') {
+          // 用户在宿主接手前自己停止：直接发送的交办留在记录里，气泡标为已取消。
+          finalizeRun(job, { status: 'cancelled' });
+        } else {
+          // 宿主从未接手（保存失败、begin 被拒）：草稿在被消费的那一刻就没了，
+          // 先把它还给输入框，再撤回这次乐观追加的用户/助手双气泡。排队消息也
+          // 一律撤回，否则队列重试时同一段交办会在记录里出现两次。
+          restoreFailedSubmission(draft, recovery, job);
+          const rollback = {
+            ...latest.current,
+            chats: latest.current.chats
+              .map(chat => (chat.id === job.chatId ? { ...chat, messages: chat.messages.filter(message => message.id !== user.id && message.id !== assistant.id) } : chat))
+              .filter(chat => !(createdChat && chat.id === job.chatId && chat.messages.length === 0)),
+          };
+          latest.current = rollback;
+          if (draftProducersLive.current) setState(rollback);
+          // 气泡被撤回了，失败原因必须另外呈现。排队消息由队列自己带着上下文报，
+          // 直接发送没有别的出口，就在这里给出与发送失败一致的提示。
+          if (reportFailure) setToast(`未发送：${job.failureMessage}`, 'error');
+        }
       } else {
         const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;
         restoreFailedSubmission(draft, recovery, job, executionStatus);

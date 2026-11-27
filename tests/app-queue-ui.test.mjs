@@ -265,9 +265,22 @@ const seed={version:2,workspaceId:'office-home',workspaces:[{id:'office-home',na
 let stored=structuredClone(seed);
 let failBegin=false;
 const prepares=[],runs=[];
+// 合成宿主自己负责落盘：串行化写入并保证原子替换，退出前再确认一次。
+// 否则并发 writeFile 与 app.exit 重叠时，读到的可能是被截断的空文件，
+// 那是测试宿主的问题，不是产品保存路径的问题。
+let writeChain=Promise.resolve();
+const persist=snapshot=>{
+ const payload=JSON.stringify(snapshot);
+ writeChain=writeChain.then(async()=>{
+  const temporary=workspaceFile+'.'+Math.random().toString(36).slice(2)+'.tmp';
+  await fs.writeFile(temporary,payload);
+  await fs.rename(temporary,workspaceFile);
+ });
+ return writeChain;
+};
 ipcMain.handle('qa',async(_,name,args)=>{
  if(name==='loadWorkspace')return stored;
- if(name==='saveWorkspace'){stored=structuredClone(args[0]);await fs.writeFile(workspaceFile,JSON.stringify(stored));return {saved:true};}
+ if(name==='saveWorkspace'){stored=structuredClone(args[0]);await persist(stored);return {saved:true};}
  if(name==='saveDrafts')return {saved:true};
  if(name==='runtimeStatus')return runtime;
  if(name==='runtimeCleanupStatus')return [];
@@ -320,6 +333,9 @@ app.whenReady().then(async()=>{
   await wait('!!document.querySelector(\\'textarea[aria-label="聊天输入框"]\\') && !document.querySelector(\\'textarea[aria-label="聊天输入框"]\\').disabled','composer ready');
   await wait('document.querySelector(".workspace-save-banner")?.dataset.saveStatus==="saved"','workspace saved');
   await (${exerciseWindow.toString()})(window);
+  // 退出前把最后一次内存快照落盘，避免把「进程先退出」当成数据丢失。
+  await writeChain;
+  await persist(stored);
   app.exit(0);
  }catch(error){console.error(error);app.exit(1);}
 }).catch(error=>{console.error(error);app.exit(1);});`,
