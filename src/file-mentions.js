@@ -59,7 +59,8 @@ function mentionReplaceEnd(source, token, paths) {
     if (typeof path !== 'string' || !path || !rest.startsWith(path)) continue;
     const after = source[offset + path.length];
     if (after !== undefined && !PATH_STOP.test(after)) continue;
-    const candidateEnd = offset + path.length + (after === '"' ? 1 : 0);
+    // 只有引号形式的记号才连结束引号一起替换；未加引号的记号后面那个引号是正文。
+    const candidateEnd = offset + path.length + (token.quoted && after === '"' ? 1 : 0);
     if (candidateEnd > end) end = candidateEnd;
   }
   return end;
@@ -71,7 +72,7 @@ export function applyMention(text, token, candidate, paths = []) {
   const mention = token ? formatMention(candidate, token.quoted) : null;
   if (!mention) return { text: source, caret: token ? token.end : source.length };
   const suffix = source.slice(mentionReplaceEnd(source, token, paths));
-  const spacing = suffix === '' || !/^[\s，。；：！？、,.!?;:)\]）】]/u.test(suffix) ? ' ' : '';
+  const spacing = suffix === '' || !/^[\s"’，。；：！？、,.!?;:)\]）】]/u.test(suffix) ? ' ' : '';
   return {
     text: `${source.slice(0, token.start)}${mention}${spacing}${suffix}`,
     caret: token.start + mention.length + spacing.length,

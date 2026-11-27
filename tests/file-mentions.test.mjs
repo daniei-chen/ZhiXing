@@ -135,6 +135,14 @@ test('没有对上真实路径时不扩展，引号里的其它引号也不会�
   assert.equal(applied.text, '看 @"src/App.jsx" 然后 "b"');
 });
 
+test('未加引号的记号补全不会吃掉紧随的双引号', () => {
+  const text = '看 "这个 @src/App.jsx"';
+  const token = activeMention(text, 13);
+  assert.equal(token?.quoted, false);
+  const applied = applyMention(text, token, { path: 'src/App.jsx', kind: 'file' }, ['src/App.jsx']);
+  assert.equal(applied.text, '看 "这个 @src/App.jsx"');
+});
+
 test('后缀能对上工作区里的真实路径时才扩展替换范围', () => {
   const text = '@src/App.jsx';
   const applied = applyMention(
