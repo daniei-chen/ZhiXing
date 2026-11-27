@@ -53,6 +53,20 @@ test('全角、零宽和方向控制字符以原始位置替换并精确还原',
  }
  for(const secret of ['ｐａｓｓｗｏｒｄ＝synthetic-pass','pass\u200bword=123456','ＡＰＩ＿ＫＥＹ：synthetic-key'])assert(vault.protect(secret).blocked,secret);
 });
+test('格式字符、变体选择符和谚文填充符不能拆开手机号或身份证',()=>{
+ const vault=new PrivacySession('invisible-fillers');
+ for(const [raw,type] of [['138\u316412345678','PHONE'],['138\u115f12345678','PHONE'],['138\ufe0f12345678','PHONE'],['138\uffa012345678','PHONE'],['110101\u3164199001011237','ID']]){
+  const result=vault.protect(raw);assert(result.entities.some(entity=>entity.type===type),`${type} ${JSON.stringify(raw)}`);
+  assert(!result.text.includes(raw));assert(!result.text.includes('138'));assert(!result.text.includes('110101'));assert.equal(vault.restore(result.text).text,raw);
+ }
+});
+test('凭证检查与识别共用同一份隐藏字符集合',async()=>{
+ const {containsCredential}=await import(moduleUrl('src/privacy-recognizers.js'));
+ const key='sk-live-synthetic-abcdef123456';
+ assert(containsCredential(`header ${key.slice(0,10)}\ufe0f${key.slice(10)} trailer`,key));
+ assert(containsCredential(`header ${key.slice(0,4)}\u3164${key.slice(4)} trailer`,key));
+ assert(!containsCredential(`header ${key.slice(0,10)}x${key.slice(10)} trailer`,key));
+});
 test('伪造占位符不能隐藏凭证和手机号，只有本任务签发的占位符受保留',()=>{
  const vault=new PrivacySession('forged');
  for(const secret of ['⟦ZX-password=synthetic-secret-123⟧','⟦ZX-ｐａｓｓｗｏｒｄ＝123456⟧','⟦ZX-api_key=synthetic-secret⟧']){
