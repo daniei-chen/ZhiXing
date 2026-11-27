@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowUp, Brain, CaretRight, Check, CircleNotch, FileText, Files, FolderOpen, Globe, Hand, Lightbulb, Paperclip, Plugs, Plus, ShieldCheck, ShieldWarning, Stop, Target, X } from '@phosphor-icons/react';
 import { IconButton } from './ui.jsx';
 import { PERMISSION_MODES, permissionMode } from './permissions.js';
@@ -7,6 +7,7 @@ import { VoiceInput } from './VoiceInput.jsx';
 import { ModelControls } from './ModelControls.jsx';
 import { matchesSessionCommandPrefix, parseSessionCommand } from './session-commands.js';
 import { queuePreview } from './message-queue.js';
+import { activeMention, applyMention, mentionNote, mentionState } from './file-mentions.js';
 import { useKeyedValue } from './use-keyed-value.js';
 
 const COMMANDS = [
@@ -22,7 +23,7 @@ function markMoreBelow(field) {
   field.toggleAttribute('data-more-below', field.scrollHeight - field.clientHeight - field.scrollTop > 1);
 }
 
-export function Composer({ settings, files: initialFiles, input: initialInput, draftStore, draftKey, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended, takeover = null, queue = [], onRemoveQueued, onRetryQueued, onEditQueued }) {
+export function Composer({ settings, files: initialFiles, input: initialInput, draftStore, draftKey, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended, takeover = null, queue = [], onRemoveQueued, onRetryQueued, onEditQueued, referenceScope = null }) {
   const draft = useKeyedValue(draftStore, draftKey);
   const input = draft?.text ?? initialInput;
   const files = draft?.files ?? initialFiles;
@@ -38,6 +39,44 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
   const commandOptions = /^\/[a-z\p{Script=Han}]*$/u.test(input) && dismissedInput !== input && !menu && !voiceActive && !takenOver
     ? COMMANDS.filter(([command]) => command.startsWith(input) || matchesSessionCommandPrefix(command.slice(1), input))
     : [];
+  const [mention,setMention]=useState(null),[mentionIndex,setMentionIndex]=useState(0);
+  const mentionCache=useRef(null),mentionDismissed=useRef(''),mentionLoading=useRef(false),mentionSession=useRef(0);
+  const mentionSignature=token=>token?`${token.start}:${token.prefix}`:'';
+  // 一次输入会话只列一次工作区：新开一个 @ 记号时重新读取，之后的按键只在本地筛选。
+  function updateMention(value,caret){
+    if(disabled||voiceActive||takenOver||menu){setMention(null);return;}
+    const token=activeMention(value,caret);
+    if(!token){mentionDismissed.current='';setMention(null);return;}
+    if(mentionDismissed.current===mentionSignature(token)){setMention(null);return;}
+    const cached=mentionCache.current;
+    if(cached){setMentionIndex(0);setMention({token,status:'ready',...cached});return;}
+    setMentionIndex(0);
+    setMention(previous=>previous&&mentionSignature(previous.token)===mentionSignature(token)?previous:{token,status:'loading',workspace:true,entries:[],truncated:false,error:''});
+    if(mentionLoading.current)return;
+    mentionLoading.current=true;
+    const session=mentionSession.current;
+    Promise.resolve(window.zhixing?.listWorkspaceReferences?.(referenceScope ?? {})).then(result=>{
+      if(mentionSession.current!==session)return;
+      const source=result&&typeof result==='object'?result:{workspace:false,entries:[],truncated:false};
+      mentionCache.current=source;
+      setMention(previous=>previous?{...previous,status:'ready',error:'',workspace:source.workspace!==false,entries:Array.isArray(source.entries)?source.entries:[],truncated:source.truncated===true}:previous);
+    }).catch(cause=>{
+      if(mentionSession.current!==session)return;
+      setMention(previous=>previous?{...previous,status:'error',error:cause?.message||'无法读取项目工作区。'}:previous);
+    }).finally(()=>{if(mentionSession.current===session)mentionLoading.current=false;});
+  }
+  function pickMention(candidate){
+    if(!mention)return;
+    const applied=applyMention(input,mention.token,candidate);
+    mentionDismissed.current='';
+    setMention(null);
+    setInput(applied.text);
+    requestAnimationFrame(()=>{const field=composer.current;if(!field)return;field.focus();field.setSelectionRange(applied.caret,applied.caret);});
+  }
+  useEffect(()=>{mentionSession.current+=1;mentionCache.current=null;mentionLoading.current=false;mentionDismissed.current='';setMention(null);setMentionIndex(0);},[scopeKey,draftKey]);
+  const mentionView=mention&&mention.status==='ready'?mentionState(mention,mention.token.query):null;
+  const mentionItems=mentionView?.items??[];
+  const mentionOpen=!!mention&&!menu;
   function chooseCommand(command) {
     if (['/model', '/settings', '/skills'].includes(command)) {
       onLocalCommand(command);
@@ -101,14 +140,25 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
       event.preventDefault();
       if (!disabled && !busy && !running && !takenOver) void addFiles(event.dataTransfer.files, 'draft');
     }}>
+      {mentionOpen && <div className="dropdown composer-dropdown mention-palette" role="listbox" aria-label="文件引用候选">
+        <div className="dropdown-label">文件</div>
+        {mention.status==='loading' && <p className="mention-empty" role="status">正在读取项目文件…</p>}
+        {mention.status==='error' && <p className="mention-empty" role="alert">{mention.error}</p>}
+        {mentionItems.map((item,index)=><button type="button" role="option" key={item.path} aria-selected={index===mentionIndex%mentionItems.length} onMouseDown={event=>{event.preventDefault();pickMention(item);}}>{item.kind==='directory'?<FolderOpen size={15}/>:<FileText size={15}/>}<span>{item.path}{item.kind==='directory'?'/':''}</span></button>)}
+        {mention.status==='ready' && !!mentionNote(mentionView) && <p className="mention-empty">{mentionNote(mentionView)}</p>}
+        {mention.status==='ready' && !!mentionItems.length && <div className="mention-hint">↑↓ 选择 · Enter 插入 · Esc 关闭</div>}
+      </div>}
       {!!commandOptions.length && <div className="dropdown composer-dropdown command-palette" role="listbox" aria-label="内核与界面命令"><div className="dropdown-label">命令</div>{commandOptions.map(([command,label,description,Icon],index)=><button type="button" role="option" aria-selected={index===commandIndex%commandOptions.length} key={command} onClick={()=>chooseCommand(command)}><Icon size={16}/><span><strong>{command}<small>{label}</small></strong><small>{description}</small></span></button>)}</div>}
       {!!files.length && <div className="attachment-chips">{files.map(file => <div className={`attachment-chip ${file.status !== 'ready' ? 'invalid' : ''}`} key={file.id}>
         <FileText size={19}/><button type="button" className="attachment-name" title={file.name} onClick={() => openModal({ type: 'document', value: file })}><strong>{file.name}</strong><small>{fileReadLabel(file)}</small></button>
         <IconButton icon={X} label={`移除附件 ${file.name}`} onClick={() => setFiles(previous => previous.filter(item => item.id !== file.id))}/>
       </div>)}</div>}
       <div className="composer-input">
-        <textarea ref={composer} aria-label="聊天输入框" aria-describedby="composer-shortcuts" placeholder={running ? '再交代一件，本轮结束后自动发送…' : '交代一件事，或添加要处理的资料…'} value={input} rows={2} maxLength={60000} disabled={disabled || voiceActive || takenOver} onPaste={event => { if (event.clipboardData.files.length && !disabled && !busy && !running && !takenOver) { event.preventDefault(); void addFiles(event.clipboardData.files, 'draft'); } }} onChange={event => {setCommandIndex(0);setInput(event.target.value);}} onScroll={event => markMoreBelow(event.currentTarget)} onKeyDown={event => {
+        <textarea ref={composer} aria-label="聊天输入框" aria-describedby="composer-shortcuts" placeholder={running ? '再交代一件，本轮结束后自动发送…' : '交代一件事，或添加要处理的资料…'} value={input} rows={2} maxLength={60000} disabled={disabled || voiceActive || takenOver} onPaste={event => { if (event.clipboardData.files.length && !disabled && !busy && !running && !takenOver) { event.preventDefault(); void addFiles(event.clipboardData.files, 'draft'); } }} onChange={event => {setCommandIndex(0);setInput(event.target.value);updateMention(event.target.value,event.target.selectionStart);}} onSelect={event => updateMention(event.target.value,event.target.selectionStart??event.target.value.length)} onScroll={event => markMoreBelow(event.currentTarget)} onKeyDown={event => {
           if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+          if (mentionOpen && event.key === 'Escape') { event.preventDefault();event.stopPropagation();mentionDismissed.current=mentionSignature(mention.token);setMention(null);return; }
+          if (mentionOpen && mentionItems.length && ['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault();setMentionIndex(previous=>(previous+(event.key==='ArrowDown'?1:-1)+mentionItems.length)%mentionItems.length);return; }
+          if (mentionOpen && mentionItems.length && (event.key==='Enter'||event.key==='Tab') && !event.shiftKey) { event.preventDefault();pickMention(mentionItems[mentionIndex%mentionItems.length]);return; }
           if (event.key === 'Escape' && commandOptions.length) { event.preventDefault();event.stopPropagation();setDismissedInput(input);return; }
           if (commandOptions.length && ['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault();setCommandIndex(previous=>(previous+(event.key==='ArrowDown'?1:-1)+commandOptions.length)%commandOptions.length);return; }
           if (commandOptions.length && (event.key==='Tab'&&!event.shiftKey || event.key==='Enter'&&!event.shiftKey&&!parseSessionCommand(input)&&!commandOptions.some(row=>row[0]===input))) { event.preventDefault();chooseCommand(commandOptions[commandIndex%commandOptions.length][0]);return; }

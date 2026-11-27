@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('zhixing',{
  browserCapture:options=>ipcRenderer.invoke('browser:capture',options),
  terminalAction:options=>ipcRenderer.invoke('terminal:action',options),
  listWorkspaceFiles:options=>ipcRenderer.invoke('workspace:list-files',options),
+ listWorkspaceReferences:options=>ipcRenderer.invoke('workspace:list-references',options),
 watchWorkspace:options=>ipcRenderer.invoke('workspace:watch',options),
 unwatchWorkspace:options=>ipcRenderer.invoke('workspace:unwatch',options),
 onWorkspaceFsChange:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('workspace:fs-change',fn);return()=>ipcRenderer.removeListener('workspace:fs-change',fn);},
