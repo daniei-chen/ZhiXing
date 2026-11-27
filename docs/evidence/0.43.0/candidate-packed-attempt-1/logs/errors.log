@@ -1,0 +1,12 @@
+
+> office-agent@0.43.0 test:errors
+> node scripts/test-error-copy-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\_temp\zhixing-packed-journeys\errors\run-ZWbY50
+PASS 实包运行时报告 0.43.0
+PASS 真实 401 的 API Key 被换成可行动的文案（HTTP_401）显示「API Key 无效或已过期，请在「设置 · 供应商」中更新后重试。」
+PASS 解析不到的主机显示「解析不到服务地址」（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」
+PASS 被本机网络接住时按实际错误码 ENOTFOUND 给文案（ENOTFOUND）显示「解析不到服务地址，请检查网络连接或代理设置。」
+PASS 拒绝连接的端口显示连接被拒绝（ECONNREFUSED）显示「服务地址拒绝连接，请确认地址和端口是否正确。」
+PASS 无响应的服务地址按 12 秒超时给出超时文案（TIMEOUT）显示「请求超时，请检查网络后重试。」
+PASS 主进程保留真实错误码，每条界面文案都与技术原文不同

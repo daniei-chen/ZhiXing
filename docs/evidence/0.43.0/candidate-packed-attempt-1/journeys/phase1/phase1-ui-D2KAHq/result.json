@@ -1,0 +1,1017 @@
+{
+  "layer": "windows-packaged-app + real-harness + loopback SSE model fixture",
+  "version": "0.43.0",
+  "sourceCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "sourceDirty": false,
+  "startedAt": "2026-11-27T07:04:59.759Z",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "status": "passed",
+  "cases": [
+    {
+      "name": "packaged EXE opens the isolated profile",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:05:00.104Z",
+      "finishedAt": "2026-11-27T07:05:01.285Z",
+      "version": "0.43.0",
+      "packaged": true,
+      "isolatedProfile": true,
+      "versions": {
+        "electron": "44.11.5",
+        "chrome": "152.0.7977.169",
+        "node": "24.22.3"
+      }
+    },
+    {
+      "name": "real dropped attachment is parsed into the project chat draft",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:05:01.601Z",
+      "finishedAt": "2026-11-27T07:05:03.096Z",
+      "attachmentName": "会议资料.txt",
+      "parsedTextSha256": "b66abd488abfc599f049a9d8fbc5852a4628be86237cf963685eaa6cde0b5abb",
+      "projectId": "qa-phase1-project",
+      "workspaceId": "qa-phase1-workspace"
+    },
+    {
+      "name": "100 continuous characters write bounded drafts without rewriting workspace.bin",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:05:03.096Z",
+      "finishedAt": "2026-11-27T07:05:11.953Z",
+      "characters": 100,
+      "maximumGapMs": 87.85719999999947,
+      "firstDraftWriteMs": 2040.3955999999998,
+      "observedDraftWritesDuringTyping": [
+        {
+          "afterCharacter": 27,
+          "elapsedMs": 2040.3955999999998,
+          "file": {
+            "bytes": 663,
+            "sha256": "15f46507dfdf67b3996e6e03a537942cf7da3cfaa57eee72e4668b616251a7cb",
+            "mtimeNs": "1795763105774298500"
+          }
+        },
+        {
+          "afterCharacter": 53,
+          "elapsedMs": 4071.4952999999996,
+          "file": {
+            "bytes": 741,
+            "sha256": "45c21f170fd778669b3bc0c039563c3f53a3944e055fc9e462ed8ac7e05d2eec",
+            "mtimeNs": "1795763107808552900"
+          }
+        },
+        {
+          "afterCharacter": 79,
+          "elapsedMs": 6099.0491999999995,
+          "file": {
+            "bytes": 819,
+            "sha256": "652f080a7e848d947a96c82280818487a362deb15799f522a654ced6b8e31f60",
+            "mtimeNs": "1795763109839600300"
+          }
+        }
+      ],
+      "workspaceBaseline": {
+        "bytes": 1930,
+        "sha256": "2abd45c71371150f6d15bffc1bc42241d8380100619fc63c6410e554e8426068",
+        "mtimeNs": "1795763101446355200"
+      },
+      "workspaceWritesDuringTyping": 0,
+      "samples": [
+        {
+          "character": 1,
+          "elapsedMs": 6.817900000000009,
+          "gapMs": 0.011199999999917054,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 2,
+          "elapsedMs": 92.0657000000001,
+          "gapMs": 87.03250000000025,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 3,
+          "elapsedMs": 168.71219999999994,
+          "gapMs": 77.26199999999972,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 4,
+          "elapsedMs": 244.66269999999986,
+          "gapMs": 75.91089999999986,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 5,
+          "elapsedMs": 326.01839999999993,
+          "gapMs": 80.92939999999999,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 6,
+          "elapsedMs": 403.34770000000026,
+          "gapMs": 77.64379999999983,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 7,
+          "elapsedMs": 484.78359999999975,
+          "gapMs": 78.59880000000067,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 8,
+          "elapsedMs": 561.9748,
+          "gapMs": 79.92349999999988,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 9,
+          "elapsedMs": 638.4321,
+          "gapMs": 76.5600999999997,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 10,
+          "elapsedMs": 716.1909999999998,
+          "gapMs": 77.48630000000048,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 11,
+          "elapsedMs": 794.3275000000003,
+          "gapMs": 78.07110000000011,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 12,
+          "elapsedMs": 872.0145000000002,
+          "gapMs": 78.01260000000002,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 13,
+          "elapsedMs": 949.0396000000001,
+          "gapMs": 77.67729999999938,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 14,
+          "elapsedMs": 1024.232,
+          "gapMs": 74.9409999999998,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 15,
+          "elapsedMs": 1100.0944,
+          "gapMs": 75.6820000000007,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 16,
+          "elapsedMs": 1174.9629999999997,
+          "gapMs": 74.51249999999982,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 17,
+          "elapsedMs": 1262.4027999999998,
+          "gapMs": 87.85719999999947,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 18,
+          "elapsedMs": 1340.9386999999997,
+          "gapMs": 78.51960000000054,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 19,
+          "elapsedMs": 1418.531,
+          "gapMs": 77.69570000000022,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 20,
+          "elapsedMs": 1497.8891999999996,
+          "gapMs": 78.46749999999975,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 21,
+          "elapsedMs": 1574.6148000000003,
+          "gapMs": 77.34770000000026,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 22,
+          "elapsedMs": 1652.8774000000003,
+          "gapMs": 78.34279999999944,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 23,
+          "elapsedMs": 1730.7275,
+          "gapMs": 78.03160000000025,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 24,
+          "elapsedMs": 1808.3420999999998,
+          "gapMs": 77.66740000000027,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 25,
+          "elapsedMs": 1886.6385,
+          "gapMs": 78.11249999999927,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 26,
+          "elapsedMs": 1965.6746000000003,
+          "gapMs": 79.08760000000075,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 27,
+          "elapsedMs": 2040.3955999999998,
+          "gapMs": 74.86229999999978,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 28,
+          "elapsedMs": 2121.3705,
+          "gapMs": 80.60869999999977,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 29,
+          "elapsedMs": 2199.7347,
+          "gapMs": 78.2519000000002,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 30,
+          "elapsedMs": 2275.4217,
+          "gapMs": 76.3127999999997,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 31,
+          "elapsedMs": 2355.3167999999996,
+          "gapMs": 79.70679999999993,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 32,
+          "elapsedMs": 2434.1159,
+          "gapMs": 78.97650000000067,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 33,
+          "elapsedMs": 2511.9898000000003,
+          "gapMs": 77.52759999999944,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 34,
+          "elapsedMs": 2588.1958999999997,
+          "gapMs": 75.86180000000058,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 35,
+          "elapsedMs": 2669.1117000000004,
+          "gapMs": 80.99649999999929,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 36,
+          "elapsedMs": 2747.4276,
+          "gapMs": 78.65580000000045,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 37,
+          "elapsedMs": 2825.2697,
+          "gapMs": 77.77919999999995,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 38,
+          "elapsedMs": 2903.3319,
+          "gapMs": 78.13140000000021,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 39,
+          "elapsedMs": 2982.1207999999997,
+          "gapMs": 78.76139999999941,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 40,
+          "elapsedMs": 3057.9236,
+          "gapMs": 75.5657000000001,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 41,
+          "elapsedMs": 3132.7859,
+          "gapMs": 75.19180000000051,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 42,
+          "elapsedMs": 3215.423,
+          "gapMs": 82.44589999999971,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 43,
+          "elapsedMs": 3293.6463000000003,
+          "gapMs": 78.65629999999965,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 44,
+          "elapsedMs": 3371.3423000000003,
+          "gapMs": 77.30110000000059,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 45,
+          "elapsedMs": 3449.0247,
+          "gapMs": 77.8089,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 46,
+          "elapsedMs": 3528.4844000000003,
+          "gapMs": 79.28989999999976,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 47,
+          "elapsedMs": 3607.3376,
+          "gapMs": 79.13339999999971,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 48,
+          "elapsedMs": 3683.7487,
+          "gapMs": 76.46349999999984,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 49,
+          "elapsedMs": 3759.0262000000002,
+          "gapMs": 75.01310000000012,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 50,
+          "elapsedMs": 3839.8899,
+          "gapMs": 80.94710000000032,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 51,
+          "elapsedMs": 3919.2698,
+          "gapMs": 78.5663999999997,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 52,
+          "elapsedMs": 3996.8229,
+          "gapMs": 78.22050000000036,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 53,
+          "elapsedMs": 4071.4952999999996,
+          "gapMs": 74.4951000000001,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 54,
+          "elapsedMs": 4153.2402999999995,
+          "gapMs": 81.7485999999999,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 55,
+          "elapsedMs": 4231.5633,
+          "gapMs": 78.81129999999939,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 56,
+          "elapsedMs": 4309.4836,
+          "gapMs": 77.77200000000084,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 57,
+          "elapsedMs": 4386.902099999999,
+          "gapMs": 77.67849999999999,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 58,
+          "elapsedMs": 4466.079100000001,
+          "gapMs": 79.1284999999989,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 59,
+          "elapsedMs": 4544.634899999999,
+          "gapMs": 78.44170000000122,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 60,
+          "elapsedMs": 4621.2065999999995,
+          "gapMs": 76.67779999999948,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 61,
+          "elapsedMs": 4701.1401000000005,
+          "gapMs": 79.57489999999962,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 62,
+          "elapsedMs": 4779.338900000001,
+          "gapMs": 78.07200000000012,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 63,
+          "elapsedMs": 4856.3433,
+          "gapMs": 77.63470000000052,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 64,
+          "elapsedMs": 4934.1011,
+          "gapMs": 77.37830000000031,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 65,
+          "elapsedMs": 5012.6037,
+          "gapMs": 78.74759999999878,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 66,
+          "elapsedMs": 5090.054700000001,
+          "gapMs": 77.23230000000149,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 67,
+          "elapsedMs": 5169.702499999999,
+          "gapMs": 79.3161,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 68,
+          "elapsedMs": 5245.3981,
+          "gapMs": 76.1214,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 69,
+          "elapsedMs": 5323.750899999999,
+          "gapMs": 78.44959999999992,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 70,
+          "elapsedMs": 5399.729600000001,
+          "gapMs": 75.69290000000001,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 71,
+          "elapsedMs": 5482.086799999999,
+          "gapMs": 82.69549999999981,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 72,
+          "elapsedMs": 5559.1986,
+          "gapMs": 76.83740000000034,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 73,
+          "elapsedMs": 5637.7629,
+          "gapMs": 78.77429999999913,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 74,
+          "elapsedMs": 5715.821099999999,
+          "gapMs": 77.98719999999958,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 75,
+          "elapsedMs": 5793.8241,
+          "gapMs": 77.46110000000044,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 76,
+          "elapsedMs": 5870.549499999999,
+          "gapMs": 77.32439999999951,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 77,
+          "elapsedMs": 5949.448,
+          "gapMs": 78.70670000000064,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 78,
+          "elapsedMs": 6024.6657,
+          "gapMs": 75.01800000000003,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 79,
+          "elapsedMs": 6099.0491999999995,
+          "gapMs": 74.82740000000013,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 80,
+          "elapsedMs": 6184.7374,
+          "gapMs": 85.6219000000001,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 81,
+          "elapsedMs": 6263.503000000001,
+          "gapMs": 78.76679999999942,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 82,
+          "elapsedMs": 6339.870499999999,
+          "gapMs": 76.49120000000039,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 83,
+          "elapsedMs": 6418.031199999999,
+          "gapMs": 77.92720000000008,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 84,
+          "elapsedMs": 6497.1924,
+          "gapMs": 78.90999999999985,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 85,
+          "elapsedMs": 6576.760200000001,
+          "gapMs": 77.58799999999974,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 86,
+          "elapsedMs": 6653.1404999999995,
+          "gapMs": 78.52610000000095,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 87,
+          "elapsedMs": 6730.5301,
+          "gapMs": 77.63949999999932,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 88,
+          "elapsedMs": 6808.500599999999,
+          "gapMs": 77.95930000000044,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 89,
+          "elapsedMs": 6887.990599999999,
+          "gapMs": 79.4471999999987,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 90,
+          "elapsedMs": 6963.4277,
+          "gapMs": 75.19419999999991,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 91,
+          "elapsedMs": 7038.623299999999,
+          "gapMs": 75.07800000000134,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 92,
+          "elapsedMs": 7113.8717,
+          "gapMs": 75.45399999999972,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 93,
+          "elapsedMs": 7190.0291,
+          "gapMs": 76.23549999999886,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 94,
+          "elapsedMs": 7265.8321,
+          "gapMs": 75.57790000000023,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 95,
+          "elapsedMs": 7340.3958,
+          "gapMs": 74.37910000000011,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 96,
+          "elapsedMs": 7416.6687,
+          "gapMs": 76.1885000000002,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 97,
+          "elapsedMs": 7497.3516,
+          "gapMs": 81.04470000000038,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 98,
+          "elapsedMs": 7575.877699999999,
+          "gapMs": 78.7482,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 99,
+          "elapsedMs": 7652.6471,
+          "gapMs": 76.48970000000008,
+          "workspaceUnchanged": true
+        },
+        {
+          "character": 100,
+          "elapsedMs": 7727.585499999999,
+          "gapMs": 75.0663999999997,
+          "workspaceUnchanged": true
+        }
+      ]
+    },
+    {
+      "name": "reload and explicit chat selection restore draft text, attachment and ownership",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:05:11.954Z",
+      "finishedAt": "2026-11-27T07:05:12.246Z",
+      "draftKey": "chat:qa-phase1-chat",
+      "textLength": 100,
+      "attachments": 1,
+      "projectId": "qa-phase1-project",
+      "workspaceId": "qa-phase1-workspace"
+    },
+    {
+      "name": "real slow SSE grows visible text without per-chunk workspace writes",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:05:12.246Z",
+      "finishedAt": "2026-11-27T07:05:20.195Z",
+      "sseChunks": 13,
+      "visibleGrowthSamples": [
+        {
+          "chunk": 1,
+          "visibleCharacters": 278,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 2,
+          "visibleCharacters": 386,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 3,
+          "visibleCharacters": 494,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 4,
+          "visibleCharacters": 602,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 5,
+          "visibleCharacters": 710,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 6,
+          "visibleCharacters": 818,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 7,
+          "visibleCharacters": 926,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 8,
+          "visibleCharacters": 1034,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 9,
+          "visibleCharacters": 1142,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 10,
+          "visibleCharacters": 1254,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 11,
+          "visibleCharacters": 1366,
+          "workspaceUnchanged": true
+        },
+        {
+          "chunk": 12,
+          "visibleCharacters": 1478,
+          "workspaceUnchanged": true
+        }
+      ],
+      "workspaceBaseline": {
+        "bytes": 4054,
+        "sha256": "96fc3d6a5cf6175224b4ab68e830c4de8b195b16752c9c248091e98860642d5d",
+        "mtimeNs": "1795763112276714100"
+      },
+      "workspaceWritesDuringObservedStreaming": 0
+    },
+    {
+      "name": "the final reply is persisted once complete and remains readable after reload",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:05:20.196Z",
+      "finishedAt": "2026-11-27T07:05:20.730Z",
+      "replyCharacters": 1798,
+      "replySha256": "78d1a3ce837c5ea0271f73f42d8d934414b16a47ede2b1a31dbe0fc4d138166a",
+      "modelRequests": 1,
+      "processStatus": "exited"
+    },
+    {
+      "name": "closing before debounce flushes the last draft and normal restart restores it",
+      "status": "passed",
+      "startedAt": "2026-11-27T07:05:20.731Z",
+      "finishedAt": "2026-11-27T07:05:22.917Z",
+      "keyToCloseMs": 9.158500000001368,
+      "debounceMs": 400,
+      "prepareToQuitObserved": true,
+      "savedAcknowledgementObserved": true,
+      "firstExit": {
+        "launch": 1,
+        "code": 0,
+        "signal": null
+      },
+      "restoredDraftLength": 19,
+      "projectId": "qa-phase1-project"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "01-draft-restored.png",
+      "bytes": 48265,
+      "sha256": "56d587b6f2383462f15fee951ffdbdd3b7b758801b4543ae444d11b61ea76b22",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "02-live-stream.png",
+      "bytes": 116936,
+      "sha256": "edf78043f88575f57468b6d45970c9a536b77279fea4e252173581c43797c245",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "03-final-reply.png",
+      "bytes": 174935,
+      "sha256": "d68f6da0fe3a218644b4e1479c8b5f2ff0df2630c428eeff74f533e6bbd340b7",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    }
+  ],
+  "processExits": [
+    {
+      "launch": 1,
+      "code": 0,
+      "signal": null
+    },
+    {
+      "launch": 2,
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "providerRequests": [
+    {
+      "model": "qa-phase1-model",
+      "stream": true,
+      "typedTextIncluded": true,
+      "parsedAttachmentIncluded": true
+    }
+  ],
+  "visualReview": "pending-human-review",
+  "timing": {
+    "productDebounceMs": 400,
+    "productMaxWaitMs": 2000,
+    "requestedInterKeyMs": 70,
+    "firstWriteToleranceMs": [
+      1500,
+      2500
+    ],
+    "purpose": "CI observation tolerances, not a product latency guarantee."
+  },
+  "boundaries": [
+    "Empty project/chat metadata and provider configuration are seeded through real desktop IPC; text is entered one character at a time through CDP Input.insertText.",
+    "A real temporary text file is dropped through CDP and parsed by the production attachment path.",
+    "All assistant text comes from slow loopback SSE through the real Harness and privacy gateway; no assistant or progress state is injected.",
+    "Read-only observers record prepare-to-quit and its saved acknowledgement; they do not acknowledge or flush on behalf of the application.",
+    "File fingerprints establish observed writes in this bounded fixture, not a benchmark for large databases or all concurrent workloads.",
+    "No installer, upgrade, real cloud model quality, user installation, cross-account migration or complete visual audit is covered."
+  ],
+  "exeSha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f",
+  "persistenceEvents": [
+    {
+      "time": "2026-11-27T07:05:01.202Z",
+      "kind": "workspace",
+      "bytes": 1244,
+      "revision": 1
+    },
+    {
+      "time": "2026-11-27T07:05:01.323Z",
+      "kind": "workspace",
+      "bytes": 1865,
+      "revision": 2
+    },
+    {
+      "time": "2026-11-27T07:05:01.395Z",
+      "kind": "workspace",
+      "bytes": 1899,
+      "revision": 3
+    },
+    {
+      "time": "2026-11-27T07:05:01.447Z",
+      "kind": "workspace",
+      "bytes": 1899,
+      "revision": 4
+    },
+    {
+      "time": "2026-11-27T07:05:02.453Z",
+      "kind": "drafts",
+      "bytes": 553,
+      "revision": 5
+    },
+    {
+      "time": "2026-11-27T07:05:05.773Z",
+      "kind": "drafts",
+      "bytes": 632,
+      "revision": 6
+    },
+    {
+      "time": "2026-11-27T07:05:07.807Z",
+      "kind": "drafts",
+      "bytes": 710,
+      "revision": 7
+    },
+    {
+      "time": "2026-11-27T07:05:09.839Z",
+      "kind": "drafts",
+      "bytes": 788,
+      "revision": 8
+    },
+    {
+      "time": "2026-11-27T07:05:11.875Z",
+      "kind": "drafts",
+      "bytes": 855,
+      "revision": 9
+    },
+    {
+      "time": "2026-11-27T07:05:12.032Z",
+      "kind": "workspace",
+      "bytes": 2677,
+      "revision": 10
+    },
+    {
+      "time": "2026-11-27T07:05:12.051Z",
+      "kind": "workspace",
+      "bytes": 2677,
+      "revision": 11
+    },
+    {
+      "time": "2026-11-27T07:05:12.256Z",
+      "kind": "workspace",
+      "bytes": 2677,
+      "revision": 12
+    },
+    {
+      "time": "2026-11-27T07:05:12.267Z",
+      "kind": "workspace",
+      "bytes": 4023,
+      "revision": 13
+    },
+    {
+      "time": "2026-11-27T07:05:12.276Z",
+      "kind": "workspace",
+      "bytes": 4023,
+      "revision": 14
+    },
+    {
+      "time": "2026-11-27T07:05:20.339Z",
+      "kind": "workspace",
+      "bytes": 15754,
+      "revision": 15
+    },
+    {
+      "time": "2026-11-27T07:05:20.357Z",
+      "kind": "workspace",
+      "bytes": 37443,
+      "revision": 16
+    },
+    {
+      "time": "2026-11-27T07:05:20.359Z",
+      "kind": "workspace",
+      "bytes": 37443,
+      "revision": 17
+    },
+    {
+      "time": "2026-11-27T07:05:20.455Z",
+      "kind": "workspace",
+      "bytes": 37443,
+      "revision": 18
+    },
+    {
+      "time": "2026-11-27T07:05:20.496Z",
+      "kind": "workspace",
+      "bytes": 37443,
+      "revision": 19
+    },
+    {
+      "time": "2026-11-27T07:05:21.371Z",
+      "kind": "drafts",
+      "bytes": 372,
+      "revision": 20
+    },
+    {
+      "time": "2026-11-27T07:05:21.377Z",
+      "kind": "workspace",
+      "bytes": 37500,
+      "revision": 21
+    },
+    {
+      "time": "2026-11-27T07:05:22.633Z",
+      "kind": "workspace",
+      "bytes": 37500,
+      "revision": 1
+    },
+    {
+      "time": "2026-11-27T07:05:22.756Z",
+      "kind": "workspace",
+      "bytes": 37500,
+      "revision": 2
+    },
+    {
+      "time": "2026-11-27T07:05:22.935Z",
+      "kind": "workspace",
+      "bytes": 37500,
+      "revision": 3
+    }
+  ],
+  "cleanup": {
+    "processesExited": true,
+    "temporaryRemoved": true
+  },
+  "fixtureError": null,
+  "finishedAt": "2026-11-27T07:05:23.048Z"
+}

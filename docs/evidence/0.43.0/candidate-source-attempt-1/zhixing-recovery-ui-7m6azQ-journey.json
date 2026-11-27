@@ -1,0 +1,49 @@
+{
+  "layer": "Windows Electron renderer with synthetic IPC/fault injection; not final installer or cloud",
+  "records": [
+    {
+      "name": "失败后不导航即恢复正文和2个附件，terminal前归档轨迹/成果/子任务",
+      "status": "passed",
+      "details": {
+        "runId": "0afe6ffb-66da-455d-ba11-6bc6b0cee60d",
+        "executionCount": 1,
+        "traceCount": 3
+      }
+    },
+    {
+      "name": "内核清理重试只调用cleanup，不重新执行",
+      "status": "passed",
+      "details": {
+        "cleanupRetries": 1,
+        "executionCount": 1
+      }
+    },
+    {
+      "name": "从实际合成存储文件重新载入后失败正文/轨迹/清理终态仍在",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "失败期间的新输入及空附件不被旧草稿覆盖",
+      "status": "passed",
+      "details": {
+        "executionCount": 2
+      }
+    },
+    {
+      "name": "资料空间加入第三份资料保留原正文和前2个附件，再次加入不重复",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "附件读取期间正常打字不使附件generation过期",
+      "status": "passed",
+      "details": {}
+    },
+    {
+      "name": "12个附件满额时明确提示未加入数量且原附件全部保留",
+      "status": "passed",
+      "details": {}
+    }
+  ]
+}

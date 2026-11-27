@@ -170,15 +170,29 @@ async function check(name, action) {
 }
 async function ready() {
   await until(
-    () =>
-      evaluate(
-        () =>
-          document.readyState === 'complete' &&
-          !!document.querySelector('.app-shell') &&
-          document.querySelector('.workspace-save-banner')?.dataset.saveStatus === 'saved',
-      ),
+    async () => {
+      try {
+        return await evaluate(
+          () =>
+            location.href === 'zhixing://app/index.html' &&
+            document.readyState === 'complete' &&
+            !!document.querySelector('.app-shell') &&
+            document.querySelector('.workspace-save-banner')?.dataset.saveStatus === 'saved',
+        );
+      } catch (error) {
+        // The page target survives a document navigation, but its previous
+        // execution context can disappear between two readiness polls.
+        if (navigationContextGone(error)) return false;
+        throw error;
+      }
+    },
     'loaded app and saved workspace',
     60000,
+  );
+}
+function navigationContextGone(error) {
+  return /Execution context was destroyed|Cannot find context with specified id/.test(
+    error.message,
   );
 }
 async function selectChat(id) {
@@ -213,12 +227,7 @@ async function reloadReady() {
           before,
         );
       } catch (error) {
-        if (
-          /Execution context was destroyed|Cannot find context with specified id/.test(
-            error.message,
-          )
-        )
-          return false;
+        if (navigationContextGone(error)) return false;
         throw error;
       }
     },
@@ -523,11 +532,38 @@ async function launch() {
     'fresh renderer and main inspector endpoints',
     60000,
   );
-  const identity = await mainEvaluate(() => {
-    const { app, BrowserWindow } = process.mainModule.require('electron');
+  await mainEvaluate(() => {
+    const { BrowserWindow } = process.mainModule.require('electron');
     const window = BrowserWindow.getAllWindows()[0];
     window.webContents.setZoomFactor(1);
     window.setContentSize(1255, 912);
+    return true;
+  });
+  // CDP can advertise a page's requested URL before WebContents has committed
+  // it. Wait for the real navigation and loaded app before reading identity.
+  await until(
+    () =>
+      mainEvaluate(() => {
+        const { BrowserWindow } = process.mainModule.require('electron');
+        const window = BrowserWindow.getAllWindows()[0];
+        return (
+          window &&
+          !window.isDestroyed() &&
+          window.webContents.getURL() === 'zhixing://app/index.html' &&
+          !window.webContents.isLoadingMainFrame()
+        );
+      }),
+    'committed application navigation',
+    60000,
+  );
+  await ready();
+  await until(
+    () => evaluate(() => innerWidth === 1255 && innerHeight === 912),
+    'requested real viewport',
+  );
+  const identity = await mainEvaluate(() => {
+    const { app, BrowserWindow } = process.mainModule.require('electron');
+    const window = BrowserWindow.getAllWindows()[0];
     return {
       packaged: app.isPackaged,
       version: app.getVersion(),
@@ -548,11 +584,6 @@ async function launch() {
   assert.equal(path.resolve(identity.profile), profile);
   assert.equal(path.resolve(identity.exe), path.resolve(exe));
   assert.equal(identity.url, 'zhixing://app/index.html');
-  await until(
-    () => evaluate(() => innerWidth === 1255 && innerHeight === 912),
-    'requested real viewport',
-  );
-  await ready();
   return identity;
 }
 async function closeNormally() {
@@ -594,6 +625,8 @@ try {
       version: identity.version,
       versions: identity.versions,
       isolatedProfile: true,
+      committedUrl: identity.url,
+      workspaceReady: true,
     };
   });
   currentCase = 'seed empty isolated chats and an ask-mode provider';

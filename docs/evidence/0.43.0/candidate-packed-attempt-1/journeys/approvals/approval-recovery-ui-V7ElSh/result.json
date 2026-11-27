@@ -1,0 +1,58 @@
+{
+  "layer": "windows-packaged-app + real-harness + loopback model fixture",
+  "version": "0.43.0",
+  "sourceCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "sourceDirty": false,
+  "startedAt": "2026-11-27T07:06:17.788Z",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "status": "failed",
+  "cases": [
+    {
+      "name": "application identity and temporary profile are verified",
+      "status": "failed",
+      "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ ''\n- 'zhixing://app/index.html'\n"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "failure.png",
+      "bytes": 42499,
+      "sha256": "8d665777a20919dd8c76e945417ee5450c28e5fdaa142e7fa680df2291bc7e00",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    }
+  ],
+  "processExits": [
+    {
+      "launch": 1,
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "providerRequests": [],
+  "visualReview": "pending-human-review",
+  "boundaries": [
+    "Only provider configuration and empty project/chat metadata are seeded through desktop IPC in an isolated temporary profile.",
+    "Each tool call and result uses the real Harness, native approval bridge and production file policy. The loopback model provides deterministic SSE responses.",
+    "Only one-time allow/reject choices are exercised; no session grant, persistent grant, real cloud, installer or user installation is covered.",
+    "Approval and handoff snapshots are observed through production IPC. The expired-response negative case calls the real answer IPC; normal decisions use trusted CDP pointer events.",
+    "The global fallback case injects failed state into the real application ErrorBoundary through CDP to exercise actual App unmount/recovery; it does not establish that a spontaneous exception was caught.",
+    "Recovery is within the same live host with local persistence enabled. Normal host restart must retain saved terminal messages but must not revive pending approvals.",
+    "A separate case disables persistence through the real settings UI and starts a new project chat. Reload must cancel that volatile run instead of restoring its conversation or approval.",
+    "Screenshots are captured separately from assertions and require visual review."
+  ],
+  "exeSha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f",
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ ''\n- 'zhixing://app/index.html'\n\n    at launch (file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:550:10)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:591:22\n    at async check (file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:160:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:590:3",
+  "cleanup": {
+    "processesExited": true,
+    "temporaryRemoved": true
+  },
+  "fixtureError": null,
+  "finishedAt": "2026-11-27T07:06:19.423Z"
+}

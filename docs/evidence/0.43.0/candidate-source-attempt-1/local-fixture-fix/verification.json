@@ -1,0 +1,60 @@
+{
+  "task": "Windows conversation-recovery fixture adapts to root-scoped question queue",
+  "originalFailure": {
+    "workflowRunId": "45954359999",
+    "jobId": "140357299195",
+    "originalLog": "/workspace/scratch/7464bebaff38/windows-source-043-attempt1/job-140357299195.log",
+    "generatedAssertion": "main.cjs:167:85",
+    "sourceAssertionBeforeEdit": "tests/conversation-recovery-ui.test.mjs:221",
+    "actual": "undefined",
+    "expected": "null",
+    "cause": "The selected question is now Array.find() over the root-scoped queue; no selected item is undefined. The old private-observation contract expected a single-state null."
+  },
+  "changes": {
+    "productFiles": [],
+    "testFiles": [
+      "tests/conversation-recovery-ui.test.mjs"
+    ],
+    "nullNormalization": "Only the test observation API maps absent current selection to null.",
+    "strengthenedAssertions": [
+      "Both root questions remain after workspace write failure",
+      "Both root questions remain after failed or unresolved native forget",
+      "Confirmed deletion retains exactly the other root question",
+      "Late deleted-root question cannot re-enter the full queue",
+      "Another root question does not take over the current composer",
+      "Selecting the retained root shows its actual inline question"
+    ]
+  },
+  "validation": {
+    "sourceProbe": {
+      "exitCode": 0,
+      "chunkId": "935cf7",
+      "queueBefore": 2,
+      "queueAfter": 1,
+      "retainedRootSelectable": true
+    },
+    "negativeControl": {
+      "exitCode": 1,
+      "chunkId": "b89479",
+      "mutation": "In the isolated scratch build only, omit App's question-queue deletion cleanup",
+      "expected": "Assertion failure with target-question still in queue",
+      "observed": "Assertion failure with target-question still in queue"
+    },
+    "generatedTemplateSyntax": {
+      "exitCode": 0,
+      "files": [
+        "main.cjs",
+        "preload.cjs"
+      ]
+    },
+    "eslintExitCode": 0,
+    "nodeCheckExitCode": 0,
+    "diffCheckExitCode": 0
+  },
+  "limits": [
+    "Source probe uses real App callbacks with a hook scheduler and simulated IPC; child DOM/layout is not exercised.",
+    "The corrected Windows Electron journey has not run locally.",
+    "Windows platform assertion, 120-second timeout, disk-byte deletion, job/cache cleanup and other-root preservation assertions remain.",
+    "No product implementation was changed."
+  ]
+}

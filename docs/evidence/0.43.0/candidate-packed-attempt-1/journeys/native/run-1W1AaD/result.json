@@ -1,0 +1,140 @@
+{
+  "version": "0.43.0",
+  "sourceCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "exeSha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f",
+  "status": "passed",
+  "records": [
+    {
+      "name": "Windows 当前执行权限触发原生 write 审批卡片，真实点击拒绝后未写入",
+      "status": "passed",
+      "details": {
+        "receipts": 2
+      }
+    },
+    {
+      "name": "实际批准的多文件补丁停在第 1/3 步，已写文件保留、后续文件不变",
+      "status": "passed",
+      "details": {
+        "receipts": 5
+      }
+    },
+    {
+      "name": "Office 转换的审批卡片真实点击仅允许本次，源文件保持原字节",
+      "status": "passed",
+      "details": {
+        "receipts": 7,
+        "pdfSha256": "b9f4d067b484ccd278ac4b53d875e7cacded0be2cae91c45718fdcb84c08c6a7",
+        "pdfBytes": 12582
+      }
+    },
+    {
+      "name": "重启后保留补丁终态；Markdown 按所选历史和已审阅快照保存准确字节，零新增出站",
+      "status": "passed",
+      "details": {
+        "markdownBytes": 1761,
+        "markdownSha256": "0f5ff16814c911345a075c5cff2fd1ef061fd9642c39f355bd3b24631f7cf692"
+      }
+    },
+    {
+      "name": "保存对话框打开期间移动会话，旧快照不再允许写盘",
+      "status": "passed",
+      "details": {}
+    }
+  ],
+  "receipts": [
+    {
+      "number": 1,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 0
+    },
+    {
+      "number": 2,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 1
+    },
+    {
+      "number": 3,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 1
+    },
+    {
+      "number": 4,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 2
+    },
+    {
+      "number": 5,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 3
+    },
+    {
+      "number": 6,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 3
+    },
+    {
+      "number": 7,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 4
+    }
+  ],
+  "approvals": [
+    {
+      "hostEpoch": "555e97c4-e0ad-4bb4-bee3-cd27ca40e62d",
+      "requestId": "e103afca-2c14-43c3-a793-3771e2717347",
+      "runId": "d4ce6e7e-8d88-4db3-822a-a2ae6d56d65f",
+      "rootSessionId": "qa-native-files",
+      "sourceSessionId": "qa-native-files",
+      "toolName": "write",
+      "callId": "native-1",
+      "outcome": "rejected",
+      "expectedTargetMatched": true,
+      "decisionTransport": "trusted CDP pointer",
+      "decidedAt": "2026-11-27T07:04:14.405Z"
+    },
+    {
+      "hostEpoch": "555e97c4-e0ad-4bb4-bee3-cd27ca40e62d",
+      "requestId": "d24de3ba-fa13-4a24-a864-cf52dd918610",
+      "runId": "da3468d6-6400-46ce-a5a7-0afbaddc5f39",
+      "rootSessionId": "qa-native-files",
+      "sourceSessionId": "qa-native-files",
+      "toolName": "apply_patch",
+      "callId": "native-4",
+      "outcome": "allowed-once",
+      "expectedTargetMatched": true,
+      "decisionTransport": "trusted CDP pointer",
+      "decidedAt": "2026-11-27T07:04:17.998Z"
+    },
+    {
+      "hostEpoch": "555e97c4-e0ad-4bb4-bee3-cd27ca40e62d",
+      "requestId": "d64675c7-7185-4331-8e60-71973f0718ce",
+      "runId": "c3484a6b-d3a8-45b7-baab-531ef9ca6dff",
+      "rootSessionId": "qa-native-files",
+      "sourceSessionId": "qa-native-files",
+      "toolName": "office_convert",
+      "callId": "native-6",
+      "outcome": "allowed-once",
+      "expectedTargetMatched": true,
+      "decisionTransport": "trusted CDP pointer",
+      "decidedAt": "2026-11-27T07:04:21.579Z"
+    }
+  ],
+  "exits": [
+    {
+      "code": 0,
+      "signal": null
+    },
+    {
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "dialogSelection": "synthetic save selection only; approvals use trusted CDP pointer clicks on the real inline cards"
+}

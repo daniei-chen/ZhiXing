@@ -1,0 +1,11 @@
+
+> office-agent@0.43.0 test:approvals
+> node scripts/test-approval-recovery-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\_temp\zhixing-packed-journeys\approvals\approval-recovery-ui-V7ElSh
+FAIL application identity and temporary profile are verified: Expected values to be strictly equal:
++ actual - expected
+
++ ''
+- 'zhixing://app/index.html'
+

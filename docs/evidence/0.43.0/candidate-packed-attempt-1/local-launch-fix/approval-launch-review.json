@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-27T07:18:25.972001+00:00",
+  "runId": 45954360110,
+  "jobId": 140357299267,
+  "artifactId": 15178314910,
+  "candidate": {
+    "version": "0.43.0",
+    "sourceCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+    "exeSha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f"
+  },
+  "observedFailure": {
+    "case": "application identity and temporary profile are verified",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ ''\n- 'zhixing://app/index.html'\n\n    at launch (file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:550:10)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:591:22\n    at async check (file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:160:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-approval-recovery-ui.mjs:590:3",
+    "passedCases": 0,
+    "failedCases": 1,
+    "unreachedCases": 12,
+    "providerRequests": 0,
+    "processExits": [
+      {
+        "launch": 1,
+        "code": 0,
+        "signal": null
+      }
+    ],
+    "cleanup": {
+      "processesExited": true,
+      "temporaryRemoved": true
+    }
+  },
+  "visualReview": {
+    "method": "assistant viewed original failure.png",
+    "observation": "Application home was rendered; the upper-right status still indicated loading/restoring the local workspace. No approval case had started.",
+    "rawReviewFieldUnchanged": true
+  },
+  "fix": {
+    "file": "scripts/test-approval-recovery-ui.mjs",
+    "sha256": "aa984a9c7fe0480b5c3a4ec95667414beba458d13f7cec133196cf3154bcf485",
+    "scope": "QA script only",
+    "sequence": [
+      "attach fresh renderer and main CDP targets",
+      "set viewport",
+      "wait for main WebContents exact committed app URL and no main-frame loading",
+      "wait for real app shell, complete document, exact renderer URL and saved workspace",
+      "verify viewport",
+      "read fresh main-process identity and preserve all six exact identity assertions"
+    ],
+    "contextRetries": [
+      "Execution context was destroyed",
+      "Cannot find context with specified id"
+    ],
+    "unexpectedErrors": "propagated",
+    "fullJourneyCases": 13
+  },
+  "electronContract": {
+    "version": "44.11.5",
+    "file": "node_modules/electron/electron.d.ts",
+    "sha256": "6d8fed3099181a3c51290b827f6f6514935d9269a7fc6bdc813dc12b31e01381",
+    "finding": "did-start-navigation retains deprecated url/isInPlace/isMainFrame positional arguments while the first event argument exposes url/isSameDocument/isMainFrame. The product hook was not changed and is not established as a cause of this failure."
+  },
+  "validation": {
+    "nodeCheck": "passed",
+    "eslint": "passed",
+    "prettier": "passed",
+    "localReadinessHelperProbe": {
+      "knownContextErrorsRetried": 2,
+      "unexpectedErrorRejected": true,
+      "identityAssertionsPreserved": 6,
+      "journeyChecks": 13
+    },
+    "windowsAfterFix": "not run",
+    "fullApplicationLaunchAfterFix": "not run"
+  },
+  "files": [
+    {
+      "path": "/workspace/scratch/7464bebaff38/windows-packed-043-attempt1/extracted/journeys/approvals/approval-recovery-ui-V7ElSh/result.json",
+      "bytes": 3163,
+      "sha256": "eb27fcca252f3a68b139ba5eb8c8e0bb9042a1878f71b2b57b079c22833751bd"
+    },
+    {
+      "path": "/workspace/scratch/7464bebaff38/windows-packed-043-attempt1/extracted/journeys/approvals/approval-recovery-ui-V7ElSh/app-log-tail.txt",
+      "bytes": 415,
+      "sha256": "0eb04baf1103c07e24c96030415f51d450810932f91b787dfcfa957cdb93eb30"
+    },
+    {
+      "path": "/workspace/scratch/7464bebaff38/windows-packed-043-attempt1/extracted/journeys/approvals/approval-recovery-ui-V7ElSh/failure.png",
+      "bytes": 42499,
+      "sha256": "8d665777a20919dd8c76e945417ee5450c28e5fdaa142e7fa680df2291bc7e00"
+    },
+    {
+      "path": "/workspace/scratch/7464bebaff38/phase043-first-packed/job-140357299267.log",
+      "bytes": 199419,
+      "sha256": "cb9d26dca020bd4be29075865b144617b52dee1d5bd9b5b2ccdfa4d2334f9db8"
+    }
+  ]
+}

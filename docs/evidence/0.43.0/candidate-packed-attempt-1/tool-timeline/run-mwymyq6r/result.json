@@ -1,0 +1,61 @@
+{
+  "layer": "windows-packaged-app + real-kernel + local fake provider",
+  "version": "0.43.0",
+  "sourceCommit": "feaadaeb575671fa326b9eedd6ac631c7e68f1ce",
+  "sourceDirty": false,
+  "exeSha256": "39565d30eb488f6e4af544227f3f4923e2d847b39b47e1cf7f526f721e7d274f",
+  "status": "passed",
+  "cases": [
+    {
+      "name": "假服务已保存，工作区指向它",
+      "status": "passed"
+    },
+    {
+      "name": "调用与结果合为一次工具调用，保留完成状态",
+      "status": "passed",
+      "rows": [
+        "更新工作计划 · 完成"
+      ],
+      "summary": "1 次工具调用"
+    },
+    {
+      "name": "刷新后从保存轨迹恢复一次调用",
+      "status": "passed",
+      "rows": [
+        "更新工作计划 · 完成"
+      ],
+      "summary": "1 次工具调用",
+      "savedTrace": [
+        {
+          "type": "tool/call",
+          "callId": "event-17",
+          "status": "running"
+        },
+        {
+          "type": "tool/result",
+          "callId": "event-17",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "provider": "http://127.0.0.1:51832/v1",
+  "lastRequestKeys": [
+    "model",
+    "messages",
+    "stream",
+    "max_tokens",
+    "tools",
+    "reasoning_effort"
+  ],
+  "rows": [
+    "更新工作计划 · 完成"
+  ],
+  "summary": "1 次工具调用",
+  "answer": "知行\n脱敏模式\n工作计划 · 1/1\n检查工具时间线\n1 次工具调用\n\n工具已经跑完了。\n\n详情\n\n上下文 6,824 / 128,000 tokens 压缩上下文",
+  "providerCalls": [
+    "GET /v1/models",
+    "POST /v1/chat/completions",
+    "POST /v1/chat/completions"
+  ]
+}
