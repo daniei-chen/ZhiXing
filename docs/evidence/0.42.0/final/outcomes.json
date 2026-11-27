@@ -1,0 +1,97 @@
+{
+  "install": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "electron": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "quality": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "package": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "nsis": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "verify": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "unit": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "components": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "sites": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "packed": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "errors": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "native": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "tools": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "phase0a": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "phase1": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "workbench": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "dependencies": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "startup": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "signature": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  }
+}

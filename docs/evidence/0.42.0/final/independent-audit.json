@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-27T05:01:45.939Z",
+  "status": "passed_no_blocking_discrepancies",
+  "repository": "daniei-chen/ZhiXing",
+  "version": "0.42.0",
+  "tag": "v0.42.0",
+  "releaseId": 460182987,
+  "publishedAt": "2026-11-27T04:55:56Z",
+  "workflowRunId": "45940385739",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "sourceTree": "c88625526d187b2049428de82072672414ff10bb",
+  "identity": {
+    "tagCommitMatched": true,
+    "apiCommitTreeMatched": true,
+    "provenanceMatched": true,
+    "sourceDirty": false,
+    "runnerNode": "v24.19.0",
+    "applicationExecutable": {
+      "bytes": 246511104,
+      "sha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3"
+    },
+    "applicationExecutableScope": "Hash cross-checked across the six actual packaged journey reports; this audit did not extract and rehash the inner EXE from NSIS."
+  },
+  "assets": {
+    "count": 18,
+    "manifestMatches": 18,
+    "receiptMatches": 18,
+    "publicApiDigestMatches": 18,
+    "mismatched": 0,
+    "extras": [],
+    "files": [
+      {
+        "name": "SHA256SUMS-release.txt",
+        "bytes": 1526,
+        "sha256": "a70405917a1d10a04097962a8c98813b051c8e2cd34ea91f95d6d24b3be73c57",
+        "remoteAssetId": 799037411,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "ZhiXing-0.42.0-x64.exe",
+        "bytes": 338723692,
+        "sha256": "24c6adb1511329da43c339e29fed2433305761d36dc8639a24023ecc2fb6dd07",
+        "remoteAssetId": 799037529,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "ZhiXing-0.42.0-x64.exe.blockmap",
+        "bytes": 314876,
+        "sha256": "747a7168ae854577129f2eeab4d0c68b0288827d8902e11651cbc9ff47c10634",
+        "remoteAssetId": 799038476,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "ZhiXing-v0.41.0-to-v0.42.0.patch",
+        "bytes": 2189757,
+        "sha256": "6c9c78674419d4ec293bfa7717f5f2e881ea2b4c3fbec658376d587676f69f5c",
+        "remoteAssetId": 799038612,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "acceptance-summary-0.42.0.json",
+        "bytes": 25971,
+        "sha256": "6f1ee384970eae6d72ef4a720f438a2e0805a1ce3fe6e385356669448c71d134",
+        "remoteAssetId": 799038731,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "advisories-by-path.json",
+        "bytes": 685,
+        "sha256": "2aa4a2bba546df57e857a2e5c6bfa02e1cfbe5f1e8527371eb395aeeba56174f",
+        "remoteAssetId": 799038857,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "app-update.yml",
+        "bytes": 111,
+        "sha256": "4f1b8da276060c800e09d2c87b550511fe48afb1ff3480bdde14af876862ec30",
+        "remoteAssetId": 799039003,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "audit-request-0.42.0.md",
+        "bytes": 5027,
+        "sha256": "a0c88543b02116e5a7e64b213b8ba131b11b0a3391d0c8af3cc8280f270cf0a5",
+        "remoteAssetId": 799039085,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "build-provenance.json",
+        "bytes": 287,
+        "sha256": "0e1476163a1f7586238b5020a93fb98a798d514fd51398b9fb83909574c0f165",
+        "remoteAssetId": 799039215,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "harness-capability-map.md",
+        "bytes": 72090,
+        "sha256": "24d1b4e40744b116ac586924f0d32aba50be18005663b92a41efd020cc4fb778",
+        "remoteAssetId": 799039320,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "iteration-0.42.0.md",
+        "bytes": 8339,
+        "sha256": "104965d6f5b05113dfcd7996fe47989cc2d2a68fd21cb0347080068bda502c37",
+        "remoteAssetId": 799039425,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "latest.yml",
+        "bytes": 342,
+        "sha256": "acdc97ee6b82e3e406bc12e6609a01460e20a2605d681dd75c19e4eb9e037a06",
+        "remoteAssetId": 799039527,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "packed-source-manifest.json",
+        "bytes": 14673,
+        "sha256": "b7297e7c3a3e8565b47a3b77fc60d99cd26995100569e33e93ca97615b5e755b",
+        "remoteAssetId": 799039580,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "production-inventory.json",
+        "bytes": 422927,
+        "sha256": "e22e1dfa3de100a58e33ee32b595067476c1f136dce11ec683467200ad32894b",
+        "remoteAssetId": 799039646,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "production-sbom.cdx.json",
+        "bytes": 924010,
+        "sha256": "33ccd953fb9201eec3bef8232f9ec61e20730dee58c453a3e7d598fa50a49a03",
+        "remoteAssetId": 799039710,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "release-notes-0.42.0.md",
+        "bytes": 4540,
+        "sha256": "3f6cbde550b6ec5e230d7d47ecc15b2988bf803f280d6b38ea3ee9c681c6d5ea",
+        "remoteAssetId": 799039779,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "signing.md",
+        "bytes": 371,
+        "sha256": "63cf28526df2f21b0170a02d721cbb3c51e246cddc5a35b9c37cb85c89c7b4e0",
+        "remoteAssetId": 799039850,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      },
+      {
+        "name": "windows-acceptance-0.42.0.md",
+        "bytes": 2233,
+        "sha256": "011e57cef1c7e89d1cffc5c558705353666fa60a721e26e1b074f882fb292276",
+        "remoteAssetId": 799039912,
+        "receiptMethod": "github-api-sha256",
+        "verified": true
+      }
+    ]
+  },
+  "checksums": {
+    "entries": 17,
+    "coversEveryOtherAsset": true,
+    "checksumFileHashedInExternalManifest": true
+  },
+  "gates": {
+    "count": 19,
+    "allSuccess": true,
+    "outcomesMatched": true
+  },
+  "counts": {
+    "unit": {
+      "tests": 611,
+      "suites": 0,
+      "pass": 611,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 308940.6445
+    },
+    "components": {
+      "tests": 36,
+      "suites": 0,
+      "pass": 36,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 22860.0626
+    },
+    "sites": {
+      "tests": 4,
+      "suites": 0,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 98.9294
+    },
+    "packed": {
+      "tests": 410,
+      "suites": 0,
+      "pass": 410,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 468831.5298
+    }
+  },
+  "packedScope": {
+    "package-aware": 40,
+    "mixed-source": 3,
+    "source-only": 1,
+    "unit": "test-files",
+    "boundary": "Packaged EXE runs source test files; fixture generators and test dependencies may come from the checkout. Mixed/source-only helpers do not verify the renderer bundle."
+  },
+  "journeys": {
+    "errors": {
+      "passed": 7,
+      "observed": 5,
+      "skipped": 0,
+      "failed": 0,
+      "visualReview": "not_recorded",
+      "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3"
+    },
+    "native": {
+      "passed": 5,
+      "observed": 0,
+      "skipped": 0,
+      "failed": 0,
+      "visualReview": "not_recorded",
+      "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3"
+    },
+    "tools": {
+      "passed": 3,
+      "observed": 0,
+      "skipped": 0,
+      "failed": 0,
+      "visualReview": "not_recorded",
+      "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3"
+    },
+    "phase0a": {
+      "passed": 9,
+      "observed": 0,
+      "skipped": 0,
+      "failed": 0,
+      "visualReview": "pending-human-review",
+      "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3"
+    },
+    "phase1": {
+      "passed": 7,
+      "observed": 0,
+      "skipped": 0,
+      "failed": 0,
+      "visualReview": "pending-human-review",
+      "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3"
+    },
+    "workbench": {
+      "passed": 10,
+      "observed": 0,
+      "skipped": 0,
+      "failed": 0,
+      "visualReview": "pending-human-review",
+      "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3"
+    }
+  },
+  "evidenceFingerprints": {
+    "count": 12,
+    "mismatched": 0,
+    "files": [
+      {
+        "name": "logs/unit.log",
+        "bytes": 61327,
+        "sha256": "1bc9fa06c897a4df15bd1fea4e00e1e1b18797f5e818c8f862a0399097be47b9",
+        "verified": true
+      },
+      {
+        "name": "logs/components.log",
+        "bytes": 7052,
+        "sha256": "6947edf0642fb6d34f4541e8595f34e24227c766a601ef4abda7bbeb2ffcf569",
+        "verified": true
+      },
+      {
+        "name": "logs/sites.log",
+        "bytes": 472,
+        "sha256": "925b79b9b633630f23da8a9797516a577a29b16a1e6443819141930631f58d63",
+        "verified": true
+      },
+      {
+        "name": "logs/packed.log",
+        "bytes": 45259,
+        "sha256": "644d52069b7fc3622adc6a47464eb619bcccdf21665012c4c148b650a102cea2",
+        "verified": true
+      },
+      {
+        "name": "logs/quality.log",
+        "bytes": 2415,
+        "sha256": "9fd49827396fbf0705eb351b063f1e0decc43d4c178f2114716a6f3d277eb453",
+        "verified": true
+      },
+      {
+        "name": "logs/startup.log",
+        "bytes": 3876,
+        "sha256": "9a4b43328de8a046e4c9bd43a78fb7f211b6c29e55b4ed1040ef480161b570c8",
+        "verified": true
+      },
+      {
+        "name": "journeys/errors/result.json",
+        "bytes": 4805,
+        "sha256": "ad32b0f3ac4beff2b424c382ba589a373ec7850fae1d6b8dd385f78226669985",
+        "verified": true
+      },
+      {
+        "name": "journeys/native/result.json",
+        "bytes": 2357,
+        "sha256": "29cd3d66a911a19d0a6f379ba35994639960d4b44725fa4d572eb91209e18ec1",
+        "verified": true
+      },
+      {
+        "name": "journeys/tools/result.json",
+        "bytes": 1636,
+        "sha256": "2137caad90ffe73cf5e7f4229b2bebaa60e723c2cdbedce01a064f4aa4d81c88",
+        "verified": true
+      },
+      {
+        "name": "journeys/phase0a/result.json",
+        "bytes": 10833,
+        "sha256": "b41e8a0c3682e8d450127677e77f35f074d26e27de79a0ff2046b610f1cc9ae7",
+        "verified": true
+      },
+      {
+        "name": "journeys/phase1/result.json",
+        "bytes": 27384,
+        "sha256": "83c3b91e536d3ac02791d2a80a1f8f85bb585ecc49d901dc3fb9a0bdd449e29e",
+        "verified": true
+      },
+      {
+        "name": "journeys/workbench/result.json",
+        "bytes": 8381,
+        "sha256": "070b8724862a2aa274bb0c490af9d6d500995fd73d06b358be9b6aa138ae4509",
+        "verified": true
+      }
+    ]
+  },
+  "packedSourceVerification": {
+    "matchedFiles": 102,
+    "sourceFingerprint": "068d4f0bb604cad5098c55503f886d65f47e438cf35efd82691ebffda0f3712d"
+  },
+  "atomicReplacement": {
+    "unit": [
+      {
+        "case": "temporary-no-delete-sharing",
+        "firstErrorCode": "EPERM",
+        "lastObservedErrorCode": "EPERM",
+        "renameAttempts": 2,
+        "holderReleasedNormally": true,
+        "originalBytesPreservedWhileHeld": true,
+        "replacementBytesMatched": true,
+        "temporaryRemovedAfterCommit": true
+      },
+      {
+        "case": "persistent-no-delete-sharing",
+        "firstErrorCode": "EPERM",
+        "lastObservedErrorCode": "EPERM",
+        "failedRenameAttempts": 9,
+        "renameAttemptsIncludingExplicitRetry": 10,
+        "holderReleasedNormally": true,
+        "originalBytesPreservedWhileHeld": true,
+        "replacementBytesMatched": true,
+        "temporaryRemovedAfterCommit": true
+      }
+    ],
+    "packed": [
+      {
+        "case": "temporary-no-delete-sharing",
+        "firstErrorCode": "EPERM",
+        "lastObservedErrorCode": "EPERM",
+        "renameAttempts": 2,
+        "holderReleasedNormally": true,
+        "originalBytesPreservedWhileHeld": true,
+        "replacementBytesMatched": true,
+        "temporaryRemovedAfterCommit": true
+      },
+      {
+        "case": "persistent-no-delete-sharing",
+        "firstErrorCode": "EPERM",
+        "lastObservedErrorCode": "EPERM",
+        "failedRenameAttempts": 9,
+        "renameAttemptsIncludingExplicitRetry": 10,
+        "holderReleasedNormally": true,
+        "originalBytesPreservedWhileHeld": true,
+        "replacementBytesMatched": true,
+        "temporaryRemovedAfterCommit": true
+      }
+    ]
+  },
+  "dependencies": {
+    "appVersion": "0.42.0",
+    "packageCount": 1162,
+    "fingerprint": "c47ded11501d7a20913d5910590fc00d943fd9ec2024b4072a93bdcdaa6bb23d",
+    "npmVersion": "11.21.3",
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 32,
+      "high": 0,
+      "critical": 0,
+      "total": 32
+    },
+    "uniqueDirectAdvisoriesOnInstalledPaths": 2,
+    "auditedFromVerifiedLockProjection": true
+  },
+  "signature": {
+    "executable": "NotSigned",
+    "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+    "installationLifecycle": "not run",
+    "realCloud": "not run",
+    "installer": "NotSigned",
+    "version": "0.42.0"
+  },
+  "publication": {
+    "summaryRecordedBeforePublish": "pending_separate_publish_job",
+    "receiptStatus": "published_and_verified",
+    "receiptRunId": "45940385739",
+    "draft": false,
+    "prerelease": true
+  },
+  "boundaries": [
+    "Only artifacts and logs from formal release run45940385739 were used; candidate, failed and standalone source runs were not substituted.",
+    "Remote assets were compared with the provided current GitHub API snapshots; this reviewer performed no additional downloads or network queries.",
+    "The 410 packed test count includes source test files, fixtures and mixed/source-only helpers; 40/3/1 are test-file classifications, not assertion-level coverage.",
+    "Original automated visualReview values remain pending-human-review or not_recorded; no human visual approval is inferred.",
+    "Installer and application signatures are NotSigned; installation lifecycle, real cloud and the user installation were not exercised.",
+    "The pre-publication acceptance summary remains immutable; publication completion is established separately by the receipt and public Release snapshot."
+  ]
+}

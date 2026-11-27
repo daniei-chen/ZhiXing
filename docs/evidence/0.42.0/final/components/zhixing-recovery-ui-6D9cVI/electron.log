@@ -1,0 +1,30 @@
+
+Error occurred in handler for 'qa': Error: protected synthetic IPC rejection
+    at emitFailure (D:\a\_temp\zhixing-release-temp\zhixing-recovery-ui-6D9cVI\main.cjs:46:1020)
+    at async D:\a\_temp\zhixing-release-temp\zhixing-recovery-ui-6D9cVI\main.cjs:55:24
+PASS 失败后不导航即恢复正文和2个附件，terminal前归档轨迹/成果/子任务
+PASS 内核清理重试只调用cleanup，不重新执行
+PASS 从实际合成存储文件重新载入后失败正文/轨迹/清理终态仍在
+Error occurred in handler for 'qa': Error: protected synthetic IPC rejection
+    at emitFailure (D:\a\_temp\zhixing-release-temp\zhixing-recovery-ui-6D9cVI\main.cjs:46:1020)
+    at async D:\a\_temp\zhixing-release-temp\zhixing-recovery-ui-6D9cVI\main.cjs:79:9
+PASS 失败期间的新输入及空附件不被旧草稿覆盖
+PASS 资料空间加入第三份资料保留原正文和前2个附件，再次加入不重复
+PASS 附件读取期间正常打字不使附件generation过期
+PASS 12个附件满额时明确提示未加入数量且原附件全部保留
+Error occurred in handler for 'qa': Error: SYNTHETIC_DISK_WRITE_FAILED
+    at D:\a\_temp\zhixing-release-temp\zhixing-recovery-ui-6D9cVI\main.cjs:15:55
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'qa': Error: SYNTHETIC_DISK_WRITE_FAILED
+    at D:\a\_temp\zhixing-release-temp\zhixing-recovery-ui-6D9cVI\main.cjs:15:55
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+Error occurred in handler for 'qa': Error: SYNTHETIC_FORGET_UNCONFIRMED
+    at D:\a\_temp\zhixing-release-temp\zhixing-recovery-ui-6D9cVI\main.cjs:23:57
+    at Session.<anonymous> (node:electron/js2c/browser_init:1:119124)
+    at Session.emit (node:events:514:28)
+PASS forget失败或未确认不提前清缓存；成功仅清目标job/轨迹/滚动缓存；迟到事件不复活
+PASS 删除写盘故障可见且不提前forget，重试后文件字节与重启均无目标marker
+PASS 历史孤儿不会静默删除，显式恢复后正文附件可见
+PASS 自动化待保存正文可读，重试保存不增加runPrepared次数

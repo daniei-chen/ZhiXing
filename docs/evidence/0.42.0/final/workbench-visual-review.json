@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "status": "ai_reviewed",
+  "reviewKind": "AI-only visual inspection of four original screenshots",
+  "reviewer": {
+    "type": "AI assistant",
+    "agent": "chat_ui",
+    "humanReviewer": false
+  },
+  "reviewedAt": "2026-11-27T04:57:21.381982+00:00",
+  "version": "0.42.0",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "workflow": {
+    "runId": "45940385739",
+    "url": "https://github.com/daniei-chen/ZhiXing/actions/runs/45940385739"
+  },
+  "evidenceLayer": "windows-packaged-app + real-harness + loopback model fixture",
+  "method": "Each of the four original PNGs was separately opened with view_image and visually inspected. Image byte counts, dimensions and SHA256 values were independently matched to the raw result. No image or original report was rewritten.",
+  "rawResult": {
+    "file": "journeys/workbench/workbench-preview-ui-lBqHep/result.json",
+    "bytes": 8381,
+    "sha256": "070b8724862a2aa274bb0c490af9d6d500995fd73d06b358be9b6aa138ae4509",
+    "status": "passed",
+    "recordedCaseCounts": {
+      "passed": 10,
+      "failed": 0
+    },
+    "visualReview": "pending-human-review",
+    "preservedUnchanged": true
+  },
+  "screenshots": [
+    {
+      "file": "journeys/workbench/workbench-preview-ui-lBqHep/01-delivery-preview-light.png",
+      "filename": "01-delivery-preview-light.png",
+      "bytes": 76168,
+      "sha256": "c7760b062a9dace8130e376295b78629951e5ed18f4b779402e22beb2c391b19",
+      "width": 1255,
+      "height": 912,
+      "reviewStatus": "ai_reviewed",
+      "observations": [
+        "浅色界面中，右侧产出标签显示季度纪要.md的文件名、返回入口、放大预览入口、本机提取文字及正文；没有以模态层盖住聊天。",
+        "左侧聊天正文、改动与交付卡片可见；底部未发送草稿、模型入口、麦克风和发送按钮可见，预览面板未覆盖输入区。",
+        "标签条在其独立行内呈现，右端面板操作仍可见，未发现标签与操作重叠。"
+      ]
+    },
+    {
+      "file": "journeys/workbench/workbench-preview-ui-lBqHep/02-preview-file-unavailable.png",
+      "filename": "02-preview-file-unavailable.png",
+      "bytes": 72564,
+      "sha256": "ced836724eff3b99bcd20d6ad32034e583ba63e5253d655171f20558228b1f4d",
+      "width": 1255,
+      "height": 912,
+      "reviewStatus": "ai_reviewed",
+      "observations": [
+        "文件不存在的红色提示位于右侧预览内容区，重试预览按钮完整可见；没有继续显示先前提取正文。",
+        "文件名和返回入口仍在预览头部；左侧聊天及未发送草稿保持可见，错误区域没有覆盖输入区。"
+      ]
+    },
+    {
+      "file": "journeys/workbench/workbench-preview-ui-lBqHep/03-keyboard-tab-navigation.png",
+      "filename": "03-keyboard-tab-navigation.png",
+      "bytes": 78447,
+      "sha256": "066f5c175b8336785f7befb42ef7f75778b1c1abf99998cbc8c156f2a6128fd9",
+      "width": 1255,
+      "height": 912,
+      "reviewStatus": "ai_reviewed",
+      "observations": [
+        "详情标签具有清晰的焦点描边，内容区展示交办详情及合成项目信息。",
+        "标签条已横向滚动，早期标签在左边缘部分裁切；详情标签和右端面板操作完整可见，滚动范围没有扩展为整页横向位移。",
+        "聊天正文、交付卡片和底部草稿仍在同一可见布局中，没有被详情内容挤盖。"
+      ]
+    },
+    {
+      "file": "journeys/workbench/workbench-preview-ui-lBqHep/04-delivery-preview-dark-narrow.png",
+      "filename": "04-delivery-preview-dark-narrow.png",
+      "bytes": 62554,
+      "sha256": "7b7f796a95e118706c5786e87b2f2b681665d2c1cdfae6c1df876bc03122f287",
+      "width": 950,
+      "height": 912,
+      "reviewStatus": "ai_reviewed",
+      "observations": [
+        "950×912截图中，右侧季度纪要文字预览、返回入口与放大预览入口清楚可见，深色背景与文字保持可辨。",
+        "产出标签与右端面板操作分区可见；底部草稿、模型入口、麦克风和发送按钮没有被预览面板或提示覆盖。",
+        "聊天中的季度纪要.md行内引用自然跨两行，右侧同时显示该文件预览；本图本身不证明点击行为，实际点击断言属于独立的专项结果。"
+      ]
+    }
+  ],
+  "findings": [],
+  "conclusion": {
+    "blockingVisualIssuesObserved": false,
+    "text": "在本次四张正式构建截图覆盖的浅色预览、文件缺失、键盘焦点与深色窄屏状态中，未观察到阻塞使用的遮挡、预览覆盖输入区或标签与固定操作重叠。"
+  },
+  "boundaries": [
+    "This is AI visual review, not human approval; the original pending-human-review fields remain unchanged.",
+    "The screenshots belong only to formal workflow 45940385739 and source 1639c63c9273181fa8f63d9bdd5ed86178aafe1f; prior candidates and the failed first formal run were not substituted.",
+    "Only these four still images at 1255×912 and 950×912 were visually reviewed. This is not pixel-identical verification, an accessibility audit, all DPI or display configurations, or all pages and interaction states.",
+    "Mouse, keyboard, file reads, retry behavior, ownership isolation and persistence are established only by their separately recorded automated assertions; static screenshots do not independently prove those behaviors.",
+    "The project, files and model response are controlled QA fixtures using the real packaged application and Harness with a local synthetic model service; this is not real cloud office-task evaluation or user data.",
+    "The preview shown is extracted plain text, not original Office/PDF/image page layout verification.",
+    "No installer, upgrade or uninstall lifecycle, code signing, user installation, cross-account decryption or comprehensive Harness desktop visual parity was reviewed here."
+  ]
+}

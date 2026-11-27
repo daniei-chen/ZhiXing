@@ -1,0 +1,53 @@
+{
+  "layer": "Windows Electron real App/React/Chromium DOM + synthetic IPC and JSON file; not production main, encrypted vault, installer, Harness or cloud",
+  "records": [
+    {
+      "name": "三份新草稿经真实DOM逐份回切，正文/独立附件/原归属和三个顶栏入口正确",
+      "status": "passed",
+      "details": {
+        "draftKeys": [
+          "new:office-home:home:2b459963-becb-4c44-ada2-056e223850bc",
+          "new:office-home:home:16cbf82d-fc61-4fc9-9829-148100684bed",
+          "new:office-home:home:8aa74d73-16e5-4397-9224-07e80a7007ee"
+        ],
+        "draftOpens": 3
+      }
+    },
+    {
+      "name": "重新载入持久JSON文件后，三份草稿仍可逐份打开且使用原键",
+      "status": "passed",
+      "details": {
+        "pageLoads": 2,
+        "draftOpens": 6,
+        "persistedDraftCount": 3
+      }
+    },
+    {
+      "name": "首次发送失败无需导航，同页恢复正文附件并绑定实际chat，原new键已消费",
+      "status": "passed",
+      "details": {
+        "chatId": "e48b0ec8-2766-4895-84c9-b750f0bf9652",
+        "sourceKey": "new:office-home:home:2b459963-becb-4c44-ada2-056e223850bc",
+        "targetKey": "chat:e48b0ec8-2766-4895-84c9-b750f0bf9652",
+        "prepareRunCalls": 1,
+        "runPreparedCalls": 1
+      }
+    },
+    {
+      "name": "空项目草稿解析附件期间删除项目，迟到附件不复活，重载后仍无孤儿/删除marker",
+      "status": "passed",
+      "details": {
+        "pageLoads": 3,
+        "filePickCalls": 4,
+        "survivingNewDrafts": 2
+      }
+    },
+    {
+      "name": "当前目标直接调用原生指令，历史按钮已收起，原草稿和附件保留",
+      "status": "passed",
+      "details": {
+        "chatId": "e48b0ec8-2766-4895-84c9-b750f0bf9652"
+      }
+    }
+  ]
+}

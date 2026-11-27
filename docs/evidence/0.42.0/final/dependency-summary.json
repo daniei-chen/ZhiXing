@@ -1,0 +1,16 @@
+{
+  "appVersion": "0.42.0",
+  "packageCount": 1162,
+  "fingerprint": "c47ded11501d7a20913d5910590fc00d943fd9ec2024b4072a93bdcdaa6bb23d",
+  "npmVersion": "11.21.3",
+  "vulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 32,
+    "high": 0,
+    "critical": 0,
+    "total": 32
+  },
+  "uniqueDirectAdvisoriesOnInstalledPaths": 2,
+  "auditedFromVerifiedLockProjection": true
+}

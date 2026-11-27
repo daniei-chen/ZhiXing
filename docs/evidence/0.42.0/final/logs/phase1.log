@@ -1,0 +1,13 @@
+
+> office-agent@0.42.0 test:phase1
+> node scripts/test-phase1-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\_temp\zhixing-release-evidence\journeys\phase1\phase1-ui-adsKWS
+PASS packaged EXE opens the isolated profile
+PASS real dropped attachment is parsed into the project chat draft
+PASS 100 continuous characters write bounded drafts without rewriting workspace.bin
+PASS reload and explicit chat selection restore draft text, attachment and ownership
+PASS real slow SSE grows visible text without per-chunk workspace writes
+PASS the final reply is persisted once complete and remains readable after reload
+PASS closing before debounce flushes the last draft and normal restart restores it
+{"status":"passed","passed":7,"failed":0,"screenshots":3,"visualReview":"pending-human-review","evidence":"D:\\a\\_temp\\zhixing-release-evidence\\journeys\\phase1\\phase1-ui-adsKWS"}

@@ -1,0 +1,275 @@
+{
+  "layer": "windows-packaged-app + real-harness + loopback model fixture",
+  "version": "0.42.0",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "sourceDirty": false,
+  "startedAt": "2026-11-27T04:53:40.612Z",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "status": "passed",
+  "cases": [
+    {
+      "name": "packaged EXE uses only the isolated QA profile",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:41.888Z",
+      "finishedAt": "2026-11-27T04:53:41.899Z",
+      "version": "0.42.0",
+      "versions": {
+        "electron": "44.11.5",
+        "chrome": "152.0.7977.169",
+        "node": "24.22.3"
+      },
+      "isolatedProfile": true,
+      "viewport": {
+        "width": 1255,
+        "height": 912,
+        "dpr": 1
+      }
+    },
+    {
+      "name": "real Harness writes and presents both files and creates inline references",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:42.192Z",
+      "finishedAt": "2026-11-27T04:53:45.497Z",
+      "files": [
+        {
+          "name": "季度纪要.md",
+          "characters": 33
+        },
+        {
+          "name": "年度资料.md",
+          "characters": 16917
+        }
+      ],
+      "modelRequests": 4
+    },
+    {
+      "name": "delivery card opens safe text in the output tab while the chat draft remains editable",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:45.498Z",
+      "finishedAt": "2026-11-27T04:53:45.979Z",
+      "characters": 33,
+      "coverage": "UTF-8",
+      "draftCharacters": 20,
+      "modalOpened": false
+    },
+    {
+      "name": "returning to outputs and activating an inline reference by keyboard preserves the text limit",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:45.980Z",
+      "finishedAt": "2026-11-27T04:53:46.620Z",
+      "characters": 12000,
+      "coverage": "UTF-8",
+      "activation": "Enter on inline file reference",
+      "limitLabelVisible": true
+    },
+    {
+      "name": "explicit enlargement uses the existing document modal and returns to the same side preview",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:46.621Z",
+      "finishedAt": "2026-11-27T04:53:46.969Z",
+      "explicitlyOpened": true,
+      "sameTextLimit": true,
+      "draftPreserved": true
+    },
+    {
+      "name": "missing real delivery stays as an inline error and retries after the same file is restored",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:46.970Z",
+      "finishedAt": "2026-11-27T04:53:47.605Z",
+      "realMissingFile": true,
+      "retryRestoredSameFile": true,
+      "modalOpened": false
+    },
+    {
+      "name": "all nine visible tabs select their real panels including browser and terminal",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:47.605Z",
+      "finishedAt": "2026-11-27T04:53:49.100Z",
+      "tabs": [
+        {
+          "page": "browser",
+          "selected": true,
+          "panel": "browser"
+        },
+        {
+          "page": "files",
+          "selected": true,
+          "panel": "files"
+        },
+        {
+          "page": "terminal",
+          "selected": true,
+          "panel": "terminal"
+        },
+        {
+          "page": "chat",
+          "selected": true,
+          "panel": "chat"
+        },
+        {
+          "page": "activity",
+          "selected": true,
+          "panel": "activity"
+        },
+        {
+          "page": "review",
+          "selected": true,
+          "panel": "review"
+        },
+        {
+          "page": "deliverables",
+          "selected": true,
+          "panel": "deliverables"
+        },
+        {
+          "page": "stats",
+          "selected": true,
+          "panel": "stats"
+        },
+        {
+          "page": "details",
+          "selected": true,
+          "panel": "details"
+        }
+      ],
+      "browserNavigation": "not exercised",
+      "terminalExecution": "not exercised"
+    },
+    {
+      "name": "arrow keys wrap and Home and End activate tabs with one focused selected control",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:49.101Z",
+      "finishedAt": "2026-11-27T04:53:49.357Z",
+      "keys": [
+        {
+          "key": "ArrowLeft",
+          "selected": "details"
+        },
+        {
+          "key": "ArrowRight",
+          "selected": "browser"
+        },
+        {
+          "key": "End",
+          "selected": "details"
+        },
+        {
+          "key": "Home",
+          "selected": "browser"
+        },
+        {
+          "key": "ArrowRight",
+          "selected": "files"
+        },
+        {
+          "key": "End",
+          "selected": "details"
+        }
+      ],
+      "oneTabStop": true
+    },
+    {
+      "name": "switching chats clears the old file preview without losing the original chat draft",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:49.357Z",
+      "finishedAt": "2026-11-27T04:53:50.525Z",
+      "otherChatHasNoDelivery": true,
+      "originalDraftRestored": true,
+      "delayedResponseInjection": false
+    },
+    {
+      "name": "dark narrow layout keeps preview, keyboard tabs and the ordinary composer usable",
+      "status": "passed",
+      "startedAt": "2026-11-27T04:53:50.526Z",
+      "finishedAt": "2026-11-27T04:53:52.371Z",
+      "viewport": {
+        "width": 950,
+        "height": 912,
+        "dpr": 1
+      },
+      "composerWidth": 252,
+      "selectedTabVisible": true,
+      "closingPanelPreservesDraft": true
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "01-delivery-preview-light.png",
+      "bytes": 76168,
+      "sha256": "c7760b062a9dace8130e376295b78629951e5ed18f4b779402e22beb2c391b19",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "02-preview-file-unavailable.png",
+      "bytes": 72564,
+      "sha256": "ced836724eff3b99bcd20d6ad32034e583ba63e5253d655171f20558228b1f4d",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "03-keyboard-tab-navigation.png",
+      "bytes": 78447,
+      "sha256": "066f5c175b8336785f7befb42ef7f75778b1c1abf99998cbc8c156f2a6128fd9",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "04-delivery-preview-dark-narrow.png",
+      "bytes": 62554,
+      "sha256": "7b7f796a95e118706c5786e87b2f2b681665d2c1cdfae6c1df876bc03122f287",
+      "width": 950,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    }
+  ],
+  "providerRequests": [
+    {
+      "step": 0,
+      "nextTool": "write"
+    },
+    {
+      "step": 1,
+      "nextTool": "write"
+    },
+    {
+      "step": 2,
+      "nextTool": "present"
+    },
+    {
+      "step": 3,
+      "nextTool": null
+    }
+  ],
+  "visualReview": "pending-human-review",
+  "boundaries": [
+    "Empty project/chat metadata and provider configuration are seeded through real desktop IPC in an isolated temporary profile.",
+    "A loopback provider drives actual Harness write/present tools; no assistant message, delivery reference or preview response is injected.",
+    "Full workspace permission is selected; native approval dialogs are not exercised or replaced.",
+    "Preview covers the existing safe extracted-text path and its 12,000-character display limit, not Office page layout or image preview.",
+    "A temporary fixture file is moved away and restored to exercise a real file-unavailable error and retry; no production IPC is replaced.",
+    "Browser and terminal tabs retain their real existing panels. This gate does not navigate a website or execute a terminal command.",
+    "Keyboard, selected tabs, visible panels, draft input and geometry are asserted; screenshots require separate visual review.",
+    "Chat switching checks scope isolation without injecting a delayed response. Delayed-response races are covered separately by component tests.",
+    "No installer, upgrade, real cloud model quality, user installation, signing or cross-account migration is exercised."
+  ],
+  "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3",
+  "processExit": {
+    "code": 0,
+    "signal": null
+  },
+  "cleanup": {
+    "processExited": true,
+    "temporaryRemoved": true
+  },
+  "fixtureError": null,
+  "finishedAt": "2026-11-27T04:53:52.509Z"
+}

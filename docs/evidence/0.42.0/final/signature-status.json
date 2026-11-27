@@ -1,0 +1,8 @@
+{
+  "executable": "NotSigned",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "installationLifecycle": "not run",
+  "realCloud": "not run",
+  "installer": "NotSigned",
+  "version": "0.42.0"
+}

@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "status": "verified",
+  "verifiedAt": "2026-11-27T04:57:24.776930+00:00",
+  "repository": "daniei-chen/ZhiXing",
+  "version": "0.42.0",
+  "tag": "v0.42.0",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "sourceTree": "c88625526d187b2049428de82072672414ff10bb",
+  "releaseId": 460182987,
+  "releaseUrl": "https://github.com/daniei-chen/ZhiXing/releases/tag/v0.42.0",
+  "draft": false,
+  "prerelease": true,
+  "publishedAt": "2026-11-27T04:55:56Z",
+  "assetCount": 18,
+  "mismatched": 0,
+  "missing": [],
+  "extras": [],
+  "files": [
+    {
+      "name": "SHA256SUMS-release.txt",
+      "assetId": 799037411,
+      "bytes": 1526,
+      "sha256": "a70405917a1d10a04097962a8c98813b051c8e2cd34ea91f95d6d24b3be73c57",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/SHA256SUMS-release.txt"
+    },
+    {
+      "name": "ZhiXing-0.42.0-x64.exe",
+      "assetId": 799037529,
+      "bytes": 338723692,
+      "sha256": "24c6adb1511329da43c339e29fed2433305761d36dc8639a24023ecc2fb6dd07",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/ZhiXing-0.42.0-x64.exe"
+    },
+    {
+      "name": "ZhiXing-0.42.0-x64.exe.blockmap",
+      "assetId": 799038476,
+      "bytes": 314876,
+      "sha256": "747a7168ae854577129f2eeab4d0c68b0288827d8902e11651cbc9ff47c10634",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/ZhiXing-0.42.0-x64.exe.blockmap"
+    },
+    {
+      "name": "ZhiXing-v0.41.0-to-v0.42.0.patch",
+      "assetId": 799038612,
+      "bytes": 2189757,
+      "sha256": "6c9c78674419d4ec293bfa7717f5f2e881ea2b4c3fbec658376d587676f69f5c",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/ZhiXing-v0.41.0-to-v0.42.0.patch"
+    },
+    {
+      "name": "acceptance-summary-0.42.0.json",
+      "assetId": 799038731,
+      "bytes": 25971,
+      "sha256": "6f1ee384970eae6d72ef4a720f438a2e0805a1ce3fe6e385356669448c71d134",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/acceptance-summary-0.42.0.json"
+    },
+    {
+      "name": "advisories-by-path.json",
+      "assetId": 799038857,
+      "bytes": 685,
+      "sha256": "2aa4a2bba546df57e857a2e5c6bfa02e1cfbe5f1e8527371eb395aeeba56174f",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/advisories-by-path.json"
+    },
+    {
+      "name": "app-update.yml",
+      "assetId": 799039003,
+      "bytes": 111,
+      "sha256": "4f1b8da276060c800e09d2c87b550511fe48afb1ff3480bdde14af876862ec30",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/app-update.yml"
+    },
+    {
+      "name": "audit-request-0.42.0.md",
+      "assetId": 799039085,
+      "bytes": 5027,
+      "sha256": "a0c88543b02116e5a7e64b213b8ba131b11b0a3391d0c8af3cc8280f270cf0a5",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/audit-request-0.42.0.md"
+    },
+    {
+      "name": "build-provenance.json",
+      "assetId": 799039215,
+      "bytes": 287,
+      "sha256": "0e1476163a1f7586238b5020a93fb98a798d514fd51398b9fb83909574c0f165",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/build-provenance.json"
+    },
+    {
+      "name": "harness-capability-map.md",
+      "assetId": 799039320,
+      "bytes": 72090,
+      "sha256": "24d1b4e40744b116ac586924f0d32aba50be18005663b92a41efd020cc4fb778",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/harness-capability-map.md"
+    },
+    {
+      "name": "iteration-0.42.0.md",
+      "assetId": 799039425,
+      "bytes": 8339,
+      "sha256": "104965d6f5b05113dfcd7996fe47989cc2d2a68fd21cb0347080068bda502c37",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/iteration-0.42.0.md"
+    },
+    {
+      "name": "latest.yml",
+      "assetId": 799039527,
+      "bytes": 342,
+      "sha256": "acdc97ee6b82e3e406bc12e6609a01460e20a2605d681dd75c19e4eb9e037a06",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/latest.yml"
+    },
+    {
+      "name": "packed-source-manifest.json",
+      "assetId": 799039580,
+      "bytes": 14673,
+      "sha256": "b7297e7c3a3e8565b47a3b77fc60d99cd26995100569e33e93ca97615b5e755b",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/packed-source-manifest.json"
+    },
+    {
+      "name": "production-inventory.json",
+      "assetId": 799039646,
+      "bytes": 422927,
+      "sha256": "e22e1dfa3de100a58e33ee32b595067476c1f136dce11ec683467200ad32894b",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/production-inventory.json"
+    },
+    {
+      "name": "production-sbom.cdx.json",
+      "assetId": 799039710,
+      "bytes": 924010,
+      "sha256": "33ccd953fb9201eec3bef8232f9ec61e20730dee58c453a3e7d598fa50a49a03",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/production-sbom.cdx.json"
+    },
+    {
+      "name": "release-notes-0.42.0.md",
+      "assetId": 799039779,
+      "bytes": 4540,
+      "sha256": "3f6cbde550b6ec5e230d7d47ecc15b2988bf803f280d6b38ea3ee9c681c6d5ea",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/release-notes-0.42.0.md"
+    },
+    {
+      "name": "signing.md",
+      "assetId": 799039850,
+      "bytes": 371,
+      "sha256": "63cf28526df2f21b0170a02d721cbb3c51e246cddc5a35b9c37cb85c89c7b4e0",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/signing.md"
+    },
+    {
+      "name": "windows-acceptance-0.42.0.md",
+      "assetId": 799039912,
+      "bytes": 2233,
+      "sha256": "011e57cef1c7e89d1cffc5c558705353666fa60a721e26e1b074f882fb292276",
+      "state": "uploaded",
+      "method": "github-api-sha256",
+      "downloadUrl": "https://github.com/daniei-chen/ZhiXing/releases/download/v0.42.0/windows-acceptance-0.42.0.md"
+    }
+  ],
+  "method": "Independently downloaded Actions bundle bytes rehashed locally, then compared with the published GitHub release metadata. No second download of the public installer."
+}

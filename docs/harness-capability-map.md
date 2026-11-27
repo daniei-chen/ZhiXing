@@ -10,6 +10,8 @@
 
 本表是构建时源码说明，不预填本次 Windows 门禁或公开发布成功。实际结果以 [v0.42.0 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.42.0) 的验收摘要、源码指纹及校验值为准。未签名、用户安装生命周期与真实云端仍须单列；固定功能标签和提取文字不提升完整动态资源 Dock、Office 编辑、Resident Host 或 SQLite 的状态。
 
+**0.42.0 发布后补记：** 2026-11-27（北京时间），正式 main 提交 `1639c63c` 构建的 [v0.42.0](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.42.0) 已公开。18 项资产的名称、大小及 SHA256 与独立下载的 Actions bundle 字节逐项匹配，缺失、额外和不匹配均为 0。本次源码 611/611、组件与隔离 renderer 36/36、Sites 4/4、目录包 410/410；Windows Phase 0A 9/9、Phase 1 7/7、新工作面板 10/10。错误文案 7 项通过另 5 条 observed，仍分列。详见 [正式 Windows 验收](windows-acceptance-0.42.0.md) 与 [原始证据和独立远端校验](evidence/0.42.0/final/)。未签名，安装生命周期、真实云端和完整 Phase 1 仍未覆盖；本补记不修改已发布资产的构建时原字节。
+
 ## 已发布里程碑：0.41.0 / Phase 1 基础
 
 0.41.0 新增按作用域订阅的草稿、局部流式正文、串行加密草稿覆盖层与界面错误恢复，详细实现与未覆盖范围见 [本轮迭代](iteration-0.41.0.md) 和 [外部审计入口](audit-request-0.41.0.md)。上游核对只记“部分/未核对”，没有提升常驻 Host、SQLite、Office 编辑或其他尚未实现的能力等级。

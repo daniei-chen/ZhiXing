@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "repository": "daniei-chen/ZhiXing",
+  "version": "0.42.0",
+  "tag": "v0.42.0",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "sourceTree": "c88625526d187b2049428de82072672414ff10bb",
+  "baseTag": "v0.41.0",
+  "files": [
+    {
+      "name": "SHA256SUMS-release.txt",
+      "bytes": 1526,
+      "sha256": "a70405917a1d10a04097962a8c98813b051c8e2cd34ea91f95d6d24b3be73c57"
+    },
+    {
+      "name": "ZhiXing-0.42.0-x64.exe",
+      "bytes": 338723692,
+      "sha256": "24c6adb1511329da43c339e29fed2433305761d36dc8639a24023ecc2fb6dd07"
+    },
+    {
+      "name": "ZhiXing-0.42.0-x64.exe.blockmap",
+      "bytes": 314876,
+      "sha256": "747a7168ae854577129f2eeab4d0c68b0288827d8902e11651cbc9ff47c10634"
+    },
+    {
+      "name": "ZhiXing-v0.41.0-to-v0.42.0.patch",
+      "bytes": 2189757,
+      "sha256": "6c9c78674419d4ec293bfa7717f5f2e881ea2b4c3fbec658376d587676f69f5c"
+    },
+    {
+      "name": "acceptance-summary-0.42.0.json",
+      "bytes": 25971,
+      "sha256": "6f1ee384970eae6d72ef4a720f438a2e0805a1ce3fe6e385356669448c71d134"
+    },
+    {
+      "name": "advisories-by-path.json",
+      "bytes": 685,
+      "sha256": "2aa4a2bba546df57e857a2e5c6bfa02e1cfbe5f1e8527371eb395aeeba56174f"
+    },
+    {
+      "name": "app-update.yml",
+      "bytes": 111,
+      "sha256": "4f1b8da276060c800e09d2c87b550511fe48afb1ff3480bdde14af876862ec30"
+    },
+    {
+      "name": "audit-request-0.42.0.md",
+      "bytes": 5027,
+      "sha256": "a0c88543b02116e5a7e64b213b8ba131b11b0a3391d0c8af3cc8280f270cf0a5"
+    },
+    {
+      "name": "build-provenance.json",
+      "bytes": 287,
+      "sha256": "0e1476163a1f7586238b5020a93fb98a798d514fd51398b9fb83909574c0f165"
+    },
+    {
+      "name": "harness-capability-map.md",
+      "bytes": 72090,
+      "sha256": "24d1b4e40744b116ac586924f0d32aba50be18005663b92a41efd020cc4fb778"
+    },
+    {
+      "name": "iteration-0.42.0.md",
+      "bytes": 8339,
+      "sha256": "104965d6f5b05113dfcd7996fe47989cc2d2a68fd21cb0347080068bda502c37"
+    },
+    {
+      "name": "latest.yml",
+      "bytes": 342,
+      "sha256": "acdc97ee6b82e3e406bc12e6609a01460e20a2605d681dd75c19e4eb9e037a06"
+    },
+    {
+      "name": "packed-source-manifest.json",
+      "bytes": 14673,
+      "sha256": "b7297e7c3a3e8565b47a3b77fc60d99cd26995100569e33e93ca97615b5e755b"
+    },
+    {
+      "name": "production-inventory.json",
+      "bytes": 422927,
+      "sha256": "e22e1dfa3de100a58e33ee32b595067476c1f136dce11ec683467200ad32894b"
+    },
+    {
+      "name": "production-sbom.cdx.json",
+      "bytes": 924010,
+      "sha256": "33ccd953fb9201eec3bef8232f9ec61e20730dee58c453a3e7d598fa50a49a03"
+    },
+    {
+      "name": "release-notes-0.42.0.md",
+      "bytes": 4540,
+      "sha256": "3f6cbde550b6ec5e230d7d47ecc15b2988bf803f280d6b38ea3ee9c681c6d5ea"
+    },
+    {
+      "name": "signing.md",
+      "bytes": 371,
+      "sha256": "63cf28526df2f21b0170a02d721cbb3c51e246cddc5a35b9c37cb85c89c7b4e0"
+    },
+    {
+      "name": "windows-acceptance-0.42.0.md",
+      "bytes": 2233,
+      "sha256": "011e57cef1c7e89d1cffc5c558705353666fa60a721e26e1b074f882fb292276"
+    }
+  ]
+}

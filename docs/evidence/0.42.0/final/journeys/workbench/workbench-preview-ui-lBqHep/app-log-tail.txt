@@ -1,0 +1,8 @@
+
+Debugger listening on ws://127.0.0.1:60881/7e423d09-c2b6-4fd9-9b65-99424ab0270b
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:60882/devtools/browser/da1cc03e-22ef-448d-9bc8-95b8d3c2c5f1
+Debugger attached.
+Debugger ending on ws://127.0.0.1:60881/7e423d09-c2b6-4fd9-9b65-99424ab0270b
+For help, see: https://nodejs.org/learn/getting-started/debugging

@@ -1,0 +1,20 @@
+
+Debugger listening on ws://127.0.0.1:60812/09509b8c-67c6-4169-8b20-749eb335e036
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:60813/devtools/browser/9588f890-30d9-46ed-84e7-6e4fe783302d
+Debugger attached.
+Error occurred in handler for 'browser:layout': Error: 会话的项目范围已变化，请重新打开会话。
+    at D:\a\ZhiXing\ZhiXing\release\win-unpacked\resources\app\electron\main.cjs:281:8
+    at async Session.<anonymous> (node:electron/js2c/browser_init:1:119108)
+Error occurred in handler for 'browser:state': Error: 会话的项目范围已变化，请重新打开会话。
+    at D:\a\ZhiXing\ZhiXing\release\win-unpacked\resources\app\electron\main.cjs:281:8
+    at async Session.<anonymous> (node:electron/js2c/browser_init:1:119108)
+Error occurred in handler for 'browser:layout': Error: 会话的项目范围已变化，请重新打开会话。
+    at D:\a\ZhiXing\ZhiXing\release\win-unpacked\resources\app\electron\main.cjs:281:8
+    at async Session.<anonymous> (node:electron/js2c/browser_init:1:119108)
+Error occurred in handler for 'browser:layout': Error: 会话的项目范围已变化，请重新打开会话。
+    at D:\a\ZhiXing\ZhiXing\release\win-unpacked\resources\app\electron\main.cjs:281:8
+    at async Session.<anonymous> (node:electron/js2c/browser_init:1:119108)
+Debugger ending on ws://127.0.0.1:60812/09509b8c-67c6-4169-8b20-749eb335e036
+For help, see: https://nodejs.org/learn/getting-started/debugging

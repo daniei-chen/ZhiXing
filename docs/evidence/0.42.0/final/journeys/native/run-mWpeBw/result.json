@@ -1,0 +1,99 @@
+{
+  "version": "0.42.0",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3",
+  "status": "passed",
+  "records": [
+    {
+      "name": "Windows 当前执行权限触发原生 write 审批，拒绝后未写入",
+      "status": "passed",
+      "details": {
+        "receipts": 2
+      }
+    },
+    {
+      "name": "实际批准的多文件补丁停在第 1/3 步，已写文件保留、后续文件不变",
+      "status": "passed",
+      "details": {
+        "receipts": 5
+      }
+    },
+    {
+      "name": "Office 转换的真实桌面审批可批准，源文件保持原字节",
+      "status": "passed",
+      "details": {
+        "receipts": 7,
+        "pdfSha256": "bcc36e0c08760f04f881c485c2a8b08562668003f4d47705f6a3c60869f62337",
+        "pdfBytes": 12582
+      }
+    },
+    {
+      "name": "重启后保留补丁终态；Markdown 按所选历史和已审阅快照保存准确字节，零新增出站",
+      "status": "passed",
+      "details": {
+        "markdownBytes": 1761,
+        "markdownSha256": "0f5ff16814c911345a075c5cff2fd1ef061fd9642c39f355bd3b24631f7cf692"
+      }
+    },
+    {
+      "name": "保存对话框打开期间移动会话，旧快照不再允许写盘",
+      "status": "passed",
+      "details": {}
+    }
+  ],
+  "receipts": [
+    {
+      "number": 1,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 0
+    },
+    {
+      "number": 2,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 1
+    },
+    {
+      "number": 3,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 1
+    },
+    {
+      "number": 4,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 2
+    },
+    {
+      "number": 5,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 3
+    },
+    {
+      "number": 6,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 3
+    },
+    {
+      "number": 7,
+      "model": "qa-native-files",
+      "reasoning": "high",
+      "toolResults": 4
+    }
+  ],
+  "exits": [
+    {
+      "code": 0,
+      "signal": null
+    },
+    {
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "dialogSelection": "synthetic approval and save selection only"
+}

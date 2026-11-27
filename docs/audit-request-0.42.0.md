@@ -15,7 +15,12 @@
 5. 阅读 `tests/delivery-preview-ui.test.mjs` 及夹具、`tests/workbench-tabs-ui.test.mjs`。真实 renderer 使用合成 IPC 验证竞态；其证据不能代替主机 HMAC、真实文件或 Windows 桌面。
 6. 检查 `scripts/test-workbench-preview-ui.mjs`：临时 profile 内由真实 Harness 写入并 present 两份文件，断言磁盘和保存内容；检查卡片/行内引用/放大、文件移走与重试、九视图、键盘、聊天切换、草稿及深色窄窗口。主机异常退出或清理失败也应令门禁失败。截图原始真人待审状态不能被自动脚本改为真人已审。
 7. 检查 `workbench` 在 PR 打包、正式发行、必需门禁、摘要和证据收集中的完整接线。发布仅允许精确 main 源码，通过全部门禁并逐项核验 18 资产后公开。新 draft 查询缺失可有界重试，身份不同或 API 报错必须立即失败。
-8. 将本轮原始日志与候选失败一并读取。Linux 基线三项已知失败单列在 `evidence/0.42.0/linux-baseline-failures.json`；不可删去或将其转写为 Windows 失败/通过。
+8. 检查 `harness/privacy-bridge.mjs` 的 `renameEncryptedTemp` 及 `electron/main.cjs` 的调用范围：仅工作空间与草稿保存复用 Windows 有界替换，不先删除旧目标，不推进未提交 revision。将两条真实 Windows 无删除共享句柄测试、两条保存队列回归与 Phase 1 实包结果分别核对；夹具中的 `EPERM` 不能用于认定首次失败的实际文件占用者。
+9. 将本轮原始日志与候选失败一并读取。Linux 基线三项已知失败单列在 `evidence/0.42.0/linux-baseline-failures.json`；不可删去或将其转写为 Windows 失败/通过。
+
+## 发布后核验入口
+
+正式发布的源码提交为 `1639c63c9273181fa8f63d9bdd5ed86178aafe1f`；后续文档提交不能替代该二进制身份。[正式证据归档](evidence/0.42.0/final/) 同时提供原始日志、成功收据、18 项资产的独立远端核验、AI 截图复核及逐文件清单。首次正式发布失败单独保留在 [release-attempt-1](evidence/0.42.0/release-attempt-1/README.md)。已发布资产保留构建时原字节，本段是发布后的仓库文档补记。
 
 ## 未覆盖
 

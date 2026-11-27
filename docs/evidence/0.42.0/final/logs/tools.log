@@ -1,0 +1,16 @@
+
+> office-agent@0.42.0 test:tools-ui
+> node scripts/test-tool-timeline-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\ZhiXing\ZhiXing\.preview\qa-0.42.0\tool-timeline\run-mwyi8z5k
+PASS 假服务已保存，工作区指向它
+PASS 调用与结果合为一次工具调用，保留完成状态
+PASS 刷新后从保存轨迹恢复一次调用
+{
+  "status": "passed",
+  "cases": 3,
+  "rows": [
+    "更新工作计划 · 完成"
+  ],
+  "evidence": "D:\\a\\ZhiXing\\ZhiXing\\.preview\\qa-0.42.0\\tool-timeline\\run-mwyi8z5k"
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "repository": "daniei-chen/ZhiXing",
+  "version": "0.42.0",
+  "tag": "v0.42.0",
+  "sourceCommit": "1639c63c9273181fa8f63d9bdd5ed86178aafe1f",
+  "sourceTree": "c88625526d187b2049428de82072672414ff10bb",
+  "eligible": true,
+  "baseTag": "v0.41.0",
+  "baseCommit": "7ef24667ab8d546b94234a21706dffa2c8bae9d6",
+  "existingDraftId": null
+}

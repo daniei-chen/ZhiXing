@@ -1,0 +1,16 @@
+
+> office-agent@0.42.0 test:workbench-preview
+> node scripts/test-workbench-preview-ui.mjs release/win-unpacked/知行.exe
+
+Evidence: D:\a\_temp\zhixing-release-evidence\journeys\workbench\workbench-preview-ui-lBqHep
+PASS packaged EXE uses only the isolated QA profile
+PASS real Harness writes and presents both files and creates inline references
+PASS delivery card opens safe text in the output tab while the chat draft remains editable
+PASS returning to outputs and activating an inline reference by keyboard preserves the text limit
+PASS explicit enlargement uses the existing document modal and returns to the same side preview
+PASS missing real delivery stays as an inline error and retries after the same file is restored
+PASS all nine visible tabs select their real panels including browser and terminal
+PASS arrow keys wrap and Home and End activate tabs with one focused selected control
+PASS switching chats clears the old file preview without losing the original chat draft
+PASS dark narrow layout keeps preview, keyboard tabs and the ordinary composer usable
+{"status":"passed","passed":10,"failed":0,"screenshots":4,"evidence":"D:\\a\\_temp\\zhixing-release-evidence\\journeys\\workbench\\workbench-preview-ui-lBqHep"}
