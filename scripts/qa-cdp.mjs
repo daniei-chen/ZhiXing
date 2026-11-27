@@ -44,7 +44,23 @@ export async function connectUi(port = 9333, mainProcess = false) {
     throw new Error(`UI condition not reached: ${expression}`);
   }
   async function click(text, selector = 'button') {
-    const expression = `(() => { const nodes=[...document.querySelectorAll(${JSON.stringify(selector)})].filter(e=>e.getClientRects().length&&(e.getAttribute('aria-label')===${JSON.stringify(text)}||e.textContent.trim()===${JSON.stringify(text)})); if(nodes.length!==1) throw Error('Expected one visible control '+${JSON.stringify(text)}+', found '+nodes.length); const e=nodes[0];if(e.disabled)throw Error('Disabled control '+${JSON.stringify(text)});e.scrollIntoView({block:'nearest',inline:'nearest'});const r=e.getBoundingClientRect();const x=(Math.max(r.left,0)+Math.min(r.right,innerWidth))/2,y=(Math.max(r.top,0)+Math.min(r.bottom,innerHeight))/2;const hit=document.elementFromPoint(x,y);if(!hit||!e.contains(hit))throw Error('Control is obscured '+${JSON.stringify(text)});return {x,y};})()`;
+    // A wrapped inline control has separate line boxes. Its union rectangle's
+    // centre can be empty paragraph space, so hit-test each visible fragment.
+    const expression = `(() => {
+      const nodes=[...document.querySelectorAll(${JSON.stringify(selector)})].filter(e=>e.getClientRects().length&&(e.getAttribute('aria-label')===${JSON.stringify(text)}||e.textContent.trim()===${JSON.stringify(text)}));
+      if(nodes.length!==1)throw Error('Expected one visible control '+${JSON.stringify(text)}+', found '+nodes.length);
+      const e=nodes[0];
+      if(e.disabled)throw Error('Disabled control '+${JSON.stringify(text)});
+      e.scrollIntoView({block:'nearest',inline:'nearest'});
+      for(const r of e.getClientRects()){
+        const left=Math.max(r.left,0),right=Math.min(r.right,innerWidth),top=Math.max(r.top,0),bottom=Math.min(r.bottom,innerHeight);
+        if(right<=left||bottom<=top)continue;
+        const x=(left+right)/2,y=(top+bottom)/2;
+        const hit=document.elementFromPoint(x,y);
+        if(hit&&e.contains(hit))return {x,y};
+      }
+      throw Error('Control is obscured '+${JSON.stringify(text)});
+    })()`;
     const point = await evaluate(expression);
     await send('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...point });
     await send('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...point });

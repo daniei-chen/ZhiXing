@@ -1,0 +1,267 @@
+{
+  "layer": "windows-packaged-app + real-harness + loopback model fixture",
+  "version": "0.42.0",
+  "sourceCommit": "cc147ef46404d2a13a2e35e43a77174a4dadc322",
+  "sourceDirty": false,
+  "startedAt": "2026-11-27T03:10:46.307Z",
+  "runner": {
+    "platform": "win32",
+    "release": "10.0.26100",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "status": "failed",
+  "cases": [
+    {
+      "name": "packaged EXE uses only the isolated QA profile",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:47.545Z",
+      "finishedAt": "2026-11-27T03:10:47.555Z",
+      "version": "0.42.0",
+      "versions": {
+        "electron": "44.11.5",
+        "chrome": "152.0.7977.169",
+        "node": "24.22.3"
+      },
+      "isolatedProfile": true,
+      "viewport": {
+        "width": 1255,
+        "height": 912,
+        "dpr": 1
+      }
+    },
+    {
+      "name": "real Harness writes and presents both files and creates inline references",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:47.860Z",
+      "finishedAt": "2026-11-27T03:10:51.231Z",
+      "files": [
+        {
+          "name": "季度纪要.md",
+          "characters": 33
+        },
+        {
+          "name": "年度资料.md",
+          "characters": 16917
+        }
+      ],
+      "modelRequests": 4
+    },
+    {
+      "name": "delivery card opens safe text in the output tab while the chat draft remains editable",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:51.232Z",
+      "finishedAt": "2026-11-27T03:10:51.717Z",
+      "characters": 33,
+      "coverage": "UTF-8",
+      "draftCharacters": 20,
+      "modalOpened": false
+    },
+    {
+      "name": "returning to outputs and activating an inline reference by keyboard preserves the text limit",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:51.717Z",
+      "finishedAt": "2026-11-27T03:10:52.346Z",
+      "characters": 12000,
+      "coverage": "UTF-8",
+      "activation": "Enter on inline file reference",
+      "limitLabelVisible": true
+    },
+    {
+      "name": "explicit enlargement uses the existing document modal and returns to the same side preview",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:52.346Z",
+      "finishedAt": "2026-11-27T03:10:52.704Z",
+      "explicitlyOpened": true,
+      "sameTextLimit": true,
+      "draftPreserved": true
+    },
+    {
+      "name": "missing real delivery stays as an inline error and retries after the same file is restored",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:52.705Z",
+      "finishedAt": "2026-11-27T03:10:53.341Z",
+      "realMissingFile": true,
+      "retryRestoredSameFile": true,
+      "modalOpened": false
+    },
+    {
+      "name": "all nine visible tabs select their real panels including browser and terminal",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:53.342Z",
+      "finishedAt": "2026-11-27T03:10:54.845Z",
+      "tabs": [
+        {
+          "page": "browser",
+          "selected": true,
+          "panel": "browser"
+        },
+        {
+          "page": "files",
+          "selected": true,
+          "panel": "files"
+        },
+        {
+          "page": "terminal",
+          "selected": true,
+          "panel": "terminal"
+        },
+        {
+          "page": "chat",
+          "selected": true,
+          "panel": "chat"
+        },
+        {
+          "page": "activity",
+          "selected": true,
+          "panel": "activity"
+        },
+        {
+          "page": "review",
+          "selected": true,
+          "panel": "review"
+        },
+        {
+          "page": "deliverables",
+          "selected": true,
+          "panel": "deliverables"
+        },
+        {
+          "page": "stats",
+          "selected": true,
+          "panel": "stats"
+        },
+        {
+          "page": "details",
+          "selected": true,
+          "panel": "details"
+        }
+      ],
+      "browserNavigation": "not exercised",
+      "terminalExecution": "not exercised"
+    },
+    {
+      "name": "arrow keys wrap and Home and End activate tabs with one focused selected control",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:54.846Z",
+      "finishedAt": "2026-11-27T03:10:55.106Z",
+      "keys": [
+        {
+          "key": "ArrowLeft",
+          "selected": "details"
+        },
+        {
+          "key": "ArrowRight",
+          "selected": "browser"
+        },
+        {
+          "key": "End",
+          "selected": "details"
+        },
+        {
+          "key": "Home",
+          "selected": "browser"
+        },
+        {
+          "key": "ArrowRight",
+          "selected": "files"
+        },
+        {
+          "key": "End",
+          "selected": "details"
+        }
+      ],
+      "oneTabStop": true
+    },
+    {
+      "name": "switching chats clears the old file preview without losing the original chat draft",
+      "status": "passed",
+      "startedAt": "2026-11-27T03:10:55.106Z",
+      "finishedAt": "2026-11-27T03:10:56.324Z",
+      "otherChatHasNoDelivery": true,
+      "originalDraftRestored": true,
+      "delayedResponseInjection": false
+    },
+    {
+      "name": "dark narrow layout keeps preview, keyboard tabs and the ordinary composer usable",
+      "status": "failed",
+      "error": "Error: Control is obscured 季度纪要.md\n    at <anonymous>:1:675\n    at <anonymous>:1:730"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "01-delivery-preview-light.png",
+      "bytes": 76109,
+      "sha256": "d5ebc71104d8eef02c0b96cce87aef99503afdc22d6abdf4c375d5e16a9629f7",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "02-preview-file-unavailable.png",
+      "bytes": 72510,
+      "sha256": "447d2ee39f10a6920c109fcdc1c7fa4a0776d1d64c05db48d6473eb2cf628356",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "03-keyboard-tab-navigation.png",
+      "bytes": 78374,
+      "sha256": "91828475792dd69547d9bf21bdde8d62b464f56789634d6857b41fd42ea2e114",
+      "width": 1255,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    },
+    {
+      "file": "failure.png",
+      "bytes": 65620,
+      "sha256": "24085d1c8c1de32d9179e93d9b4c6392816cb9b7c6530f986828d73c7d2c3999",
+      "width": 950,
+      "height": 912,
+      "visualReview": "pending-human-review"
+    }
+  ],
+  "providerRequests": [
+    {
+      "step": 0,
+      "nextTool": "write"
+    },
+    {
+      "step": 1,
+      "nextTool": "write"
+    },
+    {
+      "step": 2,
+      "nextTool": "present"
+    },
+    {
+      "step": 3,
+      "nextTool": null
+    }
+  ],
+  "visualReview": "pending-human-review",
+  "boundaries": [
+    "Empty project/chat metadata and provider configuration are seeded through real desktop IPC in an isolated temporary profile.",
+    "A loopback provider drives actual Harness write/present tools; no assistant message, delivery reference or preview response is injected.",
+    "Full workspace permission is selected; native approval dialogs are not exercised or replaced.",
+    "Preview covers the existing safe extracted-text path and its 12,000-character display limit, not Office page layout or image preview.",
+    "A temporary fixture file is moved away and restored to exercise a real file-unavailable error and retry; no production IPC is replaced.",
+    "Browser and terminal tabs retain their real existing panels. This gate does not navigate a website or execute a terminal command.",
+    "Keyboard, selected tabs, visible panels, draft input and geometry are asserted; screenshots require separate visual review.",
+    "Chat switching checks scope isolation without injecting a delayed response. Delayed-response races are covered separately by component tests.",
+    "No installer, upgrade, real cloud model quality, user installation, signing or cross-account migration is exercised."
+  ],
+  "exeSha256": "23a3a18a3442c2d8ae1eef9f2d3aa92f97ff3d6e76ca5261d091ae6f474e80d3",
+  "error": "Error: Error: Control is obscured 季度纪要.md\n    at <anonymous>:1:675\n    at <anonymous>:1:730\n    at evaluate (file:///D:/a/ZhiXing/ZhiXing/scripts/qa-cdp.mjs:34:42)\n    at async Object.click (file:///D:/a/ZhiXing/ZhiXing/scripts/qa-cdp.mjs:48:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-workbench-preview-ui.mjs:881:7\n    at async check (file:///D:/a/ZhiXing/ZhiXing/scripts/test-workbench-preview-ui.mjs:135:19)\n    at async file:///D:/a/ZhiXing/ZhiXing/scripts/test-workbench-preview-ui.mjs:868:3",
+  "processExit": {
+    "code": 0,
+    "signal": null
+  },
+  "cleanup": {
+    "processExited": true,
+    "temporaryRemoved": true
+  },
+  "fixtureError": null,
+  "finishedAt": "2026-11-27T03:10:57.355Z"
+}

@@ -123,5 +123,44 @@
     "code signing",
     "full app browser visual review"
   ],
-  "releaseCompletionClaimed": false
+  "releaseCompletionClaimed": false,
+  "candidateFollowup": {
+    "reason": "Correct the real CDP hit point for naturally wrapped inline references; product source unchanged from first candidate.",
+    "baseCommit": "cc147ef46404d2a13a2e35e43a77174a4dadc322",
+    "checks": [
+      {
+        "command": "npm run quality",
+        "exitCode": 0,
+        "errors": 0,
+        "warnings": 0,
+        "scope": "adopted-and-changed-scope",
+        "eslintFiles": 80,
+        "javascriptFiles": 313,
+        "stylelintFiles": 7,
+        "cssFiles": 7,
+        "prettierFiles": 58,
+        "textFiles": 556
+      },
+      {
+        "command": "node --test --test-concurrency=2 tests/qa-cdp-ui.test.mjs tests/delivery-preview-ui.test.mjs tests/workbench-tabs-ui.test.mjs tests/release-assets.test.mjs",
+        "exitCode": 0,
+        "tests": 20,
+        "pass": 20,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    ],
+    "sourceFiles": [
+      {
+        "path": "scripts/qa-cdp.mjs",
+        "sha256": "c2fc7013bf7915944b81f8f352b8e6bf6f38934fb49455b1e004851c8d3cf005"
+      },
+      {
+        "path": "tests/qa-cdp-ui.test.mjs",
+        "sha256": "1f15433cf83d59f95fcaa400bc4083ca64117a35e4babd961ba92ce01f5f9107"
+      }
+    ],
+    "windowsRerun": "not_yet_run_at_recording"
+  }
 }

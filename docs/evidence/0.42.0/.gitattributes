@@ -1,0 +1,3 @@
+# Preserve original failed-candidate and final Windows evidence bytes.
+candidate-1-*.json -text -whitespace
+final/** -text -whitespace
