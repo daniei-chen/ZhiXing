@@ -193,9 +193,19 @@ app.setAppLogsPath(path.join(profile, 'logs'));
 const WORKSPACE_FILE = path.join(directory, 'workspace.bin');
 const DRAFTS_FILE = path.join(directory, 'drafts.bin');
 
-const TRANSIENT = new Set(['ENOENT', 'EPERM', 'EACCES', 'EBUSY']);
+const SHARED = new Set(['EPERM', 'EACCES', 'EBUSY']);
+// 只有 ENOENT 才算「没有存档」。Windows 上另一个进程正在 rename 覆盖时，读取会短暂
+// EPERM/EBUSY：有界重试后仍失败就抛出去，绝不把「读不到」当成「没有存档」，否则
+// 启动会用种子覆盖掉刚被强杀留下的现场，门禁就变成了自说自话。
 const readStore = async file => {
-  try { return codec.decode(await fs.readFile(file)); } catch (error) { if (TRANSIENT.has(error.code)) return null; throw error; }
+  for (let attempt = 0; ; attempt++) {
+    try { return codec.decode(await fs.readFile(file)); }
+    catch (error) {
+      if (error.code === 'ENOENT') return null;
+      if (!SHARED.has(error.code) || attempt >= 5) throw error;
+    }
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
 };
 // 与真实主进程同一条提交路径：Windows 上 rename 覆盖一个正在被读取的目标会
 // 返回 EPERM（本仓库 0.42.0 发布时在 drafts.bin 上真遇到过），所以复用产品里的
@@ -387,11 +397,14 @@ async function until(probe, label, timeout = 30000) {
 
 async function readStore(directory, file) {
   const codec = require(path.join(directory, 'codec.cjs'));
-  try {
-    return JSON.parse(codec.decode(await readFile(path.join(directory, file))));
-  } catch (error) {
-    if (error.code === 'ENOENT') return null;
-    throw error;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return JSON.parse(codec.decode(await readFile(path.join(directory, file))));
+    } catch (error) {
+      if (error.code === 'ENOENT') return null;
+      if (!['EPERM', 'EACCES', 'EBUSY'].includes(error.code) || attempt >= 5) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
 }
 
