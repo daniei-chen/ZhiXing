@@ -41,6 +41,7 @@ import { acceptsGoalImages, formatSessionCommand, parseSessionCommand } from './
 import { FEEDBACK_CATEGORIES, FEEDBACK_NOTE_MAX_BYTES, feedbackFor, feedbackLabel, noteBytes } from './message-feedback.js';
 import { enqueueMessage, nextQueued, patchQueued, queuedFor, removeQueued } from './message-queue.js';
 import { fallbackTitle } from './session-title.js';
+import { sendFailureToast, sendRecoveryState } from './send-failure.js';
 
 const desktop = window.zhixing;
 const uuid = () => crypto.randomUUID();
@@ -1261,6 +1262,15 @@ export function App() {
           // 一律撤回，否则队列重试时同一段交办会在记录里出现两次。
           let restored = restoreFailedSubmission(draft, recovery, job);
           if (!restored && recovery) restored = rejoinRejectedDraft(draft, recovery);
+          // 草稿没被消费（保存还没落定时又打了字，revision 校验因此不通过）时
+          // 内容本来就在输入框里，不能说成「没能恢复」。
+          const untouched = !recovery && draft.draftKey ? draftMap.current[draft.draftKey] : null;
+          const recoveryState = sendRecoveryState({
+            hadDraft: Boolean(draft.draftKey),
+            consumed: Boolean(recovery),
+            restored: Boolean(restored),
+            kept: Boolean(untouched && (untouched.text?.trim() || untouched.files?.length)),
+          });
           const rollback = {
             ...latest.current,
             chats: latest.current.chats
@@ -1272,9 +1282,7 @@ export function App() {
           // 气泡被撤回了，失败原因必须另外呈现。排队消息由队列自己带着上下文报，
           // 直接发送没有别的出口，就在这里给出与发送失败一致的提示。
           // 内容没能接回输入框时必须直说，不能让「未发送」听上去像什么都在。
-          if (reportFailure) setToast(restored
-            ? `未发送：${job.failureMessage}刚才没送出的内容已接回输入框。`
-            : `未发送：${job.failureMessage}刚才输入的内容没能恢复，请重新输入。`, 'error');
+          if (reportFailure) setToast(sendFailureToast(job.failureMessage, recoveryState), 'error');
         }
       } else {
         const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;

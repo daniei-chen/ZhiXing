@@ -139,6 +139,52 @@ async function exerciseWindow(window) {
     'the accepted run settles before the next submission',
   );
 
+  // F. 再次执行被拒：本来就没有草稿，文案不能提「恢复」。
+  await run('window.zhixing.appQA.failNextBegin()');
+  await run('document.querySelector(\'[aria-label="再次执行"]\').click()');
+  await wait(q('v.prepares.length===4'), 'the repeated send reached the host');
+  await wait(
+    '(document.querySelector(".toast.error span")?.textContent||"").includes("合成主机拒绝了本次启动")',
+    'the repeated send is rejected',
+  );
+  const repeated = await toast();
+  assert.match(repeated, /^未发送：/);
+  assert.doesNotMatch(
+    repeated,
+    /恢复|输入框|接回/,
+    'a repeat has no draft, so nothing can be restored',
+  );
+  assert.deepEqual(await bubbles(), ['上一轮交办', '恢复后的交办']);
+  console.log('PASS 再次执行被拒只说未发送，不谎称内容没恢复');
+
+  // G. 预检还没回来就继续输入：草稿没被消费，内容一直在输入框里。
+  await run('window.zhixing.appQA.holdPrepare()');
+  await run('window.zhixing.appQA.failNextBegin()');
+  await type('准备期间打字');
+  await pressEnter();
+  await wait(q('v.heldPrepare===true'), 'the preflight is parked');
+  await type('准备期间打字追加的字');
+  await wait(
+    'document.querySelector(' +
+      JSON.stringify(field) +
+      ').value===' +
+      JSON.stringify('准备期间打字追加的字'),
+    'typing during the preflight stays in the composer',
+  );
+  await run('window.zhixing.appQA.releasePrepare()');
+  await wait(
+    '(document.querySelector(".toast.error span")?.textContent||"").includes("还在输入框里")',
+    'the rejection says the text is still in the composer',
+  );
+  assert.doesNotMatch(
+    await toast(),
+    /没能恢复/,
+    'the text was never consumed, so nothing was lost',
+  );
+  assert.equal(await value(), '准备期间打字追加的字', 'the composer keeps what the user typed');
+  assert.deepEqual(await bubbles(), ['上一轮交办', '恢复后的交办']);
+  console.log('PASS 预检期间继续输入、随后被拒：明说内容还在输入框里');
+
   // E. 保存还没落定就继续输入，随后保存被拒：原始交办不能连文本一起消失。
   await run('window.zhixing.appQA.holdSaveOnText(' + JSON.stringify('保存期间打字') + ')');
   await type('保存期间打字');
@@ -174,7 +220,7 @@ async function exerciseWindow(window) {
   await run('window.zhixing.appQA.failNextBegin()');
   await type('新聊天里的失败');
   await pressEnter();
-  await wait(q('v.prepares.length===5'), 'the fifth preflight ran');
+  await wait(q('v.prepares.length===7'), 'the seventh preflight ran');
   await wait(
     'document.querySelector(' +
       JSON.stringify(field) +
@@ -219,7 +265,7 @@ test('直发失败：草稿与附件回到输入框，失败可见', { timeout: 
       `const {contextBridge,ipcRenderer}=require('electron');
 const methods=['loadWorkspace','saveWorkspace','saveDrafts','runtimeStatus','runtimeCleanupStatus','retryRuntimeCleanup','listAutomations','retryAutomationSave','forgetSession','removeAutomation','prepareRun','runPrepared','beginRun','runHandoffs','awaitRunHandoff','acknowledgeRunHandoff','questionSnapshot','workspaceSaveStatus','retryWorkspaceSave','loadFeedback','listMcp','browserState','browserLayout','windowControl','speechStatus','pickFiles','approvalSnapshot','runStatus'];
 const api=Object.fromEntries(methods.map(name=>[name,(...args)=>ipcRenderer.invoke('qa',name,args)]));
-api.appQA={snapshot:()=>ipcRenderer.invoke('qa','snapshot'),finish:index=>ipcRenderer.invoke('qa','finish',index),failNextBegin:()=>ipcRenderer.invoke('qa','failNextBegin'),failSaveOnText:text=>ipcRenderer.invoke('qa','failSaveOnText',[text]),clearFailSave:()=>ipcRenderer.invoke('qa','clearFailSave'),holdSaveOnText:text=>ipcRenderer.invoke('qa','holdSaveOnText',[text]),releaseSave:()=>ipcRenderer.invoke('qa','releaseSave')};
+api.appQA={snapshot:()=>ipcRenderer.invoke('qa','snapshot'),finish:index=>ipcRenderer.invoke('qa','finish',index),failNextBegin:()=>ipcRenderer.invoke('qa','failNextBegin'),failSaveOnText:text=>ipcRenderer.invoke('qa','failSaveOnText',[text]),clearFailSave:()=>ipcRenderer.invoke('qa','clearFailSave'),holdSaveOnText:text=>ipcRenderer.invoke('qa','holdSaveOnText',[text]),releaseSave:()=>ipcRenderer.invoke('qa','releaseSave'),holdPrepare:()=>ipcRenderer.invoke('qa','holdPrepare'),releasePrepare:()=>ipcRenderer.invoke('qa','releasePrepare')};
 for(const name of ['RuntimeEvent','WorkspaceSaveState','PrepareToQuit','AutomationChange','BrowserChange','SpeechEvent','ApprovalsChanged'])api['on'+name]=callback=>{const listener=(_,value)=>callback(value);ipcRenderer.on(name,listener);return()=>ipcRenderer.removeListener(name,listener);};
 contextBridge.exposeInMainWorld('zhixing',api);`,
     );
@@ -237,6 +283,8 @@ let stored=structuredClone(seed);
 let failBegin=false;
 let failSaveText='';
 let holdSaveText='';
+let holdPrepare=false;
+let releasePrepareHook=null;
 let releaseHeld=null;
 const prepares=[],runs=[];
 // 合成宿主自己负责落盘：串行化写入并保证原子替换，退出前再确认一次，
@@ -281,6 +329,7 @@ ipcMain.handle('qa',async(_,name,args)=>{
  if(name==='runHandoffs')return {runs:[]};
  if(name==='prepareRun'){
    assert.equal(stored.settings.demo,false);
+   if(holdPrepare){holdPrepare=false;await new Promise(resolve=>{releasePrepareHook=resolve;});releasePrepareHook=null;}
    prepares.push({...args[0]});
    return {preparationId:'prep-'+prepares.length,text:'SAFE_INPUT',privacyMode:'redact',providerId:'synthetic-provider',baseUrl:'http://127.0.0.1/synthetic'};
  }
@@ -289,6 +338,8 @@ ipcMain.handle('qa',async(_,name,args)=>{
  if(name==='clearFailSave'){failSaveText='';return true;}
  if(name==='holdSaveOnText'){holdSaveText=String(args[0]||'');return true;}
  if(name==='releaseSave'){releaseHeld?.();return true;}
+ if(name==='holdPrepare'){holdPrepare=true;return true;}
+ if(name==='releasePrepare'){releasePrepareHook?.();return true;}
  if(name==='beginRun'){
    if(failBegin){failBegin=false;throw new Error('合成主机拒绝了本次启动。');}
    const entry={identity:{hostEpoch:'qa',runId:args[0].runId,sessionId:prepares.at(-1).sessionId,replyId:args[0].replyId,receiptId:'receipt-'+args[0].runId},settled:false};
@@ -303,7 +354,7 @@ ipcMain.handle('qa',async(_,name,args)=>{
  }
  if(name==='acknowledgeRunHandoff')return {acknowledged:true};
  if(name==='runPrepared')return {text:'合成答复',masked:'合成答复',privacyMode:'redact'};
- if(name==='snapshot')return {prepares:prepares.map(item=>({sessionId:item.sessionId,prompt:item.prompt})),runs:runs.map(item=>({settled:item.settled})),held:releaseHeld!==null,saved:stored};
+ if(name==='snapshot')return {prepares:prepares.map(item=>({sessionId:item.sessionId,prompt:item.prompt})),runs:runs.map(item=>({settled:item.settled})),held:releaseHeld!==null,heldPrepare:releasePrepareHook!==null,saved:stored};
  if(name==='finish'){const index=Array.isArray(args)?args[0]:args;const entry=runs[index];if(!entry)throw new Error('run not found');if(entry.settled)return true;entry.settled=true;entry.release();return true;}
  return {};
 });
@@ -347,7 +398,7 @@ app.whenReady().then(async()=>{
     const code = await exited;
     assert.equal(spawnError, undefined, String(spawnError));
     assert.equal(code, 0, output);
-    assert.equal((output.match(/PASS /g) || []).length, 5, output);
+    assert.equal((output.match(/PASS /g) || []).length, 7, output);
     // 失败的两段交办一次都不能落进记录，只有被接受的那件留在聊天里。
     const saved = JSON.parse(await readFile(path.join(directory, 'workspace.json'), 'utf8'));
     const chat = saved.chats.find((item) => item.id === 'chat-a');
