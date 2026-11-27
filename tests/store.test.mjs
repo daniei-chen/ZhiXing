@@ -174,3 +174,27 @@ test('旧版草稿引用已删除会话时不会凭空恢复', () => {
  assert.equal(draft.kind, undefined);
 });
 
+
+test('renderer reload preserves only the exact host-owned live run and reply binding', () => {
+  const saved = mergeState(null);
+  saved.chats = [{ id: 'chat-a', workspaceId: 'office-home', messages: [
+    { id: 'reply-a', runId: 'run-a', role: 'assistant', pending: true, text: '' },
+    { id: 'reply-old', runId: 'run-old', role: 'assistant', pending: true, text: '旧的部分输出' },
+  ] }];
+  const liveRuns = [{ sessionId: 'chat-a', replyId: 'reply-a', runId: 'run-a' }];
+  const restored = mergeState(saved, { liveRuns });
+  assert.equal(restored.chats[0].messages[0].pending, true);
+  assert.equal(restored.chats[0].messages[1].status, 'interrupted');
+  assert.equal(restored.chats[0].messages[1].text, '旧的部分输出');
+  assert.equal(mergeState(saved).chats[0].messages[0].status, 'interrupted');
+});
+
+test('a live run from another session or another reply cannot revive a saved pending message', () => {
+  const saved = mergeState(null);
+  saved.chats = [{ id: 'chat-a', workspaceId: 'office-home', messages: [{ id: 'reply-a', runId: 'run-a', role: 'assistant', pending: true }] }];
+  for (const run of [
+    { sessionId: 'chat-b', replyId: 'reply-a', runId: 'run-a' },
+    { sessionId: 'chat-a', replyId: 'reply-b', runId: 'run-a' },
+    { sessionId: 'chat-a', replyId: 'reply-a', runId: 'run-b' },
+  ]) assert.equal(mergeState(saved, { liveRuns: [run] }).chats[0].messages[0].status, 'interrupted');
+});

@@ -8,6 +8,8 @@ import { PrivacyReview, ExportReview } from './Review.jsx';
 import { UtilityPage } from './UtilityPage.jsx';
 import { Settings } from './Settings.jsx';
 import {AgentQuestion} from './AgentQuestion.jsx';
+import { ApprovalPanel } from './ApprovalPanel.jsx';
+import { useRuntimeApprovals } from './use-runtime-approvals.js';
 import {Workbench} from './Workbench.jsx';
 import {ConversationResources} from './ConversationResources.jsx';
 import {AnswerText} from './AnswerText.jsx';
@@ -74,7 +76,8 @@ export function App() {
   const [menu, setMenu] = useState(null);
   const [modal, setModal] = useState(null);
   const [settingsPage, setSettingsPage] = useState(null);
-  const [question,setQuestion]=useState(null);
+  const [questions,setQuestions]=useState([]);
+  const approvals = useRuntimeApprovals();
   const [toast, setToastState] = useState(null);
   const [deliverableBusy, setDeliverableBusy] = useState({});
   const [reviewPath, setReviewPath] = useState("");
@@ -111,6 +114,8 @@ export function App() {
   const removedDraftKeys = useRef(new Set());
   const runJobs = useRef(new Map());
   const pendingRunSettlements = useRef(new Set());
+  const pendingReceiptAcks = useRef(new Map());
+  const questionRevision = useRef(-1);
   const forgottenRuntimeIds = useRef({ sessions: new Set(), runs: new Set() });
   const deletionBusy = useRef(false);
   const automationLatest = useRef(automationState);
@@ -226,28 +231,65 @@ export function App() {
     return { draftKey: consumed.key, submittedRevision: consumed.cleared.revision - 1 };
   }
 
+  async function readWorkspaceWithHandoffs() {
+    const saved = await desktop.loadWorkspace();
+    const handoffs = desktop.runHandoffs ? await desktop.runHandoffs() : { runs: [] };
+    return { saved, handoffs };
+  }
+
+  function restoreLoadedWorkspace(saved, handoffs, { preserveLocalDrafts = false } = {}) {
+    const initial = mergeState(saved, { liveRuns: handoffs.runs });
+    if (preserveLocalDrafts)
+      initial.drafts = initial.settings.persist ? { ...initial.drafts, ...draftMap.current } : {};
+    const reconnecting = handoffs.runs.filter((run) =>
+      initial.chats.some(
+        (chat) =>
+          chat.id === run.sessionId &&
+          chat.messages.some((message) => message.id === run.replyId && message.runId === run.runId),
+      ),
+    );
+    const liveChat = initial.chats.find((chat) => chat.id === reconnecting[0]?.sessionId);
+    if (liveChat) initial.workspaceId = liveChat.workspaceId;
+    latest.current = initial;
+    draftMap.current = initial.settings.persist ? initial.drafts || {} : {};
+    draftSlices.replace(draftMap.current);
+    const restored = liveChat
+      ? { section: 'home', chatId: liveChat.id, projectId: liveChat.projectId || null }
+      : restoredDraftView(initial) ||
+        (preserveLocalDrafts
+          ? {
+              section: 'home',
+              chatId: null,
+              projectId: null,
+              newDraftId: newDraftIdFor(initial.workspaceId, null),
+            }
+          : null);
+    if (preserveLocalDrafts) {
+      const key = draftKeyFor({ ...restored, workspaceId: initial.workspaceId });
+      const draft = draftMap.current[key] || { text: '', files: [] };
+      activeDraftKey.current = key;
+      inputRef.current = draft.text;
+      filesRef.current = draft.files;
+      setInputValue(draft.text);
+      setFilesValue(draft.files);
+    }
+    if (saved || preserveLocalDrafts) {
+      setState(initial);
+      if (restored) setView(restored);
+    }
+    setNativeProjects(initial.projects);
+    for (const run of reconnecting) void reconnectRun(run);
+  }
+
   async function retryWorkspaceSave() {
     if (['saving', 'recovering'].includes(workspaceSave.status)) return;
     if (storageFailed.current) {
       setWorkspaceSave(previous => ({ ...previous, status: 'recovering' }));
       try {
         await desktop.retryWorkspaceSave?.();
-        const saved = mergeState(await desktop.loadWorkspace());
-        const restoredDrafts={...saved.drafts,...draftMap.current};
-        draftMap.current = saved.settings.persist ? restoredDrafts : {};
-        publishDrafts();
-        saved.drafts=draftMap.current;
-        const restored = restoredDraftView(saved)||{section:'home',chatId:null,projectId:null,newDraftId:newDraftIdFor(saved.workspaceId,null)};
-        const key=draftKeyFor({...restored,workspaceId:saved.workspaceId});
-        const draft=draftMap.current[key]||{text:'',files:[]};
-        activeDraftKey.current=key;
-        inputRef.current=draft.text;
-        filesRef.current=draft.files;
-        setInputValue(draft.text);
-        setFilesValue(draft.files);
-        setState(saved);
-        setNativeProjects(saved.projects);
-        setView(restored);
+        const { saved, handoffs } = await readWorkspaceWithHandoffs();
+        if (!draftProducersLive.current) return;
+        restoreLoadedWorkspace(saved, handoffs, { preserveLocalDrafts: true });
         storageFailed.current = false;
         setWorkspaceSave(previous => ({ ...previous, status: 'saved', errorCode: undefined }));
       } catch (error) {
@@ -266,6 +308,10 @@ export function App() {
         const snapshot = workspaceSnapshot();
         await desktop.saveWorkspace(snapshot);
       }
+      // A queue retry can durably save a complete result without another React
+      // state change. Confirm only receipts present in the host's saved snapshot;
+      // the host independently checks that same run/message/receipt identity.
+      if (desktop && pendingReceiptAcks.current.size) await acknowledgeSavedHandoffs(await desktop.loadWorkspace());
       if (sequence !== latestSaveSequence.current) return;
       if (desktop?.workspaceSaveStatus) {
         const status = await desktop.workspaceSaveStatus();
@@ -278,6 +324,9 @@ export function App() {
   }
 
   const { section, chatId, projectId } = view;
+  const chatApprovals = approvals.pending.filter(request => request.rootSessionId === chatId);
+  const question = questions.find(request => (request.rootSessionId || request.sessionId) === chatId);
+  const otherInteractionRoots = [...new Set([...approvals.pending.map(item => item.rootSessionId), ...questions.map(item => item.rootSessionId || item.sessionId)])].filter(id => id !== chatId);
   const workspace = state.workspaces.find(space => space.id === state.workspaceId) || state.workspaces[0];
   const modeWorkspaceIds=new Set(state.workspaces.filter(space=>space.type===workspace.type).map(space=>space.id));
   const projects = state.projects.filter(project => modeWorkspaceIds.has(project.workspaceId));
@@ -336,18 +385,8 @@ export function App() {
   useEffect(() => {
     if (!desktop) return;
     let mounted = true;
-    desktop.loadWorkspace().then(saved => {
-      if(mounted){
-        const initial=mergeState(saved);
-        draftMap.current = initial.settings.persist ? initial.drafts || {} : {};
-        draftSlices.replace(draftMap.current);
-        if(saved){
-          setState(initial);
-          const restored = restoredDraftView(initial);
-          if (restored) setView(restored);
-        }
-        setNativeProjects(initial.projects);
-      }
+    readWorkspaceWithHandoffs().then(({ saved, handoffs }) => {
+      if (mounted) restoreLoadedWorkspace(saved, handoffs);
     }).catch(() => {
       if (!mounted) return;
       storageFailed.current = true;
@@ -360,8 +399,9 @@ export function App() {
     const unsubscribe = desktop.onRuntimeEvent(event => {
       if (forgottenRuntimeIds.current.sessions.has(event.sessionId) || forgottenRuntimeIds.current.runs.has(event.runId)) return;
       const job = active.current;
-      if(event.type==='question'){setQuestion(event);return;}
-      if(event.type==='question-closed'){setQuestion(previous=>previous?.requestId===event.requestId?null:previous);return;}
+      if(event.questionsSnapshot){applyQuestions(event.questionsSnapshot);return;}
+      if(event.type==='question'){setQuestions(previous=>[...previous.filter(item=>item.requestId!==event.requestId),event]);return;}
+      if(event.type==='question-closed'){setQuestions(previous=>previous.filter(item=>item.requestId!==event.requestId));return;}
       if(event.type==='live-stats'){
         if(job?.runId===event.runId)setLiveStats({runId:event.runId,context:event.context});
         return;
@@ -394,6 +434,7 @@ export function App() {
       }
       setEvents(old => [...old.slice(-599), { ...event, time }]);
     });
+    desktop.questionSnapshot?.().then(snapshot => { if (mounted) applyQuestions(snapshot); }).catch(() => {});
     const applySaveState = snapshot => {
       if (!mounted || !snapshot || typeof snapshot !== 'object') return;
       setWorkspaceSave(previous => {
@@ -476,6 +517,13 @@ export function App() {
         check();
       });
       if (storageFailed.current) throw new Error('本机工作空间读取失败，现有文件保持在磁盘中。');
+      if (active.current && !active.current.demo && (reason === 'recovery' || reason === 'quit' && active.current.awaitingInitialSave)) {
+        // This also pre-cancels a run still waiting for its initial save/begin
+        // IPC, which is not yet present in the host's handoff snapshot. Normal
+        // quit has already closed registered runs; retain their full handoff.
+        active.current.preflightCancelled = true;
+        await desktop.cancelRun(active.current.runId);
+      }
       // The private run promise carries the complete local result. A terminal
       // event can clear active before that promise settles, and runJobs can be
       // pruned by deletion, so keep these handoffs outside both projections.
@@ -808,6 +856,61 @@ export function App() {
     setState(current => finalizeConversationRun(current, job, { ...outcome, finalization: job.finalization }));
   }
 
+  function applyQuestions(snapshot) {
+    if (!Number.isSafeInteger(snapshot?.revision) || snapshot.revision < questionRevision.current) return;
+    questionRevision.current = snapshot.revision;
+    setQuestions(snapshot.pending || []);
+  }
+
+  async function acknowledgeSavedHandoffs(snapshot) {
+    if (!desktop?.acknowledgeRunHandoff) return;
+    for (const [runId, identity] of pendingReceiptAcks.current) {
+      const message = snapshot.chats.find(chat => chat.id === identity.sessionId)?.messages.find(message => message.runId === runId && message.resultReceiptId === identity.receiptId && !message.pending);
+      // A deliberately nonpersistent conversation is delivered to memory only.
+      if (snapshot.settings.persist && !message) continue;
+      await desktop.acknowledgeRunHandoff(identity);
+      pendingReceiptAcks.current.delete(runId);
+    }
+  }
+
+  async function receiveHandoff(job, identity) {
+    const receipt = await desktop.awaitRunHandoff(identity);
+    Object.assign(job, { trace: receipt.trace, traceTruncated: receipt.traceTruncated, progressText: receipt.progressText, children: receipt.children, plan: receipt.plan });
+    const acknowledgement = { hostEpoch: receipt.hostEpoch, runId: receipt.runId, sessionId: receipt.sessionId, receiptId: receipt.receiptId };
+    pendingReceiptAcks.current.set(job.runId, acknowledgement);
+    finalizeRun(job, { ...receipt.outcome, time: receipt.time, receiptId: receipt.receiptId });
+    try {
+      if (draftProducersLive.current) await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const savedReply = latest.current.chats.find(chat => chat.id === job.chatId)?.messages.find(message => message.id === job.replyId);
+      if (savedReply?.resultReceiptId !== receipt.receiptId) throw new Error('交办结果尚未接回原消息，主机恢复记录已保留。');
+      await persistWorkspaceSnapshot(latest.current);
+    } catch (error) {
+      setWorkspaceSave(previous => ({ ...previous, status: 'failed', errorCode: errorText(error) }));
+    }
+    return receipt.outcome;
+  }
+
+  async function reconnectRun(run) {
+    if (runJobs.current.has(run.runId)) return;
+    const job = { ...run, chatId: run.sessionId, demo: false };
+    runJobs.current.set(job.runId, job);
+    liveReplies.set(job.runId, job.progressText || '');
+    if (run.status === 'running' && !active.current) { active.current = job; setRunning(job); }
+    setEvents(previous => [...previous, ...(run.trace || [])].slice(-600));
+    let releaseSettlement;
+    const settled = new Promise(resolve => { releaseSettlement = resolve; });
+    pendingRunSettlements.current.add(settled);
+    try {
+      await receiveHandoff(job, run);
+    } catch {
+      setToast('暂时无法接回交办结果。主机保留了恢复记录，请重新载入界面后重试。', 'error');
+    } finally {
+      if (active.current === job) { active.current = null; setRunning(null); }
+      pendingRunSettlements.current.delete(settled);
+      releaseSettlement();
+    }
+  }
+
   function localCommand(command) {
     setInput('');
     if(command==='/model')setMenu({name:'models'});
@@ -894,10 +997,24 @@ export function App() {
     finally { setBusy(false); }
   }
 
+  function restoreFailedSubmission(draft, recovery, job, executionStatus) {
+      if (recovery && !['completed', 'cancelled'].includes(executionStatus) && job.terminalStatus !== 'cancelled') {
+        const currentDraft = draftMap.current[recovery.draftKey];
+        const restored = recoverSubmittedDraft(currentDraft, { ...draft, ...recovery });
+        if (restored) {
+          const next = persistDraft(recovery.draftKey, restored, currentDraft.revision);
+          if (next && activeDraftKey.current === recovery.draftKey && !inputRef.current && !filesRef.current.length) {
+            inputRef.current = next.text; filesRef.current = next.files;
+            setInputValue(next.text); setFilesValue(next.files);
+          }
+        }
+      }
+  }
+
   async function startReply(draft, preview, demo = false) {
     if (!draftProducersLive.current || active.current || draft.workspaceId !== latest.current.workspaceId) return;
     const recovery = draft.draftKey ? clearSubmittedDraft(draft) : null;
-    const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [] };
+    const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [], awaitingInitialSave: true };
     runJobs.current.set(job.runId, job);
     if (runJobs.current.size > 80) for (const [id, old] of runJobs.current) {
       if (old !== job && old.finalization?.processStatus !== 'cleanup_pending' && old !== active.current) { runJobs.current.delete(id); liveReplies.set(id, undefined); break; }
@@ -905,7 +1022,7 @@ export function App() {
     active.current = job; setRunning(job);
     const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl, visual }) => ({ id, name, size, path, sourceUrl, ...(visual ? { visual } : {}) })) };
     const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0, startedAt: Date.now() };
-    setState(current => {
+    const appendSubmission = current => {
       const target = current.chats.find(item => item.id === draft.sessionId);
       const now = Date.now();
       if (!target) return { ...current, chats: [...current.chats, {
@@ -918,28 +1035,35 @@ export function App() {
       const binding = !demo&&(!target.messages.length||target.importedFrom==='deepseek'&&!target.providerId) ? {providerId:preview.providerId,providerUrl:preview.baseUrl} : {};
       if(!target.messages.length)binding.title=draft.text.replace(/\s+/g,' ').slice(0,42);
       return { ...current, chats: current.chats.map(item => item.id === target.id ? { ...item,...binding, updatedAt: now, messages: [...history, assistant] } : item) };
-    });
+    };
+    const submittedState = appendSubmission({ ...latest.current, drafts: draftMap.current });
+    latest.current = submittedState;
+    setState(submittedState);
     if (draft.sideScope) setSideSelection({scope:draft.sideScope,id:draft.sessionId});
     else navigate('home', draft.sessionId, draft.projectId);
     let releaseSettlement;
     const settled = new Promise(resolve => { releaseSettlement = resolve; });
     pendingRunSettlements.current.add(settled);
     try {
-      const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
-      finalizeRun(job, { result });
+      // Persist the run/reply binding before any model or tool can execute.
+      // This is the anchor used after a renderer reload, never a second run.
+      await persistWorkspaceSnapshot(submittedState);
+      job.awaitingInitialSave = false;
+      if (!draftProducersLive.current || job.preflightCancelled) {
+        job.terminalStatus = 'cancelled';
+        throw Object.assign(new Error('交办已停止，未启动新的内核。'), { code: 'RUNTIME_CANCELLED', stage: 'prepare' });
+      }
+      if (!demo && desktop.beginRun) {
+        const identity = await desktop.beginRun({ runId: job.runId, replyId: job.replyId, preparationId: preview.preparationId });
+        const outcome = await receiveHandoff(job, identity);
+        if (outcome.status === 'failed') restoreFailedSubmission(draft, recovery, job, outcome.finalization?.executionStatus || outcome.result?.finalization?.executionStatus);
+      } else {
+        const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
+        finalizeRun(job, { result });
+      }
     } catch (error) {
       const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;
-      if (recovery && !['completed', 'cancelled'].includes(executionStatus) && job.terminalStatus !== 'cancelled') {
-        const currentDraft = draftMap.current[recovery.draftKey];
-        const restored = recoverSubmittedDraft(currentDraft, { ...draft, ...recovery });
-        if (restored) {
-          const next = persistDraft(recovery.draftKey, restored, currentDraft.revision);
-          if (next && activeDraftKey.current === recovery.draftKey && !inputRef.current && !filesRef.current.length) {
-            inputRef.current = next.text; filesRef.current = next.files;
-            setInputValue(next.text); setFilesValue(next.files);
-          }
-        }
-      }
+      restoreFailedSubmission(draft, recovery, job, executionStatus);
       finalizeRun(job, { status: job.terminalStatus || 'failed', result: error.result, output: error.output, finalization: error.finalization, error: { code: error.code, stage: error.stage, message: `运行未完成：${errorText(error)}` } });
     } finally {
       if (active.current === job) { active.current = null; setRunning(null); }
@@ -948,9 +1072,10 @@ export function App() {
     }
   }
 
-  async function stop() {
-    const job = active.current;
-    if (!job) return;
+  async function stop(runId) {
+    const job = typeof runId === 'string' ? runJobs.current.get(runId) : active.current;
+    if (!job) { if (typeof runId === 'string') await desktop?.cancelRun(runId); return; }
+    job.preflightCancelled = true;
     if(job.demo){
       job.terminalStatus = 'cancelled';
       finalizeRun(job, { status: 'cancelled' });
@@ -1035,6 +1160,7 @@ export function App() {
     const saved = workspaceSnapshot(snapshot);
     if (desktop) await desktop.saveWorkspace(saved);
     else saveState(saved);
+    await acknowledgeSavedHandoffs(snapshot);
   }
 
   async function finishWorkspaceDeletion(operation) {
@@ -1069,7 +1195,8 @@ export function App() {
         for (const [key, scope] of Object.entries(draftScopes.current)) if (key === `chat:${id}` || scope.chatId === id) delete draftScopes.current[key];
         setEvents(previous => previous.filter(event => event.sessionId !== id && !removedRuns.has(event.runId)));
         setLiveStats(previous => removedRuns.has(previous?.runId) ? null : previous);
-        setQuestion(previous => previous?.sessionId === id || removedRuns.has(previous?.runId) ? null : previous);
+        setQuestions(previous => previous.filter(item => (item.rootSessionId || item.sessionId) !== id && !removedRuns.has(item.runId)));
+        for (const runId of removedRuns) pendingReceiptAcks.current.delete(runId);
         setCleanupPending(previous => previous.filter(row => row.sessionId !== id && !removedRuns.has(row.runId)));
         setSideSelection(previous => previous.id === id ? { scope: '', id: null } : previous);
       }
@@ -1334,7 +1461,7 @@ export function App() {
   const scopeProps = { workspace, projects, chats, spaceChats, documents, automations, taskRuns, project, mode, orphanDrafts: unresolvedDrafts };
 
   return <div className={`app-shell ${isDark ? 'dark' : ''} ${sidebarOpen ? '' : 'sidebar-hidden'} ${settingsPage ? 'settings-open' : ''}`}>
-    <div className="app-body" inert={!!modal || !!settingsPage||!!question} aria-hidden={settingsPage ? true : undefined}>
+    <div className="app-body" inert={!!modal || !!settingsPage} aria-hidden={settingsPage ? true : undefined}>
       <Titlebar desktop={desktop} sidebarOpen={sidebarOpen} setSidebar={setSidebar} workspace={workspace}/>
       {sidebarOpen && <Sidebar state={state} workspace={workspace} projects={projects} chats={chats} activeChat={chat?.id} runningChatId={running?.chatId} activeProject={project} section={section} newChat={newChat} openChat={openChat} selectProject={selectProject} navigate={navigate} changeWorkspace={changeWorkspace} updateChat={updateChat} expandProject={id => updateProject(id, { expanded: !projects.find(item => item.id === id)?.expanded })} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} openModal={openModal} unread={unread} automations={automations} documents={documents} chooseFiles={chooseFiles} customTab={customTab} setCustomTab={setCustomTab}/>}
       <main className={`main-panel ${panel&&room?'with-workbench':''}`}>
@@ -1368,7 +1495,11 @@ export function App() {
             {cleanupPending.map(item => <section className="running-return runtime-cleanup-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.finalization?.error?.message}>内核退出尚未确认，该会话暂不能重新执行。</span>{desktop?.retryRuntimeCleanup && <button type="button" disabled={!!recoveryAction} onClick={() => void retryCleanup(item.runId)}>重试清理</button>}</section>)}
             {pendingOutcomes.map(item => <section className="running-return automation-save-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.persistenceError?.message}>自动化执行已结束，结果尚未保存；后续调度已暂停。</span>{item.result && <button type="button" onClick={() => openRun(item)}>查看结果</button>}{desktop?.retryAutomationSave && <button type="button" disabled={!!recoveryAction} onClick={() => void retryAutomationSave(item.runId)}>重试保存结果</button>}</section>)}
             {automationState.persistenceError && !pendingOutcomes.length && <section className="running-return automation-save-error" role="alert"><WarningCircle size={15}/><span>{automationState.persistenceError.message || '自动化记录保存失败，待恢复。'}</span></section>}
-            {running&&!runningHere&&<div className="running-return" role="status"><CircleNotch size={14}/><span>{state.chats.find(item=>item.id===running.chatId)?.title||'另一段聊天'}正在执行</span><button type="button" onClick={returnToRunningChat}>返回任务</button></div>}
+            {running&&!runningHere&&<div className="running-return" role="status"><CircleNotch size={14}/><span>{state.chats.find(item=>item.id===running.chatId)?.title||'另一段聊天'}{approvals.pending.some(item=>item.runId===running.runId)?'有待批准操作':questions.some(item=>item.runId===running.runId)?'需要补充信息':'正在执行'}</span><button type="button" onClick={returnToRunningChat}>返回任务</button></div>}
+            {otherInteractionRoots.map(rootId => <section key={rootId} className="running-return interaction-return" role="status"><Info size={15}/><span>{state.chats.find(item=>item.id===rootId)?.title||'另一段交办'}等待你处理</span><button type="button" onClick={()=>{
+              const target=latest.current.chats.find(item=>item.id===rootId);
+              if(target){setState(current=>({...current,workspaceId:target.workspaceId}));navigate('home',target.id,target.projectId,false,target.workspaceId);}
+            }}>查看待处理</button></section>)}
             {room ? <>
               {chat ? <section className="transcript" ref={transcript} onScroll={onTranscriptScroll} aria-label="聊天记录">
                 {!messages.length && <p className="transcript-empty">这段聊天还没有消息。</p>}
@@ -1393,7 +1524,7 @@ export function App() {
                     </details>;
                   })()}
                   {message.pending&&<StreamingAnswer store={liveReplies} runId={message.runId} initialText={message.progressText} onOpenUrl={openAnswerUrl} onProgress={onStreamProgress}/>}
-                  {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':runStatusLabel(events,running?.runId)}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl} references={message.deliverables} onOpenFile={openDeliverable}/>}
+                  {message.pending ? <div className="thinking-label" role="status"><CircleNotch size={17}/>{running?.status==='cancelling'?'正在停止并保存已生成内容…':chatApprovals.some(item=>item.runId===message.runId)?'等待你批准':question?.runId===message.runId?'等待你补充信息':runStatusLabel(events,running?.runId)}</div> : <AnswerText text={message.text} onOpenUrl={openAnswerUrl} references={message.deliverables} onOpenFile={openDeliverable}/>}
                   {message.unrestored>0 && <p className="restore-note" role="status">{restoreNotice(message.unrestored)}</p>}
                   {!message.pending&&message.changes?.length>0&&<ChangedFiles files={message.changes} onOpen={file=>openReview(file?.path)}/>}
                   {!message.pending&&message.deliverables?.length>0&&<DeliveryCards files={message.deliverables} onOpen={openDeliverable} onAction={deliverableAction} pending={deliverableBusy}/>}
@@ -1440,15 +1571,15 @@ export function App() {
                 <div className="quick-workflows">{workflows[mode].slice(0, 3).map(([label, prompt]) => <button key={label} onClick={() => applyTemplate(prompt)}>{label}<ArrowUpRight size={13}/></button>)}</div>
                 {project && <button className="text-button" onClick={() => openModal({ type: 'project-settings', value: project })}>项目说明</button>}
               </section></div>}
-              <Composer settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage||!!question}/>
+              <Composer takeover={chatApprovals.length ? <ApprovalPanel hostEpoch={approvals.hostEpoch} requests={chatApprovals} connection={approvals.connection} onStop={()=>stop(chatApprovals[0].runId)}/> : question ? <AgentQuestion key={question.requestId} inline request={question} count={questions.filter(item=>(item.rootSessionId||item.sessionId)===chatId).length} onStop={()=>stop(question.runId)} onAnswer={value=>desktop.answerQuestion({...value,runId:question.runId,rootSessionId:question.rootSessionId||question.sessionId})}/> : null} settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage}/>
             </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={applyTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
           </div>
-          {room&&<ErrorBoundary key={workScopeKey} scope="workbench" hidden={!panel}><Workbench deliveryPreview={deliveryPreview.preview && <DeliveryPreview preview={deliveryPreview.preview} onBack={deliveryPreview.close} onRetry={deliveryPreview.retry} onEnlarge={value => openModal({type:'document',value})}/>} draftStore={draftSlices} liveReplies={liveReplies} key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!question||!!menu} onClose={closeWorkPanel} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/></ErrorBoundary>}
+          {room&&<ErrorBoundary key={workScopeKey} scope="workbench" hidden={!panel}><Workbench deliveryPreview={deliveryPreview.preview && <DeliveryPreview preview={deliveryPreview.preview} onBack={deliveryPreview.close} onRetry={deliveryPreview.retry} onEnlarge={value => openModal({type:'document',value})}/>} draftStore={draftSlices} liveReplies={liveReplies} key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!menu} onClose={closeWorkPanel} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/></ErrorBoundary>}
 
         </div>
       </main>
     </div>
-    {settingsPage && <div className="settings-shell" inert={!!modal||!!question}>
+    {settingsPage && <div className="settings-shell" inert={!!modal}>
       <Titlebar desktop={desktop} sidebarOpen={sidebarOpen} setSidebar={setSidebar} workspace={workspace} settingsMode/>
       <AppRail section={section} settings navigate={navigate} openModal={openModal}/>
       <Settings key={settingsPage.tab || '常规'} modal={settingsPage} close={() => setSettingsPage(null)} setModal={openModal} state={state} scope={scopeProps} setSetting={setSetting} runtime={runtime} setRuntime={setRuntime} changeWorkspace={changeWorkspace} notify={setToast}/>
@@ -1464,7 +1595,7 @@ export function App() {
       {workspaceSave.status === 'failed' && <button type="button" className="secondary-button" onClick={() => void retryWorkspaceSave()}>{storageFailed.current?'重试读取':'重试保存'}</button>}
     </section>
     {toast && <div className={`toast ${toast.type}`} role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'}>{toast.type === 'error' ? <WarningCircle size={15}/> : toast.type === 'success' ? <Check size={15}/> : <Info size={15}/>}<span>{toast.message}</span>{toast.type === 'error'&&<button type="button" className="toast-dismiss" aria-label="关闭错误提示" onClick={()=>setToast(null)}>×</button>}</div>}
-    {question&&<AgentQuestion key={question.requestId} request={question} onAnswer={value=>desktop.answerQuestion(value)}/>}
+
     {privacyView && <PrivacyReview key={modal.type} modal={modal} original={reviewOriginal} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} currentMode={state.settings.privacyMode} onClose={() => setModal(null)} onSettings={() => openModal({ type: 'settings', tab: '隐私与数据' })} onSend={() => startReply(modal.draft, modal.preview)}/>}
     {modal?.type === 'export-review' && <ExportReview title={modal.title} original={modal.original} masked={modal.masked} history={state.settings.persist?modal.history:undefined} terms={state.settings.customTerms} policy={state.settings.privacyPolicy} privacyMode={state.settings.privacyMode} desktop={desktop} action={modal.action} defaultFormat={modal.format} onClose={() => setModal(null)} onExport={modal.action==='share'?shareReviewedChat:saveExport}/>}
     {modal?.type === 'new-drafts' && <Modal title="未发送的新草稿" onClose={() => setModal(null)}><p className="modal-copy">选择一份继续编辑。草稿保留在各自的空间和项目中。</p><div className="record-list">{unsentDrafts.map(draft => <article key={draft.key} data-draft-key={draft.key}><NotePencil size={16}/><span><strong>{draft.text.trim().replace(/\s+/g, ' ').slice(0, 80) || '仅附件草稿'}</strong><small>{state.workspaces.find(space => space.id === draft.workspaceId)?.name} · {state.projects.find(project => project.id === draft.projectId)?.name || '未归入项目'}</small><small>{draft.text.length} 字 · {draft.files.length} 个附件 · {new Date(draft.updatedAt).toLocaleString('zh-CN')}</small></span><button type="button" className="secondary-button" onClick={() => openNewDraft(draft.key)}>继续编辑</button></article>)}{!unsentDrafts.length && <p className="empty-note">没有未发送的新草稿。</p>}</div></Modal>}

@@ -1,0 +1,38 @@
+{
+  "evidenceLayer": "source-only",
+  "command": "node --test tests/conversation-drafts-ui.test.mjs",
+  "toolChunkId": "11c912",
+  "exitCode": 0,
+  "counts": {
+    "tests": 26,
+    "passed": 26,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "regressions": [
+    "failed-save ACK retry, host retry API",
+    "failed-save ACK retry, direct-save compatibility",
+    "quit before begin while initial save pending",
+    "quit after host begin preserves full result",
+    "read retry reconnects existing handoff",
+    "late read retry cannot reattach disposed App"
+  ],
+  "quality": {
+    "eslintExitCode": 0,
+    "diffCheckExitCode": 0
+  },
+  "logs": {
+    "before": "before-observations.json",
+    "lateReadBefore": "late-read-before.log",
+    "after": "fixture-after.log",
+    "lint": "lint.log",
+    "diffCheck": "diff-check.log"
+  },
+  "limits": [
+    "Child components are mocked in this hook fixture",
+    "No Windows EXE execution",
+    "No real cloud service",
+    "First pre-fix run preserved as recorded assertion data, not a copied raw log"
+  ]
+}

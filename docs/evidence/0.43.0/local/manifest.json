@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "hashAlgorithm": "sha256",
+  "files": {
+    ".gitattributes": {
+      "bytes": 8,
+      "sha256": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da"
+    },
+    "approval-renderer.log": {
+      "bytes": 237,
+      "sha256": "e91ce1f6d2047d3555d9710640824d67ab44da5a4ab1d113a6d74347271c29a7"
+    },
+    "build-final.log": {
+      "bytes": 1289,
+      "sha256": "f2dfc2528aa457f853eb0490d52a38cb29db5ba9e530ff2837566d3a3fdca111"
+    },
+    "core.log": {
+      "bytes": 7317,
+      "sha256": "022d2003dcb57e001f65f796cb7d57b80612183c222da4168a93ae00604e7b5e"
+    },
+    "existing-contracts.log": {
+      "bytes": 4811,
+      "sha256": "b008a2e374e9e17e404b7ca7fbf84c007df8bd60e638c3ac51fbb0f9b8b6afa4"
+    },
+    "quality.log": {
+      "bytes": 2769,
+      "sha256": "7e4c8ba9282afb87480488fc88c1f2b908d158d66a16e6b3f2d2ab568b2d45ce"
+    },
+    "renderer-race-review/before-observations.json": {
+      "bytes": 1780,
+      "sha256": "bc04f47139d48e97c5465bf6738fd5f6330d5c163a5a5ac12f9a89fec3333153"
+    },
+    "renderer-race-review/diff-check.log": {
+      "bytes": 12,
+      "sha256": "02a713f76226c52a198adae80526740fc4d6057636326bc8dec49635db8ae7a7"
+    },
+    "renderer-race-review/fixture-after.log": {
+      "bytes": 2897,
+      "sha256": "b49722615b3988b7e21ec3b428e064369f87f067ea634090883d92baf8a5e88f"
+    },
+    "renderer-race-review/late-read-before.log": {
+      "bytes": 911,
+      "sha256": "bd277d67c03d66e2fe1867f7f4fd39da506f50ff22ebb8592ca6d64132e0af71"
+    },
+    "renderer-race-review/lint.log": {
+      "bytes": 150,
+      "sha256": "9aac3da9a7039a99c345545c32f286aa65c358d571bfce7e00d94625d095c829"
+    },
+    "renderer-race-review/validation.json": {
+      "bytes": 1068,
+      "sha256": "a2500fc9b3364843649a8b228d273fa61065645b805cff47070b428e8a15c58f"
+    },
+    "runtime-baseline.log": {
+      "bytes": 2897,
+      "sha256": "81c34377ce48a47ef8250b8bd0fc09153000cc638c559ed6c2edd216933f754e"
+    },
+    "sites-final.log": {
+      "bytes": 616,
+      "sha256": "20c14f5d8a3df3db21fc34311c2a1c4d9d88cd8031293933583a75e48808e7e9"
+    },
+    "source-app-development-attempt/app-log-tail.txt": {
+      "bytes": 609,
+      "sha256": "f67f492e34aaff2617dfe2419373e7977920ed9f84f68050d994546503d7c746"
+    },
+    "source-app-development-attempt/result.json": {
+      "bytes": 3203,
+      "sha256": "7f9ea726729f1477f1f9c19cdab31f28b7ac29a631d88ca0baa8f738f9a8cebe"
+    },
+    "summary.json": {
+      "bytes": 8541,
+      "sha256": "b8ce1ea42c522daf8967e5da7c1fefbbd9ecbffcee8a0001bf15eb4dd53257b6"
+    }
+  }
+}

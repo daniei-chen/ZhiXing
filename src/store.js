@@ -27,7 +27,7 @@ const legacySample = new Map([
   ['c6', 'https://github.com/deepseek-ai/deepseek-harness'],
 ]);
 
-export function mergeState(saved) {
+export function mergeState(saved, { liveRuns = [] } = {}) {
   const defaults = structuredClone(seedState);
   if (![1, 2].includes(saved?.version) || !Array.isArray(saved.projects) || !Array.isArray(saved.chats)) return defaults;
 
@@ -88,7 +88,8 @@ export function mergeState(saved) {
     chats: chats.map(chat => ({
       ...chat,
       workspaceId: projectById.get(chat.projectId)?.workspaceId || chat.workspaceId || workspaceId,
-      messages: (chat.messages || []).map(message => message.pending ? { ...message, pending: false, stopped: true, status: 'interrupted', text: message.progressText || message.text || '上次运行已中断。', progressText: '' } : message),
+      messages: (chat.messages || []).map(message => message.pending && !liveRuns.some(run => run.sessionId === chat.id && run.runId === message.runId && run.replyId === message.id)
+        ? { ...message, pending: false, stopped: true, status: 'interrupted', text: message.progressText || message.text || '上次运行已中断。', progressText: '' } : message),
     })),
     automations: automations.map(task => ({ ...task, workspaceId: task.workspaceId || projectById.get(task.projectId)?.workspaceId || workspaceId, kind: task.kind || 'reminder', status: task.status === '运行中' ? '上次运行已中断' : task.status })),
     documents: documents.map(document => ({ ...document, workspaceId: document.workspaceId || workspaceId })),
@@ -190,7 +191,8 @@ export function initialState() {
 
 export function saveState(state) {
   if (state.settings.persist) {
-    const { drafts: _memoryDrafts, ...persisted } = state;
+    const persisted = { ...state };
+    delete persisted.drafts;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
   }
   else localStorage.removeItem(STORAGE_KEY);

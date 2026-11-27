@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "date": "2026-11-27",
+  "baselineCommit": "7076fe7a694ca772e25fc64f038e3dc909a9baf1",
+  "source": "installed official packages restored from package-lock.json; not the user desktop app.asar",
+  "files": [
+    {
+      "path": "@deepseek-ai/dsh-user-approval/src/index.ts",
+      "package": "@deepseek-ai/dsh-user-approval",
+      "version": "0.2.2-rc.5",
+      "bytes": 14458,
+      "sha256": "afa2f16553b8dcf5ea74f4bf09555cc8aa633d8203146d3e369210a5ef043cff",
+      "lockIntegrity": "sha512-Im2bB8oYnl0A2CnqmI7qT9JmpVgwArlI07r8aAIPhaG4QfdIFS/uP0X7Q8Xc6ZAS85AelFNdEUm9Ms6YuYzjnQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-user-approval/src/types.ts",
+      "package": "@deepseek-ai/dsh-user-approval",
+      "version": "0.2.2-rc.5",
+      "bytes": 3435,
+      "sha256": "4413da55040e100e5700b5b89dccf387e08275587ac21876cba8cbab2df34037",
+      "lockIntegrity": "sha512-Im2bB8oYnl0A2CnqmI7qT9JmpVgwArlI07r8aAIPhaG4QfdIFS/uP0X7Q8Xc6ZAS85AelFNdEUm9Ms6YuYzjnQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-sdk-protocol/src/types.ts",
+      "package": "@deepseek-ai/dsh-sdk-protocol",
+      "version": "0.2.2-rc.5",
+      "bytes": 10201,
+      "sha256": "3101f0792bb3eb849e521d7e4ec0d715b2913e97f7dda722ecad31bdba1bf398",
+      "lockIntegrity": "sha512-cTpUbYEfKJJoPd31nQD6uP48j+JzlK/TbhtXuVa0y5zHKnXO7DjiP+zkf6tZYHwy6dAM1pIvI90fZXYCZMO9jQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-sdk-protocol/src/transport.ts",
+      "package": "@deepseek-ai/dsh-sdk-protocol",
+      "version": "0.2.2-rc.5",
+      "bytes": 10054,
+      "sha256": "ed13ba6e37ef84aadd684e97eb42a5369e56d08172e7d5928764c472ef152fab",
+      "lockIntegrity": "sha512-cTpUbYEfKJJoPd31nQD6uP48j+JzlK/TbhtXuVa0y5zHKnXO7DjiP+zkf6tZYHwy6dAM1pIvI90fZXYCZMO9jQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-sdk-jsonrpc-server/src/server.ts",
+      "package": "@deepseek-ai/dsh-sdk-jsonrpc-server",
+      "version": "0.2.2-rc.5",
+      "bytes": 27458,
+      "sha256": "d64bdfc1b76af96645378e02e2a1d1fe8b2416a09e41b37512084c7899472122",
+      "lockIntegrity": "sha512-hAxXcsKNQAEyEt8/y8Bw/h9ybajlMNuuKS91sJH8AkOq3KXmnZjyEv9ZtECmtjn3QXL4uZVJheATFQm/dM/FMw=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-sdk-client/src/client.ts",
+      "package": "@deepseek-ai/dsh-sdk-client",
+      "version": "0.2.2-rc.5",
+      "bytes": 28490,
+      "sha256": "fdb4940d455b8a446d950c61f0b65aaf9239c44695d6aa6007d374d4c94c0fb9",
+      "lockIntegrity": "sha512-mVgnx31VhkZ23TiaNlRLxrCtSiAtRUs1zAlJMQlbST8FcTS/uKlG9dEtnvIAXY3+gEF/bAIdHFI1s5MRrZTY3w=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-client-ui-approval/src/client/index.ts",
+      "package": "@deepseek-ai/dsh-client-ui-approval",
+      "version": "0.2.2-rc.5",
+      "bytes": 4793,
+      "sha256": "9bcb71f5f05438bfa49f4d3972cc0043ebd4328bb43517a18d142133c6221307",
+      "lockIntegrity": "sha512-YennLNKikkrx3MOWOtBqEgKiI0OD8SBuSSrc9FdImAAHtMmTRw60mn3ym01D8XaVw6XPdvN9wxSE2ntXhPadpQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-client-ui-approval/src/client/ApprovalPanel.tsx",
+      "package": "@deepseek-ai/dsh-client-ui-approval",
+      "version": "0.2.2-rc.5",
+      "bytes": 937,
+      "sha256": "0802fbcd054a23fc756cc99f36ddc19865f9163c0dc407c6717404b7181b8a56",
+      "lockIntegrity": "sha512-YennLNKikkrx3MOWOtBqEgKiI0OD8SBuSSrc9FdImAAHtMmTRw60mn3ym01D8XaVw6XPdvN9wxSE2ntXhPadpQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-client-ui-approval/src/client/ApprovalCard.tsx",
+      "package": "@deepseek-ai/dsh-client-ui-approval",
+      "version": "0.2.2-rc.5",
+      "bytes": 4652,
+      "sha256": "8195c1da052bed082880cb08ae442b34fcc8c127f1423098f97d7e7b18b007eb",
+      "lockIntegrity": "sha512-YennLNKikkrx3MOWOtBqEgKiI0OD8SBuSSrc9FdImAAHtMmTRw60mn3ym01D8XaVw6XPdvN9wxSE2ntXhPadpQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-client-ui-approval/src/client/contract/slots.ts",
+      "package": "@deepseek-ai/dsh-client-ui-approval",
+      "version": "0.2.2-rc.5",
+      "bytes": 8358,
+      "sha256": "cd57f226b78b402145e6b448edad6d3b2c10ba84a2078d4fd9945d5b8bd707bc",
+      "lockIntegrity": "sha512-YennLNKikkrx3MOWOtBqEgKiI0OD8SBuSSrc9FdImAAHtMmTRw60mn3ym01D8XaVw6XPdvN9wxSE2ntXhPadpQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-subagent/src/child-agent.ts",
+      "package": "@deepseek-ai/dsh-subagent",
+      "version": "0.2.2-rc.5",
+      "bytes": 13080,
+      "sha256": "f632ef9e600a0508a4112e47f7862a3382ae5080d03353d04ed2449eda6f4fac",
+      "lockIntegrity": "sha512-ZuQK0hMB23fimxN+fmpzn4XE6cKYU2QxALxD08bCXNm9ZUooE+ohrr/DBfa3aEuEFQ4rlVDhLoMLyLRHMScYuA=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-subagent/src/manager.ts",
+      "package": "@deepseek-ai/dsh-subagent",
+      "version": "0.2.2-rc.5",
+      "bytes": 59245,
+      "sha256": "8488f36b734c946fdc577c6542205ab7c68f82df413e607427108060393532a5",
+      "lockIntegrity": "sha512-ZuQK0hMB23fimxN+fmpzn4XE6cKYU2QxALxD08bCXNm9ZUooE+ohrr/DBfa3aEuEFQ4rlVDhLoMLyLRHMScYuA=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-subagent/lib/index.js",
+      "package": "@deepseek-ai/dsh-subagent",
+      "version": "0.2.2-rc.5",
+      "bytes": 140070,
+      "sha256": "47837c0cd3cd8259fbdd14b7a477f3df3f928946c5b9e261f35a883411ba3697",
+      "lockIntegrity": "sha512-ZuQK0hMB23fimxN+fmpzn4XE6cKYU2QxALxD08bCXNm9ZUooE+ohrr/DBfa3aEuEFQ4rlVDhLoMLyLRHMScYuA=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-action-cards/src/types.ts",
+      "package": "@deepseek-ai/dsh-action-cards",
+      "version": "0.2.2-rc.5",
+      "bytes": 3186,
+      "sha256": "c49b240b8bf677d7621de1de70add5996c10e41aabb21fe1174717e679f77142",
+      "lockIntegrity": "sha512-92HJI7AK60/z4SbRBn4Q3CxHjowsGYdfRSSEvcjvhAoVNTJEDHY4lpFsDZZUNLf0o2aVpgwhAU6TtqJ4rqUyeQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-action-cards/README.zh.md",
+      "package": "@deepseek-ai/dsh-action-cards",
+      "version": "0.2.2-rc.5",
+      "bytes": 11297,
+      "sha256": "6ff6f78ec5f2d0e6ef401266343f5fe48aa07f01b6f69c1ac5b15a5804421914",
+      "lockIntegrity": "sha512-92HJI7AK60/z4SbRBn4Q3CxHjowsGYdfRSSEvcjvhAoVNTJEDHY4lpFsDZZUNLf0o2aVpgwhAU6TtqJ4rqUyeQ=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-cordis-host-runner/README.zh.md",
+      "package": "@deepseek-ai/dsh-cordis-host-runner",
+      "version": "0.2.2-rc.5",
+      "bytes": 9982,
+      "sha256": "f44876835c07fe79db7e648dff6b1ce54a2024fc74e173c1b59687516ef678d1",
+      "lockIntegrity": "sha512-SEoB/uxkTZPqwdBB6FQLrejLQ4a2BEXSJq0pvTX6ZiY1Mw1jNzRfjl3jZbvKaTjfgse+jPneFPKSbKoD+MtLMA=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-sdk-client/src/api.ts",
+      "package": "@deepseek-ai/dsh-sdk-client",
+      "version": "0.2.2-rc.5",
+      "bytes": 16759,
+      "sha256": "a287a1ef52d732455e5ac8f8610bb9cdabcc24a27c7347cb938673249db193ba",
+      "lockIntegrity": "sha512-mVgnx31VhkZ23TiaNlRLxrCtSiAtRUs1zAlJMQlbST8FcTS/uKlG9dEtnvIAXY3+gEF/bAIdHFI1s5MRrZTY3w=="
+    },
+    {
+      "path": "@deepseek-ai/dsh-cordis-host-runner/src/index.ts",
+      "package": "@deepseek-ai/dsh-cordis-host-runner",
+      "version": "0.2.2-rc.5",
+      "bytes": 53396,
+      "sha256": "2cb144c5c51cc65d90f0348080abc53f1f6bdcee069cd5b3409d4bf7531f5139",
+      "lockIntegrity": "sha512-SEoB/uxkTZPqwdBB6FQLrejLQ4a2BEXSJq0pvTX6ZiY1Mw1jNzRfjl3jZbvKaTjfgse+jPneFPKSbKoD+MtLMA=="
+    }
+  ],
+  "boundaries": [
+    "No current Harness desktop window or local D-drive installation was read.",
+    "Ordinary composer approvals are distinct from post-turn Action Cards.",
+    "Delegated child approval policy is pinned to never by rc.5 upstream.",
+    "dsh-cordis-host-runner is an in-process definition registry, not a resident OS process manager."
+  ]
+}

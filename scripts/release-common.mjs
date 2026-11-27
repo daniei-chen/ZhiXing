@@ -24,6 +24,7 @@ export const REQUIRED_GATES = [
   'phase0a',
   'phase1',
   'workbench',
+  'approvals',
   'dependencies',
   'startup',
   'signature',

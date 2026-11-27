@@ -1,0 +1,17 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> office-agent@0.43.0 test:sites
+> node --test tests/sites-worker.test.mjs
+
+✔ serves existing static assets without a fallback (4.493542ms)
+✔ falls back to index.html for an unknown app route (1.538853ms)
+✔ does not turn missing API or write requests into the app shell (0.727889ms)
+✔ emits the files required by Sites packaging (6.750339ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 148.398602

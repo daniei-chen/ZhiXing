@@ -1,0 +1,6 @@
+[17:1127/150850.154940:ERROR:dbus/bus.cc:406] Failed to connect to the bus: Failed to open socket: Operation not permitted
+[17:1127/150850.155000:ERROR:dbus/bus.cc:406] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Debugger listening on ws://127.0.0.1:42665/1b2607a0-8b26-4b46-80a8-9e3410895c83
+For help, see: https://nodejs.org/learn/getting-started/debugging
+Debugger attached.
+[17:1127/150850.199223:FATAL:chrome/browser/process_singleton_posix.cc:319] Check failed: . socket() failed: Operation not permitted (1)

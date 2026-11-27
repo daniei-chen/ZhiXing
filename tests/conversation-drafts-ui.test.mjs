@@ -8,6 +8,8 @@ import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
 import {build} from 'esbuild';
 import {mergeState} from '../src/store.js';
+import {WorkspacePersistence} from '../electron/workspace-persistence.mjs';
+import {RuntimeHandoffs} from '../electron/runtime-handoffs.mjs';
 
 // No browser/Electron process: execute the real App render and callbacks with a
 // small hook scheduler. Child components and DOM/layout are outside this layer.
@@ -16,7 +18,7 @@ const visualImports = new Map([...source.matchAll(/import\s*\{([^}]+)\}\s*from\s
   .map(([, names, name]) => [name, names.split(',').map(value => value.trim())]));
 const compiled = await build({
   stdin: {
-    contents: "export { App } from './src/App.jsx'; export { flushRendererDurability } from './src/renderer-durability.js';",
+    contents: "export { App } from './src/App.jsx'; export { flushRendererDurability } from './src/renderer-durability.js'; export { bindRuntimeApprovals } from './src/runtime-approvals.js';",
     resolveDir: fileURLToPath(new URL('..', import.meta.url)), sourcefile: 'draft-test-entry.mjs', loader: 'js',
   },
   bundle: true, write: false, platform: 'node', format: 'cjs', jsx: 'transform',
@@ -27,7 +29,7 @@ const compiled = await build({
       if (args.path === 'react' || visualImports.has(args.path)) return {path: args.path, namespace: 'draft-test'};
     });
     builder.onLoad({filter: /.*/, namespace: 'draft-test'}, args => ({contents: args.path === 'react'
-      ? ['useState', 'useRef', 'useEffect', 'useLayoutEffect'].map(name => `export const ${name}=(...args)=>globalThis.__hooks.${name}(...args);`).join('\n')
+      ? ['useState', 'useRef', 'useEffect', 'useLayoutEffect', 'useSyncExternalStore'].map(name => `export const ${name}=(...args)=>globalThis.__hooks.${name}(...args);`).join('\n')
       : visualImports.get(args.path).map(name => `export const ${name}=Object.assign(()=>null,{displayName:${JSON.stringify(name)}});`).join('\n')}));
   }}],
 });
@@ -40,6 +42,7 @@ function fixture() {
 }
 async function mount(saved = fixture(), overrides = {}) {
   const slots = [], effects = [], listeners = new Map(), snapshots = [], draftSnapshots = [];
+  const animationFrames = [];
   const timers = new Map();
   let now = 0, timerId = 0, renders = 0, mounted = true;
   let index = 0, dirty = true, tree, stored = structuredClone(saved), pendingRun, pendingPrepare;
@@ -65,6 +68,16 @@ async function mount(saved = fixture(), overrides = {}) {
     },
   };
   hooks.useLayoutEffect = hooks.useEffect;
+  hooks.useSyncExternalStore = (subscribe, getSnapshot) => {
+    const [, setSnapshot] = hooks.useState(getSnapshot);
+    hooks.useEffect(() => {
+      const check = () => setSnapshot(getSnapshot());
+      const unsubscribe = subscribe(check);
+      check();
+      return unsubscribe;
+    }, [subscribe, getSnapshot]);
+    return getSnapshot();
+  };
   const desktop = {
     loadWorkspace: async () => structuredClone(stored),
     saveWorkspace: async value => { stored = structuredClone(value); snapshots.push(stored); },
@@ -73,27 +86,39 @@ async function mount(saved = fixture(), overrides = {}) {
     listAutomations: async () => ({revision: 0, tasks: [], runs: []}),
     prepareRun: async () => overrides.deferPrepare ? new Promise(resolve => { pendingPrepare = resolve; }) : ({preparationId: 'prepared', privacyMode: 'redact'}),
     runPrepared: () => new Promise((resolve, reject) => { pendingRun = {resolve, reject}; }),
+    approvalSnapshot: async () => ({hostEpoch: 'fixture-host', revision: 0, pending: []}),
+    answerApproval: async () => { throw new Error('No approval is pending in this fixture.'); },
     forgetSession: async () => ({forgotten: true}),
     ...overrides,
   };
-  for (const name of ['RuntimeEvent', 'AutomationChange', 'WorkspaceSaveState', 'PrepareToQuit']) desktop[`on${name}`] = callback => { listeners.set(name, callback); return () => listeners.delete(name); };
+  for (const name of ['RuntimeEvent', 'AutomationChange', 'WorkspaceSaveState', 'PrepareToQuit', 'ApprovalsChanged']) desktop[`on${name}`] = callback => { listeners.set(name, callback); return () => listeners.delete(name); };
   const sandbox = {
     module: {exports: {}}, console, structuredClone, crypto: webcrypto, innerWidth: 1200,
     window: {zhixing: desktop, addEventListener() {}, removeEventListener() {}},
     document: {addEventListener() {}, removeEventListener() {}, querySelector: () => null},
     matchMedia: () => ({matches: false, addEventListener() {}, removeEventListener() {}}),
-    requestAnimationFrame: callback => callback(),
+    requestAnimationFrame: callback => { animationFrames.push(callback); },
     setTimeout: (callback, delay = 0) => { const id = ++timerId; timers.set(id, { callback, at: now + delay }); return id; },
     clearTimeout: id => timers.delete(id),
     __hooks: hooks, __element: (type, props, ...children) => ({type, props: {...props, children}}),
   };
   vm.runInNewContext(compiled.outputFiles[0].text, sandbox, {filename: 'App.headless.cjs'});
+  // The real entry point binds this outside App. Keep the live bridge when an
+  // App subtree unmounts so the fixture exercises the real external-store hook.
+  sandbox.module.exports.bindRuntimeApprovals(desktop);
   async function flush({ advance = 400 } = {}) {
     const deadline = now + advance;
     for (let turn = 0; turn < 80; turn++) {
       if (mounted && dirty) { dirty = false; index = 0; renders++; tree = sandbox.module.exports.App(); }
       effects.splice(0).forEach(effect => effect());
       await new Promise(resolve => setImmediate(resolve));
+      if (animationFrames.length) {
+        // One frame at a time lets React's scheduled render commit between the
+        // real receiveHandoff function's two requestAnimationFrame barriers.
+        const callbacks = animationFrames.splice(0);
+        callbacks.forEach(callback => callback(now));
+        continue;
+      }
       if (!dirty && !effects.length) {
         const next = [...timers.entries()].filter(([, timer]) => timer.at <= deadline).sort((a, b) => a[1].at - b[1].at)[0];
         if (!next) { now = deadline; return; }
@@ -520,4 +545,449 @@ test('App卸载后迟到的prepare结果不得启动旧交办', async () => {
   assert.equal(starts, 0);
   assert.equal(host.writes.length, writes);
   assert.equal(JSON.stringify(host.value), durable);
+});
+
+for (const recoverWhileSaving of [false, true]) {
+  test(`首轮绑定保存尚未完成时${recoverWhileSaving ? '全局恢复先撤销待启动run' : '卸载App撤销生产者'}，保存完成也不能启动内核`, async () => {
+    const host = sharedPersistence();
+    let releaseWrite, blockedReply, starts = 0;
+    const heldWrite = new Promise(resolve => { releaseWrite = resolve; });
+    const cancellations = [];
+    const old = await mount(host.value, {
+      ...host.desktop,
+      saveWorkspace: async value => {
+        const pending = value.chats.flatMap(chat => chat.messages).find(message => message.pending);
+        if (pending) { blockedReply ||= pending; await heldWrite; }
+        await host.desktop.saveWorkspace(value);
+      },
+      beginRun: async () => { starts++; throw new Error('An unmounted App must not begin a new run.'); },
+      cancelRun: async runId => { cancellations.push(runId); return {accepted: true}; },
+    });
+    old.component('Composer').setInput('SAVED_BEFORE_ENGINE_START');
+    await old.flush();
+    const sending = old.component('Composer').onSubmit();
+    await old.flush({ advance: 0 });
+    assert(blockedReply?.runId, 'the real startReply must be waiting for its persisted reply binding');
+    assert.equal(starts, 0);
+    old.unmount();
+    await old.flush({ advance: 0 });
+    const renders = old.renders;
+    let restored = false, restoring;
+    try {
+      if (recoverWhileSaving) {
+        restoring = old.flushDurability({reason: 'recovery'}).then(() => { restored = true; });
+        await old.flush({ advance: 10000 });
+        assert.deepEqual(cancellations, [blockedReply.runId]);
+        assert.equal(restored, false, 'recovery still waits for the pending write and cancellation outcome');
+      }
+    } finally {
+      releaseWrite();
+      await sending;
+      if (restoring) await restoring;
+      else await old.flushDurability();
+    }
+    assert.equal(starts, 0, 'a delayed save must not launch a model while its UI is gone');
+    assert.equal(old.renders, renders);
+    const reply = host.value.chats[0].messages.at(-1);
+    assert.equal(reply.runId, blockedReply.runId);
+    assert.equal(reply.pending, false);
+    assert.equal(reply.status, 'cancelled');
+    assert.equal(host.value.chats[0].messages[0].text, 'SAVED_BEFORE_ENGINE_START');
+    if (!recoverWhileSaving) assert.deepEqual(cancellations, []);
+  });
+}
+
+function handoffPersistence(saved = fixture()) {
+  let value = structuredClone(saved),
+    failResultWrites = false,
+    rejectAcknowledgement = false;
+  const handoffs = new RuntimeHandoffs();
+  const result = Promise.withResolvers();
+  const calls = { begin: 0, wait: 0, retry: 0, acknowledgements: [], cancellations: [] };
+  const persistence = new WorkspacePersistence({
+    initialState: value,
+    write: async ({ state }) => {
+      if (
+        failResultWrites &&
+        state.chats.some((chat) => chat.messages.some((message) => message.resultReceiptId))
+      ) {
+        throw Object.assign(new Error('Synthetic result persistence failure'), { code: 'ENOSPC' });
+      }
+      value = structuredClone(state);
+    },
+  });
+  return {
+    get value() {
+      return value;
+    },
+    handoffs,
+    result,
+    calls,
+    failResultWrites(value) {
+      failResultWrites = value;
+    },
+    rejectAcknowledgement(value) {
+      rejectAcknowledgement = value;
+    },
+    desktop: {
+      loadWorkspace: async () => {
+        await persistence.flush();
+        return structuredClone(value);
+      },
+      // An actual IPC transfer clones objects into the host realm before its
+      // format checks. Keep the real persistence and receipt implementations.
+      saveWorkspace: (state) => persistence.saveWorkspace(structuredClone(state)),
+      saveDrafts: (drafts) => persistence.saveDrafts(structuredClone(drafts)),
+      retryWorkspaceSave: async () => {
+        calls.retry++;
+        await persistence.retry();
+      },
+      runHandoffs: async () => handoffs.snapshot(),
+      beginRun: async ({ runId, replyId }) => {
+        calls.begin++;
+        const chat = value.chats.find((chat) =>
+          chat.messages.some((message) => message.id === replyId && message.runId === runId),
+        );
+        assert(chat, 'the host must receive a persisted reply binding before execution');
+        return handoffs.start(
+          { runId, replyId, sessionId: chat.id, workspaceId: chat.workspaceId, persist: true },
+          () => result.promise,
+        );
+      },
+      awaitRunHandoff: (identity) => {
+        calls.wait++;
+        return handoffs.wait(identity);
+      },
+      acknowledgeRunHandoff: async (identity) => {
+        calls.acknowledgements.push(structuredClone(identity));
+        if (rejectAcknowledgement) throw new Error('Synthetic acknowledgement failure');
+        return handoffs.acknowledge(identity, (entry) =>
+          value.chats.some(
+            (chat) =>
+              chat.id === entry.binding.sessionId &&
+              chat.messages.some(
+                (message) =>
+                  message.id === entry.binding.replyId &&
+                  message.runId === entry.binding.runId &&
+                  message.resultReceiptId === entry.receiptId &&
+                  !message.pending,
+              ),
+          ),
+        );
+      },
+      cancelRun: async (runId) => {
+        calls.cancellations.push(runId);
+        return { accepted: true };
+      },
+    },
+  };
+}
+
+for (const hasHostRetry of [true, false]) {
+  test(`完整结果保存失败后${hasHostRetry ? '主机重试' : '直接保存兼容路径'}成功必须确认原receipt，ACK失败仍可重试`, async () => {
+    const host = handoffPersistence();
+    const app = await mount(host.value, {
+      ...host.desktop,
+      ...(hasHostRetry ? {} : { retryWorkspaceSave: undefined }),
+    });
+    app.component('Composer').setInput('RETRY_RESULT_RECEIPT');
+    await app.flush();
+    const sending = app.component('Composer').onSubmit();
+    await app.flush();
+    assert.equal(host.calls.begin, 1);
+    const identity = host.handoffs.snapshot().runs[0];
+    host.failResultWrites(true);
+    host.result.resolve({
+      text: 'COMPLETE_LOCAL_RESULT',
+      masked: 'PROTECTED_RESULT',
+      finalization: {
+        executionStatus: 'completed',
+        processStatus: 'exited',
+        persistenceStatus: 'saved',
+      },
+    });
+    await app.flush();
+    await sending;
+    assert.equal(host.handoffs.snapshot().runs.length, 1);
+    assert.equal(host.calls.acknowledgements.length, 0, 'a failed save cannot release its receipt');
+    app.button('重试保存');
+
+    host.failResultWrites(false);
+    host.rejectAcknowledgement(true);
+    app.button('重试保存').props.onClick();
+    await app.flush();
+    const reply = host.value.chats[0].messages.at(-1);
+    assert.equal(reply.text, 'COMPLETE_LOCAL_RESULT');
+    assert.equal(reply.pending, false);
+    assert.equal(reply.status, 'succeeded');
+    assert.equal(typeof reply.resultReceiptId, 'string');
+    assert.equal(
+      host.calls.acknowledgements.length,
+      1,
+      'successful retry must attempt the original receipt acknowledgement',
+    );
+    assert.equal(host.calls.acknowledgements[0].runId, identity.runId);
+    assert.equal(host.calls.acknowledgements[0].receiptId, reply.resultReceiptId);
+    assert.equal(host.handoffs.snapshot().runs.length, 1);
+    app.button('重试保存');
+
+    host.rejectAcknowledgement(false);
+    app.button('重试保存').props.onClick();
+    await app.flush();
+    assert.equal(host.calls.acknowledgements.length, 2);
+    assert.deepEqual(host.calls.acknowledgements[1], host.calls.acknowledgements[0]);
+    assert.equal(host.handoffs.snapshot().runs.length, 0);
+    assert.equal(host.calls.begin, 1, 'save/ACK retry must not execute the run again');
+    assert.equal(host.calls.wait, 1);
+    assert.equal(host.calls.retry, hasHostRetry ? 2 : 0);
+    app.unmount();
+  });
+}
+
+test('正常退出屏障撤销仍被首次保存阻塞的run，保存最后草稿且不晚启动内核', async () => {
+  const host = sharedPersistence();
+  const heldWrite = Promise.withResolvers();
+  let blockedReply,
+    starts = 0;
+  const cancellations = [];
+  const app = await mount(host.value, {
+    ...host.desktop,
+    saveWorkspace: async (value) => {
+      const reply = value.chats.flatMap((chat) => chat.messages).find((message) => message.pending);
+      if (reply) {
+        blockedReply ||= reply;
+        await heldWrite.promise;
+      }
+      await host.desktop.saveWorkspace(value);
+    },
+    beginRun: async () => {
+      starts++;
+      throw new Error('The quit barrier must prevent a late begin.');
+    },
+    cancelRun: async (runId) => {
+      cancellations.push(runId);
+      return { accepted: true };
+    },
+  });
+  app.component('Composer').setInput('QUIT_BEFORE_BEGIN');
+  await app.flush();
+  const sending = app.component('Composer').onSubmit();
+  await app.flush({ advance: 0 });
+  assert(blockedReply?.runId);
+  app.component('Composer').setInput('LAST_UNSENT_DRAFT');
+  await app.flush({ advance: 0 });
+  let savedForQuit = false;
+  const closing = app.flushDurability({ reason: 'quit' }).then(() => {
+    savedForQuit = true;
+  });
+  try {
+    await app.flush({ advance: 10000 });
+    assert.deepEqual(cancellations, [blockedReply.runId]);
+    assert.equal(savedForQuit, false, 'quit must still wait for the delayed binding save');
+  } finally {
+    heldWrite.resolve();
+    await app.flush();
+    await sending;
+    await closing;
+  }
+  assert.equal(starts, 0);
+  const chat = host.value.chats[0],
+    reply = chat.messages.at(-1);
+  assert.equal(reply.runId, blockedReply.runId);
+  assert.equal(reply.status, 'cancelled');
+  assert.equal(reply.pending, false);
+  assert.equal(chat.messages[0].text, 'QUIT_BEFORE_BEGIN');
+  assert.equal(host.value.drafts[`chat:${chat.id}`].text, 'LAST_UNSENT_DRAFT');
+  app.unmount();
+});
+
+test('正常退出屏障等待已交给主机的完整结果，不重复取消或用摘要覆盖正文', async () => {
+  const host = handoffPersistence();
+  const app = await mount(host.value, host.desktop);
+  app.component('Composer').setInput('QUIT_AFTER_BEGIN');
+  await app.flush();
+  const sending = app.component('Composer').onSubmit();
+  await app.flush();
+  assert.equal(host.calls.begin, 1);
+  let savedForQuit = false;
+  const closing = app.flushDurability({ reason: 'quit' }).then(() => {
+    savedForQuit = true;
+  });
+  await app.flush();
+  assert.equal(savedForQuit, false);
+  assert.deepEqual(host.calls.cancellations, []);
+  host.result.resolve({
+    text: 'FINAL_PRIVATE_RESULT_AT_QUIT',
+    masked: 'PROTECTED_SUMMARY',
+    finalization: {
+      executionStatus: 'completed',
+      processStatus: 'exited',
+      persistenceStatus: 'saved',
+    },
+  });
+  await app.flush();
+  await sending;
+  await closing;
+  assert.equal(savedForQuit, true);
+  assert.equal(host.value.chats[0].messages.at(-1).text, 'FINAL_PRIVATE_RESULT_AT_QUIT');
+  assert.equal(host.value.chats[0].messages.at(-1).status, 'succeeded');
+  assert.equal(host.handoffs.snapshot().runs.length, 0);
+  assert.equal(host.calls.begin, 1);
+  assert.deepEqual(host.calls.cancellations, []);
+  app.unmount();
+});
+
+test('同宿主重载首次读取失败后重试保留活跃回复，接回完整结果且不重跑', async () => {
+  const saved = fixture();
+  saved.chats = [
+    {
+      id: 'live-chat',
+      workspaceId: saved.workspaceId,
+      projectId: null,
+      title: '仍在交办',
+      messages: [
+        { id: 'user-live', role: 'user', text: 'READ_RETRY_TASK' },
+        { id: 'reply-live', runId: 'run-live', role: 'assistant', text: '', pending: true },
+      ],
+    },
+  ];
+  saved.drafts = {
+    'chat:live-chat': {
+      kind: 'chat',
+      chatId: 'live-chat',
+      workspaceId: saved.workspaceId,
+      text: 'PRESERVED_RELOAD_DRAFT',
+      files: [file('read-retry-material')],
+      revision: 1,
+    },
+  };
+  const host = handoffPersistence(saved);
+  const identity = host.handoffs.start(
+    {
+      runId: 'run-live',
+      sessionId: 'live-chat',
+      replyId: 'reply-live',
+      workspaceId: saved.workspaceId,
+      persist: true,
+    },
+    () => host.result.promise,
+  );
+  let reads = 0;
+  const app = await mount(saved, {
+    ...host.desktop,
+    loadWorkspace: async () => {
+      reads++;
+      if (reads === 1) throw new Error('Synthetic transient read failure');
+      return host.desktop.loadWorkspace();
+    },
+  });
+  app.button('重试读取').props.onClick();
+  await app.flush();
+  const liveReply = host.value.chats[0].messages.at(-1);
+  assert.equal(
+    liveReply.pending,
+    true,
+    'a still-registered handoff must not be persisted as interrupted',
+  );
+  assert.notEqual(liveReply.status, 'interrupted');
+  assert.equal(host.calls.wait, 1, 'read retry must reconnect the original host execution');
+  assert.equal(app.component('Composer').input, 'PRESERVED_RELOAD_DRAFT');
+  assert.equal(app.component('Composer').files[0].id, 'read-retry-material');
+  host.result.resolve({
+    text: 'READ_RETRY_FULL_RESULT',
+    masked: 'PROTECTED',
+    finalization: {
+      executionStatus: 'completed',
+      processStatus: 'exited',
+      persistenceStatus: 'saved',
+    },
+  });
+  await app.flush();
+  const finalReply = host.value.chats[0].messages.at(-1);
+  assert.equal(finalReply.text, 'READ_RETRY_FULL_RESULT');
+  assert.equal(finalReply.status, 'succeeded');
+  assert.equal(finalReply.runId, identity.runId);
+  assert.equal(finalReply.pending, false);
+  assert.equal(host.handoffs.snapshot().runs.length, 0);
+  assert.equal(host.calls.begin, 0, 'reconnecting a running task must not begin another execution');
+  assert.equal(host.calls.acknowledgements.length, 1);
+  assert.equal(host.value.drafts['chat:live-chat'].text, 'PRESERVED_RELOAD_DRAFT');
+  app.unmount();
+});
+
+test('读取重试期间App已卸载，迟到快照不再接回旧App或覆盖新草稿', async () => {
+  const saved = fixture();
+  saved.chats = [
+    {
+      id: 'late-read-chat',
+      workspaceId: saved.workspaceId,
+      projectId: null,
+      title: '读取仍在交办',
+      messages: [
+        { id: 'late-read-user', role: 'user', text: 'LATE_READ_TASK' },
+        {
+          id: 'late-read-reply',
+          runId: 'late-read-run',
+          role: 'assistant',
+          text: '',
+          pending: true,
+        },
+      ],
+    },
+  ];
+  const host = handoffPersistence(saved);
+  host.handoffs.start(
+    {
+      runId: 'late-read-run',
+      sessionId: 'late-read-chat',
+      replyId: 'late-read-reply',
+      workspaceId: saved.workspaceId,
+      persist: true,
+    },
+    () => host.result.promise,
+  );
+  const delayedRead = Promise.withResolvers();
+  let reads = 0;
+  const old = await mount(saved, {
+    ...host.desktop,
+    loadWorkspace: async () => {
+      if (++reads === 1) throw new Error('Synthetic transient read failure');
+      const snapshot = structuredClone(host.value);
+      await delayedRead.promise;
+      return snapshot;
+    },
+  });
+  old.button('重试读取').props.onClick();
+  await old.flush({ advance: 0 });
+  assert.equal(reads, 2);
+  old.unmount();
+  await old.flushDurability({ reason: 'recovery' });
+  const current = await mount(host.value, host.desktop);
+  current.component('Composer').setInput('CURRENT_APP_NEW_DRAFT');
+  await current.flush();
+  assert.equal(host.calls.wait, 1);
+  try {
+    delayedRead.resolve();
+    await old.flush();
+    assert.equal(host.calls.wait, 1, 'a disposed reader must not attach another receipt observer');
+  } finally {
+    delayedRead.resolve();
+    host.result.resolve({
+      text: 'CURRENT_APP_FULL_RESULT',
+      masked: 'PROTECTED',
+      finalization: {
+        executionStatus: 'completed',
+        processStatus: 'exited',
+        persistenceStatus: 'saved',
+      },
+    });
+    await old.flush();
+    await current.flush();
+  }
+  assert.equal(host.calls.begin, 0);
+  assert.equal(host.handoffs.snapshot().runs.length, 0);
+  assert.equal(host.value.chats[0].messages.at(-1).text, 'CURRENT_APP_FULL_RESULT');
+  assert.equal(host.value.drafts['chat:late-read-chat'].text, 'CURRENT_APP_NEW_DRAFT');
+  assert.equal(current.component('Composer').input, 'CURRENT_APP_NEW_DRAFT');
+  current.unmount();
 });
