@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { chatText, mergeState, restoredDraftView, workspaceDeletion } from '../src/store.js';
+import { nextQueued } from '../src/message-queue.js';
 import {projectContext,projectWorktreeSourceContext} from '../src/project-core.js';
 
 test('会话副本保留停止和失败后的部分正文及其状态', () => {
@@ -227,4 +228,41 @@ test('删除聊天或项目同时清掉它的排队消息', () => {
   assert.deepEqual(afterChat.queuedMessages.map(item => item.id), ['q2']);
   const afterProject = workspaceDeletion(afterChat, { type: 'delete-project', id: 'p9' });
   assert.deepEqual(afterProject.queuedMessages, []);
+});
+
+test('强杀重启：已经交给内核的排队交办不回到队列，未发出的可重试且不停在发送中', () => {
+  const saved = mergeState(null);
+  saved.chats = [
+    {
+      id: 'chat-a', workspaceId: 'office-home', projectId: null,
+      messages: [
+        { id: 'm1', role: 'user', text: '已经发出的一件', queueId: 'q1' },
+        { id: 'm2', role: 'assistant', text: '', pending: true, runId: 'run-1', progressText: '写到一半' },
+      ],
+    },
+    {
+      id: 'chat-b', workspaceId: 'office-home', projectId: null,
+      messages: [{ id: 'm3', role: 'user', text: '另开的一段', queueId: 'q9' }],
+    },
+  ];
+  saved.queuedMessages = [
+    { id: 'q1', chatId: 'chat-a', workspaceId: 'office-home', text: '已经发出的一件', files: [], createdAt: 5, sending: true },
+    { id: 'q2', chatId: 'chat-a', workspaceId: 'office-home', text: '还没发出的那件', files: [{ id: 'f1', name: '附件.txt' }], createdAt: 6, sending: true },
+    { id: 'q9', chatId: 'chat-b', workspaceId: 'office-home', text: '另开的一段', files: [], createdAt: 7, sending: true },
+  ];
+
+  const restored = mergeState(saved);
+  assert.deepEqual(restored.queuedMessages.map(item => item.id), ['q2'], '已受理的交办只留在聊天记录里，不回队列');
+  const [retryable] = restored.queuedMessages;
+  assert.equal(retryable.sending, undefined, '重启后不能停在「发送中」');
+  assert.match(retryable.error, /上次退出时未发送/);
+  assert.deepEqual(retryable.files.map(file => file.name), ['附件.txt'], '排队附件的归属随条目保留');
+  assert.equal(
+    nextQueued(restored.queuedMessages, { chatId: 'chat-a', workspaceId: 'office-home' }),
+    null,
+    '恢复出来的条目必须等用户确认，不能自动重放',
+  );
+  assert.ok(!restored.chats[0].messages.some(message => message.queueId === 'q9'), '匹配只看同一条聊天');
+  assert.equal(restored.chats[0].messages[1].pending, false);
+  assert.equal(restored.chats[0].messages[1].status, 'interrupted');
 });
