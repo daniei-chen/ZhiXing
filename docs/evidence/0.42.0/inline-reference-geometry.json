@@ -1,0 +1,226 @@
+{
+  "viewport": {
+    "width": 950,
+    "height": 600,
+    "devicePixelRatio": 1
+  },
+  "rootFont": "14px / 21px \"Segoe UI\", \"Microsoft YaHei UI\", \"Microsoft YaHei\", system-ui, sans-serif",
+  "scenarios": [
+    {
+      "id": "production214",
+      "answerWidth": 214,
+      "font": "14px / 24.92px \"Segoe UI\", \"Microsoft YaHei UI\", \"Microsoft YaHei\", system-ui, sans-serif",
+      "links": [
+        {
+          "text": "季度纪要.md",
+          "font": "12.32px / 21.9296px \"Cascadia Mono\", Consolas, monospace",
+          "union": {
+            "left": 94,
+            "top": 146,
+            "right": 292.578125,
+            "bottom": 188.90625,
+            "width": 198.578125,
+            "height": 42.90625
+          },
+          "unionCenter": {
+            "x": 193.2890625,
+            "y": 167.453125,
+            "containsHit": false,
+            "target": {
+              "tag": "P",
+              "className": "",
+              "text": "两份材料已完成。请查看 季度纪要.md 和 年度资料.md。"
+            }
+          },
+          "fragments": [
+            {
+              "left": 251.640625,
+              "top": 146,
+              "right": 292.578125,
+              "bottom": 164,
+              "width": 40.9375,
+              "height": 18,
+              "center": {
+                "x": 272.109375,
+                "y": 155,
+                "containsHit": true,
+                "target": {
+                  "tag": "CODE",
+                  "className": "inline-file-ref",
+                  "text": "季度纪要.md"
+                }
+              }
+            },
+            {
+              "left": 94,
+              "top": 170.90625,
+              "right": 132.5625,
+              "bottom": 188.90625,
+              "width": 38.5625,
+              "height": 18,
+              "center": {
+                "x": 113.28125,
+                "y": 179.90625,
+                "containsHit": true,
+                "target": {
+                  "tag": "CODE",
+                  "className": "inline-file-ref",
+                  "text": "季度纪要.md"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "text": "年度资料.md",
+          "font": "12.32px / 21.9296px \"Cascadia Mono\", Consolas, monospace",
+          "union": {
+            "left": 153.84375,
+            "top": 170.90625,
+            "right": 233.34375,
+            "bottom": 188.90625,
+            "width": 79.5,
+            "height": 18
+          },
+          "unionCenter": {
+            "x": 193.59375,
+            "y": 179.90625,
+            "containsHit": true,
+            "target": {
+              "tag": "CODE",
+              "className": "inline-file-ref",
+              "text": "年度资料.md"
+            }
+          },
+          "fragments": [
+            {
+              "left": 153.84375,
+              "top": 170.90625,
+              "right": 233.34375,
+              "bottom": 188.90625,
+              "width": 79.5,
+              "height": 18,
+              "center": {
+                "x": 193.59375,
+                "y": 179.90625,
+                "containsHit": true,
+                "target": {
+                  "tag": "CODE",
+                  "className": "inline-file-ref",
+                  "text": "年度资料.md"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "direct252",
+      "answerWidth": 252,
+      "font": "14px / 24.92px \"Segoe UI\", \"Microsoft YaHei UI\", \"Microsoft YaHei\", system-ui, sans-serif",
+      "links": [
+        {
+          "text": "季度纪要.md",
+          "font": "12.32px / 21.9296px \"Cascadia Mono\", Consolas, monospace",
+          "union": {
+            "left": 537.640625,
+            "top": 146,
+            "right": 617.140625,
+            "bottom": 164,
+            "width": 79.5,
+            "height": 18
+          },
+          "unionCenter": {
+            "x": 577.390625,
+            "y": 155,
+            "containsHit": true,
+            "target": {
+              "tag": "CODE",
+              "className": "inline-file-ref",
+              "text": "季度纪要.md"
+            }
+          },
+          "fragments": [
+            {
+              "left": 537.640625,
+              "top": 146,
+              "right": 617.140625,
+              "bottom": 164,
+              "width": 79.5,
+              "height": 18,
+              "center": {
+                "x": 577.390625,
+                "y": 155,
+                "containsHit": true,
+                "target": {
+                  "tag": "CODE",
+                  "className": "inline-file-ref",
+                  "text": "季度纪要.md"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "text": "年度资料.md",
+          "font": "12.32px / 21.9296px \"Cascadia Mono\", Consolas, monospace",
+          "union": {
+            "left": 397.640625,
+            "top": 170.90625,
+            "right": 477.140625,
+            "bottom": 188.90625,
+            "width": 79.5,
+            "height": 18
+          },
+          "unionCenter": {
+            "x": 437.390625,
+            "y": 179.90625,
+            "containsHit": true,
+            "target": {
+              "tag": "CODE",
+              "className": "inline-file-ref",
+              "text": "年度资料.md"
+            }
+          },
+          "fragments": [
+            {
+              "left": 397.640625,
+              "top": 170.90625,
+              "right": 477.140625,
+              "bottom": 188.90625,
+              "width": 79.5,
+              "height": 18,
+              "center": {
+                "x": 437.390625,
+                "y": 179.90625,
+                "containsHit": true,
+                "target": {
+                  "tag": "CODE",
+                  "className": "inline-file-ref",
+                  "text": "年度资料.md"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "evidenceLayer": "local-linux-electron-renderer",
+  "electron": "44.11.5",
+  "platform": "linux",
+  "sourceCommit": "cc147ef46404d2a13a2e35e43a77174a4dadc322",
+  "fingerprints": {
+    "src/AnswerText.jsx": "70b885f0c3b5948e438e34417da08a43b8a0d0f9a13c49994beeadb908c528ad",
+    "src/styles.css": "21e41c792bfa4d0b84b4db011d2e821d86ddc1af9194a186aa6447ed14e1ae6f",
+    "src/inline-references.js": "cdd5ad0634bfb722b3abb682cd6e058169bdf1bc2cb1a6d9b08b77bdaee050ae"
+  },
+  "boundaries": [
+    "Production AnswerText and CSS; synthetic wrapper, reply, and deliverables.",
+    "Linux fallback fonts may wrap differently from Windows.",
+    "Geometry investigation only; not a packaged Windows result or a product change."
+  ],
+  "unionCenterOpenedCount": 0,
+  "firstFragmentOpenedCount": 1
+}

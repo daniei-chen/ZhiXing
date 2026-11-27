@@ -9,6 +9,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { connectUi } from './qa-cdp.mjs';
+import { selectWorkbenchTab } from './qa-workbench.mjs';
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const root = process.cwd();
@@ -95,7 +96,7 @@ try {
     return {providerId:mine.id};
   })()`);
   assert.ok(saved.providerId);
-  try { await ui.evaluate('location.reload(); true'); } catch {}
+  try { await ui.evaluate('location.reload(); true'); } catch { /* The renderer may reload before the CDP reply. */ }
   await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')&&!document.querySelector(\'textarea[aria-label="聊天输入框"]\').disabled', 60000);
 
   await ui.fill('textarea[aria-label="聊天输入框"]', '请先核对工作计划，再算一下 2+3。');
@@ -108,9 +109,8 @@ try {
     await pause(300);
   }
 
-  if (!await ui.evaluate('!!document.querySelector("select[aria-label=\\"工作面板视图\\"]")')) await ui.click('打开工作面板', 'button[aria-label="打开工作面板"]');
-  await ui.waitFor('!!document.querySelector(\'select[aria-label="工作面板视图"]\')', 30000);
-  await ui.evaluate('(()=>{const s=document.querySelector(\'select[aria-label="工作面板视图"]\');s.value="activity";s.dispatchEvent(new Event("change",{bubbles:true}));return true})()');
+  if (!await ui.evaluate('!!document.querySelector(".workbench:not([hidden])")')) await ui.click('打开工作面板', 'button[aria-label="打开工作面板"]');
+  await selectWorkbenchTab(ui, 'activity');
   await ui.waitFor('!!document.querySelector(\'input[aria-label="搜索轨迹"]\')', 20000);
   await ui.waitFor('document.querySelectorAll(".execution-entry").length>=2', 30000);
 
@@ -162,10 +162,10 @@ try {
   console.error(`FAIL ${report.error}`);
   process.exitCode = 1;
 } finally {
-  try { server.closeAllConnections(); server.close(); } catch {}
-  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch {}
-  try { if (ui) ui.close(); } catch {}
-  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch {}
-  try { if (log) await log.close(); } catch {}
-  try { await fs.rm(profile, { recursive: true, force: true }); } catch {}
+  try { server.closeAllConnections(); server.close(); } catch { /* Legacy teardown tolerates an already-closed fixture server. */ }
+  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch { /* The window may close before the CDP reply. */ }
+  try { if (ui) ui.close(); } catch { /* Legacy teardown tolerates an already-closed CDP connection. */ }
+  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch { /* Legacy teardown continues if the child already exited. */ }
+  try { if (log) await log.close(); } catch { /* Legacy teardown tolerates an already-closed log handle. */ }
+  try { await fs.rm(profile, { recursive: true, force: true }); } catch { /* Legacy cleanup remains best effort; this selector migration does not change its verdict. */ }
 }

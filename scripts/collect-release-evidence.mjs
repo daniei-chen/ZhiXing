@@ -45,7 +45,9 @@ async function journey(directory, prefix, depth = 0) {
     const source = path.join(directory, entry.name);
     if (
       entry.isDirectory() &&
-      /^(run-|phase[01][a-z]?-ui-|zhixing-(?:recovery-ui|drafts-native)-)/.test(entry.name)
+      /^(run-|phase[01][a-z]?-ui-|workbench-preview-ui-|zhixing-(?:recovery-ui|drafts-native)-)/.test(
+        entry.name,
+      )
     ) {
       await journey(source, relative, depth + 1);
     } else if (
@@ -84,7 +86,7 @@ for (const name of [
   'npm-audit.json',
 ])
   await copy(path.join(input, 'dependencies', name), `dependencies/${name}`, 8 * 1024 * 1024);
-for (const name of ['errors', 'native', 'phase0a', 'phase1'])
+for (const name of ['errors', 'native', 'phase0a', 'phase1', 'workbench'])
   await journey(path.join(input, 'journeys', name), `journeys/${name}`);
 await journey(path.join(input, 'components'), 'components');
 await journey(path.join(root, `.preview/qa-${version}/tool-timeline`), 'tool-timeline');

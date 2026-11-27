@@ -1,5 +1,5 @@
-import {useEffect,useLayoutEffect,useRef,useState} from 'react';
-import {Archive,ArrowClockwise,ArrowLeft,ArrowRight,ArrowSquareOut,ArrowUp,ArrowsInSimple,ArrowsOutSimple,Camera,ChartBar,ChatCircle,CaretDown,CaretRight,CircleNotch,FileCode,FileText,Files,FolderOpen,Globe,MagnifyingGlass,Plus,SidebarSimple,Stop,TerminalWindow,X} from '@phosphor-icons/react';
+import {useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
+import {Archive,ArrowClockwise,ArrowLeft,ArrowRight,ArrowSquareOut,ArrowUp,ArrowsInSimple,ArrowsOutSimple,Camera,ChartBar,ChatCircle,CaretRight,CircleNotch,FileText,Files,FolderOpen,Globe,MagnifyingGlass,Plus,SidebarSimple,Stop,TerminalWindow,X} from '@phosphor-icons/react';
 import {IconButton} from './ui.jsx';
 import {browserUrl} from '../electron/browser-policy.mjs';
 import {FileCoverage} from './FileCoverage.jsx';
@@ -9,28 +9,27 @@ import {AnswerText} from './AnswerText.jsx';
 import {ReviewPanel} from './ReviewPanel.jsx';
 import { StreamingAnswer } from './StreamingAnswer.jsx';
 import { useKeyedValue } from './use-keyed-value.js';
+import { WorkbenchTabs } from './WorkbenchTabs.jsx';
 
-const pages=[['browser','浏览器',Globe],['files','文件',FolderOpen],['terminal','终端',TerminalWindow],['chat','侧边聊天',ChatCircle],['activity','执行',CircleNotch],['review','改动',FileCode],['deliverables','产出',Files],['stats','统计',ChartBar],['details','详情',FileText]];
-function ViewPicker({page,setPage}) {
- return <label className="resource-switcher" title="切换工作面板视图"><CaretDown size={12}/><select aria-label="工作面板视图" value={page} onChange={event=>setPage(event.target.value)}>{pages.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>;
-}
-export function Workbench({visible,suspended,onClose,page,setPage,context,scopeKey,scopeReady,scopeError,project,files,fileRequest,messages,chatTitle,liveTrace,liveRun,changes,changeDiffs,reviewPath,onReviewSelect,traceTruncated,statsContext,statsLive,attach,openProject,openDeliverable,mode,privacyMode,...sideProps}){
+export function Workbench({visible,suspended,onClose,page,setPage,context,scopeKey,scopeReady,scopeError,project,files,fileRequest,messages,chatTitle,liveTrace,liveRun,changes,changeDiffs,reviewPath,onReviewSelect,traceTruncated,statsContext,statsLive,attach,openProject,openDeliverable,deliveryPreview,mode,privacyMode,...sideProps}){
  const [wide,setWide]=useState(false);
- const [,label,PageIcon]=pages.find(([id])=>page===id)||pages[0];
- const panelProps=id=>({hidden:page!==id,'aria-label':pages.find(([key])=>id===key)[1]});
+ const navigationId=useId();
+ const panelProps=id=>({hidden:page!==id,role:'tabpanel',id:`${navigationId}-panel-${id}`,'aria-labelledby':`${navigationId}-tab-${id}`,'data-workbench-panel':id,tabIndex:0});
  const syncing=scopeError?<p className="workbench-error" role="alert">{scopeError}</p>:<p className="workbench-loading" role="status"><CircleNotch size={14}/>正在同步项目工作区…</p>;
  return <aside className={`workbench ${wide?'workbench-wide':''}`} hidden={!visible} aria-label="工作面板">
-  <div className="workbench-controls" aria-label="工作面板工具">
-   <IconButton icon={wide?ArrowsInSimple:ArrowsOutSimple} label={wide?'还原面板宽度':'加宽工作面板'} onClick={()=>setWide(value=>!value)}/><IconButton icon={SidebarSimple} label="收起工作面板" onClick={onClose}/>
+  <div className="workbench-navigation">
+   <WorkbenchTabs page={page} setPage={setPage} idPrefix={navigationId} visible={visible}/>
+   <div className="workbench-controls" role="group" aria-label="工作面板工具">
+    <IconButton icon={wide?ArrowsInSimple:ArrowsOutSimple} label={wide?'还原面板宽度':'加宽工作面板'} onClick={()=>setWide(value=>!value)}/><IconButton icon={SidebarSimple} label="收起工作面板" onClick={onClose}/>
+   </div>
   </div>
-  {(page!=='browser'||!scopeReady)&&<div className="workbench-heading"><span className="workbench-heading-tab"><PageIcon size={15}/>{label}<ViewPicker page={page} setPage={setPage}/></span></div>}
-  <section className="workbench-view" {...panelProps('browser')}>{scopeReady?<BrowserPanel context={context} scopeKey={scopeKey} shown={visible&&page==='browser'&&!suspended} attach={attach} openPanel={setPage} closePanel={onClose} viewPicker={page==='browser'?<ViewPicker page={page} setPage={setPage}/>:null}/>:syncing}</section>
+  <section className="workbench-view" {...panelProps('browser')}>{scopeReady?<BrowserPanel context={context} scopeKey={scopeKey} shown={visible&&page==='browser'&&!suspended} attach={attach} openPanel={setPage} closePanel={onClose}/>:syncing}</section>
   <section className="workbench-view" {...panelProps('files')}>{scopeReady?<WorkspaceFiles key={project?.directory} context={context} project={project} attach={attach} openProject={openProject} fileRequest={fileRequest}/>:syncing}</section>
   <section className="workbench-view" {...panelProps('terminal')}>{scopeReady?<TerminalPanel context={context} scopeKey={scopeKey} project={project} shown={visible&&page==='terminal'&&!suspended} openProject={openProject}/>:syncing}</section>
   <section className="workbench-view" {...panelProps('chat')}><SideChatPanel {...sideProps}/></section>
   <section className="workbench-view" {...panelProps('activity')}><ExecutionPanel key={context.sessionId} sessionId={context.sessionId} title={chatTitle} messages={messages} liveTrace={liveTrace} liveRun={liveRun} traceTruncated={traceTruncated} liveTeam={statsLive?statsContext?.team:null}/></section>
   <section className="workbench-view" {...panelProps('review')}><ReviewPanel files={changes} diffs={changeDiffs} selected={reviewPath} onSelect={onReviewSelect}/></section>
-  <section className="workbench-view" {...panelProps('deliverables')}><DeliverablesPanel messages={messages} project={project} openDeliverable={openDeliverable}/></section>
+  <section className="workbench-view" {...panelProps('deliverables')}>{deliveryPreview||<DeliverablesPanel messages={messages} project={project} openDeliverable={openDeliverable}/>}</section>
   <section className="workbench-view" {...panelProps('stats')}><StatsPanel context={statsContext} live={statsLive}/></section>
   <section className="workbench-view workbench-details" {...panelProps('details')}><h3>交办详情</h3><dl><div><dt>工作模式</dt><dd>{mode==='government'?'政务':'办公'}</dd></div><div><dt>项目</dt><dd>{project?.name||'个人聊天'}</dd></div><div><dt>工作区</dt><dd>{project?.directory||'尚未关联'}</dd></div><div><dt>发送方式</dt><dd>{privacyMode==='raw'?'非脱敏模式':'自动脱敏'}</dd></div></dl><h3>已选资料 · {files.length}</h3>{files.map(file=><p key={file.id}><FileText size={15}/>{file.name}</p>)}{!files.length&&<p className="muted">从网页或文件面板添加资料。</p>}</section>
  </aside>;
@@ -43,7 +42,7 @@ function DeliverablesPanel({messages,openDeliverable}){
  })}</div>:<div className="deliverables-empty"><Files size={29} weight="light"/><strong>本对话还没有文件产出</strong><span>任务生成的文件会显示在这里。</span></div>}</div>;
 }
 function PanelEmpty({icon:Icon,title,children,action}){return <div className="workbench-empty"><Icon size={30} weight="light"/><h3>{title}</h3><p>{children}</p>{action}</div>;}
-function BrowserPanel({context,scopeKey,shown,attach,openPanel,closePanel,viewPicker}){
+function BrowserPanel({context,scopeKey,shown,attach,openPanel,closePanel}){
  const api=window.zhixing,host=useRef(null),startInput=useRef(null),[state,setState]=useState({tabs:[],activeId:null,recent:[]}),[address,setAddress]=useState(''),[error,setError]=useState(''),[adding,setAdding]=useState(false);
  const [capturing,setCapturing]=useState(false),[savedImage,setSavedImage]=useState('');
  const active=state.tabs.find(tab=>tab.id===state.activeId);
@@ -81,7 +80,7 @@ function BrowserPanel({context,scopeKey,shown,attach,openPanel,closePanel,viewPi
  }
  return <>
   <div className="resource-tab-strip browser-tabs" aria-label="浏览器标签">
-   {state.tabs.length?state.tabs.map(tab=><div key={tab.id} className={tab.id===state.activeId?'selected':''}><button title={tab.url||'新标签页'} aria-pressed={tab.id===state.activeId} onClick={()=>action('select',{id:tab.id})}><Globe size={14}/><span>{tab.title||'新标签页'}</span></button>{tab.id===state.activeId&&viewPicker}<IconButton icon={X} label={`关闭网页 ${tab.title}`} onClick={()=>action('close',{id:tab.id})}/></div>):<div className="selected"><button aria-pressed="true" onClick={()=>startInput.current?.focus()}><Globe size={14}/><span>新标签页</span></button>{viewPicker}<IconButton icon={X} label="关闭新标签页" onClick={closePanel}/></div>}
+   {state.tabs.length?state.tabs.map(tab=><div key={tab.id} className={tab.id===state.activeId?'selected':''}><button title={tab.url||'新标签页'} aria-pressed={tab.id===state.activeId} onClick={()=>action('select',{id:tab.id})}><Globe size={14}/><span>{tab.title||'新标签页'}</span></button><IconButton icon={X} label={`关闭网页 ${tab.title}`} onClick={()=>action('close',{id:tab.id})}/></div>):<div className="selected"><button aria-pressed="true" onClick={()=>startInput.current?.focus()}><Globe size={14}/><span>新标签页</span></button><IconButton icon={X} label="关闭新标签页" onClick={closePanel}/></div>}
    <IconButton icon={Plus} label="新建浏览器标签" onClick={newTab}/>
   </div>
   {active?.url&&<form className="browser-toolbar" onSubmit={go}><IconButton icon={ArrowLeft} label="网页后退" disabled={!active.canGoBack} onClick={()=>action('back')}/><IconButton icon={ArrowRight} label="网页前进" disabled={!active.canGoForward} onClick={()=>action('forward')}/><IconButton icon={active.loading?X:ArrowClockwise} label={active.loading?'停止加载网页':'刷新网页'} disabled={!api} onClick={()=>action(active.loading?'stop':'reload')}/><input aria-label="网页地址" value={address} onChange={event=>setAddress(event.target.value)} autoComplete="off" spellCheck={false}/><button type="submit" className="browser-go" aria-label="打开网页"><ArrowRight size={16}/></button></form>}

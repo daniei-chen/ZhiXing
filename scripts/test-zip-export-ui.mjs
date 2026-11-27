@@ -9,6 +9,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import yauzl from 'yauzl';
 import { connectUi } from './qa-cdp.mjs';
+import { selectWorkbenchTab } from './qa-workbench.mjs';
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const root = process.cwd();
@@ -42,7 +43,7 @@ await fs.writeFile(path.join(project, 'id_rsa.pem'), 'PRIVATE KEY\n');
 
 const ui = { current: null };
 const invoke = (method, value) => ui.current.evaluate(`window.zhixing.${method}(${JSON.stringify(value) ?? ''})`);
-let child = null, main = null, log = null;
+let child, main = null, log;
 const logfile = path.join(evidence, 'app.log');
 log = await fs.open(logfile, 'a');
 const portsFile = path.join(profile, 'DevToolsActivePort');
@@ -105,8 +106,7 @@ await uiRef.send('Input.dispatchMouseEvent', {type: 'mouseReleased', button: 'le
 await pause(500);
 await pause(800);
 await uiRef.click('打开工作面板');
-await uiRef.waitFor('!!document.querySelector(\'select[aria-label="工作面板视图"]\')', 30000);
-await uiRef.evaluate(`(()=>{const s=document.querySelector('select[aria-label="工作面板视图"]');s.value='files';s.dispatchEvent(new Event('change',{bubbles:true}));return s.value;})()`);
+await selectWorkbenchTab(uiRef, 'files');
 await uiRef.waitFor('!!document.querySelector(\'.workspace-file-toolbar\')', 30000);
 const enabled = await uiRef.evaluate('!document.querySelector(\'button[aria-label="打包为 ZIP"]\').disabled');
 assert.equal(enabled, true, '打包按钮可用');

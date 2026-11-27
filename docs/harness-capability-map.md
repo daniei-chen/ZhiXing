@@ -4,7 +4,13 @@
 
 本表区分实际运行的内核能力、界面接入和剩余工作。安装依赖、放置入口和读取目录均不等于端到端完成。用户要求的完整范围继续保留。
 
-## 当前里程碑：0.41.0 / Phase 1 基础
+## 当前里程碑：0.42.0 / 工作面板与交付文字预览
+
+固定九视图改为可见标签，交付卡片、行内引用和产出列表打开右侧提取文字预览；请求代次与聊天作用域隔离、读取范围、原位失败重试和显式放大均有实现。机制对标为“部分”，Harness 当前桌面视觉为“未核对”。本轮说明及差距见 [迭代记录](iteration-0.42.0.md)、[官方源码核对](workbench-preview-0.42.0.md) 和 [审计入口](audit-request-0.42.0.md)。
+
+本表是构建时源码说明，不预填本次 Windows 门禁或公开发布成功。实际结果以 [v0.42.0 发行页](https://github.com/daniei-chen/ZhiXing/releases/tag/v0.42.0) 的验收摘要、源码指纹及校验值为准。未签名、用户安装生命周期与真实云端仍须单列；固定功能标签和提取文字不提升完整动态资源 Dock、Office 编辑、Resident Host 或 SQLite 的状态。
+
+## 已发布里程碑：0.41.0 / Phase 1 基础
 
 0.41.0 新增按作用域订阅的草稿、局部流式正文、串行加密草稿覆盖层与界面错误恢复，详细实现与未覆盖范围见 [本轮迭代](iteration-0.41.0.md) 和 [外部审计入口](audit-request-0.41.0.md)。上游核对只记“部分/未核对”，没有提升常驻 Host、SQLite、Office 编辑或其他尚未实现的能力等级。
 
@@ -133,7 +139,6 @@ Phase 0B 的目录包驱动包含 41 个测试文件：37 个 package-aware、3 
 | 临时目录清理（安装残留） | Windows 实包 3 项（`npm run test:temp`）：`~nsu.tmp`、别家目录保留且不记事件、安装残留 `nsXXXX.tmp` 一并清理；只认 NSIS 两种目录名 + 「知行／zhixing」字节标记，删除失败不重试；msi／便携版残留未覆盖 |
 | 真实云端问答 | Windows 实包 + 真实云端 4 项（`scripts/test-real-cloud-chat.mjs`）：真实供应商保存并拉到 47 个模型，`deepseek-v4.1-flash` 4.86 秒回答「收到」，日志不含 Key 与完整地址；仅单供应商／单模型／单轮，多轮、工具调用、流式中断、限流、图片输入未覆盖 |
 
-
 ### 已接入、但没有真实验证
 
 | 能力 | 缺什么 |
@@ -162,9 +167,17 @@ Phase 0B 的目录包驱动包含 41 个测试文件：37 个 package-aware、3 
 三处都修好后连跑两次，`ok` 稳定为 `true`：
 
 ```json
-{"startVersion":"0.13.7.0","targetVersion":"0.13.8","downloadSeconds":3,"downloaded":true,
- "oldProcessExited":true,"versionOnDiskAfter":"0.13.8.0","relaunchedVersion":"0.13.8",
- "relaunched":true,"ok":true}
+{
+  "startVersion": "0.13.7.0",
+  "targetVersion": "0.13.8",
+  "downloadSeconds": 3,
+  "downloaded": true,
+  "oldProcessExited": true,
+  "versionOnDiskAfter": "0.13.8.0",
+  "relaunchedVersion": "0.13.8",
+  "relaunched": true,
+  "ok": true
+}
 ```
 
 **教训**：脚本报失败时，先证明脚本本身能报成功。前两轮我把脚本输出当成了产品结论。
@@ -441,8 +454,3 @@ DeepSeek 原生 Messages、兼容 Messages 和 Chat Completions 通过官方 SDK
 以下仅保留 0.11.0 初期记录，后续最终通过项以该版验收页为准：当时源码侧验证了严格模型解析、MCP 秘密目标身份、作用域草稿、运行 close join、失活锁恢复、Office 安全另存、保存队列与 PNG/WebP 导入，源码 68 项与包内 36 项通过。该初期阶段尚待测的 MCP、草稿/取消、缩放和安装生命周期，不能据此否定后续单独验收，也不能把后续旧版通过结论代替新版。历史详见 [`iteration-0.11.0.md`](iteration-0.11.0.md) 与 [`windows-acceptance-0.11.0.md`](windows-acceptance-0.11.0.md)。
 
 能力接入、源码测试、合成服务、Windows UI 和包内测试分开记录。未覆盖项保留为未完成，不把部分页面 smoke 当作逐页通过，也不宣称“全部通过”。
-
-
-
-
-

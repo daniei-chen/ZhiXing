@@ -1,6 +1,6 @@
 {
   "name": "office-agent",
-  "version": "0.41.0",
+  "version": "0.42.0",
   "description": "知行 AI 办公助手 · DeepSeek Harness",
   "author": "知行",
   "private": true,
@@ -18,7 +18,7 @@
     "test:errors": "node scripts/test-error-copy-ui.mjs",
     "test:browser": "node scripts/test-browser.mjs",
     "test:ui": "node scripts/test-ui.mjs",
-    "test:components": "node --test --test-concurrency=1 tests/conversation-resources-ui.test.mjs tests/speech-input.test.mjs tests/delivery-review-ui.test.mjs tests/conversation-recovery-ui.test.mjs tests/conversation-drafts-ui.test.mjs tests/conversation-drafts-native.test.mjs tests/capability-ui.test.mjs tests/sidebar-ui.test.mjs tests/provider-settings-ui.test.mjs tests/error-boundary-ui.test.mjs",
+    "test:components": "node --test --test-concurrency=1 tests/conversation-resources-ui.test.mjs tests/speech-input.test.mjs tests/delivery-review-ui.test.mjs tests/conversation-recovery-ui.test.mjs tests/conversation-drafts-ui.test.mjs tests/conversation-drafts-native.test.mjs tests/capability-ui.test.mjs tests/sidebar-ui.test.mjs tests/provider-settings-ui.test.mjs tests/error-boundary-ui.test.mjs tests/delivery-preview-ui.test.mjs tests/workbench-tabs-ui.test.mjs tests/qa-cdp-ui.test.mjs",
     "test:privacy": "node --test --test-concurrency=1 tests/privacy.test.mjs tests/credential-boundary.test.mjs tests/privacy-dynamic-keys.test.mjs tests/privacy-mcp-native.test.mjs tests/privacy-gateway.test.mjs tests/delivery-review.test.mjs",
     "test:kernel": "node --test --test-concurrency=1 tests/kernel.test.mjs tests/kernel-native.test.mjs tests/runtime-context.test.mjs",
     "test:delivery": "node --test --test-concurrency=1 tests/delivery-review.test.mjs tests/delivery-review-ui.test.mjs",
@@ -58,7 +58,8 @@
     "test:quality": "node --test tests/quality-gate.test.mjs",
     "test:phase0a": "node scripts/test-phase0a-ui.mjs",
     "maintenance:inventory": "node scripts/maintenance-inventory.mjs",
-    "test:phase1": "node scripts/test-phase1-ui.mjs"
+    "test:phase1": "node scripts/test-phase1-ui.mjs",
+    "test:workbench-preview": "node scripts/test-workbench-preview-ui.mjs"
   },
   "main": "electron/main.cjs",
   "dependencies": {

@@ -9,6 +9,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { connectUi } from './qa-cdp.mjs';
+import { selectWorkbenchTab } from './qa-workbench.mjs';
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const root = process.cwd();
@@ -86,7 +87,7 @@ const endpoint = `http://127.0.0.1:${server.address().port}/v1`;
 
 const ui = { current: null };
 const invoke = (method, value) => ui.current.evaluate(`window.zhixing.${method}(${JSON.stringify(value) ?? ''})`);
-let proc = null, main = null, log = null;
+let proc, main = null, log;
 const logfile = path.join(evidence, 'app.log');
 log = await fs.open(logfile, 'a');
 const portsFile = path.join(profile, 'DevToolsActivePort');
@@ -174,8 +175,7 @@ assert.match(transcript, new RegExp(finalAnswer.slice(0, 6)));
 await uiRef.click('打开工作面板').catch(async () => {
   if (await uiRef.evaluate('!![...document.querySelectorAll("button")].find(b=>b.getAttribute("aria-label")==="打开工作面板")')) await uiRef.click('打开工作面板');
 });
-await uiRef.waitFor('!!document.querySelector(\'select[aria-label="工作面板视图"]\')', 30000);
-await uiRef.evaluate('(()=>{const s=document.querySelector(\'select[aria-label="工作面板视图"]\');s.value="activity";s.dispatchEvent(new Event("change",{bubbles:true}));return s.value;})()');
+await selectWorkbenchTab(uiRef, 'activity');
 await uiRef.waitFor('!!document.querySelector(".execution-children")', 30000);
 await record('执行面板列出这次真实运行的协作子任务');
 

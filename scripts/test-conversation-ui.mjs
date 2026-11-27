@@ -4,13 +4,13 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { connectUi } from './qa-cdp.mjs';
+import { selectWorkbenchTab } from './qa-workbench.mjs';
 import { QA_DEFAULTS, startQaLocalServices } from './qa-local-services.mjs';
 
 const repository = fileURLToPath(new URL('..', import.meta.url));
 const input = 'textarea[aria-label="聊天输入框"]';
 const sideInput = 'textarea[aria-label="侧边聊天输入框"]';
 const resources = '.conversation-resources[role="dialog"]';
-const resourceTrigger = 'button[aria-label="查看当前对话产出与来源"]';
 const panel = '.workbench:not([hidden])';
 
 function usage() {
@@ -200,8 +200,8 @@ async function runJourney(phase) {
   }
   async function openPanel(page) {
     if (!await ui.evaluate(`!!document.querySelector(${JSON.stringify(panel)})`)) await ui.click('打开工作面板', '.top-actions button');
-    await ui.fill('.workbench:not([hidden]) .resource-switcher select', page);
-    await ui.waitFor(`!document.querySelector('.workbench-view[aria-label=${JSON.stringify({ browser: '浏览器', files: '文件', chat: '侧边聊天', activity: '执行' }[page])}]')?.hidden`);
+    await selectWorkbenchTab(ui, page);
+    await ui.waitFor(`document.querySelector('[role="tabpanel"][data-workbench-panel=${JSON.stringify(page)}]')?.hidden === false`);
   }
   async function openChat(id) {
     await saveSettled();
@@ -365,7 +365,7 @@ async function runJourney(phase) {
     const failedSearch=answer?.trace?.findLast(event=>/网页搜索/.test(event.label||''));
     if(failedSearch?.status==='failed'&&answer.text.includes('QA_CONVERSATION_SEARCH_UNAVAILABLE_RESPONSE')){
       await openPanel('activity');
-      assert(await ui.evaluate('document.querySelector(".workbench-view[aria-label=执行]")?.innerText.includes("网页搜索 · 失败")'));
+      assert(await ui.evaluate('document.querySelector("[role=tabpanel][data-workbench-panel=activity]")?.innerText.includes("网页搜索 · 失败")'));
       await closePanel();
       await record('非 DeepSeek 路由明确显示搜索不可用，不借用模型凭据，执行轨迹保留失败结果',{...diagnostics,answer,searchTrace:failedSearch});
       return {finished:true,failed:false,runId};
@@ -380,7 +380,7 @@ async function runJourney(phase) {
     }
     await openResources();
     await clickContaining('.resource-sources button','网页搜索记录');
-    await ui.waitFor('!!document.querySelector(".workbench:not([hidden]) .execution-panel") && !document.querySelector(".workbench-view[aria-label=执行]").hidden');
+    await ui.waitFor('!!document.querySelector(".workbench:not([hidden]) .execution-panel") && !document.querySelector("[role=tabpanel][data-workbench-panel=activity]").hidden');
     await closePanel();
     await record('无 URL 的实际搜索摘要跳执行轨迹',{trace:answer.trace,toolCalls});
     return {finished:true,failed:false,runId};
@@ -498,8 +498,10 @@ async function runJourney(phase) {
       assert.equal(await ui.evaluate(`!!document.querySelector(${JSON.stringify(panel)})`), false);
       await captureLayout('1255x912-100-resources-real-output');
       await clickContaining('.resource-outputs button', filename);
-      await ui.waitFor('document.querySelector(".modal .privacy-text")?.textContent.includes("QA_CONVERSATION_FILE_CONTENT")');
-      await ui.click('关闭对话框');
+      await ui.waitFor('document.querySelector(".delivery-preview pre")?.textContent.includes("QA_CONVERSATION_FILE_CONTENT")');
+      assert.equal(await ui.evaluate('document.querySelector("[role=tab][data-workbench-page=deliverables]")?.getAttribute("aria-selected")'), 'true');
+      assert.equal(await ui.evaluate('!!document.querySelector(".modal")'), false);
+      await ui.click('返回产出列表', '.delivery-preview button[aria-label="返回产出列表"]');
       await record('实际 Harness 写文件与 present，浮层打开原生交付引用', { chatId: mainChatId, filePath, modelRequests: produced.requests });
 
       currentStep = 'real source and attachment';
@@ -535,7 +537,7 @@ async function runJourney(phase) {
       await record('实际网页加入交办、附件来源记录与浏览器打开', { chatId: mainChatId, modelRequests: sourced.requests });
 
       currentStep = 'actual search trace';
-      const searched=await runSearchJourney();
+      await runSearchJourney();
     }
 
     if (!mainChatId) {

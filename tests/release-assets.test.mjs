@@ -24,6 +24,7 @@ import {
 import {
   downloadedAssetDigest,
   draftAssetNeedsReplacement,
+  findCreatedDraft,
   verifyRemoteAssets,
 } from '../scripts/publish-release.mjs';
 
@@ -87,10 +88,15 @@ function planApi(f, overrides = {}) {
 
 test('release gate aggregation rejects failed, cancelled, skipped and missing steps', () => {
   requireGates(gates());
-  for (const outcome of ['failure', 'cancelled', 'skipped', undefined]) {
-    const rows = gates();
-    rows.phase1 = { outcome };
-    assert.throws(() => requireGates(rows), /phase1/);
+  for (const gate of ['phase1', 'workbench']) {
+    for (const outcome of ['failure', 'cancelled', 'skipped', undefined]) {
+      const rows = gates();
+      rows[gate] = { outcome };
+      assert.throws(() => requireGates(rows), new RegExp(gate));
+    }
+    const missing = gates();
+    delete missing[gate];
+    assert.throws(() => requireGates(missing), new RegExp(gate));
   }
   const rows = gates();
   delete rows.signature;
@@ -253,6 +259,92 @@ test('draft lookup handles the real by-tag 404 contract and reads the listed rel
   );
 });
 
+test('new draft lookup retries only temporary absence and keeps an exact source identity', async () => {
+  const tag = 'v0.42.0',
+    sourceCommit = 'a'.repeat(40);
+  const draft = {
+    id: 42,
+    tag_name: tag,
+    target_commitish: sourceCommit,
+    draft: true,
+    prerelease: true,
+  };
+  const waits = [];
+  let lookups = 0;
+  const result = await findCreatedDraft({
+    tag,
+    sourceCommit,
+    lookup: async (repository, observedTag) => {
+      assert.equal(repository, REPOSITORY);
+      assert.equal(observedTag, tag);
+      lookups += 1;
+      return lookups < 3 ? null : draft;
+    },
+    wait: async (delay) => {
+      waits.push(delay);
+    },
+  });
+  assert.deepEqual(result, draft);
+  assert.equal(lookups, 3);
+  assert.deepEqual(waits, [500, 1000]);
+  for (const invalid of [
+    { id: 0 },
+    { tag_name: 'v0.41.0' },
+    { target_commitish: 'b'.repeat(40) },
+    { draft: false },
+    { prerelease: false },
+  ]) {
+    let attempts = 0;
+    await assert.rejects(
+      findCreatedDraft({
+        tag,
+        sourceCommit,
+        lookup: async () => {
+          attempts += 1;
+          return { ...draft, ...invalid };
+        },
+        wait: async () => assert.fail('Identity mismatches must not be retried'),
+      }),
+    );
+    assert.equal(attempts, 1);
+  }
+});
+
+test('new draft lookup fails after four missing records and propagates API failures', async () => {
+  const tag = 'v0.42.0',
+    sourceCommit = 'a'.repeat(40);
+  const waits = [];
+  let lookups = 0;
+  await assert.rejects(
+    findCreatedDraft({
+      tag,
+      sourceCommit,
+      lookup: async () => {
+        lookups += 1;
+        return null;
+      },
+      wait: async (delay) => {
+        waits.push(delay);
+      },
+    }),
+    /not found by its real release ID/,
+  );
+  assert.equal(lookups, 4);
+  assert.deepEqual(waits, [500, 1000, 2000]);
+  const failure = new Error('Synthetic GitHub request failure');
+  await assert.rejects(
+    findCreatedDraft({
+      tag,
+      sourceCommit,
+      lookup: async () => {
+        throw failure;
+      },
+      wait: async () => assert.fail('API errors must not be silently retried'),
+    }),
+    (error) => error === failure,
+  );
+});
+
 test('asset assembly produces exactly 18 files with a non-self-referential checksum manifest', async (t) => {
   const f = await fixture(t);
   const evidence = path.join(f.directory, 'evidence'),
@@ -314,12 +406,18 @@ test('asset assembly produces exactly 18 files with a non-self-referential check
     'ESLint 1/2 JS files; Stylelint 1/1 CSS files; Prettier 1/3 text files.\nErrors: 0; warnings: 0.\n',
   );
   await put(path.join(evidence, 'logs/startup.log'), startupLog());
-  for (const name of ['errors', 'native', 'phase0a', 'phase1'])
-    await put(path.join(evidence, `journeys/${name}/run-fixture/result.json`), {
-      ...identity,
-      status: 'passed',
-      cases: [{ name: 'synthetic asserted case', status: 'passed' }],
-    });
+  for (const name of ['errors', 'native', 'phase0a', 'phase1', 'workbench'])
+    await put(
+      path.join(
+        evidence,
+        `journeys/${name}/${name === 'workbench' ? 'workbench-preview-ui-fixture' : 'run-fixture'}/result.json`,
+      ),
+      {
+        ...identity,
+        status: 'passed',
+        cases: [{ name: 'synthetic asserted case', status: 'passed' }],
+      },
+    );
   await put(path.join(f.root, `.preview/qa-${version}/tool-timeline/run-fixture/result.json`), {
     ...identity,
     status: 'passed',

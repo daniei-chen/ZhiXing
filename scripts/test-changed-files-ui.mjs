@@ -112,7 +112,7 @@ try {
     return {providerId:mine.id,workspaceId,projectId};
   })()`);
   report.workspace = prepared; await persist();
-  try { await ui.evaluate('location.reload(); true'); } catch {}
+  try { await ui.evaluate('location.reload(); true'); } catch { /* The renderer may reload before the CDP reply. */ }
   await ui.waitFor('!!document.querySelector(\'textarea[aria-label="聊天输入框"]\')&&!document.querySelector(\'textarea[aria-label="聊天输入框"]\').disabled', 60000);
 
   await ui.evaluate('(()=>{const node=[...document.querySelectorAll(".sidebar button, .sidebar [role=\\"button\\"], button")].find(el=>el.textContent.trim().includes("QA 改动项目"));if(!node)throw new Error("Missing project row");node.click();return true})()');
@@ -152,7 +152,7 @@ try {
 
   await ui.evaluate('(()=>{const node=document.querySelector(".change-files li button");if(!node)throw new Error("Missing change row");node.click();return true})()');
   await pause(1200);
-  const panel = await ui.evaluate('(()=>{const select=document.querySelector(\'select[aria-label="工作面板视图"]\');return {view:select?.value||\'\',visible:!!document.querySelector(".workbench")};})()');
+  const panel = await ui.evaluate('(()=>{const tab=document.querySelector(\'[role="tab"][data-workbench-page][aria-selected="true"]\');return {view:tab?.dataset.workbenchPage||\'\',visible:!!document.querySelector(".workbench")};})()');
   report.panel = panel; await persist();
   assert.equal(panel.view, 'review', `点击改动文件没有打开对比视图：${JSON.stringify(panel)}`);
   await record('点击改动文件打开改动对比视图', panel);
@@ -164,10 +164,10 @@ try {
   console.error(`FAIL ${report.error}`);
   process.exitCode = 1;
 } finally {
-  try { server.closeAllConnections(); server.close(); } catch {}
-  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch {}
-  try { if (ui) ui.close(); } catch {}
-  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch {}
-  try { if (log) await log.close(); } catch {}
-  try { await fs.rm(profile, { recursive: true, force: true }); } catch {}
+  try { server.closeAllConnections(); server.close(); } catch { /* Legacy teardown tolerates an already-closed fixture server. */ }
+  try { if (ui) await ui.evaluate('window.zhixing.windowControl("close")').catch(() => {}); } catch { /* The window may close before the CDP reply. */ }
+  try { if (ui) ui.close(); } catch { /* Legacy teardown tolerates an already-closed CDP connection. */ }
+  try { if (child && child.exitCode === null) { child.kill(); if (exit) await Promise.race([exit, pause(8000)]); } } catch { /* Legacy teardown continues if the child already exited. */ }
+  try { if (log) await log.close(); } catch { /* Legacy teardown tolerates an already-closed log handle. */ }
+  try { await fs.rm(profile, { recursive: true, force: true }); } catch { /* Legacy cleanup remains best effort; this selector migration does not change its verdict. */ }
 }

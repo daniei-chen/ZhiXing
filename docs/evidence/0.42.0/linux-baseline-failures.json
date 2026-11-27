@@ -1,0 +1,183 @@
+{
+  "baseline": "cabb754b08883902b12f876e2d68338a7699d5fb",
+  "platform": "linux",
+  "nodeVersion": "v24.22.3",
+  "evidenceKind": "isolated-clean-baseline-source-tests",
+  "testsUnmodified": true,
+  "sharedDependencies": "symlink-to-restored-node_modules",
+  "tests": [
+    {
+      "id": "directory-link-redirection",
+      "testFile": "tests/deliverable-access.test.mjs",
+      "namePattern": "^目录链接重定向后旧引用失效，日志目录链接不能跨应用根读取$",
+      "instrumented": false,
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "durationMs": 337,
+      "counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "errorCodes": [
+        "ENOTDIR"
+      ],
+      "sourceLocations": [
+        "250:1",
+        "261:2"
+      ],
+      "observations": {
+        "rmdirOnLinkENOTDIR": true,
+        "assertionFailure": false,
+        "powershellExecutableMissing": false
+      },
+      "rawOutputStored": false
+    },
+    {
+      "id": "native-present-external-file",
+      "testFile": "tests/deliverable-access.test.mjs",
+      "namePattern": "^真实 Harness 在完全访问下 present 项目外文件后可用主机引用预览$",
+      "instrumented": false,
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "durationMs": 3973,
+      "counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "errorCodes": [
+        "ERR_ASSERTION"
+      ],
+      "sourceLocations": [
+        "289:1",
+        "342:3"
+      ],
+      "observations": {
+        "rmdirOnLinkENOTDIR": false,
+        "assertionFailure": true,
+        "powershellExecutableMissing": false
+      },
+      "rawOutputStored": false
+    },
+    {
+      "id": "native-powershell-pty",
+      "testFile": "tests/workbench.test.mjs",
+      "namePattern": "^真实 Harness PTY：输入、屏幕恢复、范围校验与退出$",
+      "instrumented": false,
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "durationMs": 530,
+      "counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "errorCodes": [
+        "ERR_TEST_FAILURE"
+      ],
+      "sourceLocations": [
+        "139:1"
+      ],
+      "observations": {
+        "rmdirOnLinkENOTDIR": false,
+        "assertionFailure": false,
+        "powershellExecutableMissing": true
+      },
+      "rawOutputStored": false
+    }
+  ],
+  "probe": {
+    "textType": "string",
+    "targetObserved": true,
+    "pathType": "posix-absolute",
+    "containsTarget": true,
+    "containsFixtureCredential": false,
+    "blocked": false,
+    "textOrCredentialStored": false
+  },
+  "cleanup": {
+    "dependencySymlinkRemoved": true,
+    "worktreeRemoved": true,
+    "temporaryContainerRemoved": true
+  },
+  "sourceComparison": [
+    {
+      "file": "tests/deliverable-access.test.mjs",
+      "candidateMatchesBaseline": true,
+      "baselineSha256": "7fcb6a3f5df9ca2dcc1242d4238762c07acb7dcaab79cdde4e11c2c55b3e558c"
+    },
+    {
+      "file": "tests/workbench.test.mjs",
+      "candidateMatchesBaseline": true,
+      "baselineSha256": "cca62eb10bbf42551ad9591ba4a18a7723aef1e1775d91c72e6b3f3226d2bb06"
+    },
+    {
+      "file": "src/privacy-core.js",
+      "candidateMatchesBaseline": true,
+      "baselineSha256": "41d3d177a7386f6aa2b7b8df3f6d3f1ed55b626952687032611f935162760d27"
+    },
+    {
+      "file": "electron/native-session-export.mjs",
+      "candidateMatchesBaseline": true,
+      "baselineSha256": "a9a87207f9ff326302055d4b6449434de7b2259adcc75f0826651fc21b384a5d"
+    },
+    {
+      "file": "electron/delivery-service.mjs",
+      "candidateMatchesBaseline": true,
+      "baselineSha256": "0ec2b2ba621fa81b1b5c7d5a831aeae7f26c96de8c4b559650ed1fb3f6ad3e0f"
+    },
+    {
+      "file": "electron/deliverable-access.mjs",
+      "candidateMatchesBaseline": true,
+      "baselineSha256": "fecd5a9f227362998ca96c76a46b82cdb83f3c191d6d854a61b69390b00ef1fd"
+    },
+    {
+      "file": "electron/terminal-service.mjs",
+      "candidateMatchesBaseline": true,
+      "baselineSha256": "a92cf674a6e2325d6b064ca92e5208af0f38d9589d164f7403c026cf2535ba33"
+    }
+  ],
+  "initialTrackedChanges": 0,
+  "probeRun": {
+    "id": "native-present-external-file",
+    "testFile": "tests/deliverable-access.test.mjs",
+    "namePattern": "^真实 Harness 在完全访问下 present 项目外文件后可用主机引用预览$",
+    "instrumented": true,
+    "exitCode": 1,
+    "signal": null,
+    "killed": false,
+    "durationMs": 2659,
+    "counts": {
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "errorCodes": [
+      "ERR_ASSERTION"
+    ],
+    "sourceLocations": [
+      "289:1",
+      "342:3"
+    ],
+    "observations": {
+      "rmdirOnLinkENOTDIR": false,
+      "assertionFailure": true,
+      "powershellExecutableMissing": false
+    },
+    "rawOutputStored": false
+  },
+  "finalTrackedChanges": 0,
+  "rawOutputStored": false
+}
