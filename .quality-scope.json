@@ -16,7 +16,7 @@
     "tests/runtime-execution-controls.test.mjs"
   ],
   "generatedFiles": ["package-lock.json"],
-  "generatedDirectories": ["docs/evidence/"],
+  "generatedDirectories": ["docs/evidence/", "docs/audit/"],
   "runtimeCustomProperties": [
     {
       "name": "--effort-position",
