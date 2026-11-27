@@ -48,7 +48,10 @@ async function readWorkspaceState(){
  return loadWorkspacePersistence({readWorkspace:()=>readEncrypted(WORKSPACE_FILE),readDrafts:()=>readEncrypted(DRAFTS_FILE)});
 }
 function visualReferences(state){
+ // Queued messages own their attachments after the draft reference is cleared,
+ // so they must keep the encrypted visual file reachable for a later dispatch.
  const records=[...(state.documents||[]),...Object.values(state.drafts||{}).flatMap(draft=>draft?.files||[]),
+  ...(Array.isArray(state.queuedMessages)?state.queuedMessages.flatMap(item=>item?.files||[]):[]),
   ...(state.chats||[]).flatMap(chat=>(chat?.messages||[]).flatMap(message=>message?.files||[]))];
  return new Set(records.map(record=>record?.visual?.visualId).filter(id=>typeof id==='string'&&visualApi.VISUAL_ID.test(id)));
 }
