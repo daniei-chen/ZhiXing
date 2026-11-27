@@ -91,6 +91,7 @@
 | 秘钥遮蔽显示 | `dsh-client-ui-secret-mask` | 部分：脱敏网关 + 凭证阻断 | Harness 是界面层遮蔽，知行是发送前替换，口径不同要写清 |
 | 轨迹视图 | `dsh-client-ui-trajectory` | **部分（0.25.0 起可检索）**：执行面板已有按交办切换、事件分类、状态／耗时／轮次／步骤、子任务与后台作业、检索（标签／状态／分类，含子任务与作业名）、展开／收起全部、子会话与作业输出、归档 | 未做：桌面版按轮次分组的记录表、单条记录检查器里的输入／输出／token 用量、时间概览（TTFT／吞吐／缩放）、按轮次折叠、代码视图语法高亮 |
 | 交付物视图               | `dsh-workspace-changes`、`dsh-deliverable-file-references`、`dsh-client-ui-deliverables` | **部分**：保留 0.30.0 起的改动卡片、逐文件对比及交付卡片；已发布 0.42.0 将交付卡片与行内引用接到右侧「产出」页的提取文字预览，并保留既有打开／定位动作，验证范围见本轮说明                     | 未做：git 工作树快照（终端／外部程序的改动不进卡片与对比）、独立 review tab 与其「开始／结束」整文件口径、并排视图与换行开关、review 内的打开／定位控件；交付预览没有原生动态资源标签、分页、自动刷新或图片／Office 原版面渲染。「在默认应用中打开」的成功路径未在历史自动验收中点击 |
+| 输入区 `@` 文件引用 | `dsh-file-reference`、`dsh-file-reference-local`、`dsh-client-ui-reference`、`dsh-client-ui-input-trigger` | **部分**：0.44.0 起项目会话里输入 `@` 展开当前工作区的文件候选（上下键、Enter 插入、Esc 关闭、IME 组合不抢键），插入的是相对路径文本；记号语法、评分排序、20 条上限与目录内查询照上游源码移植，私密清单复用 `isPrivateRelative`，不新增授权通道。见 `docs/file-mentions-0.44.0.md` | 候选发现是「一次 `@` 取一份索引、渲染层筛选」，没有上游带失效与后台重建的主机索引；默认只按私密清单过滤，没有额外排除 `dist`／`build` 等生成目录（有意偏差）；`@` 对话／子代理候选、正文里的文件胶囊与目录下钻未做 |
 | 会话日志 | `dsh-client-ui-settings-session-log`、`dsh-session-log-deepseek`、`dsh-session-log-export` | **未做（有意偏差，口径已纠正）** | `dsh-client-ui-settings-session-log` 是设置项「在使用官方模型 API 时上传 Session Log」的开关，用于改进 DeepSeek 模型，**不是日志查看器**；知行禁用了 `session-log-deepseek`，不上传会话日志。这与「知行有 `app.log` 与诊断导出」是两件事，0.44.0 已纠正原先「未核对」的写法 |
 
 ## 代理、协作与自动化
