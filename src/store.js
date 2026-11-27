@@ -14,6 +14,7 @@ const seedState = {
   ],
   chats: [],
   drafts: {},
+  queuedMessages: [],
   pendingWorkspaceDeletes: [],
   automations: [],
   appliedAutomationRuns: [],
@@ -84,6 +85,21 @@ export function mergeState(saved, { liveRuns = [] } = {}) {
         updatedAt: Number.isFinite(draft.updatedAt) ? draft.updatedAt : Date.now(),
       }]; }))
       : {},
+    // 排队消息只随已保存的聊天恢复；恢复后标记上次未发送，等用户确认再发。
+    queuedMessages: settings.persist && Array.isArray(saved.queuedMessages) ? saved.queuedMessages.filter(item => item && typeof item.id === 'string' && typeof item.chatId === 'string' && chatById.has(item.chatId) && typeof item.text === 'string' && Array.isArray(item.files)).slice(0, 64).map(item => {
+      const owner = chatById.get(item.chatId);
+      return {
+        id: item.id,
+        chatId: item.chatId,
+        workspaceId: owner.workspaceId || workspaceId,
+        projectId: owner.projectId || null,
+        text: item.text.slice(0, 60000),
+        files: item.files.filter(file => file && typeof file.id === 'string' && typeof file.name === 'string').slice(0, 12),
+        mode: item.mode === 'government' ? 'government' : 'office',
+        createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now(),
+        error: '上次退出时未发送。请确认后重试。',
+      };
+    }).filter(item => item.text.trim() || item.files.length) : [],
     appliedAutomationRuns: Array.isArray(saved.appliedAutomationRuns) ? saved.appliedAutomationRuns.filter(id => typeof id === 'string').slice(-240) : [],
     chats: chats.map(chat => ({
       ...chat,
@@ -115,6 +131,7 @@ export function workspaceDeletion(state, item, drafts = state.drafts || {}) {
   return {
     ...state,
     chats: state.chats.filter(chat => !chatIds.has(chat.id)), drafts: nextDrafts,
+    queuedMessages: (state.queuedMessages || []).filter(item => !chatIds.has(item.chatId) && (!projectId || item.projectId !== projectId)),
     ...(projectId ? {
       projects: state.projects.filter(project => project.id !== projectId),
       workspaces: state.workspaces.map(space => space.projectId === projectId ? { ...space, projectId: null } : space),

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chatText, mergeState, restoredDraftView } from '../src/store.js';
+import { chatText, mergeState, restoredDraftView, workspaceDeletion } from '../src/store.js';
 import {projectContext,projectWorktreeSourceContext} from '../src/project-core.js';
 
 test('会话副本保留停止和失败后的部分正文及其状态', () => {
@@ -197,4 +197,34 @@ test('a live run from another session or another reply cannot revive a saved pen
     { sessionId: 'chat-a', replyId: 'reply-b', runId: 'run-a' },
     { sessionId: 'chat-a', replyId: 'reply-a', runId: 'run-b' },
   ]) assert.equal(mergeState(saved, { liveRuns: [run] }).chats[0].messages[0].status, 'interrupted');
+});
+
+test('排队消息随加密工作空间恢复，但不复活已删除聊天或关闭保存的会话', () => {
+  const saved = mergeState(null);
+  saved.chats = [{ id: 'chat-a', workspaceId: 'office-home', projectId: null, messages: [] }];
+  saved.queuedMessages = [
+    { id: 'q1', chatId: 'chat-a', workspaceId: 'office-home', text: '排队的交办', files: [{ id: 'f1', name: '附件.txt' }], createdAt: 1 },
+    { id: 'q2', chatId: 'ghost', text: '已删除聊天', files: [], createdAt: 2 },
+    { id: 'q3', chatId: 'chat-a', text: '坏附件', files: [null], createdAt: 3 },
+    { id: 'q4', chatId: 'chat-a', text: '  ', files: [], createdAt: 4 },
+  ];
+  const restored = mergeState(saved);
+  assert.deepEqual(restored.queuedMessages.map(item => item.id), ['q1', 'q3']);
+  assert.equal(restored.queuedMessages[0].workspaceId, 'office-home');
+  assert.match(restored.queuedMessages[0].error, /上次退出时未发送/);
+  assert.deepEqual(restored.queuedMessages[1].files, [], 'invalid attachment entries are dropped, the text stays');
+  assert.equal(mergeState({ ...saved, settings: { ...saved.settings, persist: false } }).queuedMessages.length, 0);
+});
+
+test('删除聊天或项目同时清掉它的排队消息', () => {
+  const state = mergeState(null);
+  state.chats = [{ id: 'chat-a', workspaceId: 'office-home', projectId: null, messages: [] }];
+  state.queuedMessages = [
+    { id: 'q1', chatId: 'chat-a', projectId: null, text: '一', files: [] },
+    { id: 'q2', chatId: 'chat-b', projectId: 'p9', text: '二', files: [] },
+  ];
+  const afterChat = workspaceDeletion(state, { type: 'delete-chat', id: 'chat-a' });
+  assert.deepEqual(afterChat.queuedMessages.map(item => item.id), ['q2']);
+  const afterProject = workspaceDeletion(afterChat, { type: 'delete-project', id: 'p9' });
+  assert.deepEqual(afterProject.queuedMessages, []);
 });

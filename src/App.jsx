@@ -39,6 +39,9 @@ import { restoreNotice, exportNote, sumUnrestored } from './privacy-warning.js';
 import { applyAutomationResults } from './automation-core.js';
 import { acceptsGoalImages, formatSessionCommand, parseSessionCommand } from './session-commands.js';
 import { FEEDBACK_CATEGORIES, FEEDBACK_NOTE_MAX_BYTES, feedbackFor, feedbackLabel, noteBytes } from './message-feedback.js';
+import { enqueueMessage, nextQueued, patchQueued, queuedFor, removeQueued } from './message-queue.js';
+import { fallbackTitle } from './session-title.js';
+import { sendFailureToast, sendRecoveryState } from './send-failure.js';
 
 const desktop = window.zhixing;
 const uuid = () => crypto.randomUUID();
@@ -78,6 +81,9 @@ export function App() {
   const [settingsPage, setSettingsPage] = useState(null);
   const [questions,setQuestions]=useState([]);
   const approvals = useRuntimeApprovals();
+  const [queue,setQueue]=useState([]);
+  const queueRef = useRef([]);
+  const queueBusy = useRef(false);
   const [toast, setToastState] = useState(null);
   const [deliverableBusy, setDeliverableBusy] = useState({});
   const [reviewPath, setReviewPath] = useState("");
@@ -143,7 +149,7 @@ export function App() {
 
   function workspaceSnapshot(current = latest.current) {
     return current.settings.persist ? { ...current, drafts: draftMap.current }
-      : { ...current, chats: [], documents: [], drafts: {}, automations: [], settings: { ...current.settings, customTerms: [] } };
+      : { ...current, chats: [], documents: [], drafts: {}, queuedMessages: [], automations: [], settings: { ...current.settings, customTerms: [] } };
   }
 
   function publishDrafts() {
@@ -253,6 +259,10 @@ export function App() {
     latest.current = initial;
     draftMap.current = initial.settings.persist ? initial.drafts || {} : {};
     draftSlices.replace(draftMap.current);
+    // A save-retry reload keeps locally queued messages; a normal load adopts the saved queue.
+    initial.queuedMessages = preserveLocalDrafts ? queueRef.current : initial.settings.persist ? initial.queuedMessages || [] : [];
+    queueRef.current = initial.queuedMessages;
+    setQueue(initial.queuedMessages);
     const restored = liveChat
       ? { section: 'home', chatId: liveChat.id, projectId: liveChat.projectId || null }
       : restoredDraftView(initial) ||
@@ -638,6 +648,15 @@ export function App() {
     return () => window.removeEventListener('keydown', shortcut);
   });
 
+  // 本轮结束后自动发送当前聊天的队头。只处理正在看的聊天；用户切走后
+  // 队列保留，回来时继续，避免在后台对看不见的会话连续执行。
+  useEffect(() => {
+    if (!loaded || storageFailed.current || busy || queueBusy.current || active.current || running) return;
+    const head = nextQueued(queueRef.current, { chatId, workspaceId: state.workspaceId });
+    if (head) void dispatchQueued(head.id);
+    // dispatchQueued 读的是最新 refs；真正需要触发重算的是队列、运行态与当前聊天。
+  }, [queue, running, busy, loaded, chatId, state.workspaceId]);
+
   function setSetting(name, value) {
     if(name==='persist'&&!value&&active.current){setToast('请先停止正在运行的任务，再关闭本地保存。');return;}
     setState(current => {
@@ -918,8 +937,138 @@ export function App() {
     else if(command==='/skills'){setCustomTab('skills');navigate('skills');}
   }
 
+  function publishQueue(next) {
+    queueRef.current = next;
+    setQueue(next);
+    // 排队内容与聊天同属加密工作空间；先更新内存快照，再走现有保存队列，
+    // 避免刷新或退出后把已经排好的交办静默丢掉。
+    const snapshot = { ...latest.current, queuedMessages: next };
+    latest.current = snapshot;
+    setState(current => ({ ...current, queuedMessages: next }));
+    if (!loadedRef.current || storageFailed.current || !snapshot.settings?.persist) return;
+    void persistWorkspaceSnapshot(snapshot).catch(error => setWorkspaceSave(previous => ({ ...previous, status: 'failed', errorCode: errorText(error) || 'WORKSPACE_SAVE_FAILED' })));
+  }
+
+  // 运行中按发送先落到队里，不打断当前交办。队列按聊天隔离并随加密工作空间保存；
+  // 恢复后条目带「上次退出时未发送」标记，必须由用户确认才重试，不会静默重放。
+  function queueCurrentDraft() {
+    const key = activeDraftKey.current;
+    const draft = draftMap.current[key] || { text: inputRef.current, files: filesRef.current };
+    const text = (inputRef.current || draft.text || '').trim();
+    const files = filesRef.current.length ? filesRef.current : draft.files || [];
+    if (!text && !files.length) return;
+    if (files.some(file => file.status !== 'ready')) { setToast('请移除无法解析的附件后再排队。', 'error'); return; }
+    const nativeCommand = parseSessionCommand(text || '');
+    if (nativeCommand?.error) { setToast(nativeCommand.error, 'error'); return; }
+    const next = { id: uuid(), chatId, workspaceId: state.workspaceId, projectId: project?.id || null, text, files, mode, createdAt: Date.now() };
+    const result = enqueueMessage(queueRef.current, next);
+    if (result.error) { setToast(result.error, 'error'); return; }
+    publishQueue(result.queue);
+    if (key && draftMap.current[key]) persistDraft(key, { text: '', files: [] }, draftMap.current[key].revision);
+    inputRef.current = ''; filesRef.current = [];
+    setInputValue(''); setFilesValue([]);
+    setToast(`已排队 ${queuedFor(result.queue, chatId).length} 条消息，本轮结束后按顺序发送。`, 'success');
+  }
+
+  // 内核接手本轮后：移除该项，并立刻释放派发锁。锁若一直持有到整轮结束，
+  // 自动派发的那一轮里用户再也排不进新消息（Enter 会被 submit 的早退吞掉）。
+  function acceptQueued(itemId) {
+    queueBusy.current = false;
+    publishQueue(removeQueued(queueRef.current, itemId));
+  }
+
+  function discardQueued(id) {
+    publishQueue(removeQueued(queueRef.current, id));
+  }
+
+  function retryQueued(id) {
+    publishQueue(patchQueued(queueRef.current, id, { error: '', sending: false }));
+  }
+
+  function editQueued(item) {
+    setInput(previous => (previous.trim() ? `${previous.trimEnd()}\n${item.text}` : item.text));
+    if (item.files.length) setFiles(previous => [...previous, ...item.files.filter(file => !previous.some(row => row.id === file.id))]);
+    discardQueued(item.id);
+    requestAnimationFrame(() => composer.current?.focus());
+  }
+
+  async function dispatchQueued(itemId) {
+    const item = queueRef.current.find(row => row.id === itemId);
+    if (!item || item.sending || item.error || active.current || queueBusy.current) return;
+    const current = latest.current;
+    const targetChat = current.chats.find(chat => chat.id === item.chatId && !chat.archived && chat.workspaceId === current.workspaceId);
+    if (!targetChat) {
+      publishQueue(patchQueued(queueRef.current, itemId, { error: '这段聊天已删除或不在当前工作空间。' }));
+      return;
+    }
+    queueBusy.current = true;
+    publishQueue(patchQueued(queueRef.current, itemId, { sending: true, error: '' }));
+    try {
+      const settings = current.settings;
+      const targetProject = current.projects.find(project => project.id === targetChat.projectId) || null;
+      const selection = selectedModel(runtime, settings);
+      if (!settings.demo && !selection) throw new Error('所选供应商或型号当前不可用。请选择目录中的有效模型后再发送。');
+      if (!settings.demo && selection.reasoningCapability === 'unknown') throw new Error('当前模型的思考能力尚未确认，请刷新模型目录后再发送。');
+      if (!settings.demo && selection && !selection.levels.includes(settings.reasoning)) throw new Error('所选模型不支持当前的思考档位，请重新选择。');
+      const targetProvider = runtime.providers?.find(provider => provider.id === selection?.providerId);
+      if (!settings.demo && targetChat.messages.length && targetProvider
+        && ((targetChat.providerId || 'deepseek') !== targetProvider.id || (targetChat.providerUrl && targetChat.providerUrl !== targetProvider.baseUrl))) {
+        throw new Error('这段聊天使用了另一个模型服务。请先在聊天中继续发送，再排队新的交办。');
+      }
+      if (!settings.demo && targetChat.automationTaskId && parseSessionCommand(item.text || '')) throw new Error('任务聊天里的命令需要回到原聊天执行。');
+      const nativeCommand = parseSessionCommand(item.text || '');
+      const planText = nativeCommand?.name === 'plan' && !nativeCommand.verb ? nativeCommand.argument : '';
+      const startInPlanMode = Boolean(nativeCommand?.name === 'plan' && !nativeCommand.verb && (planText || item.files.length));
+      const command = nativeCommand && !startInPlanMode ? formatSessionCommand(nativeCommand) : undefined;
+      if (command && item.files.length && (!acceptsGoalImages(nativeCommand) || item.files.some(file => !file.visual?.visualId))) throw new Error('命令附件仅支持创建或编辑目标时添加的图片。');
+      const preferences = settings.personalizationEnabled ? settings.personalInstructions : '';
+      const history = targetChat.messages.filter(message => !message.pending);
+      // 与直接交办一致：prompt 不带历史（会话已恢复则内核自己带），
+      // bootstrapPrompt 才包含历史；否则每轮排队都会把旧对话当正文再发一遍。
+      const taskText = startInPlanMode ? planText || '' : item.text;
+      const prompt = composePrompt(taskText, item.files, [], targetProject?.instructions, preferences);
+      const bootstrapPrompt = composePrompt(taskText, item.files, history, targetProject?.instructions, preferences);
+      const chatMode = targetChat.mode || item.mode || mode;
+      const draft = {
+        sessionId: item.chatId, workspaceId: current.workspaceId, projectId: targetChat.projectId || null,
+        text: item.text || '请处理附件。', restoreText: '', attachments: item.files, files: [],
+        prompt, repeatExecution: false, draftKey: null, submittedRevision: 0,
+        mode: chatMode, model: selection?.id || settings.model, reasoning: settings.reasoning,
+        privacyMode: settings.privacyMode, startInPlanMode, sideScope: null, queued: true,
+      };
+      if (settings.demo) {
+        const local = new PrivacySession(item.chatId).protect(prompt, settings.customTerms, privacyPolicyForMode(settings.privacyPolicy, settings.privacyMode));
+        if (local.blocked) throw new Error('排队消息包含疑似凭证，请修改后再发送。');
+        const demoJob = await startReply(draft, { text: settings.privacyMode === 'raw' ? prompt : local.text, privacyMode: settings.privacyMode }, true, { silent: true, reportFailure: false, onAccepted: () => acceptQueued(itemId) });
+        if (!demoJob?.accepted) throw new Error(demoJob?.failureMessage || '当前无法开始新的交办，请稍后重试。');
+        return;
+      }
+      if (!desktop || !runtime.configured) throw new Error('尚未连接模型，请先在设置中配置供应商。');
+      const visualIds = item.files.flatMap(file => (file.visual?.visualId ? [file.visual.visualId] : []));
+      const preview = await desktop.prepareRun({
+        sessionId: item.chatId, prompt, bootstrapPrompt, command, startInPlanMode, mode: chatMode,
+        model: selection.id, modelProviderId: selection.providerId, reasoning: settings.reasoning,
+        permission: settings.permission, workspaceId: current.workspaceId, projectId: targetChat.projectId || null,
+        customTerms: settings.customTerms, privacyMode: settings.privacyMode, privacyPolicy: settings.privacyPolicy, visualIds,
+      });
+      if (preview.blocked) throw new Error('排队消息包含疑似凭证，请修改后再发送。');
+      if (active.current || latest.current.workspaceId !== current.workspaceId) throw new Error('工作空间或运行状态已变化，请稍后重试。');
+      // 先确认内核已接手本轮，再从队列删除；否则消息会既不在队列也没有运行。
+      const job = await startReply(draft, preview, false, { silent: true, reportFailure: false, onAccepted: () => acceptQueued(itemId) });
+      if (!job?.accepted) throw new Error(job?.failureMessage || '当前无法开始新的交办，请稍后重试。');
+    } catch (error) {
+      queueBusy.current = false;
+      publishQueue(patchQueued(queueRef.current, itemId, { sending: false, error: errorText(error) }));
+      setToast(`排队消息未发送：${errorText(error)}`, 'error');
+    }
+  }
+
   async function submit(repeatMessageId = null, sideTarget = null, actionCommand = null) {
-    if (!loaded || storageFailed.current || active.current || busy) return;
+    if (!loaded || storageFailed.current || busy || queueBusy.current) return;
+    if (active.current) {
+      if (!sideTarget && !repeatMessageId && !actionCommand && active.current.chatId === chatId) queueCurrentDraft();
+      return;
+    }
     const targetChat = sideTarget ? state.chats.find(item => item.id === sideTarget.chatId && item.workspaceId === workspace.id && (item.projectId||null) === (project?.id||null) && !item.archived) : chat;
     if(sideTarget&&(!targetChat||targetChat.id===chatId||sideTarget.scope!==workScopeKey)) { setToast('侧边聊天已变更，请重新选择有效会话。'); return; }
     const targetMessages = targetChat?.messages || [];
@@ -972,7 +1121,9 @@ export function App() {
     if (demo) {
       const local = new PrivacySession(sessionId).protect(prompt, customTerms,privacyPolicyForMode(privacyPolicy,privacyMode));
       if (local.blocked) { openModal({ type: 'privacy', original: prompt, preview: local, blocked: true }); return; }
-      await startReply(draft, { text: privacyMode === 'raw' ? prompt : local.text, privacyMode }, true);
+      // 不在提交里等整轮运行结束：busy 只表示「正在准备发送」，
+      // 否则运行中的输入框会被一直占住，排队和后续操作都无法进行。
+      void startReply(draft, { text: privacyMode === 'raw' ? prompt : local.text, privacyMode }, true);
       return;
     }
     if (!desktop || !runtime.configured) { openModal({ type: 'settings', tab: '供应商' }); return; }
@@ -990,7 +1141,7 @@ export function App() {
         else {
           if (providerChanged) setToast('已为新供应商开启聊天，上一段聊天留在原处。');
           else if (forkScheduled) setToast('已从任务聊天另开交办。');
-          await startReply(draft,preview);
+          void startReply(draft,preview);
         }
       }
     } catch (error) { setToast(`未发送：${errorText(error)}`); }
@@ -1007,14 +1158,46 @@ export function App() {
             inputRef.current = next.text; filesRef.current = next.files;
             setInputValue(next.text); setFilesValue(next.files);
           }
+          return next;
         }
       }
+      return null;
   }
 
-  async function startReply(draft, preview, demo = false) {
-    if (!draftProducersLive.current || active.current || draft.workspaceId !== latest.current.workspaceId) return;
+  // 保存还没落定，草稿槽就可能被这段新输入占用（再打一段字或按回车排队），
+  // recoverSubmittedDraft 的 revision 守卫因此拒绝还原。这里把没送出的那段接到
+  // 当前草稿后面，与「编辑排队消息」同一做法：用户正在打的内容在前，原交办在后。
+  function rejoinRejectedDraft(draft, recovery) {
+    const current = draftMap.current[recovery.draftKey];
+    if (!current) return null;
+    const text = draft.restoreText ?? draft.text ?? '';
+    const files = (draft.attachments || []).filter(file => !(current.files || []).some(row => row.id === file.id));
+    if (!String(text).trim() && !files.length) return null;
+    const next = persistDraft(recovery.draftKey, {
+      text: [current.text, text].filter(value => value && value.trim()).join('\n'),
+      files: [...(current.files || []), ...files],
+    }, current.revision);
+    if (!next) return null;
+    if (activeDraftKey.current === recovery.draftKey) {
+      inputRef.current = next.text; filesRef.current = next.files;
+      setInputValue(next.text); setFilesValue(next.files);
+    }
+    return next;
+  }
+
+  async function startReply(draft, preview, demo = false, { silent = false, onAccepted, reportFailure = true } = {}) {
+    if (!draftProducersLive.current || active.current || draft.workspaceId !== latest.current.workspaceId) return null;
     const recovery = draft.draftKey ? clearSubmittedDraft(draft) : null;
-    const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [], awaitingInitialSave: true };
+    const job = { chatId: draft.sessionId, workspaceId: draft.workspaceId, replyId: uuid(), runId: uuid(), demo, trace: [], awaitingInitialSave: true, accepted: false };
+    // 只有宿主真正接手本轮（demo 直接开始／begin 成功）才算接受。保存失败、
+    // 预检取消或 begin 被拒都不能让排队项消失，也不能留下假的失败气泡。
+    let accepted = false;
+    const accept = () => {
+      if (accepted) return;
+      accepted = true;
+      job.accepted = true;
+      try { onAccepted?.(); } catch { /* 队列记账失败不能阻断本轮。 */ }
+    };
     runJobs.current.set(job.runId, job);
     if (runJobs.current.size > 80) for (const [id, old] of runJobs.current) {
       if (old !== job && old.finalization?.processStatus !== 'cleanup_pending' && old !== active.current) { runJobs.current.delete(id); liveReplies.set(id, undefined); break; }
@@ -1022,25 +1205,29 @@ export function App() {
     active.current = job; setRunning(job);
     const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl, visual }) => ({ id, name, size, path, sourceUrl, ...(visual ? { visual } : {}) })) };
     const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0, startedAt: Date.now() };
+    let createdChat = false;
     const appendSubmission = current => {
       const target = current.chats.find(item => item.id === draft.sessionId);
       const now = Date.now();
-      if (!target) return { ...current, chats: [...current.chats, {
+      if (!target) {
+        createdChat = true;
+        return { ...current, chats: [...current.chats, {
         id: draft.sessionId, projectId: draft.projectId, workspaceId: draft.workspaceId,
         providerId: preview.providerId, providerUrl: preview.baseUrl,
-        title: draft.text.replace(/\s+/g, ' ').slice(0, 42), mode: draft.mode, createdAt: now, updatedAt: now, messages: [user, assistant],
-      }] };
+        title: fallbackTitle(draft.text) || '新的交办', mode: draft.mode, createdAt: now, updatedAt: now, messages: [user, assistant],
+        }] };
+      }
       const history = [...target.messages];
       history.push(user);
       const binding = !demo&&(!target.messages.length||target.importedFrom==='deepseek'&&!target.providerId) ? {providerId:preview.providerId,providerUrl:preview.baseUrl} : {};
-      if(!target.messages.length)binding.title=draft.text.replace(/\s+/g,' ').slice(0,42);
+      if(!target.messages.length)binding.title=fallbackTitle(draft.text)||'新的交办';
       return { ...current, chats: current.chats.map(item => item.id === target.id ? { ...item,...binding, updatedAt: now, messages: [...history, assistant] } : item) };
     };
     const submittedState = appendSubmission({ ...latest.current, drafts: draftMap.current });
     latest.current = submittedState;
     setState(submittedState);
     if (draft.sideScope) setSideSelection({scope:draft.sideScope,id:draft.sessionId});
-    else navigate('home', draft.sessionId, draft.projectId);
+    else if (!silent) navigate('home', draft.sessionId, draft.projectId);
     let releaseSettlement;
     const settled = new Promise(resolve => { releaseSettlement = resolve; });
     pendingRunSettlements.current.add(settled);
@@ -1055,21 +1242,61 @@ export function App() {
       }
       if (!demo && desktop.beginRun) {
         const identity = await desktop.beginRun({ runId: job.runId, replyId: job.replyId, preparationId: preview.preparationId });
+        accept();
         const outcome = await receiveHandoff(job, identity);
         if (outcome.status === 'failed') restoreFailedSubmission(draft, recovery, job, outcome.finalization?.executionStatus || outcome.result?.finalization?.executionStatus);
       } else {
+        accept();
         const result = demo ? { text: demoReply, masked: demoReply } : await desktop.runPrepared({ runId: job.runId, preparationId: preview.preparationId });
         finalizeRun(job, { result });
       }
     } catch (error) {
-      const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;
-      restoreFailedSubmission(draft, recovery, job, executionStatus);
-      finalizeRun(job, { status: job.terminalStatus || 'failed', result: error.result, output: error.output, finalization: error.finalization, error: { code: error.code, stage: error.stage, message: `运行未完成：${errorText(error)}` } });
+      job.failureMessage = errorText(error);
+      if (!accepted) {
+        if (reportFailure && job.terminalStatus === 'cancelled') {
+          // 用户在宿主接手前自己停止：直接发送的交办留在记录里，气泡标为已取消。
+          finalizeRun(job, { status: 'cancelled' });
+        } else {
+          // 宿主从未接手（保存失败、begin 被拒）：草稿在被消费的那一刻就没了，
+          // 先把它还给输入框，再撤回这次乐观追加的用户/助手双气泡。排队消息也
+          // 一律撤回，否则队列重试时同一段交办会在记录里出现两次。
+          let restored = restoreFailedSubmission(draft, recovery, job);
+          if (!restored && recovery) restored = rejoinRejectedDraft(draft, recovery);
+          // 草稿没被消费（保存还没落定时又打了字，revision 校验因此不通过）时
+          // 内容本来就在输入框里，不能说成「没能恢复」。
+          const untouched = !recovery && draft.draftKey ? draftMap.current[draft.draftKey] : null;
+          const recoveryState = sendRecoveryState({
+            hadDraft: Boolean(draft.draftKey),
+            consumed: Boolean(recovery),
+            restored: Boolean(restored),
+            kept: Boolean(untouched && (untouched.text?.trim() || untouched.files?.length)),
+          });
+          const rollback = {
+            ...latest.current,
+            chats: latest.current.chats
+              .map(chat => (chat.id === job.chatId ? { ...chat, messages: chat.messages.filter(message => message.id !== user.id && message.id !== assistant.id) } : chat))
+              .filter(chat => !(createdChat && chat.id === job.chatId && chat.messages.length === 0)),
+          };
+          latest.current = rollback;
+          if (draftProducersLive.current) setState(rollback);
+          // 气泡被撤回了，失败原因必须另外呈现。排队消息由队列自己带着上下文报，
+          // 直接发送没有别的出口，就在这里给出与发送失败一致的提示。
+          // 内容没能接回输入框时必须直说，不能让「未发送」听上去像什么都在。
+          if (reportFailure) setToast(sendFailureToast(job.failureMessage, recoveryState), 'error');
+        }
+      } else {
+        const executionStatus = error.finalization?.executionStatus || job.finalization?.executionStatus;
+        restoreFailedSubmission(draft, recovery, job, executionStatus);
+        finalizeRun(job, { status: job.terminalStatus || 'failed', result: error.result, output: error.output, finalization: error.finalization, error: { code: error.code, stage: error.stage, message: `运行未完成：${errorText(error)}` } });
+      }
     } finally {
       if (active.current === job) { active.current = null; setRunning(null); }
       pendingRunSettlements.current.delete(settled);
       releaseSettlement();
     }
+    // accepted 才是「宿主已接手」的判据：保存失败、预检取消或 begin 被拒都
+    // 不能当成已开始的一轮，否则排队项会永远停在「发送中」。
+    return job;
   }
 
   async function stop(runId) {
@@ -1148,6 +1375,10 @@ export function App() {
     draftMap.current = following.drafts;
     publishDrafts();
     draftWriter.schedule();
+    // 队列与草稿同样会被删除影响：不在这里同步，后续任何一次排队都会用旧 ref
+    // 把已删除聊天的正文与附件重新写回加密工作空间。
+    queueRef.current = following.queuedMessages || [];
+    setQueue(queueRef.current);
     const next = { ...following, pendingWorkspaceDeletes: [...(current.pendingWorkspaceDeletes || []), operation] };
     latest.current = next;
     setState(next);
@@ -1571,7 +1802,7 @@ export function App() {
                 <div className="quick-workflows">{workflows[mode].slice(0, 3).map(([label, prompt]) => <button key={label} onClick={() => applyTemplate(prompt)}>{label}<ArrowUpRight size={13}/></button>)}</div>
                 {project && <button className="text-button" onClick={() => openModal({ type: 'project-settings', value: project })}>项目说明</button>}
               </section></div>}
-              <Composer takeover={chatApprovals.length ? <ApprovalPanel hostEpoch={approvals.hostEpoch} requests={chatApprovals} connection={approvals.connection} onStop={()=>stop(chatApprovals[0].runId)}/> : question ? <AgentQuestion key={question.requestId} inline request={question} count={questions.filter(item=>(item.rootSessionId||item.sessionId)===chatId).length} onStop={()=>stop(question.runId)} onAnswer={value=>desktop.answerQuestion({...value,runId:question.runId,rootSessionId:question.rootSessionId||question.sessionId})}/> : null} settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage}/>
+              <Composer takeover={chatApprovals.length ? <ApprovalPanel hostEpoch={approvals.hostEpoch} requests={chatApprovals} connection={approvals.connection} onStop={()=>stop(chatApprovals[0].runId)}/> : question ? <AgentQuestion key={question.requestId} inline request={question} count={questions.filter(item=>(item.rootSessionId||item.sessionId)===chatId).length} onStop={()=>stop(question.runId)} onAnswer={value=>desktop.answerQuestion({...value,runId:question.runId,rootSessionId:question.rootSessionId||question.sessionId})}/> : null} queue={queuedFor(queue, chatId)} onRemoveQueued={discardQueued} onRetryQueued={retryQueued} onEditQueued={editQueued} settings={state.settings} files={files} input={input} draftStore={draftSlices} draftKey={renderedDraftKey} setInput={setInput} setFiles={setFiles} setSetting={setSetting} onSubmit={() => submit()} onStop={stop} running={runningHere} disabled={!loaded || storageFailed.current || (!!running && !runningHere)} busy={busy} chooseFiles={chooseFiles} addFiles={addFiles} openModal={openModal} menu={menu} toggleMenu={toggleMenu} closeMenu={() => setMenu(null)} composer={composer} runtime={runtime} setRuntime={setRuntime} openWorkbench={showWorkPage} scopeKey={viewToken.current} onLocalCommand={localCommand} suspended={!!modal||!!settingsPage}/>
             </> : <UtilityPage key={section} section={section} sidebarOpen={sidebarOpen} scope={scopeProps} chooseFiles={chooseFiles} attach={attach} toggleTask={toggleTask} runTask={runTask} taskAction={taskAction} openRun={openRun} openModal={openModal} openChat={openChat} useTemplate={applyTemplate} events={visibleEvents} customTab={customTab} setCustomTab={setCustomTab}/>}
           </div>
           {room&&<ErrorBoundary key={workScopeKey} scope="workbench" hidden={!panel}><Workbench deliveryPreview={deliveryPreview.preview && <DeliveryPreview preview={deliveryPreview.preview} onBack={deliveryPreview.close} onRetry={deliveryPreview.retry} onEnlarge={value => openModal({type:'document',value})}/>} draftStore={draftSlices} liveReplies={liveReplies} key={workScopeKey} visible={panel} suspended={!!modal||!!settingsPage||!!menu} onClose={closeWorkPanel} page={workPage} setPage={setWorkPage} chatTitle={chat?.title} context={workContext} scopeKey={workScopeKey} scopeReady={scopeReady} scopeError={workspaceSave.status==='failed'?(workspaceSave.errorCode||'本机工作空间保存失败。'):''} project={project} files={files} fileRequest={fileRequest} statsContext={statsHere||messages.findLast(message=>message.context)?.context} statsLive={!!statsHere} liveTrace={runEvents} liveRun={runningHere?running.runId:null} traceTruncated={runningHere&&running.traceTruncated} messages={messages} changes={reviewSource?.changes||[]} changeDiffs={reviewSource?.changeDiffs||[]} reviewPath={reviewPath} onReviewSelect={setReviewPath} attach={attachWorkingMaterial} openProject={()=>openModal(project?{type:'project-settings',value:project}:{type:'new-project'})} openDeliverable={openDeliverable} mode={mode} privacyMode={state.settings.privacyMode} sideChat={sideChat} sideChatId={sideChatId} sideChats={sideChats} sideDraft={sideDraft} sideFiles={sideDraftState?.files||[]} onOpenUrl={openAnswerUrl} onSideText={setSideText} onSideSelect={selectSideChat} onSideNew={createSideChat} onSideSubmit={()=>submit(null,{chatId:sideChatId,scope:workScopeKey})} sideRunning={!!running&&running.chatId===sideChatId} sendDisabled={!loaded||busy||!!running||storageFailed.current} onStop={stop}/></ErrorBoundary>}

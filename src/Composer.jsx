@@ -6,6 +6,7 @@ import {fileReadLabel} from './FileCoverage.jsx';
 import { VoiceInput } from './VoiceInput.jsx';
 import { ModelControls } from './ModelControls.jsx';
 import { matchesSessionCommandPrefix, parseSessionCommand } from './session-commands.js';
+import { queuePreview } from './message-queue.js';
 import { useKeyedValue } from './use-keyed-value.js';
 
 const COMMANDS = [
@@ -21,7 +22,7 @@ function markMoreBelow(field) {
   field.toggleAttribute('data-more-below', field.scrollHeight - field.clientHeight - field.scrollTop > 1);
 }
 
-export function Composer({ settings, files: initialFiles, input: initialInput, draftStore, draftKey, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended, takeover = null }) {
+export function Composer({ settings, files: initialFiles, input: initialInput, draftStore, draftKey, setInput, setFiles, setSetting, onSubmit, onStop, running, disabled, busy, chooseFiles, addFiles, openModal, menu, toggleMenu, closeMenu, composer, runtime, setRuntime, openWorkbench, scopeKey, onLocalCommand, suspended, takeover = null, queue = [], onRemoveQueued, onRetryQueued, onEditQueued }) {
   const draft = useKeyedValue(draftStore, draftKey);
   const input = draft?.text ?? initialInput;
   const files = draft?.files ?? initialFiles;
@@ -29,7 +30,8 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
   const [connections, setConnections] = useState([]);
   const [commandIndex,setCommandIndex]=useState(0),[dismissedInput,setDismissedInput]=useState(null);
   const takenOver = Boolean(takeover);
-  const ready = (input.trim() || files.length) && !running && !disabled && !busy && !voiceActive && !takenOver;
+  // 运行中仍可提交：消息进入排队，等本轮结束后按顺序发送（对齐 Harness 的 queue）。
+  const ready = (input.trim() || files.length) && !disabled && !busy && !voiceActive && !takenOver;
   const redacted = settings.privacyMode === 'redact';
   const PrivacyIcon = redacted ? ShieldCheck : ShieldWarning;
   const selectedPermission = permissionMode(settings.permission);
@@ -83,6 +85,17 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
   }
 
   return <div className="composer-area">
+    {!!queue.length && <section className="queued-messages" aria-label={`${queue.length} 条排队消息`}>
+      <div className="queued-heading"><span>{queue.length} 条排队消息</span><small>本轮结束后按顺序发送</small></div>
+      <ol>{queue.map((item, index) => <li key={item.id} className={item.error ? 'failed' : item.sending ? 'sending' : ''}>
+        <span className="queued-index">{index + 1}</span>
+        <span className="queued-body"><span className="queued-text">{queuePreview(item)}</span>{!!item.files?.length && <small>{item.files.length} 个附件</small>}{item.error && <small className="queued-error" role="alert">{item.error}</small>}</span>
+        {item.error ? <button type="button" className="text-button" disabled={item.sending} onClick={() => onRetryQueued(item.id)}>重试</button>
+          : item.sending ? <span className="queued-state">发送中…</span>
+          : <button type="button" className="text-button" onClick={() => onEditQueued(item)}>编辑</button>}
+        <IconButton icon={X} label="删除排队消息" disabled={item.sending} onClick={() => onRemoveQueued(item.id)}/>
+      </li>)}</ol>
+    </section>}
     {takeover}
     <form className="composer" hidden={takenOver} inert={takenOver} onSubmit={event => { event.preventDefault(); if (ready) onSubmit(); }} onDragOver={event => event.preventDefault()} onDrop={event => {
       event.preventDefault();
@@ -94,7 +107,7 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
         <IconButton icon={X} label={`移除附件 ${file.name}`} onClick={() => setFiles(previous => previous.filter(item => item.id !== file.id))}/>
       </div>)}</div>}
       <div className="composer-input">
-        <textarea ref={composer} aria-label="聊天输入框" aria-describedby="composer-shortcuts" placeholder="交代一件事，或添加要处理的资料…" value={input} rows={2} maxLength={60000} disabled={disabled || voiceActive || takenOver} onPaste={event => { if (event.clipboardData.files.length && !disabled && !busy && !running && !takenOver) { event.preventDefault(); void addFiles(event.clipboardData.files, 'draft'); } }} onChange={event => {setCommandIndex(0);setInput(event.target.value);}} onScroll={event => markMoreBelow(event.currentTarget)} onKeyDown={event => {
+        <textarea ref={composer} aria-label="聊天输入框" aria-describedby="composer-shortcuts" placeholder={running ? '再交代一件，本轮结束后自动发送…' : '交代一件事，或添加要处理的资料…'} value={input} rows={2} maxLength={60000} disabled={disabled || voiceActive || takenOver} onPaste={event => { if (event.clipboardData.files.length && !disabled && !busy && !running && !takenOver) { event.preventDefault(); void addFiles(event.clipboardData.files, 'draft'); } }} onChange={event => {setCommandIndex(0);setInput(event.target.value);}} onScroll={event => markMoreBelow(event.currentTarget)} onKeyDown={event => {
           if (event.nativeEvent.isComposing || event.keyCode === 229) return;
           if (event.key === 'Escape' && commandOptions.length) { event.preventDefault();event.stopPropagation();setDismissedInput(input);return; }
           if (commandOptions.length && ['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault();setCommandIndex(previous=>(previous+(event.key==='ArrowDown'?1:-1)+commandOptions.length)%commandOptions.length);return; }
@@ -146,7 +159,8 @@ export function Composer({ settings, files: initialFiles, input: initialInput, d
             disabled={disabled || busy || voiceActive || takenOver} menu={takenOver ? null : menu?.name} toggleMenu={toggleMenu} closeMenu={closeMenu}
             openConnection={() => openModal({ type: 'settings', tab: '供应商' })}/>
           <VoiceInput key={scopeKey} scopeKey={scopeKey} language={settings.voiceLanguage} disabled={disabled || running || busy || suspended || takenOver} onActiveChange={setVoiceActive} onAccept={text => { setInput(previous => (previous + (previous && !/\s$/.test(previous) ? '\n' : '') + text).slice(0, 60000)); requestAnimationFrame(() => composer.current?.focus()); }} openSettings={() => openModal({type:'settings',tab:'语音'})}/>
-          {running ? <button type="button" className="send-button" aria-label="停止生成" title="停止生成" onClick={onStop}><Stop size={14} weight="fill"/></button> : <button type="submit" className="send-button" aria-label="发送消息" title="发送消息（Enter）" disabled={!ready}><ArrowUp size={15} weight="regular"/></button>}
+          {running && <button type="button" className="send-button stop-generating" aria-label="停止生成" title="停止生成" onClick={onStop}><Stop size={14} weight="fill"/></button>}
+          <button type="submit" className="send-button" aria-label={running ? '排队发送' : '发送消息'} title={running ? '排队发送（本轮结束后自动发出）' : '发送消息（Enter）'} disabled={!ready}><ArrowUp size={15} weight="regular"/></button>
         </div>
       </div>
     </form>

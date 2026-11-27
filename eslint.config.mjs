@@ -60,4 +60,11 @@ export default [
     files: ['electron/runtime.mjs'],
     linterOptions: { noInlineConfig: false, reportUnusedDisableDirectives: 'error' },
   },
+  {
+    // Session-title sanitation must match the published upstream regexes that
+    // strip OSC/CSI/ESC and C0/C1 controls; matching them is the intent, so
+    // this one file opts out of no-control-regex by a marked statement.
+    files: ['src/session-title.js'],
+    linterOptions: { noInlineConfig: false, reportUnusedDisableDirectives: 'error' },
+  },
 ];
