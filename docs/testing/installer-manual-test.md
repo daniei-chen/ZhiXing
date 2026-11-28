@@ -101,6 +101,28 @@ Get-FileHash "$data\zhixing\workspace.bin" -Algorithm SHA256
 把 `workspace.bin` 的 SHA256 记下来——升级后要对比它是否**逐字节不变**（或至少仍在、能被新版本读出来）。
 同时记下项目/聊天数量，升级后要在界面里看到它们还在。
 
+除了单个文件，再对整个数据目录算一次**整树摘要**，升级前后对比。用下面这个函数（按相对路径排序、
+逐文件算 SHA256，再对清单整体算一次，结果稳定）：
+
+```powershell
+function Get-TreeHash([string]$Path) {
+  $lines = Get-ChildItem -LiteralPath $Path -Recurse -File -Force | ForEach-Object {
+    [pscustomobject]@{
+      Rel  = $_.FullName.Substring($Path.Length).TrimStart('\')
+      Hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
+    }
+  } | Sort-Object Rel | ForEach-Object { '{0}  {1}' -f $_.Hash, $_.Rel }
+  $bytes = [Text.Encoding]::UTF8.GetBytes(($lines -join "`n"))
+  [BitConverter]::ToString(
+    [Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
+  ).Replace('-','')
+}
+
+Get-TreeHash (Join-Path $env:APPDATA '知行\zhixing')
+```
+
+记下这个值。升级后用同一个函数再算一次，两个值应当相同。
+
 ## 5. 第三步：升级到 0.43.0
 
 ```powershell
@@ -111,9 +133,9 @@ $sw.Stop()
 ```
 
 升级时安装器会先跑旧版本的卸载器，命令行形如
-`"<旧目录>\Uninstall 知行.exe" /S /KEEP_APP_DATA /currentuser --updated _?=<旧目录>`
-（`installUtil.nsh:203-206`、`:224`）。这里**没有** `--delete-app-data`，所以用户数据不会被删
-（见第 7 节）。
+`"<旧目录>\Uninstall 知行.exe" /S /KEEP_APP_DATA /currentuser --keep-shortcuts --updated _?=<旧目录>`
+（拼接逻辑在 `installUtil.nsh:193-207`，执行在 `:224`）。这里**没有** `--delete-app-data`，
+所以用户数据不会被删——原因见第 7 节「别被参数名骗了」。
 
 **检查点 C（升完）**
 
@@ -122,6 +144,7 @@ $sw.Stop()
 | 版本号 | `(Get-Item "$root\知行.exe").VersionInfo.ProductVersion` = `0.43.0` |
 | 卸载项 | `DisplayVersion` = `0.43.0`，`UninstallString` 指向新目录 |
 | 用户数据还在 | `%APPDATA%\知行\zhixing\workspace.bin` 存在，SHA256 与检查点 B 一致 |
+| 用户数据整树 | `Get-TreeHash (Join-Path $env:APPDATA '知行\zhixing')` 与升级前相同（方法见第 4 节） |
 | 界面里数据还在 | 启动应用，项目和聊天都在，能打开 |
 | 快捷方式 | 仍指向 `$root\知行.exe` |
 | 进程 | 无残留进程 |
@@ -153,22 +176,42 @@ $sw.Stop()
 
 卸载器会删掉 `$INSTDIR`（`templates/nsis/uninstaller.nsh:187`）和两个注册表键（`:250`、`:254`）。
 
-## 7. 已知残留与"不算残留"的项
+## 7. 别被参数名骗了：升级为什么能保留数据
 
-**`%APPDATA%\知行\zhixing` 在卸载后仍然存在，这是设计行为，不是 bug。**
-`electron-builder.yml` 的 `nsis` 段没有配置 `deleteAppDataOnUninstall`，所以
-`DELETE_APP_DATA_ON_UNINSTALL` 没有被定义；卸载器里删用户数据的分支
-（`templates/nsis/uninstaller.nsh:216-243`）只有在下列两种情况之一才触发：
+`installUtil.nsh:224` 那行命令里有个 `KEEP_APP_DATA`，名字看着像保险。**它不是。**
+`app-builder-lib@26.18.0` 的模板里除了 `installUtil.nsh:224`、`:230` 两处 `ExecWait` 把它传给子进程之外，
+没有任何代码读它——卸载器里没有对应的 `GetParameters`/`GetOptions` 分支。把数据保住的是下面两条，
+和这个参数名没有关系：
 
-1. 命令行带 `--delete-app-data`（`:221`）；
-2. `DELETE_APP_DATA_ON_UNINSTALL` 被定义，且**不是**升级调用（`:223-226`）。
+- **A：升级调用里没有 `--delete-app-data`。** `installUtil.nsh:202-207` 是
+  `${if} ${isDeleteAppData}` / `${else}` 两支，正常安装（命令行不带该参数）走 `else`，追加 `--updated`。
+- **B：`DELETE_APP_DATA_ON_UNINSTALL` 没有被定义。** `electron-builder.yml` 的 `nsis` 段没有
+  `deleteAppDataOnUninstall`，所以 `uninstaller.nsh:223` 的 `!ifdef` 不成立，`:225` 的
+  `StrCpy $isDeleteAppData "1"` 不会执行。
 
-升级调用带的是 `--updated`（`installUtil.nsh:206`），所以即使将来定义了该宏，升级也不会删数据。
-另外 `KEEP_APP_DATA` 这个参数在 `app-builder-lib@26.18.0` 里**没有任何代码读取**，只出现在
-`installUtil.nsh:224`、`:230` 两处 `ExecWait` 里——它是个无效参数，别把数据保留归功于它。
+两条同时成立，`uninstaller.nsh:216-243` 那段删 `$APPDATA\...` 的代码就走不到（`$isDeleteAppData` 一直是 `0`）。
 
-因此逐项核对时，把 `%APPDATA%\知行\zhixing` 记成"预期保留"，不要算成卸载残留；
-如果它**消失了**，那才是数据丢失，属于必须停手的缺陷。
+> 未核对：`${isUpdated}` 与 `${isDeleteAppData}` 这两个 LogicLib 测试的**定义**不在本仓库也不在
+> `node_modules` 里（随 electron-builder 的 NSIS 分支提供），本机缓存是空的，没法给出定义处的 file:line。
+> 能引用的是它们的用法（`installUtil.nsh:202`、`uninstaller.nsh:224`）和 `installUtil.nsh:205` 的注释：
+> "always pass --updated flag - to ensure that if DELETE_APP_DATA_ON_UNINSTALL is defined, user data will be not removed"。
+
+### 谁改了哪一处就会破坏它
+
+| 改动 | 后果 |
+| --- | --- |
+| `electron-builder.yml` 的 `nsis` 段加 `deleteAppDataOnUninstall: true` | B 失效。升级时安装器仍会追加 `--updated`，`uninstaller.nsh:224` 的 `${ifnot} ${isUpdated}` 还挡得住；但**普通卸载**会删 `%APPDATA%\知行`，用户的项目和 vault 全丢 |
+| `installUtil.nsh:202-207` 被改成无条件追加 `--delete-app-data` | A 失效，升级当场删数据 |
+| `uninstaller.nsh:223-226` 的 `${ifnot} ${isUpdated}` 判断被删掉 | 只要 B 成立（宏被定义），升级也会删数据 |
+| `electron/main.cjs:4` 的 `app.setName('知行')` 被改 | 数据目录换位置，`$APPDATA\${APP_FILENAME}` 的删除范围与用户数据不再重合。表现是"旧数据变成孤儿"而不是丢数据，但升级后用户看不到自己的项目 |
+
+判断方法：改完 `electron-builder.yml` 或升级安装脚本后，重跑第 4 节到第 5 节的整树 SHA256 对比
+（`Get-TreeHash`）。两个值不一样，就是数据被动了。
+
+### 逐项核对时的口径
+
+`%APPDATA%\知行\zhixing` 在卸载后仍然存在，是设计行为，不是 bug——记成"预期保留"，
+不要算成卸载残留。如果它**消失了**，那才是数据丢失，属于必须停手的缺陷。
 
 ## 8. 与自动化脚本的关系
 
