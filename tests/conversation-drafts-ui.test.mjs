@@ -991,3 +991,42 @@ test('读取重试期间App已卸载，迟到快照不再接回旧App或覆盖�
   assert.equal(current.component('Composer').input, 'CURRENT_APP_NEW_DRAFT');
   current.unmount();
 });
+
+test('内核收尾连续失败后可放弃并释放，聊天里留下未交接的可读记录', async () => {
+  const finalization = extra => ({runId: 'run-1', executionStatus: 'failed', persistenceStatus: 'saved', processStatus: 'cleanup_pending', eventWatermark: 3, error: {code: 'RUNTIME_CLOSE_FAILED', stage: 'close', message: '内核退出仍待确认。'}, ...extra});
+  const saved = fixture();
+  saved.chats = [{id: 'chat-a', title: '隔离会话', workspaceId: saved.workspaceId, projectId: null, messages: [
+    {id: 'u1', role: 'user', text: '上一轮交办', files: []},
+    {id: 'a1', role: 'assistant', text: '部分答复', status: 'failed', runId: 'run-1', finalization: finalization()},
+  ]}];
+  let abandonedCalls = 0, retries = 0;
+  const app = await mount(saved, {
+    runtimeCleanupStatus: async () => [{runId: 'run-1', sessionId: 'chat-a', attempts: 2, retryLimit: 3, canAbandon: false, finalization: finalization()}],
+    retryRuntimeCleanup: async runId => { retries++; return {runId, sessionId: 'chat-a', status: 'cleanup_pending', attempts: 3, retryLimit: 3, canAbandon: true, finalization: finalization()}; },
+    abandonRuntimeRun: async runId => { abandonedCalls++; return {runId, sessionId: 'chat-a', status: 'abandoned', finalization: finalization({executionStatus: 'abandoned', processStatus: 'abandoned', abandoned: {attempts: 3, at: 1, previousExecutionStatus: 'failed', resultDelivered: false}})}; },
+  });
+  const buttons = () => app.nodes().filter(node => node.type === 'button').map(node => app.text(node));
+  const banner = () => app.nodes().find(node => node.props?.className === 'running-return runtime-cleanup-pending');
+  app.component('Sidebar').openChat('chat-a'); await app.flush();
+  assert(banner(), 'the quarantine banner must be visible');
+  assert(app.text(banner()).includes('已重试 2/3 次'));
+  assert(!buttons().includes('放弃并释放'), 'no escape before the retry budget is burned');
+  app.button('重试清理').props.onClick(); await app.flush();
+  assert.equal(retries, 1);
+  assert(buttons().includes('放弃并释放'), 'the escape appears once every retry failed');
+  assert(app.text(banner()).includes('放弃并释放会结束隔离，但这一轮的结果不会交接'));
+  app.button('放弃并释放').props.onClick(); await app.flush();
+  assert.equal(abandonedCalls, 1);
+  assert.equal(banner(), undefined, 'the quarantine row is gone');
+  const record = app.nodes().find(node => node.props?.['data-outcome'] === 'abandoned');
+  assert(record, 'the chat keeps a readable record of the abandoned round');
+  const note = app.text(record);
+  assert(note.includes('结果没有交接，也不算完成'));
+  assert(note.includes('3 次重试后仍未确认'));
+  assert(note.includes('内核进程可能仍在后台运行并改写工作区文件'));
+  assert(!note.includes('执行完成'), 'an abandoned round is never described as finished');
+  await app.flush({advance: 5000});
+  assert.equal(app.stored.chats[0].messages[1].finalization.processStatus, 'abandoned');
+  assert.equal(app.stored.chats[0].messages[1].finalization.abandoned.resultDelivered, false);
+  app.unmount();
+});

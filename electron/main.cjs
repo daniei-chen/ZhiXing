@@ -678,6 +678,7 @@ handle('deliverables:read',async options=>{await workspaceSaveQueue.flush();retu
  handle('agent:cancel',async({runId})=>manager.cancel(runId));
  handle('agent:cleanup-status',()=>manager.getCleanupStatus());
  handle('agent:retry-cleanup',({runId})=>manager.retryCleanup(runId));
+ handle('agent:abandon-run',({runId})=>manager.abandonRun(runId));
  handle('agent:control-execution',value=>manager.controlExecution(value));
  handle('agent:answer-question',value=>manager.answerQuestion(value));
  handle('automation:list',()=>automations.snapshot());
@@ -843,7 +844,7 @@ app.on('before-quit',event=>{
   if(automationsReady)await automationsReady.catch(()=>{});
   await automations?.close();
   const shutdown=await manager?.close();
-  if(shutdown?.cleanupPending?.length)throw new Error('任务已结束，但仍有内核退出未确认。请返回执行详情重试停止，确认退出前知行会保留会话隔离和恢复资料。');
+  if(shutdown?.cleanupPending?.length)throw new Error('任务已结束，但仍有内核退出未确认。请返回执行详情重试停止或放弃并释放，确认退出前知行会保留会话隔离和恢复资料。');
   for(;;){
    try{await requestRendererFlush();await workspaceSaveQueue?.flush();break;}
    catch(error){

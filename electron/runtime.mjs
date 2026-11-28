@@ -317,13 +317,33 @@ export class RuntimeManager{
   if(processExited(child))exited();else child.once('exit',exited);
  }
  safeMetadata(active,value,pattern){return typeof value==='string'&&pattern.test(value)&&(!active.safeContext||this.executionDisplay(value,active.safeContext)===value);}
+ // A run whose kernel exit is still unconfirmed keeps its own session and the
+ // recovery files it may still need, but it is not executing. Counting it as an
+ // execution slot is what let three stuck kernels block every chat in the app.
+ quarantined(active){return active.status==='cleanup_pending'||active.shutdownPending===true;}
+ activeRuns(){return [...this.runs.values()].filter(active=>!this.quarantined(active));}
+ slotLimitMessage(){
+  const running=this.activeRuns().length,quarantined=this.runs.size-running;
+  const limit=`已有 ${running} 个任务正在执行（上限 3 个），请等其中一轮结束后再发。`;
+  return quarantined?`${limit}另有 ${quarantined} 轮的内核退出还没确认，它们不占这个上限；请在对应聊天里重试清理，或放弃并释放。`:limit;
+ }
  sessionBusyMessage(sessionId){
-  const pending=[...this.runs.values()].find(active=>active.sessionId===sessionId&&(active.status==='cleanup_pending'||active.shutdownPending));
+  const pending=[...this.runs.values()].find(active=>active.sessionId===sessionId&&this.quarantined(active));
   if(!pending)return '该会话正在执行，请先停止当前任务。';
+  if(this.canAbandon(pending))return `上一轮的内核连续 ${pending.cleanupAttempts||0} 次重试后仍未确认退出，恢复文件已保留。可以点「放弃并释放」结束隔离，也可以继续点「重试清理」；新建聊天可以立即使用。`;
   return '上一轮的内核还没确认退出，恢复文件已保留。可以点「重试清理」，或稍等几秒再发一次；新建聊天可以立即使用。';
  }
+ // The retry budget is the schedule the run already burns on its own: one
+ // attempt per configured delay. Only once every one of them has failed is
+ // giving up on the exit confirmation a decision the user can make, and the
+ // record written then must say the round was not handed off.
+ cleanupExhausted(active){return (active.cleanupAttempts||0)>=this.cleanupRetryDelays.length;}
+ // A retry still in flight must not be abandoned from under itself; the failure
+ // path that reports the state is already past that point and passes settling.
+ canAbandon(active,settling=Boolean(active?.cleanupPromise)){return Boolean(active)&&!this.closing&&this.quarantined(active)&&this.cleanupExhausted(active)&&!settling;}
+ quarantineState(active,settling){return {attempts:active?.cleanupAttempts||0,retryLimit:this.cleanupRetryDelays.length,canAbandon:this.canAbandon(active,settling)};}
  cleanupError(active,error){return {code:this.safeMetadata(active,error?.code,/^[A-Z][A-Z0-9_]{0,79}$/)?error.code:'RUNTIME_CLOSE_FAILED',stage:this.safeMetadata(active,error?.stage,/^[a-z][a-z0-9_-]{0,39}$/)?error.stage:'close',message:active.safeContext?this.executionDisplay(error?.message||'内核退出仍待确认。',active.safeContext).slice(0,400):'内核退出仍待确认，恢复文件已保留。'};}
- getCleanupStatus(){return [...this.runs.values()].filter(active=>active.status==='cleanup_pending'||active.shutdownPending).map(active=>({runId:active.runId,sessionId:active.sessionId,status:'cleanup_pending',attempts:active.cleanupAttempts||0,error:active.cleanupError,finalization:structuredClone(active.finalization||{runId:active.runId,executionStatus:active.cancelled?'cancelled':'failed',persistenceStatus:'pending',processStatus:active.processExited?'exited':'cleanup_pending',eventWatermark:active.eventWatermark||0,error:active.cleanupError})}));}
+ getCleanupStatus(){return [...this.runs.values()].filter(active=>this.quarantined(active)).map(active=>({runId:active.runId,sessionId:active.sessionId,status:'cleanup_pending',...this.quarantineState(active),error:active.cleanupError,finalization:structuredClone(active.finalization||{runId:active.runId,executionStatus:active.cancelled?'cancelled':'failed',persistenceStatus:'pending',processStatus:active.processExited?'exited':'cleanup_pending',eventWatermark:active.eventWatermark||0,error:active.cleanupError})}));}
  scheduleCleanup(active){
   if(active.cleanupTimer||(active.cleanupAttempts||0)>=this.cleanupRetryDelays.length)return;
   const delay=this.cleanupRetryDelays[active.cleanupAttempts||0];
@@ -337,7 +357,7 @@ export class RuntimeManager{
   if(active.cleanupPromise)return active.cleanupPromise;
   if(active.shutdownPending&&!active.finalization){
    try{await bounded(()=>active.settled,this.cleanupTimeoutMs);}catch{/* Preserve quarantine below when settlement still cannot be confirmed. */}
-   if(!active.finalization)return {...this.getCleanupStatus().find(item=>item.runId===runId),status:'cleanup_pending'};
+   if(!active.finalization){active.cleanupAttempts=(active.cleanupAttempts||0)+1;return {...this.getCleanupStatus().find(item=>item.runId===runId),status:'cleanup_pending'};}
    if(!this.runs.has(runId))return {...active.settlement,status:'exited'};
   }
   if(active.status!=='cleanup_pending')throw new Error('任务仍在执行，请先停止后等待收尾。');
@@ -358,11 +378,29 @@ export class RuntimeManager{
    }
    active.cleanupError=this.cleanupError(active,error);
    active.finalization={...active.finalization,error:active.finalization.error||active.cleanupError};active.settlement.finalization=active.finalization;
-   this.emitEvent({runId,sessionId:active.sessionId,type:'run/terminal',status:active.settlement.status,finalization:active.finalization,...this.resultFields(active)});
+   this.emitEvent({runId,sessionId:active.sessionId,type:'run/terminal',status:active.settlement.status,finalization:active.finalization,quarantine:this.quarantineState(active,false),...this.resultFields(active)});
    this.scheduleCleanup(active);
-   return {...active.settlement,status:'cleanup_pending'};
+   return {...active.settlement,status:'cleanup_pending',...this.quarantineState(active,false)};
   })().finally(()=>{active.cleanupPromise=null;});
   return active.cleanupPromise;
+ }
+ // Last resort for a quarantine that the retry budget cannot clear: the user
+ // keeps the readable record of what happened and gets the session and slot
+ // back, while the unconfirmed kernel stays out of the app's bookkeeping. The
+ // round is marked abandoned, never completed, because nothing was handed off.
+ async abandonRun(runId){
+  if(typeof runId!=='string'||!SAFE_ID.test(runId))throw new Error('任务编号无效。');
+  const active=this.runs.get(runId);
+  if(!active)throw new Error('没有对应的内核收尾记录。');
+  if(!this.canAbandon(active))throw new Error(active.cleanupPromise?'清理仍在进行，请等这一次结果。':`重试清理还不满 ${this.cleanupRetryDelays.length} 次，请先重试清理。`);
+  const previous=active.finalization?.executionStatus||(active.cancelled?'cancelled':active.resultReady?'completed':'failed');
+  active.finalization={...(active.finalization||{runId:active.runId,persistenceStatus:'pending',eventWatermark:active.eventWatermark||0}),runId:active.runId,executionStatus:'abandoned',processStatus:'abandoned',abandoned:{attempts:active.cleanupAttempts||0,at:Date.now(),previousExecutionStatus:previous,resultDelivered:false}};
+  active.settlement={...(active.settlement||{runId:active.runId,sessionId:active.sessionId,status:'failed'}),status:'failed',finalization:active.finalization};
+  clearTimeout(active.cleanupTimer);active.cleanupTimer=null;
+  active.resolveSettled?.(active.settlement);
+  this.emitEvent({runId,sessionId:active.sessionId,type:'run/terminal',status:'failed',finalization:active.finalization,...this.resultFields(active)});
+  this.releaseRun(active);
+  return {...active.settlement,status:'abandoned'};
  }
  questionSnapshot(){return {revision:this.questionRevision,pending:[...this.questions.values()].map(entry=>structuredClone(entry.public))};}
  answerQuestion({requestId,answers,cancelled=false,runId,rootSessionId}){
@@ -398,7 +436,7 @@ export class RuntimeManager{
  }
  async check(config,key){
   if(this.closing)throw new Error('内核管理器正在关闭。');
-  if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
+  if(this.activeRuns().length>=3)throw new Error(this.slotLimitMessage());
   const directory=await fs.mkdtemp(path.join(await fs.mkdir(this.root,{recursive:true}).then(()=>this.root),'check-')),bridgeKey=createBridgeKey(),mcpFile=path.join(directory,'mcp.bin');let h,failure,resolveSettled;
   const active={runId:path.basename(directory),sessionId:path.basename(directory),status:'checking',isCheck:true,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,controller:new AbortController(),settled:new Promise(resolve=>{resolveSettled=resolve;}),safeContext:{providerKey:key,customTerms:[],privacyPolicy:privacyPolicyForMode(config.privacyPolicy,'redact')}};
   this.runs.set(active.runId,active);this.busy.add(active.sessionId);this.runSettlements.set(active.runId,active.settled);this.runSettlementSessions.set(active.runId,active.sessionId);
@@ -492,7 +530,7 @@ export class RuntimeManager{
   if(!key)throw new Error('尚未配置所选供应商的 API Key。');
   assertModelCredential(key);
   if((this.cancelled.get(runId)||0)>Date.now()){this.cancelled.delete(runId);throw Object.assign(new Error('任务已停止。'),{code:'RUNTIME_CANCELLED',stage:'prepare'});}
-  if(this.runs.size>=3)throw new Error('已有三个任务在运行，请稍后再试。');
+  if(this.activeRuns().length>=3)throw new Error(this.slotLimitMessage());
   if(this.busy.has(sessionId)||this.runs.has(runId))throw new Error(this.sessionBusyMessage(sessionId));
   for(const [id,p] of this.prepared)if(p.options.sessionId===sessionId)this.prepared.delete(id);
   this.busy.add(sessionId);let resolveSettled;let h,bridgeFile,mcpFile,gateway,toolBridge,automationBridge,officeVision,approvalBridge,persistKey,persistBridgeKey,failure;const visualHistory={};const active={runId,sessionId,cleanupTimeoutMs:this.cleanupTimeoutMs,eventWatermark:0,cancelled:false,h:null,controller:new AbortController(),status:'preparing',draftTail:Promise.resolve(),settled:new Promise(resolve=>{resolveSettled=resolve;})};active.resolveSettled=resolveSettled;if(this.runSettlements.size>=128){const oldest=this.runSettlements.keys().next().value;this.runSettlements.delete(oldest);this.runSettlementSessions.delete(oldest);}this.runSettlements.set(runId,active.settled);this.runSettlementSessions.set(runId,sessionId);this.runs.set(runId,active);
