@@ -1,3 +1,33 @@
+> **停止维护**：本项目已停止维护，不再接收功能更新与安全修复。
+
+## 它是什么
+
+Windows 桌面 AI 办公工作台，基于 DeepSeek Harness 内核（`@deepseek-ai/dsh`），提供 Office 文档流水线、隐私脱敏边界（本机脱敏、私密清单、凭据形状识别）、审批与权限同步，以及 Windows 原生分发（NSIS 安装包）。
+
+## 为什么停止维护
+
+内核钉在 `0.2.2-rc.5`，这是 RC 线的终点，之后只有 alpha；每次内核升版，集成层都要重新对齐约 69 行 profile 覆盖与 11 个自有插件（`harness/*.mjs`），这部分成本不体现在任何测试数字上。官方 DeepSeek Harness 已覆盖核心能力，剩下的差异化（Office 流水线、隐私边界、Windows 打包）不足以支撑这个维护量。
+
+## 警告
+
+它处理的是用户的敏感文档，而停止维护意味着不会再有安全修复。不要把本项目用于任何真实业务或真实数据。已知未修的问题里，`electron/main.cjs:235-253` 的自动更新只有状态广播，没有降级保护与撤回判定。
+
+## 保留了什么
+
+仓库保持公开，git 历史完整保留，作为参考实现。测试套件（`npm test`：757 例、756 通过、1 skipped）与几个真实修掉的安全缺陷留在历史里：隐私脱敏引擎可被隐藏字符绕过（P0-1，PR #7）、隔离内核占满执行名额导致「真的在跑」与「等待清理」无法区分（P1-3，PR #13）、原生文件写入围栏的路径大小写误拒（D24）。这些改动可被别的项目借鉴。
+
+## 未完成事项（接手从这里开始）
+
+- **P1-4 / P1-5 更新信任链与更新通道**（审计 D22）：`electron/main.cjs:235-253` 的自动更新只有状态广播，`allowPrerelease=true`、无 `allowDowngrade=false`、无「feed 版本 ≠ 已装版本」的撤回判定，错误直接透传 electron-updater 英文串。接手点：按 D22 三项补齐，并写一条把 `latest.yml` 版本调低的验收。
+- **P1-8 补丁层存在性回归**（D7）：`electron/runtime.mjs:34` 的 12 个 `disabled` id 与 `:95` 起的 4 行整行 config 覆盖共约 69 个行 id，`tests/runtime-patch.test.mjs`（43 行、2 条 `test()`、5 处断言）只钉住 compaction-basic 与 image-offload。接手点：让测试拿 `node_modules/@deepseek-ai/dsh-sdk-minimal/package/cordis.patch.yml` 的 id 集合逐条比对。
+- **P1-9 干净安装自检**（03·C1）：npm 11 的 allowScripts 拦下 7 个包的 install script，因此需要 `node node_modules/electron/install.js` 与 `node node_modules/@deepseek-ai/dsh-subprocess-local/scripts/ensure-spawn-helper.mjs`。接手点：`npm ci` 后跑一条自检脚本，检查 electron、node-pty、koffi、spawn helper 四处产物。
+- **P1-10 上游升级路径**（D8）：Node 闸门已验证（Electron 44.11.5 自带 Node 24.22.3，等于 0.2.3-alpha 的下限），但升级要重验 69 行配置键、11 个插件 API 与 `office`/`ptc`/凭据来源三处。接手点：按审计 E 节写一页 alpha 升级清单与回滚点。
+- **P1-11 `App.jsx` 拆分**（A3）：`src/App.jsx` 1855 行、38 个 `useState`。接手点：按消息、工作台、导航、模态拆，拆分前后同一套 UI 测试全绿。
+- **P1-12 常驻内核**（C2）：每轮冷启动 10–20 s。接手点：同会话第二轮不 spawn，第二轮首字节 < 3 s，MCP 不重连。
+- **P2-13…P2-20 共 8 条 P2**：逐条见 `docs/AUDIT-2026-11-28.md` D 节 P2 表，每条都有验收口径，此处不重复。
+- **12 个打包 UI e2e 脚本零 CI 覆盖**（issue SWO-58）：`package.json:41-52` 的 `test:actions`、`test:changes`、`test:compact-command`、`test:compaction`、`test:deliverables`、`test:execution-search`、`test:feedback`、`test:inline-refs`、`test:model-switch`、`test:model-window`、`test:overflow-recovery`、`test:review` 是真窗口 CDP 脚本，`.github/workflows/packed.yml` 一条都不跑（它跑另外 7 条 npm 脚本，外加 1 条直接 `node` 调用的 `scripts/test-native-files-export-ui.mjs`），只有人手动跑。接手点：挑 2–3 条最贵的先进 `packed.yml`，量出耗时再决定。
+- **在飞的两个 PR**：`#15`（`capy/ipc-secret` → `main`，head `c8c4fc688697`，+159/−12，open findings 0，`windows-source` failure、`windows-packed` success）把 SECRET 规则抽成 `src/secret-redact.js` 唯一副本，`handle()` 与 `RuntimeHandoffs.sanitizeError` 改调 `redactSecrets(...).slice(0,600)`，本地 `npm test` 764/763/0/1；已知未解决：`redactSecrets` 只在 `initialise()` 里动态 import 赋值，initialise 早期抛错时 catch 会退化成 `redactSecrets is not a function` 并盖掉真实错误。`#16`（`capy/readbytes` → `main`，head `e5195210d377`，+54/−3，open findings 0，`windows-source` failure、`windows-packed` 无结论）让 `harness/native-project-fs.mjs` 的 `readBytes` 在入口无条件 `await this.checkReadTarget(target)`，`node --test tests/native-project-fs.test.mjs` 41/41；它的 CI 红来自 `docs/testing/installer-manual-test.md` 的 prettier 格式，与自身改动无关。两者均未合并，含已完成的改动与未解决的 CI 结论。
+
 <div align="center">
 
 <img src="docs/assets/readme-ink-banner.svg" alt="雪中墨竹水墨画横幅" width="100%" />

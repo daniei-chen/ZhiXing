@@ -63,16 +63,16 @@ $sw.Stop()
 
 **检查点 A（装完）**
 
-| 核对项 | 命令 | 期望 |
-| --- | --- | --- |
-| 目录存在 | `Test-Path $root` | `True` |
-| 主程序 | `Test-Path "$root\知行.exe"` | `True` |
-| 版本号 | `(Get-Item "$root\知行.exe").VersionInfo.ProductVersion` | `0.40.0` |
-| 卸载器 | `Get-ChildItem "$root\Uninstall*.exe"` | 存在 |
-| 卸载项 | `Get-ItemProperty $uninstallKey` | `DisplayName` 以 `知行 0.40.0` 开头，`DisplayVersion` = `0.40.0` |
-| 安装信息 | `Get-ItemProperty $installKey` | `InstallLocation` = `$root` |
-| 快捷方式 | `Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\知行.lnk"`、`Test-Path "$env:USERPROFILE\Desktop\知行.lnk"` | 均 `True` |
-| 进程 | `Get-Process | Where-Object ProcessName -like '*知行*'` | 静默安装后应为空 |
+| 核对项   | 命令                                                                                                                       | 期望                                                             |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 目录存在 | `Test-Path $root`                                                                                                          | `True`                                                           |
+| 主程序   | `Test-Path "$root\知行.exe"`                                                                                               | `True`                                                           |
+| 版本号   | `(Get-Item "$root\知行.exe").VersionInfo.ProductVersion`                                                                   | `0.40.0`                                                         |
+| 卸载器   | `Get-ChildItem "$root\Uninstall*.exe"`                                                                                     | 存在                                                             |
+| 卸载项   | `Get-ItemProperty $uninstallKey`                                                                                           | `DisplayName` 以 `知行 0.40.0` 开头，`DisplayVersion` = `0.40.0` |
+| 安装信息 | `Get-ItemProperty $installKey`                                                                                             | `InstallLocation` = `$root`                                      |
+| 快捷方式 | `Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\知行.lnk"`、`Test-Path "$env:USERPROFILE\Desktop\知行.lnk"` | 均 `True`                                                        |
+| 进程     | `Get-Process \| Where-Object ProcessName -like '*知行*'`                                                                   | 静默安装后应为空                                                 |
 
 退出码按 NSIS 约定：`0` 表示成功。
 
@@ -139,15 +139,15 @@ $sw.Stop()
 
 **检查点 C（升完）**
 
-| 核对项 | 期望 |
-| --- | --- |
-| 版本号 | `(Get-Item "$root\知行.exe").VersionInfo.ProductVersion` = `0.43.0` |
-| 卸载项 | `DisplayVersion` = `0.43.0`，`UninstallString` 指向新目录 |
-| 用户数据还在 | `%APPDATA%\知行\zhixing\workspace.bin` 存在，SHA256 与检查点 B 一致 |
-| 用户数据整树 | `Get-TreeHash (Join-Path $env:APPDATA '知行\zhixing')` 与升级前相同（方法见第 4 节） |
-| 界面里数据还在 | 启动应用，项目和聊天都在，能打开 |
-| 快捷方式 | 仍指向 `$root\知行.exe` |
-| 进程 | 无残留进程 |
+| 核对项         | 期望                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------ |
+| 版本号         | `(Get-Item "$root\知行.exe").VersionInfo.ProductVersion` = `0.43.0`                  |
+| 卸载项         | `DisplayVersion` = `0.43.0`，`UninstallString` 指向新目录                            |
+| 用户数据还在   | `%APPDATA%\知行\zhixing\workspace.bin` 存在，SHA256 与检查点 B 一致                  |
+| 用户数据整树   | `Get-TreeHash (Join-Path $env:APPDATA '知行\zhixing')` 与升级前相同（方法见第 4 节） |
+| 界面里数据还在 | 启动应用，项目和聊天都在，能打开                                                     |
+| 快捷方式       | 仍指向 `$root\知行.exe`                                                              |
+| 进程           | 无残留进程                                                                           |
 
 ## 6. 第四步：卸载
 
@@ -162,17 +162,17 @@ $sw.Stop()
 
 **检查点 D（卸完）**
 
-| 核对项 | 命令 | 期望 |
-| --- | --- | --- |
-| 安装目录 | `Test-Path $root` | `False` |
-| 卸载项 | `Test-Path $uninstallKey` | `False` |
-| 安装信息 | `Test-Path $installKey` | `False` |
-| 快捷方式 | 开始菜单/桌面 `知行.lnk` | 已删除 |
-| 进程 | `Get-Process | Where-Object ProcessName -like '*知行*'` | 空 |
-| 服务 | `Get-Service | Where-Object { $_.Name -like '*zhixing*' }` | 空 |
-| 计划任务 | `Get-ScheduledTask | Where-Object { $_.TaskName -like '*知行*' }` | 空 |
-| 开机启动项 | `Get-ItemProperty 'HKCU:\...\Run'` | 与第 2 节基线一致 |
-| **用户数据** | `Test-Path "$env:APPDATA\知行\zhixing"` | **`True`（按设计保留，见第 7 节）** |
+| 核对项       | 命令                                                               | 期望                                |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------- |
+| 安装目录     | `Test-Path $root`                                                  | `False`                             |
+| 卸载项       | `Test-Path $uninstallKey`                                          | `False`                             |
+| 安装信息     | `Test-Path $installKey`                                            | `False`                             |
+| 快捷方式     | 开始菜单/桌面 `知行.lnk`                                           | 已删除                              |
+| 进程         | `Get-Process \| Where-Object ProcessName -like '*知行*'`           | 空                                  |
+| 服务         | `Get-Service \| Where-Object { $_.Name -like '*zhixing*' }`        | 空                                  |
+| 计划任务     | `Get-ScheduledTask \| Where-Object { $_.TaskName -like '*知行*' }` | 空                                  |
+| 开机启动项   | `Get-ItemProperty 'HKCU:\...\Run'`                                 | 与第 2 节基线一致                   |
+| **用户数据** | `Test-Path "$env:APPDATA\知行\zhixing"`                            | **`True`（按设计保留，见第 7 节）** |
 
 卸载器会删掉 `$INSTDIR`（`templates/nsis/uninstaller.nsh:187`）和两个注册表键（`:250`、`:254`）。
 
@@ -198,12 +198,12 @@ $sw.Stop()
 
 ### 谁改了哪一处就会破坏它
 
-| 改动 | 后果 |
-| --- | --- |
+| 改动                                                                   | 后果                                                                                                                                                              |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `electron-builder.yml` 的 `nsis` 段加 `deleteAppDataOnUninstall: true` | B 失效。升级时安装器仍会追加 `--updated`，`uninstaller.nsh:224` 的 `${ifnot} ${isUpdated}` 还挡得住；但**普通卸载**会删 `%APPDATA%\知行`，用户的项目和 vault 全丢 |
-| `installUtil.nsh:202-207` 被改成无条件追加 `--delete-app-data` | A 失效，升级当场删数据 |
-| `uninstaller.nsh:223-226` 的 `${ifnot} ${isUpdated}` 判断被删掉 | 只要 B 成立（宏被定义），升级也会删数据 |
-| `electron/main.cjs:4` 的 `app.setName('知行')` 被改 | 数据目录换位置，`$APPDATA\${APP_FILENAME}` 的删除范围与用户数据不再重合。表现是"旧数据变成孤儿"而不是丢数据，但升级后用户看不到自己的项目 |
+| `installUtil.nsh:202-207` 被改成无条件追加 `--delete-app-data`         | A 失效，升级当场删数据                                                                                                                                            |
+| `uninstaller.nsh:223-226` 的 `${ifnot} ${isUpdated}` 判断被删掉        | 只要 B 成立（宏被定义），升级也会删数据                                                                                                                           |
+| `electron/main.cjs:4` 的 `app.setName('知行')` 被改                    | 数据目录换位置，`$APPDATA\${APP_FILENAME}` 的删除范围与用户数据不再重合。表现是"旧数据变成孤儿"而不是丢数据，但升级后用户看不到自己的项目                         |
 
 判断方法：改完 `electron-builder.yml` 或升级安装脚本后，重跑第 4 节到第 5 节的整树 SHA256 对比
 （`Get-TreeHash`）。两个值不一样，就是数据被动了。
