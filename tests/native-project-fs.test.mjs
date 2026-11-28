@@ -7,8 +7,9 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 
 // harness/native-project-fs.mjs 是模型写文件的唯一原生入口，围栏写错一行就是
-// 「模型能写到工作区外」。这个文件直接压五个入口：resolve、checkReadTarget、
-// writeText、editText、patchText，每个场景都断言工作区外（或私密位置）没有副作用。
+// 「模型能写到工作区外」。这个文件直接压六个入口：resolve、checkReadTarget、
+// readBytes、writeText、editText、patchText，每个场景都断言工作区外（或私密位置）
+// 没有副作用。
 const packed = process.env.ZHIXING_TEST_PACKED_APP;
 const load = (name) =>
   import(
@@ -377,6 +378,56 @@ test('checkReadTarget：没有项目交办作用域时直接放行', async (t) =
   const f = await fixture(t);
   const target = await f.real(f.at(f.outside, 'secret.txt'));
   assert.equal(await f.fileSystem.readText(target), OUTSIDE_BODY);
+});
+
+// read_image 之外的 readBytes 调用方原先直接落到父类读字节，不过读取围栏。
+// 这里把「任何形态的 readBytes 都先过 checkReadTarget」钉死：非图片形态读工作区外
+// 的普通文件必须被拒，工作区内的字节必须原样读回，read_image 形态同样被拒。
+test('readBytes：非图片入口读工作区外被拒绝', async (t) => {
+  const f = await fixture(t);
+  await f.inScope('read', async () => {
+    const target = await f.real(f.at(f.outside, 'secret.txt'));
+    await assert.rejects(f.fileSystem.readBytes(target, undefined, 1024), /不在可浏览的项目范围内/);
+  });
+});
+
+test('readBytes：非图片入口读工作区内的字节一致，私密文件仍被拒绝', async (t) => {
+  const f = await fixture(t);
+  await f.inScope('read', async () => {
+    const bytes = await f.fileSystem.readBytes(await f.inside('a.txt'), undefined, 1024);
+    assert.equal(Buffer.from(bytes).toString('utf8'), FILES['a.txt']);
+    await assert.rejects(
+      f.fileSystem.readBytes(await f.inside('.env'), undefined, 1024),
+      /不在可(?:浏览|写入)的项目范围内/,
+    );
+  });
+});
+
+test('readBytes：read_image 形态读工作区外也被拒绝', async (t) => {
+  const f = await fixture(t);
+  await f.inScope('read_image', async () => {
+    const target = await f.real(f.at(f.outside, 'secret.txt'));
+    await assert.rejects(f.fileSystem.readBytes(target, undefined, 1024), /不在可浏览的项目范围内/);
+  });
+});
+
+// 围栏挪到分岔之前，工作区内的 read_image 仍然先到视觉分支：缺服务时的文案不变。
+test('readBytes：read_image 形态在工作区内缺服务时仍报同一句', async (t) => {
+  const f = await fixture(t);
+  const saved = [process.env.ZHIXING_OFFICE_VISION_URL, process.env.ZHIXING_OFFICE_VISION_TOKEN];
+  delete process.env.ZHIXING_OFFICE_VISION_URL;
+  delete process.env.ZHIXING_OFFICE_VISION_TOKEN;
+  try {
+    await f.inScope('read_image', async () => {
+      await assert.rejects(
+        f.fileSystem.readBytes(await f.inside('a.txt'), undefined, 1024),
+        /当前会话缺少本机视觉处理服务。/,
+      );
+    });
+  } finally {
+    if (saved[0] !== undefined) process.env.ZHIXING_OFFICE_VISION_URL = saved[0];
+    if (saved[1] !== undefined) process.env.ZHIXING_OFFICE_VISION_TOKEN = saved[1];
+  }
 });
 
 test('writeText：新建文件逐字节一致', async (t) => {

@@ -269,10 +269,10 @@ export default class NativeProjectFileSystem extends LocalFileSystem {
 
  async readBytes(target,signal,maxBytes) {
   const current=scope.getStore();
+  await this.checkReadTarget(target);
   if(current?.exec.name!=='read_image')return super.readBytes(target,signal,maxBytes);
   const {ZHIXING_OFFICE_VISION_URL:url,ZHIXING_OFFICE_VISION_TOKEN:token}=process.env;
   if(!url||!token)throw new Error('当前会话缺少本机视觉处理服务。');
-  await this.checkReadTarget(target);
   const response=await fetch(url,{method:'POST',redirect:'error',signal,
    headers:{authorization:`Bearer ${token}`,'content-type':'application/json'},body:JSON.stringify({operation:'read-image',input:target.targetKey})});
   const body=await response.json();
