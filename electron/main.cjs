@@ -14,7 +14,7 @@ let mcpServers=[],providers=[],providerTail=Promise.resolve(),providerApi,plugin
 const runtimeEventSequences=new Map();
 let worktreeOperation, runtimeApprovals, runtimeHandoffs, rendererLifetime;
 let configuration={model:'deepseek-flash',reasoning:'high',baseUrl:'https://api.deepseek.com/anthropic',credentialRevision:0,contextWindow:128000,maxTokens:8192};
-let normaliseKernel,validateKernel,projectCoreApi,containsCredential;
+let normaliseKernel,validateKernel,projectCoreApi,containsCredential,redactSecrets;
 const SAFE_ID=/^[a-zA-Z0-9_-]{1,100}$/;
 // Launch timing stays available for diagnosis: set ZHIXING_STARTUP_TRACE=1 to
 // print each stage on stderr. Unset, the helper does nothing.
@@ -77,6 +77,7 @@ async function initialise(){
  await fs.mkdir(VAULTS,{recursive:true});
  ({normaliseKernel,validateKernel}=await import('../src/kernel-config.js'));
  ({containsCredential}=await import('../src/privacy-recognizers.js'));
+ ({redactSecrets}=await import('../src/secret-redact.js'));
  configuration.kernel=normaliseKernel();
  try{const saved=JSON.parse(await fs.readFile(path.join(ROOT,'config.json'),'utf8'));for(const key of ['model','reasoning'])if(typeof saved[key]==='string')configuration[key]=saved[key];for(const key of ['contextWindow','maxTokens'])if(Number.isSafeInteger(saved[key])&&saved[key]>=1024&&saved[key]<=2000000)configuration[key]=saved[key];if(saved.baseUrl)configuration.baseUrl=validEndpoint(saved.baseUrl);if(Number.isSafeInteger(saved.credentialRevision))configuration.credentialRevision=saved.credentialRevision;configuration.kernel=normaliseKernel(saved.kernel);}catch{/* Keep the existing defaults when optional configuration cannot be read. */}
  providerApi=await import('./providers.mjs');
@@ -155,7 +156,7 @@ async function initialise(){
   let message=String(error?.message||'本轮未完成，请检查执行记录。');
   if(/dsh profile|ERR_MODULE_NOT_FOUND|stderr tail/i.test(message))return 'DeepSeek 内核启动失败。请打开设置检查内核，或使用最新安装包重新安装。';
   for(const secret of deliverySecrets())if(typeof secret==='string'&&secret)message=message.replaceAll(secret,'[已隐藏凭据]');
-  return message.replace(/sk-[A-Za-z0-9_-]{12,}/g,'[已隐藏凭据]').slice(0,600);
+  return redactSecrets(message).slice(0,600);
  }});
  manager=new RuntimeManager({root:path.join(ROOT,'harness'),readVault:async id=>JSON.parse(await readEncrypted(path.join(VAULTS,`${id}.bin`))),writeVault:(id,value)=>writeEncrypted(path.join(VAULTS,`${id}.bin`),JSON.stringify(value)),onApproval:request=>{
   // Scheduled jobs cannot borrow a foreground user's one-time decision.
@@ -293,7 +294,7 @@ function handle(channel,fn,ready){
   throw new Error('DeepSeek 内核启动失败。请打开设置检查内核，或使用最新安装包重新安装。');
  }
  // eslint-disable-next-line preserve-caught-error -- The original cause could contain credentials removed from this bounded public message.
- throw new Error(message.replace(/sk-[A-Za-z0-9_-]{12,}/g,'[已隐藏凭据]').slice(0,600));
+ throw new Error(redactSecrets(message).slice(0,600));
 }});}
 function requestRendererFlush(){
  if(!windowRef||windowRef.isDestroyed()||windowRef.webContents.isDestroyed())return workspaceSaveQueue.flush();
