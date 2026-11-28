@@ -1,8 +1,12 @@
 // Recognition uses a canonical view; replacements always use original UTF-16
 // offsets. The source and the reversible mapping are never normalized in place.
-const INVISIBLE = /[\u00ad\u034f\u061c\u180e\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/u;
+// Every Unicode format character (Cf), variation selector, and Hangul filler can
+// split a number or credential without changing how it reads. Both views strip
+// the same set, or recognition and credential checks disagree about the text.
+const INVISIBLE = /[\ufe00-\ufe0f\u{e0100}-\u{e01ef}\p{Cf}\u115f\u1160\u3164\uffa0]/u;
+const STRIP_INVISIBLE = new RegExp(INVISIBLE.source, 'gu');
 export function canonicalText(value) {
-  return String(value??'').normalize('NFKC').replace(/[\u00ad\u034f\u061c\u180e\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/gu,'').replace(/[‐‑‒–−]/g,'-');
+  return String(value??'').normalize('NFKC').replace(STRIP_INVISIBLE,'').replace(/[‐‑‒–−]/g,'-');
 }
 export function containsCredential(value, credential) {
   if(typeof credential!=='string'||!credential)return false;
