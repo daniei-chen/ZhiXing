@@ -1034,7 +1034,7 @@ export function App() {
         text: item.text || '请处理附件。', restoreText: '', attachments: item.files, files: [],
         prompt, repeatExecution: false, draftKey: null, submittedRevision: 0,
         mode: chatMode, model: selection?.id || settings.model, reasoning: settings.reasoning,
-        privacyMode: settings.privacyMode, startInPlanMode, sideScope: null, queued: true,
+        privacyMode: settings.privacyMode, startInPlanMode, sideScope: null, queued: true, queueId: item.id,
       };
       if (settings.demo) {
         const local = new PrivacySession(item.chatId).protect(prompt, settings.customTerms, privacyPolicyForMode(settings.privacyPolicy, settings.privacyMode));
@@ -1203,7 +1203,7 @@ export function App() {
       if (old !== job && old.finalization?.processStatus !== 'cleanup_pending' && old !== active.current) { runJobs.current.delete(id); liveReplies.set(id, undefined); break; }
     }
     active.current = job; setRunning(job);
-    const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl, visual }) => ({ id, name, size, path, sourceUrl, ...(visual ? { visual } : {}) })) };
+    const user = { id: uuid(), role: 'user', text: draft.text, prompt: draft.prompt, protected: preview.text, privacyMode: preview.privacyMode, startInPlanMode: draft.startInPlanMode, ...(draft.queueId ? { queueId: draft.queueId } : {}), files: (draft.attachments.length ? draft.attachments : draft.files || []).map(({ id, name, size, path, sourceUrl, visual }) => ({ id, name, size, path, sourceUrl, ...(visual ? { visual } : {}) })) };
     const assistant = { id: job.replyId, runId: job.runId, role: 'assistant', text: '', pending: true, demo,privacyMode:preview.privacyMode,protectCount:preview.entities?.length||0, startedAt: Date.now() };
     let createdChat = false;
     const appendSubmission = current => {

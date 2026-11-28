@@ -86,7 +86,10 @@ export function mergeState(saved, { liveRuns = [] } = {}) {
       }]; }))
       : {},
     // 排队消息只随已保存的聊天恢复；恢复后标记上次未发送，等用户确认再发。
-    queuedMessages: settings.persist && Array.isArray(saved.queuedMessages) ? saved.queuedMessages.filter(item => item && typeof item.id === 'string' && typeof item.chatId === 'string' && chatById.has(item.chatId) && typeof item.text === 'string' && Array.isArray(item.files)).slice(0, 64).map(item => {
+    // 内核接手时会把排队项 id 写进用户消息（queueId）。进程在「内核已受理」与
+    // 「队列从磁盘移除」之间被强杀时，磁盘上这条还在队列里：此时不能再把它当作
+    // 未发送，否则同一条交办会被重试两次，聊天记录也已经有了它。
+    queuedMessages: settings.persist && Array.isArray(saved.queuedMessages) ? saved.queuedMessages.filter(item => item && typeof item.id === 'string' && typeof item.chatId === 'string' && chatById.has(item.chatId) && typeof item.text === 'string' && Array.isArray(item.files) && !chatById.get(item.chatId).messages?.some(message => message?.queueId === item.id)).slice(0, 64).map(item => {
       const owner = chatById.get(item.chatId);
       return {
         id: item.id,
