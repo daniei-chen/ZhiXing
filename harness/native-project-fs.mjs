@@ -142,7 +142,7 @@ async function projectTarget(root, file) {
   if (stat && (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1)) throw new Error('请选择项目内的普通文件。');
   return {...location, exists:stat !== null, size:stat?.size, fileDevice:stat?.dev, fileInode:stat?.ino};
  } catch (error) {
-  if (/^E[A-Z0-9]+$/.test(error.code)) throw new Error('无法访问该项目文件，请核对目录和权限。');
+  if (/^E[A-Z0-9]+$/.test(error.code)) throw new Error('无法访问该项目文件，请核对目录和权限。',{cause:error});
   throw error;
  }
 }
@@ -241,7 +241,9 @@ export default class NativeProjectFileSystem extends LocalFileSystem {
   const candidate = path.resolve(options?.cwd??current.root, file);
   const {target} = await projectTarget(current.root, candidate);
   const resolved = await super.resolve(candidate, options);
-  if (resolved.targetKey !== target) throw new Error('项目文件位置已变化，请重新操作。');
+  // Windows 不区分大小写，而 fs.realpath 保留调用方拼写、realpath.native 给的是磁盘上的
+  // 真实大小写；直接比字符串会把 A.TXT 指到 a.txt 的正常请求判成「位置已变化」。
+  if (targetKey(resolved.targetKey) !== targetKey(target)) throw new Error('项目文件位置已变化，请重新操作。');
   return resolved;
  }
 
@@ -249,7 +251,7 @@ export default class NativeProjectFileSystem extends LocalFileSystem {
   const current=scope.getStore();
   if (!current) return;
   const file=await projectTarget(current.root,target.displayPath);
-  if (!file.exists||file.target!==target.targetKey) throw new Error('项目文件位置已变化，请重新操作。');
+  if (!file.exists||targetKey(file.target)!==targetKey(target.targetKey)) throw new Error('项目文件位置已变化，请重新操作。');
  }
 
  async readText(target,signal) {
