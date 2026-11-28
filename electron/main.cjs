@@ -169,7 +169,7 @@ async function initialise(){
   if(event.type==='run/terminal'&&event.finalization?.processStatus!=='cleanup_pending'){runtimeEventSequences.delete(event.runId);}
   if(windowRef&&!windowRef.isDestroyed())windowRef.webContents.send('agent:event',event);
   void automations?.recordEvent(event).catch(()=>{});
- }});
+ },log:(level,event,detail)=>logEvent(level,event,detail)});
  rendererLifetime=new RendererLifetime({manager,handoffs:runtimeHandoffs,onError:detail=>logEvent('warn','renderer.transient-cancel-pending',detail)});
  const {DeliverableAccess}=await import('./deliverable-access.mjs');
  startupMark('init:kernel');
