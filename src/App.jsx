@@ -426,7 +426,7 @@ export function App() {
           archived.terminalStatus = event.status;
           finalizeRun(archived, event);
         } else if (event.finalization) setState(current => ({ ...current, chats: current.chats.map(chat => ({ ...chat, messages: chat.messages.map(message => message.runId === event.runId ? { ...message, finalization: event.finalization } : message) })) }));
-        if (event.finalization?.processStatus === 'cleanup_pending') setCleanupPending(old => [...old.filter(row => row.runId !== event.runId), { runId: event.runId, sessionId: event.sessionId, finalization: event.finalization }]);
+        if (event.finalization?.processStatus === 'cleanup_pending') setCleanupPending(old => [...old.filter(row => row.runId !== event.runId), { runId: event.runId, sessionId: event.sessionId, finalization: event.finalization, ...(event.quarantine || {}) }]);
         else if (event.finalization?.processStatus === 'exited') setCleanupPending(old => old.filter(row => row.runId !== event.runId));
         if(event.status!=='succeeded' && job?.runId===event.runId){active.current=null;setRunning(null);}
         setEvents(old=>[...old.slice(-599),{...event,time:event.time??Date.now()}]);
@@ -1486,6 +1486,17 @@ export function App() {
     finally { setRecoveryAction(''); }
   }
 
+  async function abandonCleanup(runId) {
+    setRecoveryAction(`abandon:${runId}`);
+    try {
+      const result = await desktop.abandonRuntimeRun(runId);
+      setCleanupPending(old => old.filter(item => item.runId !== runId));
+      if (result.finalization) setState(current => ({ ...current, chats: current.chats.map(chat => ({ ...chat, messages: chat.messages.map(message => message.runId === runId ? { ...message, finalization: result.finalization } : message) })) }));
+      setToast('已放弃收尾确认并释放名额：这一轮的结果没有交接，恢复资料仍保留在本机。');
+    } catch (error) { setToast(`未能释放：${errorText(error)}`, 'error'); }
+    finally { setRecoveryAction(''); }
+  }
+
   async function retryAutomationSave(runId) {
     setRecoveryAction(`automation:${runId}`);
     try {
@@ -1723,7 +1734,7 @@ export function App() {
             {!!state.pendingWorkspaceDeletes?.length && <section className="running-return deletion-pending" role="alert"><WarningCircle size={15}/><span title={deletionError || '删除需要保存并完成内核记录清理。'}>{deletionError || '删除正在保存或等待清理，尚未确认完成。'}</span>{state.pendingWorkspaceDeletes.map(item => <button key={item.id} type="button" disabled={!!recoveryAction} onClick={() => void finishWorkspaceDeletion(item).catch(() => {})}>重试完成删除</button>)}</section>}
             {!!unresolvedDrafts.length && <section className="running-return orphan-drafts" role="status"><Info size={15}/><span>有 {unresolvedDrafts.length} 份旧草稿的聊天或项目已不存在，内容仍保留。</span><button type="button" onClick={() => openModal({ type: 'orphan-drafts' })}>恢复或删除</button></section>}
             {!!unsentDrafts.length && <section className="running-return unsent-drafts" role="status"><NotePencil size={15}/><span>有 {unsentDrafts.length} 份未发送的新草稿。</span><button type="button" onClick={() => openModal({ type: 'new-drafts' })}>查看草稿</button></section>}
-            {cleanupPending.map(item => <section className="running-return runtime-cleanup-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.finalization?.error?.message}>内核退出尚未确认，该会话暂不能重新执行。</span>{desktop?.retryRuntimeCleanup && <button type="button" disabled={!!recoveryAction} onClick={() => void retryCleanup(item.runId)}>重试清理</button>}</section>)}
+            {cleanupPending.map(item => <section className="running-return runtime-cleanup-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.finalization?.error?.message}>{item.canAbandon ? `内核退出连续 ${item.attempts} 次重试仍未确认，该会话暂不能重新执行；放弃并释放会结束隔离，但这一轮的结果不会交接。` : `内核退出尚未确认，该会话暂不能重新执行。（已重试 ${item.attempts}/${item.retryLimit ?? 3} 次）`}</span>{desktop?.retryRuntimeCleanup && <button type="button" disabled={!!recoveryAction} onClick={() => void retryCleanup(item.runId)}>重试清理</button>}{item.canAbandon && desktop?.abandonRuntimeRun && <button type="button" className="danger-button" disabled={!!recoveryAction} onClick={() => void abandonCleanup(item.runId)}>放弃并释放</button>}</section>)}
             {pendingOutcomes.map(item => <section className="running-return automation-save-pending" role="alert" key={item.runId}><WarningCircle size={15}/><span title={item.persistenceError?.message}>自动化执行已结束，结果尚未保存；后续调度已暂停。</span>{item.result && <button type="button" onClick={() => openRun(item)}>查看结果</button>}{desktop?.retryAutomationSave && <button type="button" disabled={!!recoveryAction} onClick={() => void retryAutomationSave(item.runId)}>重试保存结果</button>}</section>)}
             {automationState.persistenceError && !pendingOutcomes.length && <section className="running-return automation-save-error" role="alert"><WarningCircle size={15}/><span>{automationState.persistenceError.message || '自动化记录保存失败，待恢复。'}</span></section>}
             {running&&!runningHere&&<div className="running-return" role="status"><CircleNotch size={14}/><span>{state.chats.find(item=>item.id===running.chatId)?.title||'另一段聊天'}{approvals.pending.some(item=>item.runId===running.runId)?'有待批准操作':questions.some(item=>item.runId===running.runId)?'需要补充信息':'正在执行'}</span><button type="button" onClick={returnToRunningChat}>返回任务</button></div>}
@@ -1762,6 +1773,7 @@ export function App() {
                   {!message.pending&&<details className="run-summary"><summary>详情</summary><dl>{summaryRows(message).map(row => <div className="run-summary-row" key={row.key}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl></details>}
             {message.errorMessage&&<p className="run-error-detail" role="alert">{message.errorMessage}</p>}
                   {message.context?.measurement && <p className="context-usage">{contextUsageText(message.context.measurement.totalTokens, contextWindowTokens(runtime, state.settings, message.context.pressure?.contextWindow))} {message === currentContextMessage && <button type="button" disabled={!!running || busy} onClick={() => void submit(null, null, '/compact')}>压缩上下文</button>}</p>}
+                  {message.finalization?.processStatus === 'abandoned' && <p className="muted" role="status" data-outcome="abandoned">这一轮已放弃收尾确认并释放名额：内核退出在 {message.finalization.abandoned?.attempts ?? 0} 次重试后仍未确认，结果没有交接，也不算完成。内核进程可能仍在后台运行并改写工作区文件；恢复资料与执行记录仍保留在本机。</p>}
                   {message.finalization?.processStatus === 'cleanup_pending' && <p className="muted" role="status">执行已结束，内核退出仍待确认；请使用上方的重试清理。</p>}
                   {['pending', 'failed'].includes(message.finalization?.persistenceStatus) && <p className="muted" role="status">本次执行结果尚未保存。重试保存不会重新运行工具。</p>}
                   {message.finishReason === 'max-tokens' && <p className="muted">本轮达到输出上限，可以继续交办剩余部分。</p>}
