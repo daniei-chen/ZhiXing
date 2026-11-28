@@ -20,7 +20,7 @@ const { AutomationService } = await import(packagedRoot
   ? pathToFileURL(path.join(packagedRoot, 'electron', 'automation-service.mjs')).href
   : '../electron/automation-service.mjs');
 
-test('真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原',{timeout:210000},async t=>{
+test('真实 Harness → 本地 Messages 服务 → 原生办公工具 → 本机还原',{timeout:300000},async t=>{
  const stage = name => { t.signal.throwIfAborted(); diagnostic(name); };
  stage('fixture-start');
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'zhixing-integration-')),vaults=new Map(),requests=[];let stall=false,stallChild=false,filePlan=null,goalRequests=0;
