@@ -11,6 +11,7 @@
     "electron/**/*",
     "harness/**/*",
     "src/privacy-core.js",
+    "src/secret-redact.js",
     "src/privacy-recognizers.js",
     "src/privacy-policy.js",
     "src/project-core.js",
